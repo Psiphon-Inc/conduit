@@ -1,18 +1,20 @@
 {
   "name": "conduit",
-  "main": "expo-router/entry",
+  "main": "src/entrypoint",
   "version": "1.0.0",
   "scripts": {
     "android": "expo run:android",
+    "build-release": "cd android && ./gradlew assembleRelease && cd ..",
     "ios": "expo run:ios",
     "test": "jest --verbose",
     "format": "prettier --write ./src",
-    "tsc": "tsc --noUnusedLocals --noUnusedParameters"
+    "tsc": "tsc --noUnusedLocals --noUnusedParameters",
+    "check": "jest && prettier --check ./src && tsc --noUnusedLocals --noUnusedParameters"
   },
   "jest": {
     "preset": "jest-expo",
     "moduleNameMapper": {
-        "micro-key-producer/src/slip10.js": "micro-key-producer/slip10.js"
+      "micro-key-producer/src/slip10": "micro-key-producer/slip10.js"
     }
   },
   "prettier": {
@@ -24,15 +26,21 @@
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
     "@noble/curves": "^1.6.0",
+    "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-navigation/native": "^6.0.2",
     "@scure/base": "^1.1.8",
     "@scure/bip39": "^1.4.0",
+    "@tanstack/react-query": "^5.56.2",
     "expo": "~51.0.28",
+    "expo-clipboard": "^6.0.3",
     "expo-constants": "~16.0.2",
     "expo-font": "~12.0.9",
     "expo-linking": "~6.3.1",
+    "expo-notifications": "^0.28.16",
     "expo-router": "~3.5.23",
+    "expo-secure-store": "^13.0.2",
     "expo-splash-screen": "~0.27.5",
+    "expo-standard-web-crypto": "^1.8.1",
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
     "micro-key-producer": "^0.7.0",
