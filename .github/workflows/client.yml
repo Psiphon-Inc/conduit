@@ -1,0 +1,52 @@
+name: Client
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install packages
+        run: |
+            npm ci
+      - name: run formatter 
+        run: |
+            npx prettier --check ./src
+      - name: Generate expo types
+        run: |
+            npx expo customize tsconfig.json
+      - name: run tsc
+        run: |
+            npm run tsc
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install packages
+        run: |
+            npm ci
+      - name: run tests
+        run: |
+            npm run test
