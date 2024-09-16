@@ -30,3 +30,11 @@ export function niceBytes(bytes: number) {
 
     return `${bytes.toFixed(1)} ${unit}`;
 }
+
+export function bytesToMB(bytes: number) {
+    return bytes / 1024 / 1024;
+}
+
+export function MBToBytes(MB: number) {
+    return MB * 1024 * 1024;
+}

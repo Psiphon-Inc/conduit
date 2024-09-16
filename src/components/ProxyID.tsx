@@ -40,7 +40,7 @@ export function ProxyID({
                     ss.rounded5,
                     ss.halfPadded,
                     {
-                        backgroundColor: palette.blue,
+                        backgroundColor: palette.redTint2,
                     },
                 ]}
             >

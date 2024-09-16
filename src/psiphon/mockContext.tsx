@@ -4,7 +4,8 @@ import {
     InProxyActivityByPeriod,
     InProxyActivityStats,
     InProxyParameters,
-    zeroedInProxyActivityStats,
+    getDefaultInProxyParameters,
+    getZeroedInProxyActivityStats,
 } from "@/src/psiphon/inproxy";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -13,7 +14,7 @@ async function* generateMockData(
 ): AsyncGenerator<InProxyActivityStats> {
     // initial empty data, representing no usage
     // TODO: this is a crappy way to clone
-    const data = JSON.parse(JSON.stringify(zeroedInProxyActivityStats));
+    const data = getZeroedInProxyActivityStats();
 
     async function doTick() {
         // shift every array to drop the first value
@@ -21,7 +22,7 @@ async function* generateMockData(
         data.dataByPeriod["1000ms"].bytesUp.shift();
         data.dataByPeriod["1000ms"].bytesDown.shift();
         // 50% chance to add a user every tick, up to max
-        if (Math.random() > 0.5 && data.currentConnectedClients <= maxClients) {
+        if (Math.random() > 0.5 && data.currentConnectedClients < maxClients) {
             data.currentConnectedClients++;
             data.dataByPeriod["1000ms"].connectedClients.push(1);
         } else {
@@ -55,11 +56,103 @@ async function* generateMockData(
     }
 }
 
-export interface InProxyContextValue {
-    inProxyParameters: InProxyParameters | null;
+export interface InProxyActivityContextValue {
     inProxyActivityBy1000ms: InProxyActivityByPeriod;
     inProxyCurrentConnectedClients: number;
     inProxyTotalBytesTransferred: number;
+}
+
+export const InProxyActivityContext =
+    React.createContext<InProxyActivityContextValue | null>(null);
+
+export function useInProxyActivityContext(): InProxyActivityContextValue {
+    const value = React.useContext(InProxyActivityContext);
+    if (!value) {
+        throw new Error(
+            "useInProxyActivityContext must be used within a InProxyActivityProvider",
+        );
+    }
+
+    return value;
+}
+
+export function InProxyActivityProvider({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const [inProxyActivityBy1000ms, setInProxyActivityBy1000ms] =
+        React.useState<InProxyActivityByPeriod>(
+            getZeroedInProxyActivityStats().dataByPeriod["1000ms"],
+        );
+    const [inProxyCurrentConnectedClients, setInProxyCurrentConnectedClients] =
+        React.useState<number>(0);
+    const [inProxyTotalBytesTransferred, setInProxyTotalBytesTransferred] =
+        React.useState<number>(0);
+
+    const { inProxyParameters, isInProxyRunning } = useInProxyContext();
+
+    function handleInProxyActivityStats(
+        inProxyActivityStats: InProxyActivityStats,
+    ): void {
+        setInProxyCurrentConnectedClients(
+            inProxyActivityStats.currentConnectedClients,
+        );
+        setInProxyTotalBytesTransferred(
+            inProxyActivityStats.totalBytesUp +
+                inProxyActivityStats.totalBytesDown,
+        );
+        setInProxyActivityBy1000ms(inProxyActivityStats.dataByPeriod["1000ms"]);
+    }
+
+    // mock stats emitter
+    const mockDataGenerator = React.useRef<AsyncGenerator | null>(null);
+    React.useEffect(() => {
+        async function runMock() {
+            console.log("MOCK: Initializing mock data generation");
+            mockDataGenerator.current = generateMockData(
+                inProxyParameters!.maxClients,
+            );
+            let data = (await mockDataGenerator.current.next()).value;
+            while (data) {
+                if (data) {
+                    handleInProxyActivityStats(data);
+                }
+                data = (await mockDataGenerator.current.next()).value;
+            }
+            handleInProxyActivityStats(getZeroedInProxyActivityStats());
+        }
+
+        async function stopMock() {
+            if (mockDataGenerator.current) {
+                console.log("MOCK: Stopping mock data generation");
+                await mockDataGenerator.current.return(
+                    getZeroedInProxyActivityStats(),
+                );
+            }
+        }
+
+        if (isInProxyRunning()) {
+            runMock();
+        } else {
+            stopMock();
+        }
+    }, [inProxyParameters, isInProxyRunning]);
+
+    const value = {
+        inProxyActivityBy1000ms,
+        inProxyCurrentConnectedClients,
+        inProxyTotalBytesTransferred,
+    };
+    return (
+        <InProxyActivityContext.Provider value={value}>
+            {children}
+        </InProxyActivityContext.Provider>
+    );
+}
+
+export interface InProxyContextValue {
+    inProxyParameters: InProxyParameters;
     inProxyMustUpgrade: boolean;
     toggleInProxy: () => Promise<void>;
     selectInProxyParameters: (params: InProxyParameters) => Promise<void>;
@@ -85,32 +178,12 @@ export function useInProxyContext(): InProxyContextValue {
 export function InProxyProvider({ children }: { children: React.ReactNode }) {
     const [inProxyRunning, setInProxyRunning] = React.useState<boolean>(false);
     const [inProxyParameters, setInProxyParameters] =
-        React.useState<InProxyParameters | null>(null);
-    const [inProxyActivityBy1000ms, setInProxyActivityBy1000ms] =
-        React.useState<InProxyActivityByPeriod>(
-            zeroedInProxyActivityStats.dataByPeriod["1000ms"],
-        );
-    const [inProxyCurrentConnectedClients, setInProxyCurrentConnectedClients] =
-        React.useState<number>(0);
-    const [inProxyTotalBytesTransferred, setInProxyTotalBytesTransferred] =
-        React.useState<number>(0);
+        React.useState<InProxyParameters>(getDefaultInProxyParameters());
+
     // TODO: how to test this with the mock?
     //const [inProxyMustUpgrade, setInProxyMustUpgrade] =
     //    React.useState<boolean>(false);
     const inProxyMustUpgrade = false;
-
-    function handleInProxyActivityStats(
-        inProxyActivityStats: InProxyActivityStats,
-    ): void {
-        setInProxyCurrentConnectedClients(
-            inProxyActivityStats.currentConnectedClients,
-        );
-        setInProxyTotalBytesTransferred(
-            inProxyActivityStats.totalBytesUp +
-                inProxyActivityStats.totalBytesDown,
-        );
-        setInProxyActivityBy1000ms(inProxyActivityStats.dataByPeriod["1000ms"]);
-    }
 
     //function handleInProxyError(inProxyError: InProxyError): void {
     //    console.log("MOCK: Received InProxy error", inProxyError);
@@ -124,6 +197,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         params: InProxyParameters,
     ): Promise<void> {
         setInProxyParameters(params);
+
         console.log("MOCK: InProxy parameters selected successfully");
     }
 
@@ -131,7 +205,6 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         //await requestNotificationsPermissions();
         setInProxyRunning(!inProxyRunning);
         console.log("MOCK: InProxyModule.toggleInProxy() invoked");
-        setInProxyCurrentConnectedClients(0);
     }
 
     const isInProxyRunning = React.useCallback(() => {
@@ -142,48 +215,8 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         console.log("MOCK: InProxyModule.sendFeedback() invoked");
     }
 
-    // mock stats emitter
-    // DO THIS A SMARTER WAY
-    const mockDataGenerator = React.useRef<AsyncGenerator | null>(null);
-    React.useEffect(() => {
-        if (inProxyParameters) {
-            async function runMock() {
-                console.log("MOCK: Initializing mock data generation");
-                mockDataGenerator.current = generateMockData(
-                    inProxyParameters!.maxClients,
-                );
-                let data = (await mockDataGenerator.current.next()).value;
-                while (data) {
-                    if (data) {
-                        handleInProxyActivityStats(data);
-                    }
-                    data = (await mockDataGenerator.current.next()).value;
-                }
-                handleInProxyActivityStats(zeroedInProxyActivityStats);
-            }
-
-            async function stopMock() {
-                if (mockDataGenerator.current) {
-                    console.log("MOCK: Stopping mock data generation");
-                    await mockDataGenerator.current.return(
-                        zeroedInProxyActivityStats,
-                    );
-                }
-            }
-
-            if (inProxyRunning) {
-                runMock();
-            } else {
-                stopMock();
-            }
-        }
-    }, [inProxyParameters, inProxyRunning]);
-
     const value = {
         inProxyParameters,
-        inProxyActivityBy1000ms,
-        inProxyCurrentConnectedClients,
-        inProxyTotalBytesTransferred,
         inProxyMustUpgrade,
         toggleInProxy,
         selectInProxyParameters,
