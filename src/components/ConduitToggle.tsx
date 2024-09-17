@@ -65,7 +65,7 @@ export function ConduitToggle({ size }: { size: number }) {
         palette.purpleShade3,
     ];
     const buttonColoursIndex = useSharedValue(0);
-    const buttonTextColours = [palette.blueTint5, palette.transparent];
+    const buttonTextColours = [palette.redTint3, palette.transparent];
     const buttonTextColourIndex = useSharedValue(0);
     const growRadius = useSharedValue(0);
     const spinner = useSharedValue(0);
