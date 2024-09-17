@@ -9,7 +9,7 @@ export const palette = {
     redTint1: "#d9533d",
     red: "#d54028",
     redShade1: "#bf3924",
-    redShade2: "#952c1c", 
+    redShade2: "#952c1c",
     redShade3: "#6a2014",
     redShade4: "#3f130c",
     redShade5: "#150604",

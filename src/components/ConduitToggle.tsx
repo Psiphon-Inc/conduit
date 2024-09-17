@@ -17,7 +17,6 @@ import { palette, sharedStyles as ss } from "@/src/styles";
 import {
     useDerivedValue,
     useSharedValue,
-    withClamp,
     withRepeat,
     withTiming,
 } from "react-native-reanimated";
@@ -69,12 +68,12 @@ export function ConduitToggle({ size }: { size: number }) {
                 duration: 2000,
             }),
             -1,
-            true
+            true,
         );
     }
 
     function animatePeersConnected() {
-        colorsIndex.value = withTiming(4, {duration: 2000});
+        colorsIndex.value = withTiming(4, { duration: 2000 });
     }
 
     function animateTurnOff() {
@@ -98,14 +97,18 @@ export function ConduitToggle({ size }: { size: number }) {
 
     const buttonGradientColors = useDerivedValue(() => {
         return [
-            interpolateColors(colorsIndex.value, [0, 1, 2, 3, 4, 5], startColors),
+            interpolateColors(
+                colorsIndex.value,
+                [0, 1, 2, 3, 4, 5],
+                startColors,
+            ),
             interpolateColors(colorsIndex.value, [0, 1, 2, 3, 4, 5], endColors),
         ];
     });
 
     // TODO: Placeholder
     const mockPeersRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-        null
+        null,
     );
     const toggleInProxy = () => {
         console.log("toggle in proxy");
@@ -132,7 +135,7 @@ export function ConduitToggle({ size }: { size: number }) {
 
     const font = useFont(
         require("../../assets/fonts/SpaceMono-Regular.ttf"),
-        20
+        20,
     );
     if (!font) {
         return null;

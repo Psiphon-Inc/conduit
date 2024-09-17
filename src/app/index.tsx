@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -9,6 +10,7 @@ import { handleError } from "@/src/common/errors";
 export default function Index() {
     const insets = useSafeAreaInsets();
     const { signIn } = useAuthContext();
+    const { t } = useTranslation();
 
     React.useEffect(() => {
         signIn().then((result) => {
@@ -41,7 +43,9 @@ export default function Index() {
                     alignItems: "center",
                 }}
             >
-                <Text style={{ color: "white" }}>Loading...</Text>
+                <Text style={{ color: "white" }}>
+                    {t("LOADING_I18N.string")}
+                </Text>
                 <ActivityIndicator color="white" size="large" />
             </View>
         </View>

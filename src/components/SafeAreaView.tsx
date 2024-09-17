@@ -6,14 +6,16 @@ export function SafeAreaView({ children }: { children: ReactNode }) {
     const insets = useSafeAreaInsets();
 
     return (
-        <View style={{
-            marginTop: insets.top, 
-            marginBottom: insets.bottom,
-            marginLeft: insets.left,
-            marginRight: insets.right,
-            flex: 1,
-        }}>
+        <View
+            style={{
+                marginTop: insets.top,
+                marginBottom: insets.bottom,
+                marginLeft: insets.left,
+                marginRight: insets.right,
+                flex: 1,
+            }}
+        >
             {children}
         </View>
-    )
+    );
 }

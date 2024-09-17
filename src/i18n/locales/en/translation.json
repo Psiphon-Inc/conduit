@@ -1,0 +1,18 @@
+{
+    "LOADING_I18N": {
+        "string": "Loading...",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TURN_ON_I18N": {
+        "string": "Turn ON",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "CONDUIT_OFF_I18N": {
+        "string": "Conduit is OFF",
+        "developer_comment": "Indicates to the user that Conduit is off. The name 'Conduit' is the app name and should not be translated."
+    },
+    "YOUR_ID_I18N": {
+        "string": "Your Conduit ID:",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    }
+}

@@ -7,6 +7,10 @@ import { polyfillWebCrypto } from "expo-standard-web-crypto";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
+import i18nService from "@/src/i18n/i18n";
+
+i18nService.initI18n();
+
 polyfillWebCrypto();
 
 import { AuthProvider } from "@/src/auth/context";

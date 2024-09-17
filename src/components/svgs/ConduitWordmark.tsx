@@ -19,7 +19,7 @@ export function ConduitWordmark({
     color?: string;
 }) {
     const conduitWordMarkSvg = useSVG(
-        require("@/assets/images/conduit-wordmark.svg")
+        require("@/assets/images/conduit-wordmark.svg"),
     );
 
     const originalWidth = 380;
@@ -28,23 +28,25 @@ export function ConduitWordmark({
 
     const paint = React.useMemo(() => Skia.Paint(), []);
     paint.setColorFilter(
-        Skia.ColorFilter.MakeBlend(Skia.Color(color), BlendMode.SrcIn)
+        Skia.ColorFilter.MakeBlend(Skia.Color(color), BlendMode.SrcIn),
     );
 
     return (
-        <View style={{
-            width: size,
-            height: size * heightRatio
-        }}>
-        <Canvas style={[ss.flex]}>
-        <Group layer={paint}>
-            <ImageSVG
-                svg={conduitWordMarkSvg}
-                width={size}
-                height={size * heightRatio}
-            />
-        </Group>
+        <View
+            style={{
+                width: size,
+                height: size * heightRatio,
+            }}
+        >
+            <Canvas style={[ss.flex]}>
+                <Group layer={paint}>
+                    <ImageSVG
+                        svg={conduitWordMarkSvg}
+                        width={size}
+                        height={size * heightRatio}
+                    />
+                </Group>
             </Canvas>
-            </View>
+        </View>
     );
 }
