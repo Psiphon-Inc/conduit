@@ -8,7 +8,7 @@ import { ConduitWordmark } from "@/src/components/svgs/ConduitWordmark";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export default function HomeScreen() {
-    const win = useWindowDimensions()
+    const win = useWindowDimensions();
 
     return (
         <SafeAreaView>

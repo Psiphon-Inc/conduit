@@ -7,8 +7,6 @@ import {
     Group,
     Paint,
     RadialGradient,
-    Rect,
-    RoundedRect,
     Shadow,
     Text,
     interpolateColors,
@@ -39,10 +37,10 @@ export function ConduitToggle({ size }: { size: number }) {
     const radius = size / 4;
     const centeringTransform = [
         {
-            translateY: size/2,
+            translateY: size / 2,
         },
         {
-            translateX: size/2,
+            translateX: size / 2,
         },
     ];
     const [inProxyOn, setInProxyOn] = React.useState(false);
@@ -83,7 +81,7 @@ export function ConduitToggle({ size }: { size: number }) {
                 duration: 2000,
             }),
             -1,
-            true
+            true,
         );
         buttonTextColourIndex.value = withTiming(1, { duration: 500 });
     }
@@ -95,7 +93,7 @@ export function ConduitToggle({ size }: { size: number }) {
         buttonColoursIndex.value = withTiming(4, { duration: 2000 });
         spinner.value = withSequence(
             withTiming(-1, { duration: 2000 }),
-            withRepeat(withTiming(1, { duration: 8000 }), -1)
+            withRepeat(withTiming(1, { duration: 5000 }), -1),
         );
     }
 
@@ -115,9 +113,11 @@ export function ConduitToggle({ size }: { size: number }) {
                 animateAnnouncing();
             } else {
                 animatePeersConnected();
+                randomizeVelocity.setActive(true);
             }
         } else {
             animateTurnOff();
+            randomizeVelocity.setActive(false);
         }
     }, [inProxyOn, inProxyPeersConnected]);
 
@@ -126,12 +126,12 @@ export function ConduitToggle({ size }: { size: number }) {
             interpolateColors(
                 buttonColoursIndex.value,
                 [0, 1, 2, 3, 4],
-                buttonInnerColours
+                buttonInnerColours,
             ),
             interpolateColors(
                 buttonColoursIndex.value,
                 [0, 1, 2, 3, 4],
-                buttonOuterColours
+                buttonOuterColours,
             ),
         ];
     });
@@ -140,34 +140,65 @@ export function ConduitToggle({ size }: { size: number }) {
         return interpolateColors(
             buttonTextColourIndex.value,
             [0, 1],
-            buttonTextColours
+            buttonTextColours,
         );
     });
 
-    const velX = useSharedValue(5);
-    const velY = useSharedValue(1);
-
+    // will use these 2 random values to randomize the Y values that the orbs
+    // take as they traverse the conduit orb.
+    const randomA = useSharedValue(1);
+    const randomB = useSharedValue(1);
+    const startSign = useSharedValue(1);
+    const endSign = useSharedValue(1);
+    const randomizerReady = useSharedValue(0);
     const randomizeVelocity = useFrameCallback((frameInfo) => {
-        velX.value = Math.random() * 10;
-        velY.value = Math.random() * 2;
+        // pick new random values after each loop of the spinner
+        if (spinner.value > 0.9 && randomizerReady.value === 1) {
+            randomA.value = Math.random();
+            randomB.value = Math.random();
+            if (Math.random() > 0.5) {
+                startSign.value = 1;
+                endSign.value = 1;
+            } else {
+                startSign.value = -1;
+                endSign.value = -1;
+            }
+            randomizerReady.value = 0;
+            console.log("randomized at end");
+        }
+        // reset the randomizer at the start of each loop
+        if (spinner.value < 0.1 && randomizerReady.value === 0) {
+            randomA.value = Math.random();
+            randomB.value = Math.random();
+            if (Math.random() > 0.5) {
+                startSign.value = 1;
+                endSign.value = 1;
+            } else {
+                startSign.value = -1;
+                endSign.value = -1;
+            }
+            randomizerReady.value = 1;
+            console.log("randomized at start");
+        }
     });
 
     const spinVec = useDerivedValue(() => {
         return interpolateVector(
             spinner.value,
-            [-1, 0, 0.4, 1],
+            [-1, -0.6, 0, 0.6, 1],
             [
-                vec(-size, radius),
-                vec(0, radius / 6),
-                vec(radius / 2, -radius / 2),
-                vec(size, radius / 3),
-            ]
+                vec(-size, startSign.value * size * randomA.value),
+                vec(-radius, startSign.value * radius * randomA.value),
+                vec(0, 0),
+                vec(radius, endSign.value * radius * randomB.value),
+                vec(size, endSign.value * size * randomB.value),
+            ],
         );
     });
 
     // START TODO: Placeholder
     const mockPeersRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-        null
+        null,
     );
     const toggleInProxy = () => {
         console.log("toggle in proxy");
@@ -193,27 +224,29 @@ export function ConduitToggle({ size }: { size: number }) {
 
     // Inspired by the "Metaball Animation" tutorial in react-native-skia docs
     const morphLayer = React.useMemo(() => {
-        return <Paint>
-            <Blur blur={5} />
-            <ColorMatrix
-                matrix={[
-                    // R, G, B, A, Bias
-                    // prettier-ignore
-                    1, 0, 0, 0, 0,
-                    // prettier-ignore
-                    0, 1, 0, 0, 0,
-                    // prettier-ignore
-                    0, 0, 1, 0, 0,
-                    // prettier-ignore
-                    0, 0, 0, 5, -2 
-                ]}
-            />
-        </Paint>
+        return (
+            <Paint>
+                <Blur blur={5} />
+                <ColorMatrix
+                    matrix={[
+                        // R, G, B, A, Bias
+                        // prettier-ignore
+                        1, 0, 0, 0, 0,
+                        // prettier-ignore
+                        0, 1, 0, 0, 0,
+                        // prettier-ignore
+                        0, 0, 1, 0, 0,
+                        // prettier-ignore
+                        0, 0, 0, 5, -2,
+                    ]}
+                />
+            </Paint>
+        );
     }, []);
 
     const font = useFont(
         require("../../assets/fonts/SpaceMono-Regular.ttf"),
-        20
+        20,
     );
     if (!font) {
         return null;
@@ -231,40 +264,45 @@ export function ConduitToggle({ size }: { size: number }) {
             <Canvas style={[ss.flex]}>
                 <Group transform={centeringTransform}>
                     <Group layer={morphLayer}>
-                    <Group>
-                        <Circle r={radius} color={palette.black}>
-                            <Shadow
-                                dx={dxA}
-                                dy={dxA}
-                                blur={animatedBlur}
-                                color={palette.purple}
-                                inner
-                            />
-                            <Shadow
-                                dx={dxB}
-                                dy={dxB}
-                                blur={animatedBlur}
-                                color={palette.blue}
-                                inner
-                            />
-                            <RadialGradient
-                                c={spinVec}
-                                r={growRadius}
-                                colors={buttonGradientColours}
-                            />
-                        </Circle>
-                        <Circle r={radius} style="stroke" strokeWidth={2} color={palette.blueTint4} />
-                    </Group>
-                    {inProxyPeersConnected > 0 && (
                         <Group>
+                            <Circle r={radius} color={palette.black}>
+                                <Shadow
+                                    dx={dxA}
+                                    dy={dxA}
+                                    blur={animatedBlur}
+                                    color={palette.purple}
+                                    inner
+                                />
+                                <Shadow
+                                    dx={dxB}
+                                    dy={dxB}
+                                    blur={animatedBlur}
+                                    color={palette.blue}
+                                    inner
+                                />
+                                <RadialGradient
+                                    c={spinVec}
+                                    r={growRadius}
+                                    colors={buttonGradientColours}
+                                />
+                            </Circle>
                             <Circle
-                                c={spinVec}
-                                r={radius / 10}
-                                color={palette.blue}
-                            ></Circle>
-                            <Blur blur={2} />
+                                r={radius}
+                                style="stroke"
+                                strokeWidth={2}
+                                color={palette.blueTint4}
+                            />
                         </Group>
-                    )}
+                        {inProxyPeersConnected > 0 && (
+                            <Group>
+                                <Circle
+                                    c={spinVec}
+                                    r={radius / 10}
+                                    color={palette.blue}
+                                ></Circle>
+                                <Blur blur={2} />
+                            </Group>
+                        )}
                     </Group>
                     <Group>
                         <Text
@@ -299,7 +337,7 @@ export function ConduitToggle({ size }: { size: number }) {
                     },
                 ]}
                 onPress={() => {
-                        toggleInProxy();
+                    toggleInProxy();
                 }}
             />
         </View>
