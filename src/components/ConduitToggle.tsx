@@ -76,7 +76,7 @@ export function ConduitToggle({ size }: { size: number }) {
         animatedBlur.value = withTiming(0, { duration: 2000 });
         growRadius.value = withTiming(radius, { duration: 500 });
         buttonColoursIndex.value = withRepeat(
-            // only animate through the first 4 colors
+            // only animate through the first 4 colors while announcing
             withTiming(3, {
                 duration: 2000,
             }),
@@ -144,54 +144,37 @@ export function ConduitToggle({ size }: { size: number }) {
         );
     });
 
-    // will use these 2 random values to randomize the Y values that the orbs
-    // take as they traverse the conduit orb.
-    const randomA = useSharedValue(1);
-    const randomB = useSharedValue(1);
+    // randomize the starting position of the light node every time it spawns
+    const random = useSharedValue(1);
     const startSign = useSharedValue(1);
-    const endSign = useSharedValue(1);
     const randomizerReady = useSharedValue(0);
-    const randomizeVelocity = useFrameCallback((frameInfo) => {
+    const randomizeVelocity = useFrameCallback((_) => {
         // pick new random values after each loop of the spinner
         if (spinner.value > 0.9 && randomizerReady.value === 1) {
-            randomA.value = Math.random();
-            randomB.value = Math.random();
+            random.value = Math.random();
             if (Math.random() > 0.5) {
                 startSign.value = 1;
-                endSign.value = 1;
             } else {
                 startSign.value = -1;
-                endSign.value = -1;
             }
             randomizerReady.value = 0;
-            console.log("randomized at end");
         }
         // reset the randomizer at the start of each loop
         if (spinner.value < 0.1 && randomizerReady.value === 0) {
-            randomA.value = Math.random();
-            randomB.value = Math.random();
-            if (Math.random() > 0.5) {
-                startSign.value = 1;
-                endSign.value = 1;
-            } else {
-                startSign.value = -1;
-                endSign.value = -1;
-            }
             randomizerReady.value = 1;
-            console.log("randomized at start");
         }
     });
-
-    const spinVec = useDerivedValue(() => {
+    // interpolate between semi-random vectors to give a unique flight path
+    const flightVec = useDerivedValue(() => {
         return interpolateVector(
             spinner.value,
             [-1, -0.6, 0, 0.6, 1],
             [
-                vec(-size, startSign.value * size * randomA.value),
-                vec(-radius, startSign.value * radius * randomA.value),
+                vec(-size, ((startSign.value * size) / 1.5) * random.value),
+                vec(-radius, startSign.value * radius * random.value),
                 vec(0, 0),
-                vec(radius, endSign.value * radius * randomB.value),
-                vec(size, endSign.value * size * randomB.value),
+                vec(radius, 0),
+                vec(size, 0),
             ],
         );
     });
@@ -281,7 +264,7 @@ export function ConduitToggle({ size }: { size: number }) {
                                     inner
                                 />
                                 <RadialGradient
-                                    c={spinVec}
+                                    c={flightVec}
                                     r={growRadius}
                                     colors={buttonGradientColours}
                                 />
@@ -296,7 +279,7 @@ export function ConduitToggle({ size }: { size: number }) {
                         {inProxyPeersConnected > 0 && (
                             <Group>
                                 <Circle
-                                    c={spinVec}
+                                    c={flightVec}
                                     r={radius / 10}
                                     color={palette.blue}
                                 ></Circle>
@@ -317,7 +300,7 @@ export function ConduitToggle({ size }: { size: number }) {
                     {inProxyPeersConnected > 0 && (
                         <Group>
                             <Circle
-                                c={spinVec}
+                                c={flightVec}
                                 r={radius / 10}
                                 color={palette.blue}
                             ></Circle>
