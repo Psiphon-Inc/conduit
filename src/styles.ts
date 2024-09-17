@@ -37,6 +37,7 @@ export const palette = {
     purpleShade5: "#09060a",
     white: "#ffffff",
     grey: "#342F2F",
+    transparent: "rgba(0,0,0,0)",
 };
 
 export const sharedStyles = StyleSheet.create({

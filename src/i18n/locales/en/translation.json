@@ -14,5 +14,17 @@
     "YOUR_ID_I18N": {
         "string": "Your Conduit ID:",
         "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    }, 
+    "ANNOUNCING_I18N": {
+        "string": "Announcing...",
+        "developer_comment": "Text displayed while the Conduit Station is announcing it's presence to the network"
+    }, 
+    "SERVING_N_PEERS_I18N": {
+        "string": "Serving {{ num }} Peers",
+        "developer_comment": "Indicates the number of peers currently connected to the user's Conduit Station"
+    },
+    "SHUTTING_DOWN_I18N": {
+        "string": "Shutting Down...",
+        "developer_comment": "Text displayed while the Conduit Station is shutting down"
     }
 }
