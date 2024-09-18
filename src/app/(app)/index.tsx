@@ -1,29 +1,25 @@
 import React from "react";
-import { View, useWindowDimensions } from "react-native";
+import { useWindowDimensions } from "react-native";
 
-import { ConduitToggle } from "@/src/components/ConduitToggle";
+import { ConduitHeader } from "@/src/components/ConduitHeader";
+import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
+import { ConduitStatus } from "@/src/components/ConduitStatus";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
-import { ConduitFlowerIcon } from "@/src/components/svgs/ConduitFlowerIcon";
-import { ConduitWordmark } from "@/src/components/svgs/ConduitWordmark";
-import { palette, sharedStyles as ss } from "@/src/styles";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();
 
     return (
         <SafeAreaView>
-            <View style={[ss.padded, ss.row, ss.alignCenter]}>
-                <ConduitFlowerIcon size={50} color={palette.white} />
-                <ConduitWordmark size={140} color={palette.white} />
-            </View>
-            <View
-                style={[ss.flex, ss.column, ss.justifyCenter, ss.alignCenter]}
-            >
-                <View style={[ss.flex, ss.alignCenter, ss.justifyCenter]}>
-                    <ConduitToggle size={win.width} />
-                </View>
-                <View style={[ss.flex]}></View>
-            </View>
+            {/* Header takes up 10% of vertical space */}
+            <ConduitHeader width={win.width} height={win.height * 0.1} />
+            {/* Orb takes up a square, full width */}
+            <ConduitOrbToggle size={win.width} />
+            {/* Status takes up the rest of the vertical space */}
+            <ConduitStatus
+                width={win.width}
+                height={win.height - win.width - 100}
+            />
         </SafeAreaView>
     );
 }

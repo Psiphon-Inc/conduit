@@ -26,5 +26,11 @@
     "SHUTTING_DOWN_I18N": {
         "string": "Shutting Down...",
         "developer_comment": "Text displayed while the Conduit Station is shutting down"
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "{{ niceBytes }} transferred"
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers }} connected peers"
     }
 }

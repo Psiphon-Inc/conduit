@@ -38,6 +38,8 @@ export const palette = {
     white: "#ffffff",
     grey: "#342F2F",
     transparent: "rgba(0,0,0,0)",
+    transparentBlue: "rgba(59,122,150,0.5)",
+    transparentPurple: "rgba(93,66,100,0.5)",
 };
 
 export const sharedStyles = StyleSheet.create({

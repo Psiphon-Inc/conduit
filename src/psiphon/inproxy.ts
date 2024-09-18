@@ -23,6 +23,22 @@ export const InProxyActivityStatsSchema = z.object({
     }),
 });
 
+export const zeroedInProxyActivityStats = InProxyActivityStatsSchema.parse({
+    elapsedTime: 0,
+    totalBytesUp: 0,
+    totalBytesDown: 0,
+    currentConnectingClients: 0,
+    currentConnectedClients: 0,
+    dataByPeriod: {
+        "1000ms": {
+            bytesUp: new Array(288).fill(0),
+            bytesDown: new Array(288).fill(0),
+            connectedClients: new Array(288).fill(0),
+            connectingClients: new Array(288).fill(0),
+        },
+    },
+});
+
 // These are the user-configurable parameters for the inproxy.
 export const InProxyParametersSchema = z.object({
     privateKey: Base64Unpadded64Bytes,
