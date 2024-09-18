@@ -12,12 +12,15 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
+import { useSharedValue, withTiming } from "react-native-reanimated";
 
 import { pathFromPoints } from "@/src/common/skia";
 import { niceBytes } from "@/src/common/utils";
-import { useInProxyContext } from "@/src/psiphon/mockContext";
+import {
+    useInProxyActivityContext,
+    useInProxyContext,
+} from "@/src/psiphon/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
-import { useSharedValue, withTiming } from "react-native-reanimated";
 
 export function ConduitStatus({
     width,
@@ -31,8 +34,8 @@ export function ConduitStatus({
         inProxyActivityBy1000ms,
         inProxyCurrentConnectedClients,
         inProxyTotalBytesTransferred,
-        isInProxyRunning,
-    } = useInProxyContext();
+    } = useInProxyActivityContext();
+    const { isInProxyRunning } = useInProxyContext();
 
     const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
         peers: inProxyCurrentConnectedClients,

@@ -39,7 +39,7 @@ export const palette = {
     grey: "#342F2F",
     transparent: "rgba(0,0,0,0)",
     transparentBlue: "rgba(59,122,150,0.5)",
-    transparentPurple: "rgba(93,66,100,0.5)",
+    transparentPurple: "rgba(93,66,100,0.4)",
 };
 
 export const sharedStyles = StyleSheet.create({
@@ -233,6 +233,9 @@ export const sharedStyles = StyleSheet.create({
     whiteText: {
         color: palette.white,
     },
+    greyText: {
+        color: palette.grey,
+    },
     blackText: {
         color: palette.black,
     },
@@ -242,6 +245,14 @@ export const sharedStyles = StyleSheet.create({
     whiteBorderLeft: {
         borderLeftWidth: 1,
         borderColor: palette.white,
+    },
+    whiteBorderBottom: {
+        borderBottomWidth: 1,
+        borderColor: palette.white,
+    },
+    greyBorderBottom: {
+        borderBottomWidth: 1,
+        borderColor: palette.grey,
     },
     blackBg: {
         backgroundColor: palette.black,
@@ -265,10 +276,8 @@ export const sharedStyles = StyleSheet.create({
         flex: 1,
         height: "50%",
         width: "100%",
-        backgroundColor: palette.grey,
-        borderTopRightRadius: 40,
-        borderTopLeftRadius: 40,
         position: "absolute",
+        backgroundColor: palette.black,
         padding: 20,
         bottom: 0,
     },
@@ -345,9 +354,16 @@ export const sharedStyles = StyleSheet.create({
         position: "absolute",
         left: 0,
         top: 0,
-        opacity: 0.5,
+        opacity: 0.7,
         height: "100%",
         width: "100%",
         backgroundColor: "black",
     },
 });
+
+export const lineItemStyle = [
+    sharedStyles.padded,
+    sharedStyles.row,
+    sharedStyles.height60,
+    sharedStyles.greyBorderBottom,
+];

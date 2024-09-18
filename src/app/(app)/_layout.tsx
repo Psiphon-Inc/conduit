@@ -3,7 +3,10 @@ import React from "react";
 
 import { AccountProvider } from "@/src/account/context";
 import { useAuthContext } from "@/src/auth/context";
-import { InProxyProvider } from "@/src/psiphon/mockContext";
+import {
+    InProxyActivityProvider,
+    InProxyProvider,
+} from "@/src/psiphon/mockContext";
 
 export default function AppLayout() {
     const { mnemonic, deviceNonce } = useAuthContext();
@@ -14,15 +17,17 @@ export default function AppLayout() {
     }
     return (
         <InProxyProvider>
-            <AccountProvider mnemonic={mnemonic} deviceNonce={deviceNonce}>
-                <Stack
-                    screenOptions={{
-                        headerShown: false,
-                    }}
-                >
-                    <Stack.Screen name="index" />
-                </Stack>
-            </AccountProvider>
+            <InProxyActivityProvider>
+                <AccountProvider mnemonic={mnemonic} deviceNonce={deviceNonce}>
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                        }}
+                    >
+                        <Stack.Screen name="index" />
+                    </Stack>
+                </AccountProvider>
+            </InProxyActivityProvider>
         </InProxyProvider>
     );
 }

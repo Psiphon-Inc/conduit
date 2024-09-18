@@ -27,13 +27,16 @@ import {
 } from "react-native-reanimated";
 
 //import { useInProxyContext } from "@/src/psiphon/context";
-import { useInProxyContext } from "@/src/psiphon/mockContext";
+import {
+    useInProxyActivityContext,
+    useInProxyContext,
+} from "@/src/psiphon/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitOrbToggle({ size }: { size: number }) {
     const { t } = useTranslation();
-    const { toggleInProxy, isInProxyRunning, inProxyCurrentConnectedClients } =
-        useInProxyContext();
+    const { toggleInProxy, isInProxyRunning } = useInProxyContext();
+    const { inProxyCurrentConnectedClients } = useInProxyActivityContext();
 
     const radius = size / 4;
     const centeringTransform = [
@@ -113,13 +116,11 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         if (isInProxyRunning()) {
             if (inProxyCurrentConnectedClients === 0) {
                 if (animationState !== "announcing") {
-                    console.log("enter announcing state");
                     animateAnnouncing();
                     setAnimationState("announcing");
                 }
             } else {
                 if (animationState !== "active") {
-                    console.log("enter peers connected state");
                     animatePeersConnected();
                     setAnimationState("active");
                 }
@@ -128,7 +129,6 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         } else {
             randomizeVelocity.setActive(false);
             if (animationState !== "idle") {
-                console.log("enter idle state");
                 animateTurnOff();
                 setAnimationState("idle");
             }

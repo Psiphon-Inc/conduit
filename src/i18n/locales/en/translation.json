@@ -12,7 +12,7 @@
         "developer_comment": "Indicates to the user that Conduit is off. The name 'Conduit' is the app name and should not be translated."
     },
     "YOUR_ID_I18N": {
-        "string": "Your Conduit ID:",
+        "string": "Your Conduit ID",
         "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
     },
     "ANNOUNCING_I18N": {
@@ -32,5 +32,35 @@
     },
     "CONNECTED_PEERS_I18N": {
         "string": "{{ peers }} connected peers"
+    },
+    "DONE_I18N": {
+        "string": "Done"
+    },
+    "CANCEL_I18N": {
+        "string": "Cancel"
+    },
+    "CONFIRM_I18N": {
+        "string": "Confirm"
+    },
+    "SAVE_I18N": {
+        "string": "Save"
+    },
+    "EDIT_SETTINGS_I18N": {
+        "string": "Edit Settings"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "Max Peers"
+    },
+    "MBPS_PER_PEER_I18N": {
+        "string": "MBps Per Peer"
+    },
+    "MAX_BANDWIDTH_USAGE_I18N": {
+        "string": "Max Bandwidth Usage"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "Send Diagnostic"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "Changing Conduit settings requires restarting your Conduit Station. Any connected users will be disconnected. Confirm changes?"
     }
 }

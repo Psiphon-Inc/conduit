@@ -2,8 +2,17 @@ import { edwardsToMontgomeryPub } from "@noble/curves/ed25519";
 import { base64nopad } from "@scure/base";
 import { z } from "zod";
 
-import { Ed25519KeyPair } from "@/src/common/cryptography";
+import {
+    Ed25519KeyPair,
+    generateEd25519KeyPair,
+    keyPairToBase64nopad,
+} from "@/src/common/cryptography";
+import { wrapError } from "@/src/common/errors";
 import { Base64Unpadded64Bytes } from "@/src/common/validators";
+import {
+    DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
+    DEFAULT_INPROXY_MAX_CLIENTS,
+} from "@/src/constants";
 
 export const InProxyActivityDataByPeriodSchema = z.object({
     bytesUp: z.array(z.number()).length(288),
@@ -21,22 +30,6 @@ export const InProxyActivityStatsSchema = z.object({
     dataByPeriod: z.object({
         "1000ms": InProxyActivityDataByPeriodSchema,
     }),
-});
-
-export const zeroedInProxyActivityStats = InProxyActivityStatsSchema.parse({
-    elapsedTime: 0,
-    totalBytesUp: 0,
-    totalBytesDown: 0,
-    currentConnectingClients: 0,
-    currentConnectedClients: 0,
-    dataByPeriod: {
-        "1000ms": {
-            bytesUp: new Array(288).fill(0),
-            bytesDown: new Array(288).fill(0),
-            connectedClients: new Array(288).fill(0),
-            connectingClients: new Array(288).fill(0),
-        },
-    },
 });
 
 // These are the user-configurable parameters for the inproxy.
@@ -58,6 +51,40 @@ export type InProxyActivityByPeriod = z.infer<
     typeof InProxyActivityDataByPeriodSchema
 >;
 export type InProxyError = z.infer<typeof InProxyErrorSchema>;
+
+export function getDefaultInProxyParameters(): InProxyParameters {
+    const ephemeralKey = generateEd25519KeyPair();
+    if (ephemeralKey instanceof Error) {
+        throw wrapError(
+            ephemeralKey,
+            "Failed to get default InProxyParameters",
+        );
+    }
+    return InProxyParametersSchema.parse({
+        privateKey: keyPairToBase64nopad(ephemeralKey),
+        maxClients: DEFAULT_INPROXY_MAX_CLIENTS,
+        limitUpstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
+        limitDownstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
+    });
+}
+
+export function getZeroedInProxyActivityStats(): InProxyActivityStats {
+    return InProxyActivityStatsSchema.parse({
+        elapsedTime: 0,
+        totalBytesUp: 0,
+        totalBytesDown: 0,
+        currentConnectingClients: 0,
+        currentConnectedClients: 0,
+        dataByPeriod: {
+            "1000ms": {
+                bytesUp: new Array(288).fill(0),
+                bytesDown: new Array(288).fill(0),
+                connectedClients: new Array(288).fill(0),
+                connectingClients: new Array(288).fill(0),
+            },
+        },
+    });
+}
 
 /** This is used to derive the conduit key pair from the mnemonic. The chosen
  *  path is not that important, but each device should have it's own unique
