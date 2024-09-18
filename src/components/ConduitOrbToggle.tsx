@@ -26,14 +26,15 @@ import {
     withTiming,
 } from "react-native-reanimated";
 
+//import { useInProxyContext } from "@/src/psiphon/context";
+import { useInProxyContext } from "@/src/psiphon/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
-export function ConduitToggle({ size }: { size: number }) {
+export function ConduitOrbToggle({ size }: { size: number }) {
     const { t } = useTranslation();
+    const { toggleInProxy, isInProxyRunning, inProxyCurrentConnectedClients } =
+        useInProxyContext();
 
-    // The button is placed into a square Canvas that is 1/2.5 x the size, so that
-    // there is room for the orbiting elements. Therefore, our transform needs
-    // to center at 3/2 radius.
     const radius = size / 4;
     const centeringTransform = [
         {
@@ -43,8 +44,6 @@ export function ConduitToggle({ size }: { size: number }) {
             translateX: size / 2,
         },
     ];
-    const [inProxyOn, setInProxyOn] = React.useState(false);
-    const [inProxyPeersConnected, setInProxyPeersConnected] = React.useState(0);
     const buttonText = t("TURN_ON_I18N.string");
 
     const dxA = useSharedValue(10);
@@ -84,6 +83,7 @@ export function ConduitToggle({ size }: { size: number }) {
             true,
         );
         buttonTextColourIndex.value = withTiming(1, { duration: 500 });
+        spinner.value = withTiming(0, { duration: 500 });
     }
 
     function animatePeersConnected() {
@@ -104,22 +104,36 @@ export function ConduitToggle({ size }: { size: number }) {
         growRadius.value = withTiming(0, { duration: 2000 });
         buttonColoursIndex.value = withTiming(0, { duration: 500 });
         buttonTextColourIndex.value = withTiming(0, { duration: 500 });
-        spinner.value = withTiming(0, { duration: 500 });
+        spinner.value = withTiming(-1, { duration: 500 });
     }
 
+    const [animationState, setAnimationState] = React.useState("idle");
+
     React.useEffect(() => {
-        if (inProxyOn) {
-            if (inProxyPeersConnected === 0) {
-                animateAnnouncing();
+        if (isInProxyRunning()) {
+            if (inProxyCurrentConnectedClients === 0) {
+                if (animationState !== "announcing") {
+                    console.log("enter announcing state");
+                    animateAnnouncing();
+                    setAnimationState("announcing");
+                }
             } else {
-                animatePeersConnected();
+                if (animationState !== "active") {
+                    console.log("enter peers connected state");
+                    animatePeersConnected();
+                    setAnimationState("active");
+                }
                 randomizeVelocity.setActive(true);
             }
         } else {
-            animateTurnOff();
             randomizeVelocity.setActive(false);
+            if (animationState !== "idle") {
+                console.log("enter idle state");
+                animateTurnOff();
+                setAnimationState("idle");
+            }
         }
-    }, [inProxyOn, inProxyPeersConnected]);
+    }, [isInProxyRunning, inProxyCurrentConnectedClients]);
 
     const buttonGradientColours = useDerivedValue(() => {
         return [
@@ -178,32 +192,6 @@ export function ConduitToggle({ size }: { size: number }) {
             ],
         );
     });
-
-    // START TODO: Placeholder
-    const mockPeersRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-        null,
-    );
-    const toggleInProxy = () => {
-        console.log("toggle in proxy");
-        if (inProxyPeersConnected !== 0) {
-            setInProxyPeersConnected(0);
-        }
-        if (!inProxyOn) {
-            setInProxyOn(true);
-            if (!mockPeersRef.current) {
-                mockPeersRef.current = setTimeout(() => {
-                    setInProxyPeersConnected(5);
-                }, 5000);
-            }
-        } else {
-            setInProxyOn(false);
-            if (mockPeersRef.current) {
-                clearTimeout(mockPeersRef.current);
-                mockPeersRef.current = null;
-            }
-        }
-    };
-    // END TODO: Placeholder
 
     // Inspired by the "Metaball Animation" tutorial in react-native-skia docs
     const morphLayer = React.useMemo(() => {
@@ -276,7 +264,7 @@ export function ConduitToggle({ size }: { size: number }) {
                                 color={palette.blueTint4}
                             />
                         </Group>
-                        {inProxyPeersConnected > 0 && (
+                        {inProxyCurrentConnectedClients > 0 && (
                             <Group>
                                 <Circle
                                     c={flightVec}
@@ -297,7 +285,7 @@ export function ConduitToggle({ size }: { size: number }) {
                             <ColorShader color={buttonTextColour} />
                         </Text>
                     </Group>
-                    {inProxyPeersConnected > 0 && (
+                    {inProxyCurrentConnectedClients > 0 && (
                         <Group>
                             <Circle
                                 c={flightVec}

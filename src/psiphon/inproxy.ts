@@ -32,11 +32,16 @@ export const InProxyParametersSchema = z.object({
     // personalCompartmentIds: z.array(z.string()), // eventually...
 });
 
+export const InProxyErrorSchema = z.object({
+    action: z.enum(["inProxyMustUpgrade"]),
+});
+
 export type InProxyParameters = z.infer<typeof InProxyParametersSchema>;
 export type InProxyActivityStats = z.infer<typeof InProxyActivityStatsSchema>;
 export type InProxyActivityByPeriod = z.infer<
     typeof InProxyActivityDataByPeriodSchema
 >;
+export type InProxyError = z.infer<typeof InProxyErrorSchema>;
 
 /** This is used to derive the conduit key pair from the mnemonic. The chosen
  *  path is not that important, but each device should have it's own unique
