@@ -18,7 +18,7 @@ export function ConduitFlowerIcon({
     size?: number;
     color?: string;
 }) {
-    const conduitWordMarkSvg = useSVG(
+    const conduitFlowerSvg = useSVG(
         require("@/assets/images/conduit-flower-icon.svg"),
     );
 
@@ -37,7 +37,7 @@ export function ConduitFlowerIcon({
             <Canvas style={[ss.flex]}>
                 <Group layer={paint}>
                     <ImageSVG
-                        svg={conduitWordMarkSvg}
+                        svg={conduitFlowerSvg}
                         width={size}
                         height={size}
                     />

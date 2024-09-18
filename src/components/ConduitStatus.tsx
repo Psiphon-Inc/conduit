@@ -38,10 +38,7 @@ export function ConduitStatus({
         niceBytes: niceBytes(inProxyTotalBytesTransferred),
     });
 
-    const font = useFont(
-        require("../../assets/fonts/SpaceMono-Regular.ttf"),
-        20,
-    );
+    const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
     if (!font) {
         return null;
     }

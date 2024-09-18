@@ -215,10 +215,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         );
     }, []);
 
-    const font = useFont(
-        require("../../assets/fonts/SpaceMono-Regular.ttf"),
-        20,
-    );
+    const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
     if (!font) {
         return null;
     }
