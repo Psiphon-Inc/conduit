@@ -23,6 +23,22 @@ export const InProxyActivityStatsSchema = z.object({
     }),
 });
 
+export const zeroedInProxyActivityStats = InProxyActivityStatsSchema.parse({
+    elapsedTime: 0,
+    totalBytesUp: 0,
+    totalBytesDown: 0,
+    currentConnectingClients: 0,
+    currentConnectedClients: 0,
+    dataByPeriod: {
+        "1000ms": {
+            bytesUp: new Array(288).fill(0),
+            bytesDown: new Array(288).fill(0),
+            connectedClients: new Array(288).fill(0),
+            connectingClients: new Array(288).fill(0),
+        },
+    },
+});
+
 // These are the user-configurable parameters for the inproxy.
 export const InProxyParametersSchema = z.object({
     privateKey: Base64Unpadded64Bytes,
@@ -32,11 +48,16 @@ export const InProxyParametersSchema = z.object({
     // personalCompartmentIds: z.array(z.string()), // eventually...
 });
 
+export const InProxyErrorSchema = z.object({
+    action: z.enum(["inProxyMustUpgrade"]),
+});
+
 export type InProxyParameters = z.infer<typeof InProxyParametersSchema>;
 export type InProxyActivityStats = z.infer<typeof InProxyActivityStatsSchema>;
 export type InProxyActivityByPeriod = z.infer<
     typeof InProxyActivityDataByPeriodSchema
 >;
+export type InProxyError = z.infer<typeof InProxyErrorSchema>;
 
 /** This is used to derive the conduit key pair from the mnemonic. The chosen
  *  path is not that important, but each device should have it's own unique

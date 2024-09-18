@@ -12,11 +12,12 @@ import {
     DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
 // TODO: pending new psiphon module
-//import { usePsiphonVpnContext } from "@/src/psiphon/context";
+//import { useInProxyContext } from "@/src/psiphon/context";
 import {
     InProxyParametersSchema,
     formatConduitBip32Path,
 } from "@/src/psiphon/inproxy";
+import { useInProxyContext } from "@/src/psiphon/mockContext";
 
 export interface AccountContextValue {
     rootKeyPair: Ed25519KeyPair;
@@ -72,7 +73,7 @@ export function AccountProvider({
     }, [mnemonic]);
 
     // TODO: pending new psiphon module
-    //const { selectInProxyParameters } = usePsiphonVpnContext();
+    const { selectInProxyParameters } = useInProxyContext();
 
     // We store the user-controllable InProxy settings in AsyncStorage, so that
     // they can be persisted at the application layer instead of only at the VPN
@@ -107,7 +108,7 @@ export function AccountProvider({
             // also updates the context's state value for the inproxy
             // parameters, so an explicit call to sync them is not needed.
             // TODO: pending new psiphon module
-            //await selectInProxyParameters(storedInProxyParameters);
+            await selectInProxyParameters(storedInProxyParameters);
 
             // Write the defaults to AsyncStorage if they aren't there
             if (!storedInProxyMaxClients) {

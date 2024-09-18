@@ -21,7 +21,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
     const [loaded] = useFonts({
-        SpaceMono: require("../../assets/fonts/SpaceMono-Regular.ttf"),
+        SpaceMono: require("@/assets/fonts/SpaceMono-Regular.ttf"),
     });
 
     useEffect(() => {
@@ -30,31 +30,29 @@ export default function RootLayout() {
         }
     }, [loaded]);
 
-    if (!loaded) {
-        return null;
-    }
-
     const queryClient = new QueryClient();
 
     return (
         <ThemeProvider value={DarkTheme}>
-            <QueryClientProvider client={queryClient}>
-                <NotificationsProvider>
-                    <AuthProvider>
-                        <Stack
-                            screenOptions={{
-                                headerShown: false,
-                                animation: "fade",
-                            }}
-                        >
-                            <Stack.Screen
-                                name="(app)"
-                                options={{ headerShown: false }}
-                            />
-                        </Stack>
-                    </AuthProvider>
-                </NotificationsProvider>
-            </QueryClientProvider>
+            {!loaded ? null : (
+                <QueryClientProvider client={queryClient}>
+                    <NotificationsProvider>
+                        <AuthProvider>
+                            <Stack
+                                screenOptions={{
+                                    headerShown: false,
+                                    animation: "fade",
+                                }}
+                            >
+                                <Stack.Screen
+                                    name="(app)"
+                                    options={{ headerShown: false }}
+                                />
+                            </Stack>
+                        </AuthProvider>
+                    </NotificationsProvider>
+                </QueryClientProvider>
+            )}
         </ThemeProvider>
     );
 }
