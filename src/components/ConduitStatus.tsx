@@ -9,13 +9,15 @@ import {
     useFont,
     vec,
 } from "@shopify/react-native-skia";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
+import { pathFromPoints } from "@/src/common/skia";
 import { niceBytes } from "@/src/common/utils";
 import { useInProxyContext } from "@/src/psiphon/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
-import { pathFromPoints } from "../common/skia";
+import { useSharedValue, withTiming } from "react-native-reanimated";
 
 export function ConduitStatus({
     width,
@@ -29,6 +31,7 @@ export function ConduitStatus({
         inProxyActivityBy1000ms,
         inProxyCurrentConnectedClients,
         inProxyTotalBytesTransferred,
+        isInProxyRunning,
     } = useInProxyContext();
 
     const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
@@ -37,6 +40,26 @@ export function ConduitStatus({
     const totalBytesTransferredText = t("TOTAL_BYTES_TRANSFERRED_I18N.string", {
         niceBytes: niceBytes(inProxyTotalBytesTransferred),
     });
+
+    // will fade in text when conduit is running
+    const fader = useSharedValue(0);
+    const [shouldAnimateIn, setShouldAnimateIn] = React.useState(true);
+    const [shouldAnimateOut, setShouldAnimateOut] = React.useState(true);
+    React.useEffect(() => {
+        if (isInProxyRunning()) {
+            if (shouldAnimateIn) {
+                fader.value = withTiming(1, { duration: 1000 });
+                setShouldAnimateIn(false);
+                setShouldAnimateOut(true);
+            }
+        } else {
+            if (shouldAnimateOut) {
+                fader.value = withTiming(0, { duration: 1000 });
+                setShouldAnimateIn(true);
+                setShouldAnimateOut(false);
+            }
+        }
+    }, [isInProxyRunning]);
 
     const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
     if (!font) {
@@ -87,7 +110,7 @@ export function ConduitStatus({
                         colors={[palette.black, palette.purpleShade2]}
                     />
                 </Rect>
-                <Group>
+                <Group opacity={fader}>
                     <Text
                         x={width * 0.05}
                         y={connectedPeersTextOffsetY}
