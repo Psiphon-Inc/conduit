@@ -6,6 +6,7 @@ import {
     InProxyActivityStats,
     InProxyParameters,
     InProxyStatus,
+    InProxyStatusSchema,
     getDefaultInProxyParameters,
     getZeroedInProxyActivityStats,
 } from "@/src/psiphon/inproxy";
@@ -252,13 +253,17 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     const getInProxyStatus = React.useCallback(() => {
+        let state;
         if (!inProxyState.synced) {
-            return { status: "unknown" };
+            state = { status: "unknown" };
         } else {
-            return inProxyState.running
-                ? { status: "running" }
-                : { status: "stopped" };
+            if (inProxyState.running) {
+                state = { status: "running" };
+            } else {
+                state = { status: "stopped" };
+            }
         }
+        return InProxyStatusSchema.parse(state);
     }, [inProxyState]);
 
     async function sendFeedback(): Promise<void> {

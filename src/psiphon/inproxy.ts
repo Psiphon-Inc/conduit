@@ -45,7 +45,7 @@ export const InProxyErrorSchema = z.object({
     action: z.enum(["inProxyMustUpgrade"]),
 });
 
-const InProxyStatusSchema = z.object({
+export const InProxyStatusSchema = z.object({
     status: z.enum(["running", "stopped", "unknown"]),
 });
 
