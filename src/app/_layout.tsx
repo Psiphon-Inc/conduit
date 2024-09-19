@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
@@ -27,6 +28,9 @@ export default function RootLayout() {
             SplashScreen.hideAsync();
         }
     }, [loaded]);
+    useEffect(() => {
+        SystemUI.setBackgroundColorAsync(palette.black).then(() => {});
+    }, []);
 
     const queryClient = new QueryClient();
 
@@ -39,20 +43,9 @@ export default function RootLayout() {
                             <Stack
                                 screenOptions={{
                                     headerShown: false,
-                                    animation: "fade",
-                                    contentStyle: {
-                                        backgroundColor: palette.black,
-                                    },
                                 }}
                             >
-                                <Stack.Screen
-                                    name="(app)"
-                                    options={{
-                                        contentStyle: {
-                                            backgroundColor: palette.black,
-                                        },
-                                    }}
-                                />
+                                <Stack.Screen name="(app)" />
                             </Stack>
                         </AuthProvider>
                     </NotificationsProvider>

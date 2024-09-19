@@ -17,7 +17,7 @@ import {
 import { VideoView, useVideoPlayer } from "expo-video";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, View } from "react-native";
+import { Pressable, View, Text as RText } from "react-native";
 import {
     useDerivedValue,
     useFrameCallback,
@@ -127,12 +127,12 @@ export function ConduitOrbToggle({ size }: { size: number }) {
             }),
         );
         buttonTextColourIndex.value = withDelay(
-            3000,
+            delay,
             withTiming(0, { duration: 1000 }),
         );
     }
 
-    const [animationState, setAnimationState] = React.useState("idle");
+    const [animationState, setAnimationState] = React.useState("loading");
 
     // play in initial animation and video
     const [showVideo, setShowVideo] = React.useState(false);
@@ -168,7 +168,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
             }
         } else if (inProxyStatus === "stopped") {
             randomizeVelocity.setActive(false);
-            if (animationState !== "idle") {
+            if (!["idle", "loading"].includes(animationState)) {
                 animateTurnOff();
                 setAnimationState("idle");
             }

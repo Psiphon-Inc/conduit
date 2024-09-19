@@ -18,7 +18,7 @@ export function ConduitSettings() {
     const {
         inProxyParameters,
         selectInProxyParameters,
-        isInProxyRunning,
+        getInProxyStatus,
         sendFeedback,
     } = useInProxyContext();
 
@@ -90,7 +90,7 @@ export function ConduitSettings() {
             settingsChanged = true;
         }
         if (settingsChanged) {
-            if (isInProxyRunning()) {
+            if (getInProxyStatus().status === "running") {
                 setDisplayRestartConfirmation(true);
             } else {
                 await commitChanges();
@@ -304,7 +304,7 @@ export function ConduitSettings() {
                 >
                     <Ionicons
                         name="settings-outline"
-                        color={palette.redTint2}
+                        color={palette.redShade4}
                         size={40}
                     />
                 </Pressable>

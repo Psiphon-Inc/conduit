@@ -12,7 +12,7 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { useSharedValue, withTiming } from "react-native-reanimated";
+import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
 import { pathFromPoints } from "@/src/common/skia";
 import { niceBytes } from "@/src/common/utils";
@@ -43,6 +43,19 @@ export function ConduitStatus({
     const totalBytesTransferredText = t("TOTAL_BYTES_TRANSFERRED_I18N.string", {
         niceBytes: niceBytes(inProxyTotalBytesTransferred),
     });
+    
+    // fade in gradient on initial render
+    const fadeInGradient = useSharedValue(0);
+    React.useEffect(() => {
+        const inProxyStatus = getInProxyStatus();
+        if (inProxyStatus.status === "running") {
+            fadeInGradient.value = withTiming(1, { duration: 2000 });
+        } else if (inProxyStatus.status === "stopped") {
+            fadeInGradient.value = withDelay(2800, withTiming(1, { duration: 2000 }));
+        }
+        // implicitly do nothing on status unknown
+
+    }, [getInProxyStatus]);
 
     // will fade in text when conduit is running
     const fader = useSharedValue(0);
@@ -102,13 +115,15 @@ export function ConduitStatus({
         <View
             style={[
                 {
+                    position: "absolute",
+                    bottom: 0,
                     width: width,
                     height: height,
                 },
             ]}
         >
             <Canvas style={[ss.flex]}>
-                <Rect x={0} y={0} width={width} height={height}>
+                <Rect x={0} y={0} width={width} height={height} opacity={fadeInGradient}>
                     <LinearGradient
                         start={vec(width / 2, 0)}
                         end={vec(width / 2, height)}
