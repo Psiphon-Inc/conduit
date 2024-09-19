@@ -11,6 +11,7 @@ import {
 import React from "react";
 import { View } from "react-native";
 
+import { useInProxyContext } from "@/src/psiphon/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
 import {
     useDerivedValue,
@@ -18,7 +19,6 @@ import {
     withDelay,
     withTiming,
 } from "react-native-reanimated";
-import { useInProxyContext } from "@/src/psiphon/mockContext";
 
 export function ConduitFlowerIcon({
     size = 100,
@@ -29,12 +29,12 @@ export function ConduitFlowerIcon({
 }) {
     const { getInProxyStatus } = useInProxyContext();
     const conduitFlowerSvg = useSVG(
-        require("@/assets/images/conduit-flower-icon.svg")
+        require("@/assets/images/conduit-flower-icon.svg"),
     );
 
     const paint = React.useMemo(() => Skia.Paint(), []);
     paint.setColorFilter(
-        Skia.ColorFilter.MakeBlend(Skia.Color(color), BlendMode.SrcIn)
+        Skia.ColorFilter.MakeBlend(Skia.Color(color), BlendMode.SrcIn),
     );
 
     // fadeIn on first load
@@ -55,13 +55,29 @@ export function ConduitFlowerIcon({
         return [
             // R, G, B, A, Bias
             // prettier-ignore
-            1, 0, 0, 0, 0,
+            1,
+            0,
+            0,
+            0,
+            0,
             // prettier-ignore
-            0, 1, 0, 0, 0,
+            0,
+            1,
+            0,
+            0,
+            0,
             // prettier-ignore
-            0, 0, 1, 0, 0,
+            0,
+            0,
+            1,
+            0,
+            0,
             // prettier-ignore
-            0, 0, 0, fadeIn.value, 0,
+            0,
+            0,
+            0,
+            fadeIn.value,
+            0,
         ];
     });
 

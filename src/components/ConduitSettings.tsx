@@ -38,6 +38,13 @@ export function ConduitSettings() {
     // TODO: better way to make a copy?
     const [modifiedInProxyParameters, setModifiedInProxyParameters] =
         React.useState(JSON.parse(JSON.stringify(inProxyParameters)));
+    React.useEffect(() => {
+        // need to update modified in proxy params whenever they change, since
+        // we start from a default set
+        setModifiedInProxyParameters(
+            JSON.parse(JSON.stringify(inProxyParameters)),
+        );
+    }, [inProxyParameters]);
 
     async function updateInProxyMaxClients(newValue: number) {
         modifiedInProxyParameters.maxClients = newValue;

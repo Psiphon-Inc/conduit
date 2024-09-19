@@ -43,7 +43,7 @@ export function ConduitStatus({
     const totalBytesTransferredText = t("TOTAL_BYTES_TRANSFERRED_I18N.string", {
         niceBytes: niceBytes(inProxyTotalBytesTransferred),
     });
-    
+
     // fade in gradient on initial render
     const fadeInGradient = useSharedValue(0);
     React.useEffect(() => {
@@ -51,10 +51,12 @@ export function ConduitStatus({
         if (inProxyStatus.status === "running") {
             fadeInGradient.value = withTiming(1, { duration: 2000 });
         } else if (inProxyStatus.status === "stopped") {
-            fadeInGradient.value = withDelay(2800, withTiming(1, { duration: 2000 }));
+            fadeInGradient.value = withDelay(
+                2800,
+                withTiming(1, { duration: 2000 }),
+            );
         }
         // implicitly do nothing on status unknown
-
     }, [getInProxyStatus]);
 
     // will fade in text when conduit is running
@@ -123,7 +125,13 @@ export function ConduitStatus({
             ]}
         >
             <Canvas style={[ss.flex]}>
-                <Rect x={0} y={0} width={width} height={height} opacity={fadeInGradient}>
+                <Rect
+                    x={0}
+                    y={0}
+                    width={width}
+                    height={height}
+                    opacity={fadeInGradient}
+                >
                     <LinearGradient
                         start={vec(width / 2, 0)}
                         end={vec(width / 2, height)}

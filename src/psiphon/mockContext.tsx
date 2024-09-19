@@ -210,6 +210,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     React.useEffect(() => {
         async function init() {
             const running = await AsyncStorage.getItem("MockInProxyRunning");
+            console.log("check if inproxy running, stored value: ", running);
             if (running === "1") {
                 setInProxyState({
                     running: true,
@@ -228,16 +229,23 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     async function selectInProxyParameters(
         params: InProxyParameters,
     ): Promise<void> {
+        await AsyncStorage.setItem(
+            "InProxyMaxClients",
+            params.maxClients.toString(),
+        );
+        await AsyncStorage.setItem(
+            "InProxyLimitBytesPerSecond",
+            params.limitUpstreamBytesPerSecond.toString(),
+        );
         setInProxyParameters(params);
-
-        console.log("MOCK: InProxy parameters selected successfully");
+        console.log("MOCK: InProxy parameters selected successfully", params);
     }
 
     async function toggleInProxy(): Promise<void> {
         //await requestNotificationsPermissions();
         await AsyncStorage.setItem(
             "MockInProxyRunning",
-            inProxyState ? "0" : "1",
+            inProxyState.running ? "0" : "1",
         );
         setInProxyState({ running: !inProxyState.running, synced: true });
         console.log("MOCK: InProxyModule.toggleInProxy() invoked");

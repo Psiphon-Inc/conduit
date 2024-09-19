@@ -10,10 +10,15 @@ import {
 } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
-import { useDerivedValue, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import {
+    useDerivedValue,
+    useSharedValue,
+    withDelay,
+    withTiming,
+} from "react-native-reanimated";
 
-import { palette, sharedStyles as ss } from "@/src/styles";
 import { useInProxyContext } from "@/src/psiphon/mockContext";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitWordmark({
     size = 100,
@@ -54,16 +59,31 @@ export function ConduitWordmark({
         return [
             // R, G, B, A, Bias
             // prettier-ignore
-            1, 0, 0, 0, 0,
+            1,
+            0,
+            0,
+            0,
+            0,
             // prettier-ignore
-            0, 1, 0, 0, 0,
+            0,
+            1,
+            0,
+            0,
+            0,
             // prettier-ignore
-            0, 0, 1, 0, 0,
+            0,
+            0,
+            1,
+            0,
+            0,
             // prettier-ignore
-            0, 0, 0, fadeIn.value, 0,
+            0,
+            0,
+            0,
+            fadeIn.value,
+            0,
         ];
     });
-
 
     return (
         <View
@@ -81,11 +101,11 @@ export function ConduitWordmark({
                             </Paint>
                         }
                     >
-                    <ImageSVG
-                        svg={conduitWordMarkSvg}
-                        width={size}
-                        height={size * heightRatio}
-                    />
+                        <ImageSVG
+                            svg={conduitWordMarkSvg}
+                            width={size}
+                            height={size * heightRatio}
+                        />
                     </Group>
                 </Group>
             </Canvas>

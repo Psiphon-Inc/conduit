@@ -17,7 +17,7 @@ import {
 import { VideoView, useVideoPlayer } from "expo-video";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, View, Text as RText } from "react-native";
+import { Pressable, View } from "react-native";
 import {
     useDerivedValue,
     useFrameCallback,
