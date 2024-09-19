@@ -21,3 +21,8 @@ expo-env.d.ts
 
 # git hash version file
 src/git-hash.ts
+
+
+# tunnel core config files
+psiphon_config
+embedded_server_entries

@@ -144,6 +144,11 @@ android {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
         }
     }
+
+    // Enable AIDL generation for the Conduit module
+    buildFeatures {
+        aidl true
+    }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
@@ -165,8 +170,39 @@ android {
         }
     }
 }
+// Configure a flatDir repository to resolve Psiphon tunnel-core library
+repositories {
+    flatDir {
+        dirs "libs"
+    }
+}
 
 dependencies {
+    // start Conduit module dependencies
+    // Psiphon lib
+    implementation (name: 'ca.psiphon', ext: 'aar')
+
+    // Autovalue
+    compileOnly "com.google.auto.value:auto-value-annotations:1.10.4"
+    annotationProcessor "com.google.auto.value:auto-value:1.10.4"
+    annotationProcessor 'com.ryanharter.auto.value:auto-value-parcel:0.2.9'
+
+    // RxJava
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
+    implementation 'com.jakewharton.rxrelay2:rxrelay:2.1.1'
+
+    // Worker API
+    implementation 'androidx.work:work-runtime:2.9.1'
+    implementation 'androidx.work:work-rxjava2:2.9.1'
+
+    // Tests dependencies
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-inline:3.9.0'
+    testImplementation 'org.robolectric:robolectric:4.11.1'
+
+    // end Psiphon dependencies
+
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
