@@ -240,15 +240,12 @@ export function ConduitOrbToggle({ size }: { size: number }) {
             <Paint>
                 <Blur blur={5} />
                 <ColorMatrix
+                    // prettier-ignore
                     matrix={[
                         // R, G, B, A, Bias
-                        // prettier-ignore
                         1, 0, 0, 0, 0,
-                        // prettier-ignore
                         0, 1, 0, 0, 0,
-                        // prettier-ignore
                         0, 0, 1, 0, 0,
-                        // prettier-ignore
                         0, 0, 0, 5, -2,
                     ]}
                 />
