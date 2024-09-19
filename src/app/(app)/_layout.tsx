@@ -7,6 +7,7 @@ import {
     InProxyActivityProvider,
     InProxyProvider,
 } from "@/src/psiphon/mockContext";
+import { palette } from "@/src/styles";
 
 export default function AppLayout() {
     const { mnemonic, deviceNonce } = useAuthContext();
@@ -22,9 +23,20 @@ export default function AppLayout() {
                     <Stack
                         screenOptions={{
                             headerShown: false,
+                            animation: "fade",
+                            contentStyle: {
+                                backgroundColor: palette.black,
+                            },
                         }}
                     >
-                        <Stack.Screen name="index" />
+                        <Stack.Screen
+                            name="index"
+                            options={{
+                                contentStyle: {
+                                    backgroundColor: palette.black,
+                                },
+                            }}
+                        />
                     </Stack>
                 </AccountProvider>
             </InProxyActivityProvider>

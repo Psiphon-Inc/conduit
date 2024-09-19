@@ -24,7 +24,8 @@
       "package": "ca.psiphon.conduit"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

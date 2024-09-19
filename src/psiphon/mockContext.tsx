@@ -1,12 +1,15 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 
 import {
     InProxyActivityByPeriod,
     InProxyActivityStats,
     InProxyParameters,
+    InProxyStatus,
     getDefaultInProxyParameters,
     getZeroedInProxyActivityStats,
 } from "@/src/psiphon/inproxy";
+import { z } from "zod";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function* generateMockData(
@@ -90,7 +93,7 @@ export function InProxyActivityProvider({
     const [inProxyTotalBytesTransferred, setInProxyTotalBytesTransferred] =
         React.useState<number>(0);
 
-    const { inProxyParameters, isInProxyRunning } = useInProxyContext();
+    const { inProxyParameters, getInProxyStatus } = useInProxyContext();
 
     function handleInProxyActivityStats(
         inProxyActivityStats: InProxyActivityStats,
@@ -132,12 +135,12 @@ export function InProxyActivityProvider({
             }
         }
 
-        if (isInProxyRunning()) {
+        if (getInProxyStatus().status === "running") {
             runMock();
         } else {
             stopMock();
         }
-    }, [inProxyParameters, isInProxyRunning]);
+    }, [inProxyParameters, getInProxyStatus]);
 
     const value = {
         inProxyActivityBy1000ms,
@@ -156,7 +159,7 @@ export interface InProxyContextValue {
     inProxyMustUpgrade: boolean;
     toggleInProxy: () => Promise<void>;
     selectInProxyParameters: (params: InProxyParameters) => Promise<void>;
-    isInProxyRunning: () => boolean;
+    getInProxyStatus: () => InProxyStatus;
     sendFeedback: () => Promise<void>;
 }
 
@@ -175,8 +178,17 @@ export function useInProxyContext(): InProxyContextValue {
     return value;
 }
 
+const InProxyStateSchema = z.object({
+    running: z.boolean(),
+    synced: z.boolean(),
+});
+type InProxyState = z.infer<typeof InProxyStateSchema>;
+
 export function InProxyProvider({ children }: { children: React.ReactNode }) {
-    const [inProxyRunning, setInProxyRunning] = React.useState<boolean>(false);
+    const [inProxyState, setInProxyState] = React.useState<InProxyState>({
+        running: false,
+        synced: false,
+    });
     const [inProxyParameters, setInProxyParameters] =
         React.useState<InProxyParameters>(getDefaultInProxyParameters());
 
@@ -192,6 +204,26 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     //        setInProxyMustUpgrade(true);
     //    }
     //}
+    //
+
+    // simulate InProxy running in a background service using AsyncStorage
+    React.useEffect(() => {
+        async function init() {
+            const running = await AsyncStorage.getItem("MockInProxyRunning");
+            if (running === "1") {
+                setInProxyState({
+                    running: true,
+                    synced: true,
+                });
+            } else {
+                setInProxyState({
+                    running: false,
+                    synced: true,
+                });
+            }
+        }
+        init();
+    }, []);
 
     async function selectInProxyParameters(
         params: InProxyParameters,
@@ -203,13 +235,23 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
 
     async function toggleInProxy(): Promise<void> {
         //await requestNotificationsPermissions();
-        setInProxyRunning(!inProxyRunning);
+        await AsyncStorage.setItem(
+            "MockInProxyRunning",
+            inProxyState ? "0" : "1",
+        );
+        setInProxyState({ running: !inProxyState.running, synced: true });
         console.log("MOCK: InProxyModule.toggleInProxy() invoked");
     }
 
-    const isInProxyRunning = React.useCallback(() => {
-        return inProxyRunning;
-    }, [inProxyRunning]);
+    const getInProxyStatus = React.useCallback(() => {
+        if (!inProxyState.synced) {
+            return { status: "unknown" };
+        } else {
+            return inProxyState.running
+                ? { status: "running" }
+                : { status: "stopped" };
+        }
+    }, [inProxyState]);
 
     async function sendFeedback(): Promise<void> {
         console.log("MOCK: InProxyModule.sendFeedback() invoked");
@@ -220,7 +262,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         inProxyMustUpgrade,
         toggleInProxy,
         selectInProxyParameters,
-        isInProxyRunning,
+        getInProxyStatus,
         sendFeedback,
     };
 

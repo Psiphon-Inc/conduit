@@ -14,6 +14,7 @@ import {
     useFont,
     vec,
 } from "@shopify/react-native-skia";
+import { VideoView, useVideoPlayer } from "expo-video";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, View } from "react-native";
@@ -21,8 +22,10 @@ import {
     useDerivedValue,
     useFrameCallback,
     useSharedValue,
+    withDelay,
     withRepeat,
     withSequence,
+    withSpring,
     withTiming,
 } from "react-native-reanimated";
 
@@ -35,7 +38,7 @@ import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitOrbToggle({ size }: { size: number }) {
     const { t } = useTranslation();
-    const { toggleInProxy, isInProxyRunning } = useInProxyContext();
+    const { toggleInProxy, getInProxyStatus } = useInProxyContext();
     const { inProxyCurrentConnectedClients } = useInProxyActivityContext();
 
     const radius = size / 4;
@@ -68,9 +71,10 @@ export function ConduitOrbToggle({ size }: { size: number }) {
     ];
     const buttonColoursIndex = useSharedValue(0);
     const buttonTextColours = [palette.redTint3, palette.transparent];
-    const buttonTextColourIndex = useSharedValue(0);
+    const buttonTextColourIndex = useSharedValue(1);
     const growRadius = useSharedValue(0);
     const spinner = useSharedValue(0);
+    const explodeRadius = useSharedValue(0);
 
     function animateAnnouncing() {
         dxA.value = withTiming(0, { duration: 2000 });
@@ -110,10 +114,46 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         spinner.value = withTiming(-1, { duration: 500 });
     }
 
+    function animateIntro(delay: number) {
+        explodeRadius.value = withDelay(
+            delay,
+            withSpring(radius, {
+                mass: 1,
+                damping: 10,
+                stiffness: 100,
+                overshootClamping: false,
+                restDisplacementThreshold: 0.01,
+                restSpeedThreshold: 2,
+            }),
+        );
+        buttonTextColourIndex.value = withDelay(
+            3000,
+            withTiming(0, { duration: 1000 }),
+        );
+    }
+
     const [animationState, setAnimationState] = React.useState("idle");
 
+    // play in initial animation and video
+    const [showVideo, setShowVideo] = React.useState(false);
     React.useEffect(() => {
-        if (isInProxyRunning()) {
+        const inProxyStatus = getInProxyStatus().status;
+        if (inProxyStatus === "running") {
+            // Already Running: play intro animation without delay
+            setShowVideo(false);
+            animateIntro(0);
+        } else if (inProxyStatus === "stopped") {
+            // Stopped: play intro video and delay animation
+            setShowVideo(true);
+            animateIntro(2800);
+        }
+        // implicit do nothing if status is unknown
+    }, [getInProxyStatus]);
+
+    // set animation state based on InProxy state
+    React.useEffect(() => {
+        const inProxyStatus = getInProxyStatus().status;
+        if (inProxyStatus === "running") {
             if (inProxyCurrentConnectedClients === 0) {
                 if (animationState !== "announcing") {
                     animateAnnouncing();
@@ -126,14 +166,15 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 }
                 randomizeVelocity.setActive(true);
             }
-        } else {
+        } else if (inProxyStatus === "stopped") {
             randomizeVelocity.setActive(false);
             if (animationState !== "idle") {
                 animateTurnOff();
                 setAnimationState("idle");
             }
         }
-    }, [isInProxyRunning, inProxyCurrentConnectedClients]);
+        // implicit do nothing if status is unknown
+    }, [getInProxyStatus, inProxyCurrentConnectedClients]);
 
     const buttonGradientColours = useDerivedValue(() => {
         return [
@@ -215,6 +256,15 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         );
     }, []);
 
+    // setup opening video
+    const videoPlayer = useVideoPlayer(
+        require("@/assets/video/particle-swirl.mp4"),
+        (videoPlayer) => {
+            videoPlayer.loop = false;
+            videoPlayer.play();
+        },
+    );
+
     const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
     if (!font) {
         return null;
@@ -229,11 +279,24 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 height: size,
             }}
         >
+            {showVideo && (
+                <VideoView
+                    style={[
+                        ss.absolute,
+                        {
+                            width: size,
+                            height: size,
+                        },
+                    ]}
+                    player={videoPlayer}
+                    nativeControls={false}
+                />
+            )}
             <Canvas style={[ss.flex]}>
                 <Group transform={centeringTransform}>
                     <Group layer={morphLayer}>
                         <Group>
-                            <Circle r={radius} color={palette.black}>
+                            <Circle r={explodeRadius} color={palette.black}>
                                 <Shadow
                                     dx={dxA}
                                     dy={dxA}

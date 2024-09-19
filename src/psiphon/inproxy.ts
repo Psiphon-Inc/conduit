@@ -45,12 +45,17 @@ export const InProxyErrorSchema = z.object({
     action: z.enum(["inProxyMustUpgrade"]),
 });
 
+const InProxyStatusSchema = z.object({
+    status: z.enum(["running", "stopped", "unknown"]),
+});
+
 export type InProxyParameters = z.infer<typeof InProxyParametersSchema>;
 export type InProxyActivityStats = z.infer<typeof InProxyActivityStatsSchema>;
 export type InProxyActivityByPeriod = z.infer<
     typeof InProxyActivityDataByPeriodSchema
 >;
 export type InProxyError = z.infer<typeof InProxyErrorSchema>;
+export type InProxyStatus = z.infer<typeof InProxyStatusSchema>;
 
 export function getDefaultInProxyParameters(): InProxyParameters {
     const ephemeralKey = generateEd25519KeyPair();

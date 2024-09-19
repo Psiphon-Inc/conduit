@@ -35,7 +35,7 @@ export function ConduitStatus({
         inProxyCurrentConnectedClients,
         inProxyTotalBytesTransferred,
     } = useInProxyActivityContext();
-    const { isInProxyRunning } = useInProxyContext();
+    const { getInProxyStatus } = useInProxyContext();
 
     const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
         peers: inProxyCurrentConnectedClients,
@@ -49,20 +49,22 @@ export function ConduitStatus({
     const [shouldAnimateIn, setShouldAnimateIn] = React.useState(true);
     const [shouldAnimateOut, setShouldAnimateOut] = React.useState(true);
     React.useEffect(() => {
-        if (isInProxyRunning()) {
+        const inProxyStatus = getInProxyStatus().status;
+        if (inProxyStatus === "running") {
             if (shouldAnimateIn) {
                 fader.value = withTiming(1, { duration: 1000 });
                 setShouldAnimateIn(false);
                 setShouldAnimateOut(true);
             }
-        } else {
+        } else if (inProxyStatus === "stopped") {
             if (shouldAnimateOut) {
                 fader.value = withTiming(0, { duration: 1000 });
                 setShouldAnimateIn(true);
                 setShouldAnimateOut(false);
             }
         }
-    }, [isInProxyRunning]);
+        // implicit do nothing if inProxyStatus is "unknown"
+    }, [getInProxyStatus]);
 
     const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
     if (!font) {
