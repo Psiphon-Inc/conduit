@@ -145,7 +145,7 @@ export function ConduitStatus({
                         text={connectedPeersText}
                         font={font}
                     >
-                        <ColorShader color={palette.blue} />
+                        <ColorShader color={palette.purpleTint4} />
                     </Text>
                     <Text
                         x={width * 0.05}
@@ -153,7 +153,7 @@ export function ConduitStatus({
                         text={totalBytesTransferredText}
                         font={font}
                     >
-                        <ColorShader color={palette.blue} />
+                        <ColorShader color={palette.purpleTint4} />
                     </Text>
                     <Group
                         transform={[
