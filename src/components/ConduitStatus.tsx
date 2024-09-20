@@ -112,6 +112,8 @@ export function ConduitStatus({
         font.measureText(totalBytesTransferredText).height +
         connectedPeersTextOffsetY +
         padY;
+    const bytesTransferredGraphOffsetY =
+        totalBytesTransferredTextOffsetY + padY;
 
     return (
         <View
@@ -158,10 +160,10 @@ export function ConduitStatus({
                     <Group
                         transform={[
                             {
-                                translateY: height * 0.9 + 4,
+                                translateY: bytesTransferredGraphOffsetY,
                             },
                             {
-                                translateX: (width - 288) / 2,
+                                translateX: width * 0.05,
                             },
                         ]}
                     >
@@ -169,15 +171,11 @@ export function ConduitStatus({
                             path={bytesReceivedPath}
                             color={palette.transparentBlue}
                             style="fill"
-                            strokeWidth={2}
-                            strokeJoin={"round"}
                         />
                         <Path
                             path={bytesSentPath}
                             color={palette.transparentPurple}
                             style="fill"
-                            strokeWidth={2}
-                            strokeJoin={"round"}
                         />
                     </Group>
                 </Group>
