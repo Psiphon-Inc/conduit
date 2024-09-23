@@ -19,7 +19,7 @@ import { niceBytes } from "@/src/common/utils";
 import {
     useInProxyActivityContext,
     useInProxyContext,
-} from "@/src/psiphon/mockContext";
+} from "@/src/inproxy/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitStatus({
@@ -48,9 +48,9 @@ export function ConduitStatus({
     const fadeInGradient = useSharedValue(0);
     React.useEffect(() => {
         const inProxyStatus = getInProxyStatus();
-        if (inProxyStatus.status === "running") {
+        if (inProxyStatus === "RUNNING") {
             fadeInGradient.value = withTiming(1, { duration: 2000 });
-        } else if (inProxyStatus.status === "stopped") {
+        } else if (inProxyStatus === "STOPPED") {
             fadeInGradient.value = withDelay(
                 2800,
                 withTiming(1, { duration: 2000 }),
@@ -64,14 +64,14 @@ export function ConduitStatus({
     const [shouldAnimateIn, setShouldAnimateIn] = React.useState(true);
     const [shouldAnimateOut, setShouldAnimateOut] = React.useState(true);
     React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus().status;
-        if (inProxyStatus === "running") {
+        const inProxyStatus = getInProxyStatus();
+        if (inProxyStatus === "RUNNING") {
             if (shouldAnimateIn) {
                 fader.value = withTiming(1, { duration: 1000 });
                 setShouldAnimateIn(false);
                 setShouldAnimateOut(true);
             }
-        } else if (inProxyStatus === "stopped") {
+        } else if (inProxyStatus === "STOPPED") {
             if (shouldAnimateOut) {
                 fader.value = withTiming(0, { duration: 1000 });
                 setShouldAnimateIn(true);

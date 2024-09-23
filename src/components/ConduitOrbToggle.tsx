@@ -33,7 +33,7 @@ import {
 import {
     useInProxyActivityContext,
     useInProxyContext,
-} from "@/src/psiphon/mockContext";
+} from "@/src/inproxy/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitOrbToggle({ size }: { size: number }) {
@@ -137,12 +137,12 @@ export function ConduitOrbToggle({ size }: { size: number }) {
     // play in initial animation and video
     const [showVideo, setShowVideo] = React.useState(false);
     React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus().status;
-        if (inProxyStatus === "running") {
+        const inProxyStatus = getInProxyStatus();
+        if (inProxyStatus === "RUNNING") {
             // Already Running: play intro animation without delay
             setShowVideo(false);
             animateIntro(0);
-        } else if (inProxyStatus === "stopped") {
+        } else if (inProxyStatus === "STOPPED") {
             // Stopped: play intro video and delay animation
             setShowVideo(true);
             animateIntro(2800);
@@ -152,8 +152,8 @@ export function ConduitOrbToggle({ size }: { size: number }) {
 
     // set animation state based on InProxy state
     React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus().status;
-        if (inProxyStatus === "running") {
+        const inProxyStatus = getInProxyStatus();
+        if (inProxyStatus === "RUNNING") {
             if (inProxyCurrentConnectedClients === 0) {
                 if (animationState !== "announcing") {
                     animateAnnouncing();
@@ -166,7 +166,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 }
                 randomizeVelocity.setActive(true);
             }
-        } else if (inProxyStatus === "stopped") {
+        } else if (inProxyStatus === "STOPPED") {
             randomizeVelocity.setActive(false);
             if (!["idle", "loading"].includes(animationState)) {
                 animateTurnOff();

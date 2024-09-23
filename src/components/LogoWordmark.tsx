@@ -21,7 +21,7 @@ import {
 
 // @ts-ignore (this file is gitignored)
 import { GIT_HASH } from "@/src/git-hash";
-import { useInProxyContext } from "@/src/psiphon/mockContext";
+import { useInProxyContext } from "@/src/inproxy/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function LogoWordmark({
@@ -43,10 +43,10 @@ export function LogoWordmark({
     const fadeIn = useSharedValue(0);
     React.useEffect(() => {
         const inProxyStatus = getInProxyStatus();
-        if (inProxyStatus.status === "running") {
+        if (inProxyStatus === "RUNNING") {
             // fade in right away
             fadeIn.value = withTiming(1, { duration: 2000 });
-        } else if (inProxyStatus.status === "stopped") {
+        } else if (inProxyStatus === "STOPPED") {
             // fade in after a delay for particle animation
             fadeIn.value = withDelay(2800, withTiming(1, { duration: 2000 }));
         }

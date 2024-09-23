@@ -13,11 +13,9 @@ import {
 } from "@/src/constants";
 // TODO: pending new psiphon module
 //import { useInProxyContext } from "@/src/psiphon/context";
-import {
-    InProxyParametersSchema,
-    formatConduitBip32Path,
-} from "@/src/psiphon/inproxy";
-import { useInProxyContext } from "@/src/psiphon/mockContext";
+import { useInProxyContext } from "@/src/inproxy/mockContext";
+import { InProxyParametersSchema } from "@/src/inproxy/types";
+import { formatConduitBip32Path } from "@/src/inproxy/utils";
 
 export interface AccountContextValue {
     rootKeyPair: Ed25519KeyPair;

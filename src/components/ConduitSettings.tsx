@@ -25,8 +25,9 @@ import { handleError, wrapError } from "@/src/common/errors";
 import { MBToBytes, bytesToMB } from "@/src/common/utils";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
 import { ProxyID } from "@/src/components/ProxyID";
-import { InProxyParametersSchema, getProxyId } from "@/src/psiphon/inproxy";
-import { useInProxyContext } from "@/src/psiphon/mockContext";
+import { useInProxyContext } from "@/src/inproxy/mockContext";
+import { InProxyParametersSchema } from "@/src/inproxy/types";
+import { getProxyId } from "@/src/inproxy/utils";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 import {
     useDerivedValue,
@@ -121,7 +122,7 @@ export function ConduitSettings() {
             settingsChanged = true;
         }
         if (settingsChanged) {
-            if (getInProxyStatus().status === "running") {
+            if (getInProxyStatus() === "RUNNING") {
                 setDisplayRestartConfirmation(true);
             } else {
                 await commitChanges();
@@ -328,10 +329,10 @@ export function ConduitSettings() {
     const fadeIn = useSharedValue(0);
     React.useEffect(() => {
         const inProxyStatus = getInProxyStatus();
-        if (inProxyStatus.status === "running") {
+        if (inProxyStatus === "RUNNING") {
             // fade in right away
             fadeIn.value = withTiming(1, { duration: 2000 });
-        } else if (inProxyStatus.status === "stopped") {
+        } else if (inProxyStatus === "STOPPED") {
             // fade in after a delay for particle animation
             fadeIn.value = withDelay(2800, withTiming(1, { duration: 2000 }));
         }

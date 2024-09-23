@@ -6,7 +6,7 @@ import { useAuthContext } from "@/src/auth/context";
 import {
     InProxyActivityProvider,
     InProxyProvider,
-} from "@/src/psiphon/mockContext";
+} from "@/src/inproxy/mockContext";
 
 export default function AppLayout() {
     const { mnemonic, deviceNonce } = useAuthContext();
