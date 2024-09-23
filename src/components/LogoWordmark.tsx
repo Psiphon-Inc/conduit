@@ -19,6 +19,7 @@ import {
     withTiming,
 } from "react-native-reanimated";
 
+// @ts-ignore (this file is gitignored)
 import { GIT_HASH } from "@/src/git-hash";
 import { useInProxyContext } from "@/src/psiphon/mockContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
