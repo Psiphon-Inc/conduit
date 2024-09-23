@@ -1,6 +1,20 @@
 <resources>
-  <string name="app_name">conduit</string>
-  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
-  <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
-  <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
+    <string name="app_name">conduit</string>
+    <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+    <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+    <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
+    <!-- Label for the stop action in the Conduit service notification -->
+    <string name="conduit_service_stop_label_text">Stop</string>
+    <!-- Notification text for the Conduit service when it is active -->
+    <string name="conduit_service_running_notification_text">Conduit is active</string>
+    <!-- Notification text for the Conduit service when it is waiting for network connectivity -->
+    <string name="conduit_service_no_internet_notification_text">Waiting for network connectivity</string>
+    <!-- Notification channel description for the Conduit service -->
+    <string name="conduit_service_channel_description">Notification for the Conduit service</string>
+    <!-- Notification text for when the Conduit app detects an that the app must be updated to continue working -->
+    <string name="notification_conduit_inproxy_must_upgrade_text">Update required: Please download the latest version of the app to continue using it.</string>
+    <!-- Notification text for when the Conduit service fails to start -->
+    <string name="notification_conduit_failed_to_start_text">Conduit service failed to start. Tap the notification for more information</string>
+    <!-- Notification text for when the Conduit service fails to restart -->
+    <string name="notification_conduit_failed_to_restart_text">Conduit service failed to restart. Tap the notification for more information</string>
 </resources>

@@ -2,6 +2,7 @@ package ca.psiphon.conduit
 
 import android.app.Application
 import android.content.res.Configuration
+import ca.psiphon.conduit.nativemodule.ConduitPackage
 
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -21,9 +22,10 @@ class MainApplication : Application(), ReactApplication {
         this,
         object : DefaultReactNativeHost(this) {
           override fun getPackages(): List<ReactPackage> {
-            // Packages that cannot be autolinked yet can be added manually here, for example:
-            // packages.add(new MyReactNativePackage());
-            return PackageList(this).packages
+            // Add ConduitPackage to the list of packages, since it's not auto-linked.
+            val packages = PackageList(this).packages.toMutableList()
+            packages.add(ConduitPackage()) // Add this line
+            return packages
           }
 
           override fun getJSMainModuleName(): String = ".expo/.virtual-metro-entry"

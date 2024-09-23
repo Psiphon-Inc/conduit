@@ -4,6 +4,15 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <!-- Required for the Conduit service -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+  <!-- Declare use of custom permission for 'service starting' broadcast verification -->
+  <uses-permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION" />
+  <!-- Define custom permission for 'service starting' broadcast verification -->
+  <permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION" android:protectionLevel="signature" />
+  <!-- End Conduit service requirements -->
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -29,5 +38,23 @@
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>
+
+    <!-- TunnelIntentsProxy activity-alias for handling intents from the Conduit service securely -->
+    <activity-alias android:name=".TunnelIntentsProxy" android:targetActivity=".MainActivity"/>
+    <!-- Conduit service -->
+    <!-- TODO: consider using foregroundServiceType="specialUse"? -->
+    <service
+        android:name=".nativemodule.ConduitService"
+        android:exported="false"
+        android:foregroundServiceType= "dataSync"
+        android:label="@string/app_name"
+        android:process=":ConduitService" />
+
+    <!-- Conduit logging content provider -->
+    <provider
+        android:name=".nativemodule.logging.LoggingContentProvider"
+        android:authorities="${applicationId}.log"
+        android:exported="false"
+        android:process=":LoggingContentProvider" />
   </application>
 </manifest>
