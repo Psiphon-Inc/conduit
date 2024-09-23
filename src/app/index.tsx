@@ -37,7 +37,9 @@ export default function Index() {
     const conduitFlowerSvg = useSVG(
         require("@/assets/images/conduit-flower-icon.svg"),
     );
-    const testImage = useImage(require("@/assets/images/flower-no-bg.png"));
+    const conduitFlowerPng = useImage(
+        require("@/assets/images/flower-no-bg.png"),
+    );
 
     const canvasSize = 300;
     const cyclePalette = [
@@ -128,7 +130,7 @@ export default function Index() {
                                 height={flowerSize}
                             />
                             <Image
-                                image={testImage}
+                                image={conduitFlowerPng}
                                 width={flowerSize}
                                 height={flowerSize}
                             />

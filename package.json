@@ -5,7 +5,7 @@
   "scripts": {
     "android": "npm run  get-git-hash && expo run:android",
     "ios": "npm run  get-git-hash && expo run:ios",
-    "get-git-hash": "echo \"export const GIT_HASH = '$(git rev-parse --short HEAD)$(git status --porcelain | grep -q . && echo '-uncommitted')';\" > ./src/git-hash.ts",
+    "get-git-hash": "echo \"export const GIT_HASH = '$(git rev-parse --short HEAD)$(git status --porcelain | grep -q . && echo '?')';\" > ./src/git-hash.ts",
     "build-release": "npm run  get-git-hash && cd android && ./gradlew assembleRelease && cd ..",
     "test": "jest --verbose",
     "format": "prettier --write ./src",
@@ -46,6 +46,7 @@
     "expo-standard-web-crypto": "^1.8.1",
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
+    "expo-video": "^1.2.6",
     "i18next": "^23.15.1",
     "micro-key-producer": "^0.7.0",
     "react": "18.2.0",

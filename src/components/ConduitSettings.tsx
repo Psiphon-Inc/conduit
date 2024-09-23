@@ -1,7 +1,24 @@
-import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import {
+    BlendMode,
+    Canvas,
+    ColorMatrix,
+    Group,
+    ImageSVG,
+    Paint,
+    Skia,
+    useSVG,
+} from "@shopify/react-native-skia";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import {
+    Modal,
+    Pressable,
+    ScrollView,
+    Text,
+    View,
+    useWindowDimensions,
+} from "react-native";
 
 import { useAccountContext } from "@/src/account/context";
 import { handleError, wrapError } from "@/src/common/errors";
@@ -11,14 +28,21 @@ import { ProxyID } from "@/src/components/ProxyID";
 import { InProxyParametersSchema, getProxyId } from "@/src/psiphon/inproxy";
 import { useInProxyContext } from "@/src/psiphon/mockContext";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import {
+    useDerivedValue,
+    useSharedValue,
+    withDelay,
+    withTiming,
+} from "react-native-reanimated";
 
 export function ConduitSettings() {
     const { t } = useTranslation();
+    const win = useWindowDimensions();
     const { conduitKeyPair } = useAccountContext();
     const {
         inProxyParameters,
         selectInProxyParameters,
-        isInProxyRunning,
+        getInProxyStatus,
         sendFeedback,
     } = useInProxyContext();
 
@@ -38,6 +62,13 @@ export function ConduitSettings() {
     // TODO: better way to make a copy?
     const [modifiedInProxyParameters, setModifiedInProxyParameters] =
         React.useState(JSON.parse(JSON.stringify(inProxyParameters)));
+    React.useEffect(() => {
+        // need to update modified in proxy params whenever they change, since
+        // we start from a default set
+        setModifiedInProxyParameters(
+            JSON.parse(JSON.stringify(inProxyParameters)),
+        );
+    }, [inProxyParameters]);
 
     async function updateInProxyMaxClients(newValue: number) {
         modifiedInProxyParameters.maxClients = newValue;
@@ -90,7 +121,7 @@ export function ConduitSettings() {
             settingsChanged = true;
         }
         if (settingsChanged) {
-            if (isInProxyRunning()) {
+            if (getInProxyStatus().status === "running") {
                 setDisplayRestartConfirmation(true);
             } else {
                 await commitChanges();
@@ -293,21 +324,78 @@ export function ConduitSettings() {
         );
     }
 
+    // fadeIn on first load
+    const fadeIn = useSharedValue(0);
+    React.useEffect(() => {
+        const inProxyStatus = getInProxyStatus();
+        if (inProxyStatus.status === "running") {
+            // fade in right away
+            fadeIn.value = withTiming(1, { duration: 2000 });
+        } else if (inProxyStatus.status === "stopped") {
+            // fade in after a delay for particle animation
+            fadeIn.value = withDelay(2800, withTiming(1, { duration: 2000 }));
+        }
+        // implicit do nothing on status unknown
+    }, [getInProxyStatus]);
+
+    const settingsIconSvg = useSVG(require("@/assets/images/settings.svg"));
+    const settingsIconSize = win.width * 0.2;
+    const paint = React.useMemo(() => Skia.Paint(), []);
+    paint.setColorFilter(
+        Skia.ColorFilter.MakeBlend(
+            Skia.Color(palette.redTint2),
+            BlendMode.SrcIn,
+        ),
+    );
+    const opacityMatrix = useDerivedValue(() => {
+        // prettier-ignore
+        return [
+         // R, G, B, A, Bias
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, fadeIn.value, 0,
+        ];
+    });
+
     return (
         <>
-            <View style={[ss.absolute, { bottom: 0, right: 0 }]}>
+            <View
+                style={[
+                    ss.absolute,
+                    {
+                        bottom: 0,
+                        right: 0,
+                        width: settingsIconSize,
+                        height: settingsIconSize,
+                    },
+                ]}
+            >
+                <Canvas style={[ss.flex]}>
+                    <Group
+                        layer={
+                            <Paint>
+                                <ColorMatrix matrix={opacityMatrix} />
+                            </Paint>
+                        }
+                    >
+                        <Group layer={paint}>
+                            <ImageSVG
+                                svg={settingsIconSvg}
+                                width={settingsIconSize * 0.6}
+                                height={settingsIconSize * 0.6}
+                                y={settingsIconSize * 0.2}
+                                x={settingsIconSize * 0.2}
+                            />
+                        </Group>
+                    </Group>
+                </Canvas>
                 <Pressable
-                    style={[ss.padded]}
+                    style={[ss.absoluteFill]}
                     onPress={() => {
                         setModalOpen(true);
                     }}
-                >
-                    <Ionicons
-                        name="settings-outline"
-                        color={palette.redTint2}
-                        size={40}
-                    />
-                </Pressable>
+                />
             </View>
             {/* this empty modal fades in the opacity overlay */}
             <Modal animationType="fade" visible={modalOpen} transparent={true}>

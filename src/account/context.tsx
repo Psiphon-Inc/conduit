@@ -104,7 +104,7 @@ export function AccountProvider({
                     : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
             });
 
-            // sets the inproxy parameters in the psiphon module. This call
+            // sets the inproxy parameters in the psiphon context. This call
             // also updates the context's state value for the inproxy
             // parameters, so an explicit call to sync them is not needed.
             // TODO: pending new psiphon module

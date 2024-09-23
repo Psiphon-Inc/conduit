@@ -12,7 +12,7 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { useSharedValue, withTiming } from "react-native-reanimated";
+import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
 import { pathFromPoints } from "@/src/common/skia";
 import { niceBytes } from "@/src/common/utils";
@@ -35,7 +35,7 @@ export function ConduitStatus({
         inProxyCurrentConnectedClients,
         inProxyTotalBytesTransferred,
     } = useInProxyActivityContext();
-    const { isInProxyRunning } = useInProxyContext();
+    const { getInProxyStatus } = useInProxyContext();
 
     const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
         peers: inProxyCurrentConnectedClients,
@@ -44,25 +44,42 @@ export function ConduitStatus({
         niceBytes: niceBytes(inProxyTotalBytesTransferred),
     });
 
+    // fade in gradient on initial render
+    const fadeInGradient = useSharedValue(0);
+    React.useEffect(() => {
+        const inProxyStatus = getInProxyStatus();
+        if (inProxyStatus.status === "running") {
+            fadeInGradient.value = withTiming(1, { duration: 2000 });
+        } else if (inProxyStatus.status === "stopped") {
+            fadeInGradient.value = withDelay(
+                2800,
+                withTiming(1, { duration: 2000 }),
+            );
+        }
+        // implicitly do nothing on status unknown
+    }, [getInProxyStatus]);
+
     // will fade in text when conduit is running
     const fader = useSharedValue(0);
     const [shouldAnimateIn, setShouldAnimateIn] = React.useState(true);
     const [shouldAnimateOut, setShouldAnimateOut] = React.useState(true);
     React.useEffect(() => {
-        if (isInProxyRunning()) {
+        const inProxyStatus = getInProxyStatus().status;
+        if (inProxyStatus === "running") {
             if (shouldAnimateIn) {
                 fader.value = withTiming(1, { duration: 1000 });
                 setShouldAnimateIn(false);
                 setShouldAnimateOut(true);
             }
-        } else {
+        } else if (inProxyStatus === "stopped") {
             if (shouldAnimateOut) {
                 fader.value = withTiming(0, { duration: 1000 });
                 setShouldAnimateIn(true);
                 setShouldAnimateOut(false);
             }
         }
-    }, [isInProxyRunning]);
+        // implicit do nothing if inProxyStatus is "unknown"
+    }, [getInProxyStatus]);
 
     const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
     if (!font) {
@@ -95,18 +112,28 @@ export function ConduitStatus({
         font.measureText(totalBytesTransferredText).height +
         connectedPeersTextOffsetY +
         padY;
+    const bytesTransferredGraphOffsetY =
+        totalBytesTransferredTextOffsetY + padY;
 
     return (
         <View
             style={[
                 {
+                    position: "absolute",
+                    bottom: 0,
                     width: width,
                     height: height,
                 },
             ]}
         >
             <Canvas style={[ss.flex]}>
-                <Rect x={0} y={0} width={width} height={height}>
+                <Rect
+                    x={0}
+                    y={0}
+                    width={width}
+                    height={height}
+                    opacity={fadeInGradient}
+                >
                     <LinearGradient
                         start={vec(width / 2, 0)}
                         end={vec(width / 2, height)}
@@ -120,7 +147,7 @@ export function ConduitStatus({
                         text={connectedPeersText}
                         font={font}
                     >
-                        <ColorShader color={palette.blue} />
+                        <ColorShader color={palette.purpleTint4} />
                     </Text>
                     <Text
                         x={width * 0.05}
@@ -128,15 +155,15 @@ export function ConduitStatus({
                         text={totalBytesTransferredText}
                         font={font}
                     >
-                        <ColorShader color={palette.blue} />
+                        <ColorShader color={palette.purpleTint4} />
                     </Text>
                     <Group
                         transform={[
                             {
-                                translateY: height * 0.9 + 4,
+                                translateY: bytesTransferredGraphOffsetY,
                             },
                             {
-                                translateX: (width - 288) / 2,
+                                translateX: width * 0.05,
                             },
                         ]}
                     >
@@ -144,15 +171,11 @@ export function ConduitStatus({
                             path={bytesReceivedPath}
                             color={palette.transparentBlue}
                             style="fill"
-                            strokeWidth={2}
-                            strokeJoin={"round"}
                         />
                         <Path
                             path={bytesSentPath}
                             color={palette.transparentPurple}
                             style="fill"
-                            strokeWidth={2}
-                            strokeJoin={"round"}
                         />
                     </Group>
                 </Group>
