@@ -1,13 +1,20 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { z } from "zod";
 
+import { useAccountContext } from "@/src/account/context";
+import { keyPairToBase64nopad } from "@/src/common/cryptography";
+import { handleError, wrapError } from "@/src/common/errors";
 import {
-    InProxyActivityByPeriod,
+    DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
+    DEFAULT_INPROXY_MAX_CLIENTS,
+} from "@/src/constants";
+import {
     InProxyActivityStats,
+    InProxyContextValue,
     InProxyParameters,
-    InProxyStatusEnum,
-    InProxyStatusEnumSchema,
+    InProxyParametersSchema,
 } from "@/src/inproxy/types";
 import {
     getDefaultInProxyParameters,
@@ -62,113 +69,7 @@ async function* generateMockData(
     }
 }
 
-export interface InProxyActivityContextValue {
-    inProxyActivityBy1000ms: InProxyActivityByPeriod;
-    inProxyCurrentConnectedClients: number;
-    inProxyTotalBytesTransferred: number;
-}
-
-export const InProxyActivityContext =
-    React.createContext<InProxyActivityContextValue | null>(null);
-
-export function useInProxyActivityContext(): InProxyActivityContextValue {
-    const value = React.useContext(InProxyActivityContext);
-    if (!value) {
-        throw new Error(
-            "useInProxyActivityContext must be used within a InProxyActivityProvider",
-        );
-    }
-
-    return value;
-}
-
-export function InProxyActivityProvider({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    const [inProxyActivityBy1000ms, setInProxyActivityBy1000ms] =
-        React.useState<InProxyActivityByPeriod>(
-            getZeroedInProxyActivityStats().dataByPeriod["1000ms"],
-        );
-    const [inProxyCurrentConnectedClients, setInProxyCurrentConnectedClients] =
-        React.useState<number>(0);
-    const [inProxyTotalBytesTransferred, setInProxyTotalBytesTransferred] =
-        React.useState<number>(0);
-
-    const { inProxyParameters, getInProxyStatus } = useInProxyContext();
-
-    function handleInProxyActivityStats(
-        inProxyActivityStats: InProxyActivityStats,
-    ): void {
-        setInProxyCurrentConnectedClients(
-            inProxyActivityStats.currentConnectedClients,
-        );
-        setInProxyTotalBytesTransferred(
-            inProxyActivityStats.totalBytesUp +
-                inProxyActivityStats.totalBytesDown,
-        );
-        setInProxyActivityBy1000ms(inProxyActivityStats.dataByPeriod["1000ms"]);
-    }
-
-    // mock stats emitter
-    const mockDataGenerator = React.useRef<AsyncGenerator | null>(null);
-    React.useEffect(() => {
-        async function runMock() {
-            console.log("MOCK: Initializing mock data generation");
-            mockDataGenerator.current = generateMockData(
-                inProxyParameters!.maxClients,
-            );
-            let data = (await mockDataGenerator.current.next()).value;
-            while (data) {
-                if (data) {
-                    handleInProxyActivityStats(data);
-                }
-                data = (await mockDataGenerator.current.next()).value;
-            }
-            handleInProxyActivityStats(getZeroedInProxyActivityStats());
-        }
-
-        async function stopMock() {
-            if (mockDataGenerator.current) {
-                console.log("MOCK: Stopping mock data generation");
-                await mockDataGenerator.current.return(
-                    getZeroedInProxyActivityStats(),
-                );
-            }
-        }
-
-        if (getInProxyStatus() === "RUNNING") {
-            runMock();
-        } else {
-            stopMock();
-        }
-    }, [inProxyParameters, getInProxyStatus]);
-
-    const value = {
-        inProxyActivityBy1000ms,
-        inProxyCurrentConnectedClients,
-        inProxyTotalBytesTransferred,
-    };
-    return (
-        <InProxyActivityContext.Provider value={value}>
-            {children}
-        </InProxyActivityContext.Provider>
-    );
-}
-
-export interface InProxyContextValue {
-    inProxyParameters: InProxyParameters;
-    inProxyMustUpgrade: boolean;
-    toggleInProxy: () => Promise<void>;
-    selectInProxyParameters: (params: InProxyParameters) => Promise<void>;
-    getInProxyStatus: () => InProxyStatusEnum;
-    sendFeedback: () => Promise<void>;
-}
-
-export const InProxyContext = React.createContext<InProxyContextValue | null>(
-    null,
-);
+const InProxyContext = React.createContext<InProxyContextValue | null>(null);
 
 export function useInProxyContext(): InProxyContextValue {
     const value = React.useContext(InProxyContext);
@@ -188,6 +89,7 @@ const InProxyStateSyncSchema = z.object({
 type InProxyStateSync = z.infer<typeof InProxyStateSyncSchema>;
 
 export function InProxyProvider({ children }: { children: React.ReactNode }) {
+    console.log("MOCK: InProxyProvider rendered");
     const [inProxyStateSync, setInProxyStateSync] =
         React.useState<InProxyStateSync>({
             running: false,
@@ -196,19 +98,56 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     const [inProxyParameters, setInProxyParameters] =
         React.useState<InProxyParameters>(getDefaultInProxyParameters());
 
-    // TODO: how to test this with the mock?
-    //const [inProxyMustUpgrade, setInProxyMustUpgrade] =
-    //    React.useState<boolean>(false);
-    const inProxyMustUpgrade = false;
+    const { conduitKeyPair } = useAccountContext();
 
-    //function handleInProxyError(inProxyError: InProxyError): void {
-    //    console.log("MOCK: Received InProxy error", inProxyError);
-    //    if (inProxyError.action === "inProxyMustUpgrade") {
-    //        console.log("MOCK: In-proxy must upgrade");
-    //        setInProxyMustUpgrade(true);
-    //    }
-    //}
-    //
+    const queryClient = useQueryClient();
+
+    function handleInProxyActivityStats(
+        inProxyActivityStats: InProxyActivityStats,
+    ): void {
+        queryClient.setQueryData(
+            ["inProxyCurrentConnectedClients"],
+            inProxyActivityStats.currentConnectedClients,
+        );
+        queryClient.setQueryData(
+            ["inProxyCurrentConnectingClients"],
+            inProxyActivityStats.currentConnectingClients,
+        );
+        queryClient.setQueryData(
+            ["inProxyTotalBytesTransferred"],
+            inProxyActivityStats.totalBytesUp +
+                inProxyActivityStats.totalBytesDown,
+        );
+        queryClient.setQueryData(
+            ["inProxyActivityBy1000ms"],
+            inProxyActivityStats.dataByPeriod["1000ms"],
+        );
+    }
+
+    const mockDataGenerator = React.useRef<AsyncGenerator | null>(null);
+
+    async function runMock(maxClients: number) {
+        mockDataGenerator.current = generateMockData(maxClients);
+
+        console.log("MOCK: Initializing mock data generation");
+        let data = (await mockDataGenerator.current.next()).value;
+        while (data) {
+            if (data) {
+                handleInProxyActivityStats(data);
+            }
+            data = (await mockDataGenerator.current.next()).value;
+        }
+        handleInProxyActivityStats(getZeroedInProxyActivityStats());
+    }
+
+    async function stopMock() {
+        if (mockDataGenerator.current) {
+            console.log("MOCK: Stopping mock data generation");
+            await mockDataGenerator.current.return(
+                getZeroedInProxyActivityStats(),
+            );
+        }
+    }
 
     // simulate InProxy running in a background service using AsyncStorage
     React.useEffect(() => {
@@ -230,9 +169,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         init();
     }, []);
 
-    async function selectInProxyParameters(
-        params: InProxyParameters,
-    ): Promise<void> {
+    async function selectInProxyParameters(params: InProxyParameters) {
         await AsyncStorage.setItem(
             "InProxyMaxClients",
             params.maxClients.toString(),
@@ -242,11 +179,12 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             params.limitUpstreamBytesPerSecond.toString(),
         );
         setInProxyParameters(params);
-        console.log("MOCK: InProxy parameters selected successfully");
+        console.log(
+            "MOCK: InProxy parameters selected successfully, NOTE: will not restart",
+        );
     }
 
-    async function toggleInProxy(): Promise<void> {
-        //await requestNotificationsPermissions();
+    async function toggleInProxy() {
         await AsyncStorage.setItem(
             "MockInProxyRunning",
             inProxyStateSync.running ? "0" : "1",
@@ -256,32 +194,65 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             synced: true,
         });
         console.log("MOCK: InProxyModule.toggleInProxy() invoked");
+        if (inProxyStateSync.running) {
+            await stopMock();
+        } else {
+            // this awaits forever
+            await runMock(inProxyParameters!.maxClients);
+        }
     }
 
-    const getInProxyStatus = React.useCallback(() => {
-        let state;
-        if (!inProxyStateSync.synced) {
-            state = "UNKNOWN";
-        } else {
-            if (inProxyStateSync.running) {
-                state = "RUNNING";
-            } else {
-                state = "STOPPED";
-            }
-        }
-        return InProxyStatusEnumSchema.parse(state);
-    }, [inProxyStateSync]);
-
-    async function sendFeedback(): Promise<void> {
+    async function sendFeedback() {
         console.log("MOCK: InProxyModule.sendFeedback() invoked");
     }
 
+    // We store the user-controllable InProxy settings in AsyncStorage, so that
+    // they can be persisted at the application layer instead of the module
+    // layer. This also allows us to have defaults that are different than what
+    // the module/tunnel-core uses. The values stored in AsyncStorage will be
+    // taken as the source of truth.
+    async function loadInProxyParameters() {
+        try {
+            // Retrieve stored inproxy parameters from the application layer
+            const storedInProxyMaxClients =
+                await AsyncStorage.getItem("InProxyMaxClients");
+
+            const storedInProxyLimitBytesPerSecond = await AsyncStorage.getItem(
+                "InProxyLimitBytesPerSecond",
+            );
+
+            // Prepare the stored/default parameters from the application layer
+            const storedInProxyParameters = InProxyParametersSchema.parse({
+                privateKey: keyPairToBase64nopad(conduitKeyPair),
+                maxClients: storedInProxyMaxClients
+                    ? parseInt(storedInProxyMaxClients)
+                    : DEFAULT_INPROXY_MAX_CLIENTS,
+                limitUpstreamBytesPerSecond: storedInProxyLimitBytesPerSecond
+                    ? parseInt(storedInProxyLimitBytesPerSecond)
+                    : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
+                limitDownstreamBytesPerSecond: storedInProxyLimitBytesPerSecond
+                    ? parseInt(storedInProxyLimitBytesPerSecond)
+                    : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
+            });
+
+            // sets the inproxy parameters in the psiphon context. This call
+            // also updates the context's state value for the inproxy
+            // parameters, so an explicit call to sync them is not needed.
+            await selectInProxyParameters(storedInProxyParameters);
+        } catch (error) {
+            handleError(wrapError(error, "Failed to load inproxy parameters"));
+        }
+    }
+
+    React.useEffect(() => {
+        // Loads stored InProxy parameters on first render.
+        loadInProxyParameters();
+    }, []);
+
     const value = {
         inProxyParameters,
-        inProxyMustUpgrade,
         toggleInProxy,
         selectInProxyParameters,
-        getInProxyStatus,
         sendFeedback,
     };
 

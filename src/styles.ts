@@ -274,7 +274,7 @@ export const sharedStyles = StyleSheet.create({
     },
     modalHalfBottom: {
         flex: 1,
-        height: "50%",
+        height: "70%",
         width: "100%",
         position: "absolute",
         backgroundColor: palette.black,

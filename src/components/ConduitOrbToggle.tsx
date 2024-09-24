@@ -29,17 +29,20 @@ import {
     withTiming,
 } from "react-native-reanimated";
 
-//import { useInProxyContext } from "@/src/psiphon/context";
+import { useInProxyContext } from "@/src/inproxy/context";
 import {
-    useInProxyActivityContext,
-    useInProxyContext,
-} from "@/src/inproxy/mockContext";
+    useInProxyCurrentConnectedClients,
+    useInProxyStatus,
+} from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitOrbToggle({ size }: { size: number }) {
     const { t } = useTranslation();
-    const { toggleInProxy, getInProxyStatus } = useInProxyContext();
-    const { inProxyCurrentConnectedClients } = useInProxyActivityContext();
+    const { toggleInProxy } = useInProxyContext();
+
+    const { data: inProxyStatus } = useInProxyStatus();
+    const { data: inProxyCurrentConnectedClients } =
+        useInProxyCurrentConnectedClients();
 
     const radius = size / 4;
     const centeringTransform = [
@@ -126,10 +129,13 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 restSpeedThreshold: 2,
             }),
         );
-        buttonTextColourIndex.value = withDelay(
-            delay,
-            withTiming(0, { duration: 1000 }),
-        );
+        if (delay > 0) {
+            // if delay is zero, InProxy is running, so don't show button text
+            buttonTextColourIndex.value = withDelay(
+                delay,
+                withTiming(0, { duration: 1000 }),
+            );
+        }
     }
 
     const [animationState, setAnimationState] = React.useState("loading");
@@ -137,7 +143,6 @@ export function ConduitOrbToggle({ size }: { size: number }) {
     // play in initial animation and video
     const [showVideo, setShowVideo] = React.useState(false);
     React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus();
         if (inProxyStatus === "RUNNING") {
             // Already Running: play intro animation without delay
             setShowVideo(false);
@@ -148,11 +153,10 @@ export function ConduitOrbToggle({ size }: { size: number }) {
             animateIntro(2800);
         }
         // implicit do nothing if status is unknown
-    }, [getInProxyStatus]);
+    }, [inProxyStatus]);
 
     // set animation state based on InProxy state
     React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus();
         if (inProxyStatus === "RUNNING") {
             if (inProxyCurrentConnectedClients === 0) {
                 if (animationState !== "announcing") {
@@ -174,7 +178,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
             }
         }
         // implicit do nothing if status is unknown
-    }, [getInProxyStatus, inProxyCurrentConnectedClients]);
+    }, [inProxyStatus, inProxyCurrentConnectedClients]);
 
     const buttonGradientColours = useDerivedValue(() => {
         return [

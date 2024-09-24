@@ -12,7 +12,6 @@ import i18nService from "@/src/i18n/i18n";
 i18nService.initI18n();
 
 import { AuthProvider } from "@/src/auth/context";
-import { NotificationsProvider } from "@/src/notifications/context";
 import { palette } from "@/src/styles";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -38,17 +37,15 @@ export default function RootLayout() {
         <ThemeProvider value={DarkTheme}>
             {!loaded ? null : (
                 <QueryClientProvider client={queryClient}>
-                    <NotificationsProvider>
-                        <AuthProvider>
-                            <Stack
-                                screenOptions={{
-                                    headerShown: false,
-                                }}
-                            >
-                                <Stack.Screen name="(app)" />
-                            </Stack>
-                        </AuthProvider>
-                    </NotificationsProvider>
+                    <AuthProvider>
+                        <Stack
+                            screenOptions={{
+                                headerShown: false,
+                            }}
+                        >
+                            <Stack.Screen name="(app)" />
+                        </Stack>
+                    </AuthProvider>
                 </QueryClientProvider>
             )}
         </ThemeProvider>

@@ -8,13 +8,13 @@ export const InProxyStatusEnumSchema = z.enum([
     "UNKNOWN",
 ]);
 
-export const InProxyStateSchema = z.object({
+export const ProxyStateSchema = z.object({
     status: InProxyStatusEnumSchema,
-    networkState: z.enum(["HAS_INTERNET", "NO_INTERNET"]),
+    networkState: z.enum(["HAS_INTERNET", "NO_INTERNET"]).nullable(),
 });
 
-export const InProxyErrorSchema = z.object({
-    data: z.enum([
+export const ProxyErrorSchema = z.object({
+    action: z.enum([
         "proxyStartFailed",
         "proxyRestartFailed",
         "inProxyMustUpgrade",
@@ -42,8 +42,8 @@ export const InProxyActivityStatsSchema = z.object({
 export const InProxyEventSchema = z.object({
     type: z.enum(["proxyState", "proxyError", "inProxyActivityStats"]),
     data: z.union([
-        InProxyStateSchema,
-        InProxyErrorSchema,
+        ProxyStateSchema,
+        ProxyErrorSchema,
         InProxyActivityStatsSchema,
     ]),
 });
@@ -58,10 +58,17 @@ export const InProxyParametersSchema = z.object({
 
 export type InProxyParameters = z.infer<typeof InProxyParametersSchema>;
 export type InProxyStatusEnum = z.infer<typeof InProxyStatusEnumSchema>;
-export type InProxyState = z.infer<typeof InProxyStateSchema>;
-export type InProxyError = z.infer<typeof InProxyErrorSchema>;
+export type ProxyState = z.infer<typeof ProxyStateSchema>;
+export type ProxyError = z.infer<typeof ProxyErrorSchema>;
 export type InProxyActivityStats = z.infer<typeof InProxyActivityStatsSchema>;
 export type InProxyActivityByPeriod = z.infer<
     typeof InProxyActivityDataByPeriodSchema
 >;
 export type InProxyEvent = z.infer<typeof InProxyEventSchema>;
+
+export interface InProxyContextValue {
+    inProxyParameters: InProxyParameters;
+    toggleInProxy: () => Promise<void>;
+    selectInProxyParameters: (params: InProxyParameters) => Promise<void>;
+    sendFeedback: () => Promise<void>;
+}

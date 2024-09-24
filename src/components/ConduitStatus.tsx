@@ -3,7 +3,6 @@ import {
     ColorShader,
     Group,
     LinearGradient,
-    Path,
     Rect,
     Text,
     useFont,
@@ -12,14 +11,15 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
-import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
+import { useSharedValue, withTiming } from "react-native-reanimated";
 
-import { pathFromPoints } from "@/src/common/skia";
 import { niceBytes } from "@/src/common/utils";
 import {
-    useInProxyActivityContext,
-    useInProxyContext,
-} from "@/src/inproxy/mockContext";
+    useInProxyCurrentConnectedClients,
+    useInProxyCurrentConnectingClients,
+    useInProxyStatus,
+    useInProxyTotalBytesTransferred,
+} from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitStatus({
@@ -30,41 +30,29 @@ export function ConduitStatus({
     height: number;
 }) {
     const { t } = useTranslation();
-    const {
-        inProxyActivityBy1000ms,
-        inProxyCurrentConnectedClients,
-        inProxyTotalBytesTransferred,
-    } = useInProxyActivityContext();
-    const { getInProxyStatus } = useInProxyContext();
+
+    const { data: inProxyStatus } = useInProxyStatus();
+    const { data: connectedPeers } = useInProxyCurrentConnectedClients();
+    const { data: connectingPeers } = useInProxyCurrentConnectingClients();
+    const { data: totalBytesTransferred } = useInProxyTotalBytesTransferred();
 
     const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
-        peers: inProxyCurrentConnectedClients,
+        peers: connectedPeers,
     });
+    const connectingPeersText =
+        " + " +
+        t("CONNECTING_PEERS_I18N.string", {
+            peers: connectingPeers,
+        });
     const totalBytesTransferredText = t("TOTAL_BYTES_TRANSFERRED_I18N.string", {
-        niceBytes: niceBytes(inProxyTotalBytesTransferred),
+        niceBytes: niceBytes(totalBytesTransferred),
     });
 
-    // fade in gradient on initial render
-    const fadeInGradient = useSharedValue(0);
-    React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus();
-        if (inProxyStatus === "RUNNING") {
-            fadeInGradient.value = withTiming(1, { duration: 2000 });
-        } else if (inProxyStatus === "STOPPED") {
-            fadeInGradient.value = withDelay(
-                2800,
-                withTiming(1, { duration: 2000 }),
-            );
-        }
-        // implicitly do nothing on status unknown
-    }, [getInProxyStatus]);
-
-    // will fade in text when conduit is running
+    // will fade in when conduit is running
     const fader = useSharedValue(0);
     const [shouldAnimateIn, setShouldAnimateIn] = React.useState(true);
     const [shouldAnimateOut, setShouldAnimateOut] = React.useState(true);
     React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus();
         if (inProxyStatus === "RUNNING") {
             if (shouldAnimateIn) {
                 fader.value = withTiming(1, { duration: 1000 });
@@ -79,41 +67,25 @@ export function ConduitStatus({
             }
         }
         // implicit do nothing if inProxyStatus is "unknown"
-    }, [getInProxyStatus]);
+    }, [inProxyStatus]);
 
     const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
     if (!font) {
         return null;
     }
 
-    // prepare graph data if we have any
-    const globalMax = Math.max(
-        ...inProxyActivityBy1000ms.bytesUp,
-        ...inProxyActivityBy1000ms.bytesDown,
-        0,
-    );
-
-    const bytesReceivedPath = pathFromPoints(
-        inProxyActivityBy1000ms.bytesDown,
-        height * 0.1,
-        globalMax,
-    );
-    const bytesSentPath = pathFromPoints(
-        inProxyActivityBy1000ms.bytesUp,
-        height * 0.1,
-        globalMax,
-    );
-
     // prepare Y offsets
     const padY = width * 0.05;
     const connectedPeersTextOffsetY =
         font.measureText(connectedPeersText).height;
-    const totalBytesTransferredTextOffsetY =
-        font.measureText(totalBytesTransferredText).height +
+    const connectingPeersTextOffsetY =
+        font.measureText(connectingPeersText).height +
         connectedPeersTextOffsetY +
         padY;
-    const bytesTransferredGraphOffsetY =
-        totalBytesTransferredTextOffsetY + padY;
+    const totalBytesTransferredTextOffsetY =
+        font.measureText(totalBytesTransferredText).height +
+        connectingPeersTextOffsetY +
+        padY;
 
     return (
         <View
@@ -127,13 +99,7 @@ export function ConduitStatus({
             ]}
         >
             <Canvas style={[ss.flex]}>
-                <Rect
-                    x={0}
-                    y={0}
-                    width={width}
-                    height={height}
-                    opacity={fadeInGradient}
-                >
+                <Rect x={0} y={0} width={width} height={height} opacity={fader}>
                     <LinearGradient
                         start={vec(width / 2, 0)}
                         end={vec(width / 2, height)}
@@ -151,33 +117,26 @@ export function ConduitStatus({
                     </Text>
                     <Text
                         x={width * 0.05}
+                        y={connectingPeersTextOffsetY}
+                        text={connectingPeersText}
+                        font={font}
+                    >
+                        <ColorShader
+                            color={
+                                connectingPeers > 0
+                                    ? palette.purpleTint4
+                                    : palette.grey
+                            }
+                        />
+                    </Text>
+                    <Text
+                        x={width * 0.05}
                         y={totalBytesTransferredTextOffsetY}
                         text={totalBytesTransferredText}
                         font={font}
                     >
                         <ColorShader color={palette.purpleTint4} />
                     </Text>
-                    <Group
-                        transform={[
-                            {
-                                translateY: bytesTransferredGraphOffsetY,
-                            },
-                            {
-                                translateX: width * 0.05,
-                            },
-                        ]}
-                    >
-                        <Path
-                            path={bytesReceivedPath}
-                            color={palette.transparentBlue}
-                            style="fill"
-                        />
-                        <Path
-                            path={bytesSentPath}
-                            color={palette.transparentPurple}
-                            style="fill"
-                        />
-                    </Group>
                 </Group>
             </Canvas>
         </View>
