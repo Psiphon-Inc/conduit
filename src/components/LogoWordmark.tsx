@@ -21,7 +21,7 @@ import {
 
 // @ts-ignore (this file is gitignored)
 import { GIT_HASH } from "@/src/git-hash";
-import { useInProxyContext } from "@/src/psiphon/mockContext";
+import { useInProxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function LogoWordmark({
@@ -31,7 +31,8 @@ export function LogoWordmark({
     width: number;
     height: number;
 }) {
-    const { getInProxyStatus } = useInProxyContext();
+    const { data: inProxyStatus } = useInProxyStatus();
+
     const conduitFlowerSvg = useSVG(
         require("@/assets/images/conduit-flower-icon.svg"),
     );
@@ -42,16 +43,15 @@ export function LogoWordmark({
     // fadeIn on first load
     const fadeIn = useSharedValue(0);
     React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus();
-        if (inProxyStatus.status === "running") {
+        if (inProxyStatus === "RUNNING") {
             // fade in right away
             fadeIn.value = withTiming(1, { duration: 2000 });
-        } else if (inProxyStatus.status === "stopped") {
+        } else if (inProxyStatus === "STOPPED") {
             // fade in after a delay for particle animation
             fadeIn.value = withDelay(2800, withTiming(1, { duration: 2000 }));
         }
         // implicit do nothing on status unknown
-    }, [getInProxyStatus]);
+    }, [inProxyStatus]);
 
     const opacityMatrix = useDerivedValue(() => {
         // prettier-ignore

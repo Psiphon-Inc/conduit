@@ -19,15 +19,6 @@ import {
     View,
     useWindowDimensions,
 } from "react-native";
-
-import { useAccountContext } from "@/src/account/context";
-import { handleError, wrapError } from "@/src/common/errors";
-import { MBToBytes, bytesToMB } from "@/src/common/utils";
-import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
-import { ProxyID } from "@/src/components/ProxyID";
-import { InProxyParametersSchema, getProxyId } from "@/src/psiphon/inproxy";
-import { useInProxyContext } from "@/src/psiphon/mockContext";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 import {
     useDerivedValue,
     useSharedValue,
@@ -35,38 +26,53 @@ import {
     withTiming,
 } from "react-native-reanimated";
 
+import { useAccountContext } from "@/src/account/context";
+import { handleError, wrapError } from "@/src/common/errors";
+import { MBToBytes, bytesToMB } from "@/src/common/utils";
+import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
+import { NotificationsStatus } from "@/src/components/NotificationsStatus";
+import { ProxyID } from "@/src/components/ProxyID";
+import { useInProxyContext } from "@/src/inproxy/context";
+import { useInProxyStatus } from "@/src/inproxy/hooks";
+import { InProxyParametersSchema } from "@/src/inproxy/types";
+import { getProxyId } from "@/src/inproxy/utils";
+import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+
+// TODO: better way to make a copy?
+function makeCopy(data: any) {
+    return JSON.parse(JSON.stringify(data));
+}
+
 export function ConduitSettings() {
     const { t } = useTranslation();
     const win = useWindowDimensions();
     const { conduitKeyPair } = useAccountContext();
-    const {
-        inProxyParameters,
-        selectInProxyParameters,
-        getInProxyStatus,
-        sendFeedback,
-    } = useInProxyContext();
+    const { inProxyParameters, selectInProxyParameters, sendFeedback } =
+        useInProxyContext();
+
+    const { data: inProxyStatus } = useInProxyStatus();
 
     const [modalOpen, setModalOpen] = React.useState(false);
     const [sendDiagnosticIcon, setSendDiagnosticIcon] = React.useState(
         <FontAwesome name="send" size={18} color={palette.white} />,
     );
     const [displayTotalMaxMbps, setDisplayTotalMaxMbps] = React.useState(
-        bytesToMB(
-            inProxyParameters.limitUpstreamBytesPerSecond *
-                inProxyParameters.maxClients,
-        ),
+        bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond) *
+            inProxyParameters.maxClients,
     );
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
         React.useState(false);
 
     // TODO: better way to make a copy?
     const [modifiedInProxyParameters, setModifiedInProxyParameters] =
-        React.useState(JSON.parse(JSON.stringify(inProxyParameters)));
+        React.useState(makeCopy(inProxyParameters));
     React.useEffect(() => {
         // need to update modified in proxy params whenever they change, since
         // we start from a default set
-        setModifiedInProxyParameters(
-            JSON.parse(JSON.stringify(inProxyParameters)),
+        setModifiedInProxyParameters(makeCopy(inProxyParameters));
+        setDisplayTotalMaxMbps(
+            bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond) *
+                inProxyParameters.maxClients,
         );
     }, [inProxyParameters]);
 
@@ -121,7 +127,7 @@ export function ConduitSettings() {
             settingsChanged = true;
         }
         if (settingsChanged) {
-            if (getInProxyStatus().status === "running") {
+            if (inProxyStatus === "RUNNING") {
                 setDisplayRestartConfirmation(true);
             } else {
                 await commitChanges();
@@ -258,6 +264,16 @@ export function ConduitSettings() {
                                 {sendDiagnosticIcon}
                             </Pressable>
                         </View>
+                        <View
+                            style={[
+                                ...lineItemStyle,
+                                ss.flex,
+                                ss.alignCenter,
+                                ss.justifySpaceBetween,
+                            ]}
+                        >
+                            <NotificationsStatus />
+                        </View>
                     </View>
                 </ScrollView>
             </>
@@ -327,16 +343,15 @@ export function ConduitSettings() {
     // fadeIn on first load
     const fadeIn = useSharedValue(0);
     React.useEffect(() => {
-        const inProxyStatus = getInProxyStatus();
-        if (inProxyStatus.status === "running") {
+        if (inProxyStatus === "RUNNING") {
             // fade in right away
             fadeIn.value = withTiming(1, { duration: 2000 });
-        } else if (inProxyStatus.status === "stopped") {
+        } else if (inProxyStatus === "STOPPED") {
             // fade in after a delay for particle animation
             fadeIn.value = withDelay(2800, withTiming(1, { duration: 2000 }));
         }
         // implicit do nothing on status unknown
-    }, [getInProxyStatus]);
+    }, [inProxyStatus]);
 
     const settingsIconSvg = useSVG(require("@/assets/images/settings.svg"));
     const settingsIconSize = win.width * 0.2;

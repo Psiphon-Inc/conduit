@@ -33,6 +33,9 @@
     "CONNECTED_PEERS_I18N": {
         "string": "{{ peers }} connected peers"
     },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} connecting"
+    },
     "DONE_I18N": {
         "string": "Done"
     },
@@ -62,5 +65,14 @@
     },
     "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
         "string": "Changing Conduit settings requires restarting your Conduit Station. Any connected users will be disconnected. Confirm changes?"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "Notifications"
+    },
+    "ENABLE_I18N": {
+        "string": "Enable"
+    },
+    "ENABLED_I18N": {
+        "string": "Enabled"
     }
 }

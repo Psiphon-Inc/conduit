@@ -8,54 +8,16 @@ import {
     keyPairToBase64nopad,
 } from "@/src/common/cryptography";
 import { wrapError } from "@/src/common/errors";
-import { Base64Unpadded64Bytes } from "@/src/common/validators";
 import {
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
-
-export const InProxyActivityDataByPeriodSchema = z.object({
-    bytesUp: z.array(z.number()).length(288),
-    bytesDown: z.array(z.number()).length(288),
-    connectingClients: z.array(z.number()).length(288),
-    connectedClients: z.array(z.number()).length(288),
-});
-
-export const InProxyActivityStatsSchema = z.object({
-    elapsedTime: z.number(),
-    totalBytesUp: z.number(),
-    totalBytesDown: z.number(),
-    currentConnectingClients: z.number(),
-    currentConnectedClients: z.number(),
-    dataByPeriod: z.object({
-        "1000ms": InProxyActivityDataByPeriodSchema,
-    }),
-});
-
-// These are the user-configurable parameters for the inproxy.
-export const InProxyParametersSchema = z.object({
-    privateKey: Base64Unpadded64Bytes,
-    maxClients: z.number().int().positive(),
-    limitUpstreamBytesPerSecond: z.number().int().positive(),
-    limitDownstreamBytesPerSecond: z.number().int().positive(),
-    // personalCompartmentIds: z.array(z.string()), // eventually...
-});
-
-export const InProxyErrorSchema = z.object({
-    action: z.enum(["inProxyMustUpgrade"]),
-});
-
-export const InProxyStatusSchema = z.object({
-    status: z.enum(["running", "stopped", "unknown"]),
-});
-
-export type InProxyParameters = z.infer<typeof InProxyParametersSchema>;
-export type InProxyActivityStats = z.infer<typeof InProxyActivityStatsSchema>;
-export type InProxyActivityByPeriod = z.infer<
-    typeof InProxyActivityDataByPeriodSchema
->;
-export type InProxyError = z.infer<typeof InProxyErrorSchema>;
-export type InProxyStatus = z.infer<typeof InProxyStatusSchema>;
+import {
+    InProxyActivityStats,
+    InProxyActivityStatsSchema,
+    InProxyParameters,
+    InProxyParametersSchema,
+} from "@/src/inproxy/types";
 
 export function getDefaultInProxyParameters(): InProxyParameters {
     const ephemeralKey = generateEd25519KeyPair();

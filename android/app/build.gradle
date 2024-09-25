@@ -182,6 +182,9 @@ dependencies {
     // Psiphon lib
     implementation (name: 'ca.psiphon', ext: 'aar')
 
+    // Guava (need for ListenableFuture in the Worker related code)
+    implementation 'com.google.guava:guava:33.0.0-android'
+
     // Autovalue
     compileOnly "com.google.auto.value:auto-value-annotations:1.10.4"
     annotationProcessor "com.google.auto.value:auto-value:1.10.4"
