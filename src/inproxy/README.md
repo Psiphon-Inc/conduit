@@ -134,3 +134,22 @@ emitter.addListener("ConduitEvent", (event) => {
     }
 });
 ```
+
+## Mock Module
+
+To help with developing and testing the UI, there is a mocked implementation of
+the module available in `mockModule.ts`. To use this, replace the import in the
+`context.tsx` file:
+
+```
+- import { ConduitModule } from "@/src/inproxy/module";
++ import { ConduitModule } from "@/src/inproxy/mockModule";
+```
+
+The mock simulates inproxy activity and emits events like the real module, but
+without actual users connecting to an InProxy (and without running any native
+code). The mock does have some different behaviours:
+
+-   The data generation process resets on app reload, since the underlying data
+    generating process is not being persisted anywhere.
+-   The mock module does not invoke any notifications
