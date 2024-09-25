@@ -409,8 +409,8 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
         WritableMap proxyActivityStatsMap = Arguments.createMap();
 
         proxyActivityStatsMap.putInt("elapsedTime", (int) stats.getElapsedTime());
-        proxyActivityStatsMap.putInt("totalBytesUp", (int) stats.getTotalBytesUp());
-        proxyActivityStatsMap.putInt("totalBytesDown", (int) stats.getTotalBytesDown());
+        proxyActivityStatsMap.putDouble("totalBytesUp", stats.getTotalBytesUp());
+        proxyActivityStatsMap.putDouble("totalBytesDown", stats.getTotalBytesDown());
         proxyActivityStatsMap.putInt("currentConnectingClients", stats.getCurrentConnectingClients());
         proxyActivityStatsMap.putInt("currentConnectedClients", stats.getCurrentConnectedClients());
 
