@@ -357,10 +357,7 @@ export function ConduitSettings() {
     const settingsIconSize = win.width * 0.2;
     const paint = React.useMemo(() => Skia.Paint(), []);
     paint.setColorFilter(
-        Skia.ColorFilter.MakeBlend(
-            Skia.Color(palette.redTint2),
-            BlendMode.SrcIn,
-        ),
+        Skia.ColorFilter.MakeBlend(Skia.Color(palette.blue), BlendMode.SrcIn),
     );
     const opacityMatrix = useDerivedValue(() => {
         // prettier-ignore

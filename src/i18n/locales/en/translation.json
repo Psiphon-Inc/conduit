@@ -4,7 +4,7 @@
         "developer_comment": "Text displayed when the app is loading content."
     },
     "TURN_ON_I18N": {
-        "string": "Turn ON",
+        "string": "Turn On",
         "developer_comment": "Text displayed on a button to turn on a feature."
     },
     "CONDUIT_OFF_I18N": {
@@ -74,5 +74,17 @@
     },
     "ENABLED_I18N": {
         "string": "Enabled"
+    },
+    "PROXY_STATUS_I18N": {
+        "string": "Conduit Station is {{ status }}"
+    },
+    "RUNNING_I18N": {
+        "string": "RUNNING"
+    },
+    "STOPPED_I18N": {
+        "string": "STOPPED"
+    },
+    "UNKNOWN_I18N": {
+        "string": "UNKNOWN"
     }
 }

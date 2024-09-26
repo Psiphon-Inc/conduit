@@ -5,13 +5,14 @@ import {
     ColorMatrix,
     ColorShader,
     Group,
+    Image,
     Paint,
     RadialGradient,
     Shadow,
     Text,
     interpolateColors,
-    interpolateVector,
     useFont,
+    useImage,
     vec,
 } from "@shopify/react-native-skia";
 import { VideoView, useVideoPlayer } from "expo-video";
@@ -20,11 +21,9 @@ import { useTranslation } from "react-i18next";
 import { Pressable, View } from "react-native";
 import {
     useDerivedValue,
-    useFrameCallback,
     useSharedValue,
     withDelay,
     withRepeat,
-    withSequence,
     withSpring,
     withTiming,
 } from "react-native-reanimated";
@@ -34,57 +33,75 @@ import {
     useInProxyCurrentConnectedClients,
     useInProxyStatus,
 } from "@/src/inproxy/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { fonts, palette, sharedStyles as ss } from "@/src/styles";
+import { z } from "zod";
+import { ConduitConnectionLight } from "./ConduitConnectionLight";
 
 export function ConduitOrbToggle({ size }: { size: number }) {
     const { t } = useTranslation();
     const { toggleInProxy } = useInProxyContext();
-
     const { data: inProxyStatus } = useInProxyStatus();
     const { data: inProxyCurrentConnectedClients } =
         useInProxyCurrentConnectedClients();
 
-    const radius = size / 4;
-    const centeringTransform = [
+    // At the top of the canvas there is a grid of dots around the Psiphon logo,
+    // representing the Psiphon Network the InProxy is proxying traffic towards.
+    const dotsPng = useImage(require("@/assets/images/dots.png"));
+    const psiphonLogoPng = useImage(
+        require("@/assets/images/psiphon-logo.png"),
+    );
+    // the dots and Psiphon logo will fade in
+    const dotsOpacity = useSharedValue(0);
+    const psiphonLogoOpacity = useDerivedValue(() => {
+        return dotsOpacity.value - 0.2;
+    });
+
+    // In the center of the canvas is the orb, a button that toggles InProxy.
+    // The orb will have an animated gradient depending on InProxyState, flowing
+    // between the following colors
+    const orbColors = [
+        palette.black,
+        palette.blueShade3,
+        palette.purpleShade3,
+        palette.redShade3,
+        palette.purpleShade3,
+    ];
+    // Animate the index of this array of colors, interpolating a gradient
+    const orbColorsIndex = useSharedValue(0);
+    const orbGradientColors = useDerivedValue(() => {
+        return [
+            palette.black,
+            interpolateColors(orbColorsIndex.value, [0, 1, 2, 3, 4], orbColors),
+        ];
+    });
+    // The "Turn On" text also uses interpolation to appear to fade in by going
+    // from transparent to it's final color.
+    const orbText = t("TURN_ON_I18N.string");
+    const orbTextColors = [palette.transparent, palette.white];
+    const orbTextColorIndex = useSharedValue(0);
+    const orbTextColor = useDerivedValue(() => {
+        return interpolateColors(
+            orbTextColorIndex.value,
+            [0, 1],
+            orbTextColors,
+        );
+    });
+    // The orb will pop into existence at the start, animating from radius 0 up
+    const orbRadius = useSharedValue(0);
+    const finalOrbRadius = size / 4;
+    // Use a transform to center the orb and the lights that flow through it
+    const orbCenteringTransform = [
         {
-            translateY: size / 2,
+            translateY: size / 2 + finalOrbRadius / 2,
         },
         {
             translateX: size / 2,
         },
     ];
-    const buttonText = t("TURN_ON_I18N.string");
 
-    const dxA = useSharedValue(10);
-    const dxB = useSharedValue(-10);
-    const animatedBlur = useSharedValue(10);
-    const buttonInnerColours = [
-        palette.redShade3,
-        palette.redShade2,
-        palette.redShade1,
-        palette.red,
-        palette.blue,
-    ];
-    const buttonOuterColours = [
-        palette.purpleShade5,
-        palette.purpleShade3,
-        palette.purpleShade1,
-        palette.purple,
-        palette.purpleShade3,
-    ];
-    const buttonColoursIndex = useSharedValue(0);
-    const buttonTextColours = [palette.redTint3, palette.transparent];
-    const buttonTextColourIndex = useSharedValue(1);
-    const growRadius = useSharedValue(0);
-    const spinner = useSharedValue(0);
-    const explodeRadius = useSharedValue(0);
-
-    function animateAnnouncing() {
-        dxA.value = withTiming(0, { duration: 2000 });
-        dxB.value = withTiming(0, { duration: 2000 });
-        animatedBlur.value = withTiming(0, { duration: 2000 });
-        growRadius.value = withTiming(radius, { duration: 500 });
-        buttonColoursIndex.value = withRepeat(
+    function animateProxyAnnouncing() {
+        console.log("animateProxyAnnouncing()");
+        orbColorsIndex.value = withRepeat(
             // only animate through the first 4 colors while announcing
             withTiming(3, {
                 duration: 2000,
@@ -92,35 +109,28 @@ export function ConduitOrbToggle({ size }: { size: number }) {
             -1,
             true,
         );
-        buttonTextColourIndex.value = withTiming(1, { duration: 500 });
-        spinner.value = withTiming(0, { duration: 500 });
+        orbTextColorIndex.value = withTiming(0, { duration: 500 });
+        dotsOpacity.value = withTiming(1, { duration: 1000 });
     }
 
-    function animatePeersConnected() {
-        dxA.value = withTiming(10, { duration: 2000 });
-        dxB.value = withTiming(-10, { duration: 2000 });
-        animatedBlur.value = withTiming(10, { duration: 2000 });
-        buttonColoursIndex.value = withTiming(4, { duration: 2000 });
-        spinner.value = withSequence(
-            withTiming(-1, { duration: 2000 }),
-            withRepeat(withTiming(1, { duration: 5000 }), -1),
-        );
+    function animateProxyInUse() {
+        console.log("animateProxyInUse()");
+        orbColorsIndex.value = withTiming(4, { duration: 2000 });
+        dotsOpacity.value = withTiming(1, { duration: 1000 });
     }
 
-    function animateTurnOff() {
-        dxA.value = withTiming(10, { duration: 2000 });
-        dxB.value = withTiming(-10, { duration: 2000 });
-        animatedBlur.value = withTiming(10, { duration: 2000 });
-        growRadius.value = withTiming(0, { duration: 2000 });
-        buttonColoursIndex.value = withTiming(0, { duration: 500 });
-        buttonTextColourIndex.value = withTiming(0, { duration: 500 });
-        spinner.value = withTiming(-1, { duration: 500 });
+    function animateTurnOffProxy() {
+        console.log("animateTurnOffProxy()");
+        orbColorsIndex.value = withTiming(0, { duration: 500 });
+        orbTextColorIndex.value = withTiming(1, { duration: 500 });
+        dotsOpacity.value = withTiming(0.2, { duration: 1000 });
     }
 
     function animateIntro(delay: number) {
-        explodeRadius.value = withDelay(
+        console.log(`animateIntro(${delay})`);
+        orbRadius.value = withDelay(
             delay,
-            withSpring(radius, {
+            withSpring(finalOrbRadius, {
                 mass: 1,
                 damping: 10,
                 stiffness: 100,
@@ -129,116 +139,100 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 restSpeedThreshold: 2,
             }),
         );
+        dotsOpacity.value = withDelay(
+            delay,
+            withTiming(0.2, { duration: 1000 }),
+        );
         if (delay > 0) {
-            // if delay is zero, InProxy is running, so don't show button text
-            buttonTextColourIndex.value = withDelay(
+            // if we're introing with a delay, it means the InProxy is stopped,
+            // so we will fade in our button text.
+            orbTextColorIndex.value = withDelay(
                 delay,
-                withTiming(0, { duration: 1000 }),
+                withTiming(1, { duration: 1000 }),
             );
         }
     }
 
-    const [animationState, setAnimationState] = React.useState("loading");
-
-    // play in initial animation and video
-    const [showVideo, setShowVideo] = React.useState(false);
-    React.useEffect(() => {
-        if (inProxyStatus === "RUNNING") {
-            // Already Running: play intro animation without delay
-            setShowVideo(false);
-            animateIntro(0);
-        } else if (inProxyStatus === "STOPPED") {
-            // Stopped: play intro video and delay animation
-            setShowVideo(true);
-            animateIntro(2800);
-        }
-        // implicit do nothing if status is unknown
-    }, [inProxyStatus]);
-
-    // set animation state based on InProxy state
+    // We have 4 animation states that depend on the state of the InProxy:
+    const AnimationStateSchema = z.enum([
+        // Conduit running but 0 clients connected, the orb will pulse.
+        "ProxyAnnouncing",
+        // Conduit running with > 0 clients connected, flying lights.
+        "ProxyInUse",
+        // Conduit stopped, animates values towards the "off" state
+        "ProxyIdle",
+        // InProxy Status is not yet known, so we don't animate anything yet
+        "Unknown",
+    ]);
+    type AnimationState = z.infer<typeof AnimationStateSchema>;
+    const animationState = React.useRef<AnimationState>("Unknown");
     React.useEffect(() => {
         if (inProxyStatus === "RUNNING") {
             if (inProxyCurrentConnectedClients === 0) {
-                if (animationState !== "announcing") {
-                    animateAnnouncing();
-                    setAnimationState("announcing");
+                if (animationState.current !== "ProxyAnnouncing") {
+                    animateProxyAnnouncing();
+                    animationState.current = "ProxyAnnouncing";
                 }
             } else {
-                if (animationState !== "active") {
-                    animatePeersConnected();
-                    setAnimationState("active");
+                if (animationState.current !== "ProxyInUse") {
+                    animateProxyInUse();
+                    animationState.current = "ProxyInUse";
                 }
-                randomizeVelocity.setActive(true);
             }
         } else if (inProxyStatus === "STOPPED") {
-            randomizeVelocity.setActive(false);
-            if (!["idle", "loading"].includes(animationState)) {
-                animateTurnOff();
-                setAnimationState("idle");
+            if (
+                animationState.current !== "ProxyIdle" &&
+                animationState.current !== "Unknown"
+            ) {
+                animateTurnOffProxy();
+                animationState.current = "ProxyIdle";
             }
         }
-        // implicit do nothing if status is unknown
+        // implicit do nothing if status is UNKNOWN
     }, [inProxyStatus, inProxyCurrentConnectedClients]);
 
-    const buttonGradientColours = useDerivedValue(() => {
-        return [
-            interpolateColors(
-                buttonColoursIndex.value,
-                [0, 1, 2, 3, 4],
-                buttonInnerColours,
-            ),
-            interpolateColors(
-                buttonColoursIndex.value,
-                [0, 1, 2, 3, 4],
-                buttonOuterColours,
-            ),
-        ];
-    });
-
-    const buttonTextColour = useDerivedValue(() => {
-        return interpolateColors(
-            buttonTextColourIndex.value,
-            [0, 1],
-            buttonTextColours,
-        );
-    });
-
-    // randomize the starting position of the light node every time it spawns
-    const random = useSharedValue(1);
-    const startSign = useSharedValue(1);
-    const randomizerReady = useSharedValue(0);
-    const randomizeVelocity = useFrameCallback((_) => {
-        // pick new random values after each loop of the spinner
-        if (spinner.value > 0.9 && randomizerReady.value === 1) {
-            random.value = Math.random();
-            if (Math.random() > 0.5) {
-                startSign.value = 1;
-            } else {
-                startSign.value = -1;
+    // In addition to the 4 inProxyStatus dependent animation states above, we
+    // also have an intro animation to play when the app is opened.
+    const introVideoPlayer = useVideoPlayer(
+        require("@/assets/video/particle-swirl.mp4"),
+        (player) => {
+            player.loop = false;
+            player.play();
+        },
+    );
+    // If InProxy is already RUNNING when the app is opened, the intro animation
+    // will be a quick fade in of the UI. If the InProxy is STOPPED when the app
+    // is opened, this fade should be delayed until the particle animation video
+    // has played.
+    // The inProxyStatus will begin as UNKNOWN, and then become RUNNING or
+    // STOPPED once the module is hooked up. We need only want to play the
+    // particle effect intro if the proxy is stopped when the app is opened.
+    const [showVideo, setShowVideo] = React.useState(false);
+    const initialStateDetermined = React.useRef(false);
+    React.useEffect(() => {
+        if (!initialStateDetermined.current) {
+            if (inProxyStatus === "RUNNING") {
+                // Already Running: play intro animation without delay
+                setShowVideo(false);
+                animateIntro(0);
+                initialStateDetermined.current = true;
+            } else if (inProxyStatus === "STOPPED") {
+                // Stopped: play intro video and delay animation
+                setShowVideo(true);
+                setTimeout(() => {
+                    setShowVideo(false);
+                }, 2800);
+                animateIntro(2800);
+                initialStateDetermined.current = true;
+                animationState.current = "ProxyIdle";
             }
-            randomizerReady.value = 0;
+            // implicit do nothing if status is UNKNOWN
         }
-        // reset the randomizer at the start of each loop
-        if (spinner.value < 0.1 && randomizerReady.value === 0) {
-            randomizerReady.value = 1;
-        }
-    });
-    // interpolate between semi-random vectors to give a unique flight path
-    const flightVec = useDerivedValue(() => {
-        return interpolateVector(
-            spinner.value,
-            [-1, -0.6, 0, 0.6, 1],
-            [
-                vec(-size, ((startSign.value * size) / 1.5) * random.value),
-                vec(-radius, startSign.value * radius * random.value),
-                vec(0, 0),
-                vec(radius, 0),
-                vec(size, 0),
-            ],
-        );
-    });
+    }, [inProxyStatus]);
 
-    // Inspired by the "Metaball Animation" tutorial in react-native-skia docs
+    // This morphLayer creates a neat effect where elements that are close to
+    // each other appear to morph together. Any overlapping elements in the
+    // Group with this layer applied to it will have the effect applied.
     const morphLayer = React.useMemo(() => {
         return (
             <Paint>
@@ -257,21 +251,12 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         );
     }, []);
 
-    // setup opening video
-    const videoPlayer = useVideoPlayer(
-        require("@/assets/video/particle-swirl.mp4"),
-        (videoPlayer) => {
-            videoPlayer.loop = false;
-            videoPlayer.play();
-        },
-    );
-
-    const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
+    const font = useFont(fonts.JuraRegular, 20);
     if (!font) {
         return null;
     }
-    const buttonTextXOffset = -font.measureText(buttonText).width / 2;
-    const buttonTextYOffset = font.measureText(buttonText).height / 2;
+    const orbTextXOffset = -font.measureText(orbText).width / 2;
+    const orbTextYOffset = font.measureText(orbText).height / 2;
 
     return (
         <View
@@ -280,91 +265,118 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 height: size,
             }}
         >
+            {/* intro video played if Conduit Station is off on start */}
             {showVideo && (
                 <VideoView
                     style={[
                         ss.absolute,
                         {
+                            top: finalOrbRadius / 2,
                             width: size,
                             height: size,
                         },
                     ]}
-                    player={videoPlayer}
+                    player={introVideoPlayer}
                     nativeControls={false}
                 />
             )}
             <Canvas style={[ss.flex]}>
-                <Group transform={centeringTransform}>
-                    <Group layer={morphLayer}>
-                        <Group>
-                            <Circle r={explodeRadius} color={palette.black}>
-                                <Shadow
-                                    dx={dxA}
-                                    dy={dxA}
-                                    blur={animatedBlur}
-                                    color={palette.purple}
-                                    inner
-                                />
-                                <Shadow
-                                    dx={dxB}
-                                    dy={dxB}
-                                    blur={animatedBlur}
-                                    color={palette.blue}
-                                    inner
-                                />
-                                <RadialGradient
-                                    c={flightVec}
-                                    r={growRadius}
-                                    colors={buttonGradientColours}
-                                />
-                            </Circle>
-                            <Circle
-                                r={radius}
-                                style="stroke"
-                                strokeWidth={2}
-                                color={palette.blueTint4}
-                            />
-                        </Group>
-                        {inProxyCurrentConnectedClients > 0 && (
+                <Group>
+                    {/* the red dots at top representing Psiphon Network */}
+                    <Image
+                        image={dotsPng}
+                        x={size / 2 - 128 / 2}
+                        y={0}
+                        width={128}
+                        height={90}
+                        fit={"contain"}
+                        opacity={dotsOpacity}
+                    />
+                </Group>
+                <Group>
+                    {/* The Orb and Lights Scene*/}
+                    <Group transform={orbCenteringTransform}>
+                        {/* vec(0,0) at the center of the Orb */}
+                        <Group layer={morphLayer}>
+                            {/* morph layer blurs overlapping elements together */}
                             <Group>
+                                {/* The Orb */}
+                                <Circle r={orbRadius} color={palette.black}>
+                                    <Shadow
+                                        dx={10}
+                                        dy={10}
+                                        blur={10}
+                                        color={palette.purple}
+                                        inner
+                                    />
+                                    <Shadow
+                                        dx={-10}
+                                        dy={-10}
+                                        blur={10}
+                                        color={palette.blue}
+                                        inner
+                                    />
+                                    <RadialGradient
+                                        c={vec(0, 0)}
+                                        r={finalOrbRadius}
+                                        colors={orbGradientColors}
+                                    />
+                                </Circle>
                                 <Circle
-                                    c={flightVec}
-                                    r={radius / 10}
-                                    color={palette.blue}
-                                ></Circle>
-                                <Blur blur={2} />
+                                    r={finalOrbRadius}
+                                    style="stroke"
+                                    strokeWidth={2}
+                                    color={palette.blueTint4}
+                                />
                             </Group>
-                        )}
-                    </Group>
-                    <Group>
-                        <Text
-                            x={buttonTextXOffset}
-                            y={buttonTextYOffset}
-                            text={buttonText}
-                            font={font}
-                        >
-                            <ColorShader color={buttonTextColour} />
-                        </Text>
-                    </Group>
-                    {inProxyCurrentConnectedClients > 0 && (
-                        <Group>
-                            <Circle
-                                c={flightVec}
-                                r={radius / 10}
-                                color={palette.blue}
-                            ></Circle>
-                            <Blur blur={2} />
+                            {/* 1 flying light per connected client */}
+                            {[
+                                ...Array(inProxyCurrentConnectedClients).keys(),
+                            ].map((i) => {
+                                return (
+                                    <ConduitConnectionLight
+                                        key={i}
+                                        canvasSize={size}
+                                        orbRadius={finalOrbRadius}
+                                    />
+                                );
+                            })}
                         </Group>
-                    )}
+                        <Group>
+                            {/* Turn ON text displayed when Conduit is off */}
+                            <Text
+                                x={orbTextXOffset}
+                                y={orbTextYOffset}
+                                text={orbText}
+                                font={font}
+                            >
+                                <ColorShader color={orbTextColor} />
+                            </Text>
+                        </Group>
+                    </Group>
+                </Group>
+                <Group>
+                    {/* the psiphon logo at top z-indexed above orbs */}
+                    <Image
+                        image={psiphonLogoPng}
+                        x={size / 2 - 29 / 2}
+                        y={0}
+                        width={29}
+                        height={29}
+                        fit={"contain"}
+                        opacity={psiphonLogoOpacity}
+                    />
                 </Group>
             </Canvas>
+            {/* Pressable overlay over orb to turn it ON */}
             <Pressable
                 style={[
                     ss.absolute,
                     {
-                        width: size,
-                        height: size,
+                        width: finalOrbRadius * 2,
+                        height: finalOrbRadius * 2,
                         left: 0.25 * size,
+                        top: size / 2 + finalOrbRadius / 2 - finalOrbRadius,
                         borderRadius: size / 2,
                     },
                 ]}

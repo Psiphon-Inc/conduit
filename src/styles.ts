@@ -35,11 +35,12 @@ export const palette = {
     purpleShade3: "#2e2132",
     purpleShade4: "#1b131e",
     purpleShade5: "#09060a",
-    white: "#ffffff",
+    white: "#E0E0E0",
     grey: "#342F2F",
     transparent: "rgba(0,0,0,0)",
     transparentBlue: "rgba(59,122,150,0.5)",
     transparentPurple: "rgba(93,66,100,0.4)",
+    statusTextBlue: "#4B7993",
 };
 
 export const sharedStyles = StyleSheet.create({
@@ -215,20 +216,20 @@ export const sharedStyles = StyleSheet.create({
         flexWrap: "wrap",
     },
     bodyFont: {
-        fontSize: 16,
-        fontFamily: "SpaceMono",
+        fontSize: 20,
+        fontFamily: "JuraRegular",
     },
     largeFont: {
         fontSize: 24,
-        fontFamily: "SpaceMono",
+        fontFamily: "JuraRegular",
     },
     extraLargeFont: {
         fontSize: 32,
-        fontFamily: "SpaceMono",
+        fontFamily: "JuraRegular",
     },
     boldFont: {
         fontSize: 20,
-        fontFamily: "SpaceMono",
+        fontFamily: "JuraBold",
     },
     whiteText: {
         color: palette.white,
@@ -367,3 +368,8 @@ export const lineItemStyle = [
     sharedStyles.height60,
     sharedStyles.greyBorderBottom,
 ];
+
+export const fonts = {
+    JuraRegular: require("@/assets/fonts/Jura-Regular.ttf"),
+    JuraBold: require("@/assets/fonts/Jura-Bold.ttf"),
+};

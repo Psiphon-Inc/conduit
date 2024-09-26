@@ -10,7 +10,8 @@ import {
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
-import { ConduitModule } from "@/src/inproxy/module";
+//import { ConduitModule } from "@/src/inproxy/module";
+import { ConduitModule } from "@/src/inproxy/mockModule";
 import {
     InProxyActivityStats,
     InProxyActivityStatsSchema,

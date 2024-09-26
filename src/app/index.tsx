@@ -26,7 +26,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuthContext } from "@/src/auth/context";
 import { handleError } from "@/src/common/errors";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 import { router } from "expo-router";
 
 export default function Index() {
@@ -84,7 +84,7 @@ export default function Index() {
     }, []);
 
     const loadingText = t("LOADING_I18N.string");
-    const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
+    const font = useFont(fonts.JuraRegular, 20);
     if (!font) {
         return null;
     }

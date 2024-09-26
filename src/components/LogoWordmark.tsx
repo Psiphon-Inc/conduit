@@ -7,6 +7,8 @@ import {
     Paint,
     Skia,
     Text,
+    fitbox,
+    rect,
     useFont,
     useSVG,
 } from "@shopify/react-native-skia";
@@ -22,7 +24,7 @@ import {
 // @ts-ignore (this file is gitignored)
 import { GIT_HASH } from "@/src/git-hash";
 import { useInProxyStatus } from "@/src/inproxy/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 
 export function LogoWordmark({
     width,
@@ -33,12 +35,13 @@ export function LogoWordmark({
 }) {
     const { data: inProxyStatus } = useInProxyStatus();
 
-    const conduitFlowerSvg = useSVG(
-        require("@/assets/images/conduit-flower-icon.svg"),
-    );
     const conduitWordMarkSvg = useSVG(
-        require("@/assets/images/conduit-wordmark.svg"),
+        require("@/assets/images/psiphon-conduit-wordmark.svg"),
     );
+    const originalWidth = 141;
+    const originalHeight = 44;
+    const src = rect(0, 0, originalWidth, originalHeight);
+    const dst = rect(0, 0, width, height * 0.8);
 
     // fadeIn on first load
     const fadeIn = useSharedValue(0);
@@ -66,13 +69,10 @@ export function LogoWordmark({
 
     const paint = React.useMemo(() => Skia.Paint(), []);
     paint.setColorFilter(
-        Skia.ColorFilter.MakeBlend(
-            Skia.Color(palette.purpleTint4),
-            BlendMode.SrcIn,
-        ),
+        Skia.ColorFilter.MakeBlend(Skia.Color(palette.white), BlendMode.SrcIn),
     );
 
-    const font = useFont(require("@/assets/fonts/SpaceMono-Regular.ttf"), 20);
+    const font = useFont(fonts.JuraRegular, 20);
     if (!font) {
         return null;
     }
@@ -95,24 +95,19 @@ export function LogoWordmark({
                         </Paint>
                     }
                 >
-                    <Group layer={paint}>
-                        <ImageSVG
-                            svg={conduitFlowerSvg}
-                            width={width * 0.2}
-                            height={height * 0.6}
-                            y={height * 0.2}
-                        />
+                    <Group
+                        transform={fitbox("contain", src, dst)}
+                        layer={paint}
+                    >
                         <ImageSVG
                             svg={conduitWordMarkSvg}
-                            width={width * 0.4}
-                            height={height * 0.4}
-                            x={width * 0.2}
-                            y={height * 0.3}
+                            x={0}
+                            y={height * 0.1}
                         />
                     </Group>
                     <Text
                         x={width - font.measureText(versionString).width - 10}
-                        y={height - height * 0.3}
+                        y={font.measureText(versionString).height}
                         text={versionString}
                         font={font}
                         color={palette.transparentPurple}
