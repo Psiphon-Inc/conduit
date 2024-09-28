@@ -1,17 +1,22 @@
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import {
     BlendMode,
     Canvas,
     ColorMatrix,
     Group,
     ImageSVG,
+    LinearGradient,
     Paint,
+    RoundedRect,
     Skia,
     useSVG,
+    vec,
 } from "@shopify/react-native-skia";
+import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
+    ActivityIndicator,
     Modal,
     Pressable,
     ScrollView,
@@ -27,16 +32,22 @@ import {
 } from "react-native-reanimated";
 
 import { useAccountContext } from "@/src/account/context";
-import { handleError, wrapError } from "@/src/common/errors";
+import { wrapError } from "@/src/common/errors";
 import { MBToBytes, bytesToMB } from "@/src/common/utils";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
 import { NotificationsStatus } from "@/src/components/NotificationsStatus";
 import { ProxyID } from "@/src/components/ProxyID";
+import { PARTICLE_VIDEO_DELAY_MS, PRIVACY_POLICY_URL } from "@/src/constants";
 import { useInProxyContext } from "@/src/inproxy/context";
 import { useInProxyStatus } from "@/src/inproxy/hooks";
 import { InProxyParametersSchema } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import {
+    iconButton,
+    lineItemStyle,
+    palette,
+    sharedStyles as ss,
+} from "@/src/styles";
 
 // TODO: better way to make a copy?
 function makeCopy(data: any) {
@@ -47,14 +58,18 @@ export function ConduitSettings() {
     const { t } = useTranslation();
     const win = useWindowDimensions();
     const { conduitKeyPair } = useAccountContext();
-    const { inProxyParameters, selectInProxyParameters, sendFeedback } =
-        useInProxyContext();
+    const {
+        inProxyParameters,
+        selectInProxyParameters,
+        sendFeedback,
+        logErrorToDiagnostic,
+    } = useInProxyContext();
 
     const { data: inProxyStatus } = useInProxyStatus();
 
     const [modalOpen, setModalOpen] = React.useState(false);
     const [sendDiagnosticIcon, setSendDiagnosticIcon] = React.useState(
-        <FontAwesome name="send" size={18} color={palette.white} />,
+        <Feather name="send" size={24} color={palette.black} />,
     );
     const [displayTotalMaxMbps, setDisplayTotalMaxMbps] = React.useState(
         bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond) *
@@ -63,7 +78,6 @@ export function ConduitSettings() {
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
         React.useState(false);
 
-    // TODO: better way to make a copy?
     const [modifiedInProxyParameters, setModifiedInProxyParameters] =
         React.useState(makeCopy(inProxyParameters));
     React.useEffect(() => {
@@ -102,7 +116,7 @@ export function ConduitSettings() {
             modifiedInProxyParameters,
         );
         if (newInProxyParameters.error) {
-            handleError(
+            logErrorToDiagnostic(
                 wrapError(
                     newInProxyParameters.error,
                     "Error parsing updated InProxyParameters",
@@ -140,39 +154,39 @@ export function ConduitSettings() {
 
     function Settings() {
         return (
-            <>
+            <View style={[ss.flex]}>
                 <View
                     style={[
                         ss.padded,
                         ss.row,
                         ss.alignCenter,
-                        ss.justifySpaceBetween,
+                        ss.greyBorderBottom,
                     ]}
                 >
-                    <Text style={[ss.whiteText, ss.bodyFont]}>
-                        {t("EDIT_SETTINGS_I18N.string")}
-                    </Text>
                     <Pressable
                         style={[
-                            ss.padded,
                             ss.rounded20,
-                            ss.alignFlexEnd,
-                            ss.justifyFlexEnd,
-                            { backgroundColor: palette.redTint2 },
+                            ss.alignFlexStart,
+                            ss.justifyFlexStart,
                         ]}
                         onPress={onSettingsClose}
                     >
-                        <Text style={[ss.whiteText, ss.bodyFont]}>
-                            {t("DONE_I18N.string")}
-                        </Text>
+                        <Feather
+                            name={"chevron-down"}
+                            color={palette.white}
+                            size={60}
+                        />
                     </Pressable>
+                    <Text style={[ss.whiteText, ss.extraLargeFont]}>
+                        {t("SETTINGS_I18N.string")}
+                    </Text>
                 </View>
                 <ScrollView
                     contentContainerStyle={{
                         width: "100%",
                     }}
                 >
-                    <View style={[]}>
+                    <View>
                         <EditableNumberSlider
                             label={t("MAX_PEERS_I18N.string")}
                             originalValue={modifiedInProxyParameters.maxClients}
@@ -219,7 +233,16 @@ export function ConduitSettings() {
                             <Text style={[ss.bodyFont, ss.whiteText]}>
                                 {t("YOUR_ID_I18N.string")}
                             </Text>
-                            <ProxyID proxyId={getProxyId(conduitKeyPair)} />
+                            {conduitKeyPair.data ? (
+                                <ProxyID
+                                    proxyId={getProxyId(conduitKeyPair.data)}
+                                />
+                            ) : (
+                                <ActivityIndicator
+                                    size={"small"}
+                                    color={palette.white}
+                                />
+                            )}
                         </View>
                         <View
                             style={[
@@ -233,29 +256,22 @@ export function ConduitSettings() {
                                 {t("SEND_DIAGNOSTIC_I18N.string")}
                             </Text>
                             <Pressable
-                                style={[
-                                    ss.circle38,
-                                    ss.alignCenter,
-                                    ss.justifyCenter,
-                                    {
-                                        backgroundColor: palette.redTint2,
-                                    },
-                                ]}
+                                style={iconButton}
                                 onPress={() => {
                                     sendFeedback();
                                     setSendDiagnosticIcon(
-                                        <MaterialIcons
+                                        <Feather
                                             name="check"
                                             size={24}
-                                            color={palette.white}
+                                            color={palette.black}
                                         />,
                                     );
                                     setTimeout(() => {
                                         setSendDiagnosticIcon(
-                                            <FontAwesome
+                                            <Feather
                                                 name="send"
-                                                size={18}
-                                                color={palette.white}
+                                                size={24}
+                                                color={palette.black}
                                             />,
                                         );
                                     }, 3000);
@@ -276,7 +292,21 @@ export function ConduitSettings() {
                         </View>
                     </View>
                 </ScrollView>
-            </>
+                <Pressable
+                    style={[
+                        ss.absolute,
+                        ss.row,
+                        ss.fullWidth,
+                        ss.justifyCenter,
+                        { bottom: 0 },
+                    ]}
+                    onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+                >
+                    <Text style={[ss.greyText, ss.bodyFont]}>
+                        {t("PRIVACY_POLICY_I18N.string")}
+                    </Text>
+                </Pressable>
+            </View>
         );
     }
 
@@ -290,6 +320,7 @@ export function ConduitSettings() {
                         ss.alignCenter,
                         ss.justifyCenter,
                         ss.doubleGap,
+                        ss.doublePadded,
                     ]}
                 >
                     <Text style={[ss.whiteText, ss.bodyFont]}>
@@ -297,12 +328,15 @@ export function ConduitSettings() {
                             "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N.string",
                         )}
                     </Text>
+                    <Text style={[ss.whiteText, ss.bodyFont]}>
+                        {t("CONFIRM_CHANGES_I18N.string")}
+                    </Text>
                     <View style={[ss.row]}>
                         <Pressable
                             style={[
                                 ss.padded,
                                 ss.rounded10,
-                                { backgroundColor: palette.redTint2 },
+                                { backgroundColor: palette.white },
                             ]}
                             onPress={async () => {
                                 await commitChanges();
@@ -310,7 +344,7 @@ export function ConduitSettings() {
                                 setDisplayRestartConfirmation(false);
                             }}
                         >
-                            <Text style={[ss.whiteText, ss.bodyFont]}>
+                            <Text style={[ss.blackText, ss.bodyFont]}>
                                 {t("CONFIRM_I18N.string")}
                             </Text>
                         </Pressable>
@@ -326,10 +360,7 @@ export function ConduitSettings() {
                             }}
                         >
                             <Text
-                                style={[
-                                    ss.bodyFont,
-                                    { color: palette.redTint2 },
-                                ]}
+                                style={[ss.bodyFont, { color: palette.white }]}
                             >
                                 {t("CANCEL_I18N.string")}
                             </Text>
@@ -342,16 +373,12 @@ export function ConduitSettings() {
 
     // fadeIn on first load
     const fadeIn = useSharedValue(0);
-    React.useEffect(() => {
-        if (inProxyStatus === "RUNNING") {
-            // fade in right away
-            fadeIn.value = withTiming(1, { duration: 2000 });
-        } else if (inProxyStatus === "STOPPED") {
-            // fade in after a delay for particle animation
-            fadeIn.value = withDelay(2800, withTiming(1, { duration: 2000 }));
-        }
-        // implicit do nothing on status unknown
-    }, [inProxyStatus]);
+    if (inProxyStatus !== "UNKNOWN") {
+        fadeIn.value = withDelay(
+            inProxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
+            withTiming(0.8, { duration: 2000 }),
+        );
+    }
 
     const settingsIconSvg = useSVG(require("@/assets/images/settings.svg"));
     const settingsIconSize = win.width * 0.2;
@@ -362,12 +389,12 @@ export function ConduitSettings() {
     const opacityMatrix = useDerivedValue(() => {
         // prettier-ignore
         return [
-         // R, G, B, A, Bias
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, fadeIn.value, 0,
-        ];
+     // R, G, B, A, Bias
+        1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1, 0, 0,
+        0, 0, 0, fadeIn.value, 0,
+    ];
     });
 
     return (
@@ -410,12 +437,45 @@ export function ConduitSettings() {
                 />
             </View>
             {/* this empty modal fades in the opacity overlay */}
-            <Modal animationType="fade" visible={modalOpen} transparent={true}>
+            <Modal
+                animationType="fade"
+                visible={modalOpen}
+                transparent={true}
+                onRequestClose={onSettingsClose}
+            >
                 <View style={[ss.underlay]} />
             </Modal>
             {/* this modal has the settings menu and slides up */}
-            <Modal animationType="slide" visible={modalOpen} transparent={true}>
-                <View style={[ss.modalHalfBottom, ss.padded]}>
+            <Modal
+                animationType="slide"
+                visible={modalOpen}
+                transparent={true}
+                onRequestClose={onSettingsClose}
+            >
+                <View style={[ss.modalHalfBottom]}>
+                    <Canvas style={[ss.flex]}>
+                        <RoundedRect
+                            x={0}
+                            y={0}
+                            width={win.width}
+                            height={win.height}
+                            r={20}
+                        >
+                            <LinearGradient
+                                start={vec(win.width / 2, 0)}
+                                end={vec(win.width / 2, win.height)}
+                                colors={[
+                                    palette.blue,
+                                    palette.purple,
+                                    palette.black,
+                                    palette.black,
+                                    palette.black,
+                                ]}
+                            />
+                        </RoundedRect>
+                    </Canvas>
+                </View>
+                <View style={[ss.modalHalfBottom]}>
                     {displayRestartConfirmation ? (
                         <RestartConfirmation />
                     ) : (

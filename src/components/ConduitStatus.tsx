@@ -21,6 +21,7 @@ import {
 } from "react-native-reanimated";
 
 import { niceBytes } from "@/src/common/utils";
+import { useInProxyContext } from "@/src/inproxy/context";
 import {
     useInProxyCurrentConnectedClients,
     useInProxyCurrentConnectingClients,
@@ -38,6 +39,7 @@ export function ConduitStatus({
 }) {
     const { t } = useTranslation();
 
+    const { logErrorToDiagnostic } = useInProxyContext();
     const { data: inProxyStatus } = useInProxyStatus();
     const { data: connectedPeers } = useInProxyCurrentConnectedClients();
     const { data: connectingPeers } = useInProxyCurrentConnectingClients();
@@ -47,22 +49,20 @@ export function ConduitStatus({
     const fader = useSharedValue(0);
     const shouldAnimateIn = React.useRef(true);
     const shouldAnimateOut = React.useRef(true);
-    React.useEffect(() => {
-        if (inProxyStatus === "RUNNING") {
-            if (shouldAnimateIn.current) {
-                fader.value = withTiming(1, { duration: 1000 });
-                shouldAnimateIn.current = false;
-                shouldAnimateOut.current = true;
-            }
-        } else if (inProxyStatus === "STOPPED") {
-            if (shouldAnimateOut.current) {
-                fader.value = withTiming(0, { duration: 1000 });
-                shouldAnimateIn.current = true;
-                shouldAnimateOut.current = false;
-            }
+    if (inProxyStatus === "RUNNING") {
+        if (shouldAnimateIn.current) {
+            fader.value = withTiming(1, { duration: 1000 });
+            shouldAnimateIn.current = false;
+            shouldAnimateOut.current = true;
         }
-        // implicit do nothing if inProxyStatus is "unknown"
-    }, [inProxyStatus]);
+    } else if (inProxyStatus === "STOPPED") {
+        if (shouldAnimateOut.current) {
+            fader.value = withTiming(0, { duration: 1000 });
+            shouldAnimateIn.current = true;
+            shouldAnimateOut.current = false;
+        }
+    }
+    // implicit do nothing if inProxyStatus is "unknown"
 
     const fontMgr = useFonts({ Jura: [fonts.JuraRegular] });
     const statusParagraph = React.useMemo(() => {
@@ -96,7 +96,10 @@ export function ConduitStatus({
         const totalBytesTransferredText = t(
             "TOTAL_BYTES_TRANSFERRED_I18N.string",
             {
-                niceBytes: niceBytes(totalBytesTransferred),
+                niceBytes: niceBytes(
+                    totalBytesTransferred,
+                    logErrorToDiagnostic,
+                ),
             },
         );
 

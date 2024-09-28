@@ -1,10 +1,15 @@
-import { MaterialIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import {
+    iconButton,
+    lineItemStyle,
+    palette,
+    sharedStyles as ss,
+} from "@/src/styles";
 
 export function EditableNumberSlider({
     label,
@@ -58,20 +63,13 @@ export function EditableNumberSlider({
                         <Text style={[ss.bodyFont, ss.whiteText]}>{units}</Text>
                     </View>
                     <Pressable
-                        style={[
-                            ss.circle38,
-                            ss.justifyCenter,
-                            ss.alignCenter,
-                            {
-                                backgroundColor: palette.redTint2,
-                            },
-                        ]}
+                        style={iconButton}
                         onPress={() => setIsEditing(true)}
                     >
-                        <MaterialIcons
-                            name="edit"
-                            size={20}
-                            color={palette.white}
+                        <Feather
+                            name="edit-2"
+                            size={24}
+                            color={palette.black}
                         />
                     </Pressable>
                 </View>
@@ -88,8 +86,8 @@ export function EditableNumberSlider({
                     value={value}
                     onValueChange={(value) => setValue(value)}
                     maximumTrackTintColor="white"
-                    minimumTrackTintColor={palette.redTint2}
-                    thumbTintColor={palette.redTint2}
+                    minimumTrackTintColor={palette.white}
+                    thumbTintColor={palette.white}
                 />
                 <View style={[ss.row, ss.alignCenter]}>
                     <View style={[ss.row, ss.alignCenter, ss.nogap]}>
@@ -113,11 +111,11 @@ export function EditableNumberSlider({
                         style={[
                             ss.halfPadded,
                             ss.rounded10,
-                            { backgroundColor: palette.redTint2 },
+                            { backgroundColor: palette.white },
                         ]}
                     >
                         <Pressable onPress={commit}>
-                            <Text style={[ss.whiteText, ss.bodyFont]}>
+                            <Text style={[ss.blackText, ss.bodyFont]}>
                                 {t("SAVE_I18N.string")}
                             </Text>
                         </Pressable>

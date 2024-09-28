@@ -1,13 +1,17 @@
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import * as SecureStore from "expo-secure-store";
 import React from "react";
 
 import {
-    Ed25519KeyPair,
+    base64nopadToKeyPair,
     deriveEd25519KeyPair,
+    Ed25519KeyPair,
+    keyPairToBase64nopad,
 } from "@/src/common/cryptography";
 import { formatConduitBip32Path } from "@/src/inproxy/utils";
 
 export interface AccountContextValue {
-    conduitKeyPair: Ed25519KeyPair;
+    conduitKeyPair: UseQueryResult<Ed25519KeyPair>;
 }
 
 const AccountContext = React.createContext<AccountContextValue | null>(null);
@@ -39,17 +43,44 @@ export function AccountProvider({
     deviceNonce: number;
     children: React.ReactNode;
 }) {
-    const conduitKeyPair = React.useMemo(() => {
+    async function retrieveConduitKeyPair() {
         // TODO: store in asyncstorage to save startup time
-        const derived = deriveEd25519KeyPair(
-            mnemonic,
-            formatConduitBip32Path(deviceNonce),
+        const storedConduitKeyPairBase64nopad = await SecureStore.getItemAsync(
+            "conduitKeyPairBase64nopad",
         );
-        if (derived instanceof Error) {
-            throw derived;
+        if (!storedConduitKeyPairBase64nopad) {
+            const derived = deriveEd25519KeyPair(
+                mnemonic,
+                formatConduitBip32Path(deviceNonce),
+            );
+            if (derived instanceof Error) {
+                throw derived;
+            }
+            const conduitKeyPairBase64NoPad = keyPairToBase64nopad(derived);
+            if (conduitKeyPairBase64NoPad instanceof Error) {
+                throw conduitKeyPairBase64NoPad;
+            }
+            await SecureStore.setItemAsync(
+                "conduitKeyPairBase64nopad",
+                conduitKeyPairBase64NoPad,
+            );
+            return derived;
+        } else {
+            const storedConduitKeyPair = base64nopadToKeyPair(
+                storedConduitKeyPairBase64nopad,
+            );
+            if (storedConduitKeyPair instanceof Error) {
+                throw storedConduitKeyPair;
+            }
+            return storedConduitKeyPair;
         }
-        return derived;
-    }, [mnemonic]);
+    }
+
+    const conduitKeyPair = useQuery({
+        queryKey: ["conduitKeyPair"],
+        queryFn: retrieveConduitKeyPair,
+        refetchInterval: -1,
+    });
 
     const value = {
         conduitKeyPair,

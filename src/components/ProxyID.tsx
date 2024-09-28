@@ -14,14 +14,14 @@ export function ProxyID({
 }) {
     // proxyId is a base64nopad encoded X25519 public key
     const [copyIcon, setCopyIcon] = React.useState(
-        <Feather name="copy" size={16} color={palette.white} />,
+        <Feather name="copy" size={24} color={palette.black} />,
     );
 
     function showCopySuccess() {
-        setCopyIcon(<Feather name="check" size={16} color={palette.white} />);
+        setCopyIcon(<Feather name="check" size={24} color={palette.black} />);
         setTimeout(() => {
             setCopyIcon(
-                <Feather name="copy" size={16} color={palette.white} />,
+                <Feather name="copy" size={24} color={palette.black} />,
             );
         }, 2500);
     }
@@ -40,11 +40,11 @@ export function ProxyID({
                     ss.rounded5,
                     ss.halfPadded,
                     {
-                        backgroundColor: palette.redTint2,
+                        backgroundColor: palette.white,
                     },
                 ]}
             >
-                <Text style={[ss.whiteText, ss.bodyFont]}>
+                <Text style={[ss.blackText, ss.bodyFont]}>
                     {proxyId.substring(0, 4)}...
                 </Text>
                 {copyable && copyIcon}

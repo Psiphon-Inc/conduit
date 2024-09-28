@@ -1,10 +1,3 @@
-export function handleError(error: Error): Error {
-    // TODO: replace alert with some error surfacing mechanism
-    //alert(error.message);
-    console.error(unpackErrorMessage(error, false));
-    return error;
-}
-
 export function wrapError(value: unknown, message: string): Error {
     if (value instanceof Error) {
         return new Error(message, { cause: value });

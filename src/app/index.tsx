@@ -2,46 +2,63 @@ import {
     BlendColor,
     Blur,
     Canvas,
-    ColorShader,
+    ColorMatrix,
     Group,
-    Image,
     ImageSVG,
     Paint,
-    Text,
+    fitbox,
     interpolateColors,
-    useFont,
-    useImage,
+    rect,
     useSVG,
 } from "@shopify/react-native-skia";
+import { router } from "expo-router";
 import React from "react";
-import { useTranslation } from "react-i18next";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import {
+    runOnJS,
     useDerivedValue,
     useSharedValue,
     withRepeat,
     withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuthContext } from "@/src/auth/context";
-import { handleError } from "@/src/common/errors";
-import { fonts, palette, sharedStyles as ss } from "@/src/styles";
-import { router } from "expo-router";
+import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 export default function Index() {
-    const insets = useSafeAreaInsets();
     const { signIn } = useAuthContext();
-    const { t } = useTranslation();
+    const win = useWindowDimensions();
 
+    const canvasSize = win.width;
+
+    // draw Psiphon Conduit wordmark
+    const conduitSvg = useSVG(require("@/assets/images/conduit.svg"));
+    const psiphonSvg = useSVG(require("@/assets/images/psiphon.svg"));
+    const wordmarksOriginalWidth = 319;
+    const wordmarksOriginalHeight = 78;
+    const wordmarksTargetWidth = canvasSize / 3; //100
+    const wordmarksTargetHeight =
+        (wordmarksTargetWidth / wordmarksOriginalWidth) *
+        wordmarksOriginalHeight;
+    const wordmarkSrc = rect(
+        0,
+        0,
+        wordmarksOriginalWidth,
+        wordmarksOriginalHeight,
+    );
+    const wordmarkDst = rect(
+        (canvasSize - wordmarksTargetWidth) / 2,
+        0,
+        wordmarksTargetWidth,
+        wordmarksTargetHeight,
+    );
+
+    // animate the conduit flower logo pulsing with different colors while the
+    // signIn is running.
     const conduitFlowerSvg = useSVG(
         require("@/assets/images/conduit-flower-icon.svg"),
     );
-    const conduitFlowerPng = useImage(
-        require("@/assets/images/flower-no-bg.png"),
-    );
-
-    const canvasSize = 300;
     const cyclePalette = [
         palette.white,
         palette.blue,
@@ -56,49 +73,73 @@ export default function Index() {
             cyclePalette,
         );
     });
+    const flowerOriginalDim = 26;
+    const flowerSize = canvasSize / 4;
+    const flowerSrc = rect(0, 0, flowerOriginalDim, flowerOriginalDim);
+    const flowerDst = rect(
+        canvasSize / 2 - flowerSize / 2,
+        wordmarksTargetHeight * 2.2,
+        flowerSize,
+        flowerSize,
+    );
 
-    const maxFlowerSize = 80;
-    const flowerSize = useDerivedValue(() => {
-        return maxFlowerSize - lfo.value * 5;
-    });
-    const flowerCenteringTransform = useDerivedValue(() => {
-        return [
-            { translateX: canvasSize / 2 - flowerSize.value / 2 },
-            { translateY: canvasSize / 2 - flowerSize.value / 2 },
-        ];
-    });
+    const opacity = useSharedValue(0);
 
-    React.useEffect(() => {
-        lfo.value = withRepeat(withTiming(3, { duration: 3000 }), -1, true);
+    function doSignIn() {
         signIn().then((result) => {
             if (result instanceof Error) {
-                handleError(result);
+                // TODO: Right now we will never learn about signIn errors since
+                // we can't record error into feedback log yet
+                // Show some error state in the UI with some steps to fix?
+                console.error(result);
             } else {
                 // Route to home screen as soon as the credentials are loaded,
                 // this may happen before the splash animation fully completes
                 // replace as we do not want user to be able to go "back" to
                 // the splash screen
-                router.replace("/(app)/");
+                console.log("signIn complete");
+                opacity.value = withTiming(0, { duration: 600 }, () => {
+                    console.log("opacity complete callback");
+                    runOnJS(router.replace)("/(app)/");
+                });
             }
         });
-    }, []);
-
-    const loadingText = t("LOADING_I18N.string");
-    const font = useFont(fonts.JuraRegular, 20);
-    if (!font) {
-        return null;
     }
 
+    React.useEffect(() => {
+        lfo.value = withRepeat(withTiming(3, { duration: 3000 }), -1, true);
+        // NOTE: This is introducing an artificial delay of 1 second to have the
+        // nice fade in before signing in, since sign in is nearly instant now
+        // that we are storing the derived conduit key in SecureStore.
+        opacity.value = withTiming(1, { duration: 1000 }, () =>
+            runOnJS(doSignIn)(),
+        );
+    }, []);
+
+    const morphMatrix = useDerivedValue(() => {
+        // prettier-ignore
+        return [
+            // R, G, B, A, Bias
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, (lfo.value+0.5)*3, -0.2,
+    ]
+    });
+
+    const opacityMatrix = useDerivedValue(() => {
+        // prettier-ignore
+        return [
+         // R, G, B, A, Bias
+            1, 0, 0, 0, 0,
+            0, 1, 0, 0, 0,
+            0, 0, 1, 0, 0,
+            0, 0, 0, opacity.value, 0,
+        ];
+    });
+
     return (
-        <View
-            style={{
-                flex: 1,
-                marginTop: insets.top,
-                marginBottom: insets.bottom,
-                marginLeft: insets.left,
-                marginRight: insets.right,
-            }}
-        >
+        <SafeAreaView>
             <View
                 style={{
                     flex: 1,
@@ -116,52 +157,72 @@ export default function Index() {
                         <Group
                             layer={
                                 <Paint>
-                                    <BlendColor
-                                        color={flowerColor}
-                                        mode="srcIn"
-                                    />
+                                    <ColorMatrix matrix={opacityMatrix} />
                                 </Paint>
                             }
-                            transform={flowerCenteringTransform}
                         >
-                            <ImageSVG
-                                svg={conduitFlowerSvg}
-                                width={flowerSize}
-                                height={flowerSize}
-                            />
-                            <Image
-                                image={conduitFlowerPng}
-                                width={flowerSize}
-                                height={flowerSize}
-                            />
-                            <Blur blur={lfo} />
+                            <Group
+                                transform={fitbox(
+                                    "contain",
+                                    wordmarkSrc,
+                                    wordmarkDst,
+                                )}
+                            >
+                                <ImageSVG
+                                    svg={psiphonSvg}
+                                    y={0}
+                                    height={wordmarksOriginalHeight}
+                                    width={wordmarksOriginalWidth}
+                                />
+                            </Group>
+                            <Group
+                                transform={fitbox(
+                                    "contain",
+                                    wordmarkSrc,
+                                    wordmarkDst,
+                                )}
+                            >
+                                <ImageSVG
+                                    svg={conduitSvg}
+                                    y={wordmarksOriginalHeight}
+                                    height={wordmarksOriginalHeight}
+                                    width={wordmarksOriginalWidth}
+                                />
+                            </Group>
+                            <Group
+                                layer={
+                                    <Paint>
+                                        <BlendColor
+                                            color={flowerColor}
+                                            mode="srcIn"
+                                        />
+                                    </Paint>
+                                }
+                                transform={fitbox(
+                                    "contain",
+                                    flowerSrc,
+                                    flowerDst,
+                                )}
+                            >
+                                <Group
+                                    layer={
+                                        <Paint>
+                                            <Blur blur={1} />
+                                            <ColorMatrix matrix={morphMatrix} />
+                                        </Paint>
+                                    }
+                                >
+                                    <ImageSVG
+                                        svg={conduitFlowerSvg}
+                                        width={flowerSize}
+                                        height={flowerSize}
+                                    />
+                                </Group>
+                            </Group>
                         </Group>
-                        <Text
-                            x={
-                                canvasSize / 2 -
-                                font.measureText(loadingText).width / 2
-                            }
-                            y={canvasSize / 2 + maxFlowerSize}
-                            text={loadingText}
-                            font={font}
-                        >
-                            <ColorShader color={flowerColor} />
-                            <Blur blur={3} />
-                        </Text>
-                        <Text
-                            x={
-                                canvasSize / 2 -
-                                font.measureText(loadingText).width / 2
-                            }
-                            y={canvasSize / 2 + maxFlowerSize}
-                            text={loadingText}
-                            font={font}
-                        >
-                            <ColorShader color={flowerColor} />
-                        </Text>
                     </Canvas>
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 }

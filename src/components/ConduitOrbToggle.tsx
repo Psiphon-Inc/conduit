@@ -15,6 +15,7 @@ import {
     useImage,
     vec,
 } from "@shopify/react-native-skia";
+import * as Haptics from "expo-haptics";
 import { VideoView, useVideoPlayer } from "expo-video";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -24,20 +25,23 @@ import {
     useSharedValue,
     withDelay,
     withRepeat,
+    withSequence,
     withSpring,
     withTiming,
 } from "react-native-reanimated";
+import { z } from "zod";
 
+import { ConduitConnectionLight } from "@/src/components/ConduitConnectionLight";
+import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
 import { useInProxyContext } from "@/src/inproxy/context";
 import {
     useInProxyCurrentConnectedClients,
     useInProxyStatus,
 } from "@/src/inproxy/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
-import { z } from "zod";
-import { ConduitConnectionLight } from "./ConduitConnectionLight";
 
 export function ConduitOrbToggle({ size }: { size: number }) {
+    console.log("ConduitOrbToggle Render");
     const { t } = useTranslation();
     const { toggleInProxy } = useInProxyContext();
     const { data: inProxyStatus } = useInProxyStatus();
@@ -131,10 +135,9 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         orbRadius.value = withDelay(
             delay,
             withSpring(finalOrbRadius, {
-                mass: 1,
+                mass: 1.2,
                 damping: 10,
                 stiffness: 100,
-                overshootClamping: false,
                 restDisplacementThreshold: 0.01,
                 restSpeedThreshold: 2,
             }),
@@ -153,6 +156,21 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         }
     }
 
+    function animateOrbPressed() {
+        // provide instant feedback to button press, since the other animation
+        // states are tied to the ConduitModule output.
+        orbRadius.value = withSequence(
+            withTiming(finalOrbRadius * 0.95, { duration: 150 }),
+            withSpring(finalOrbRadius, {
+                duration: 1000,
+                dampingRatio: 0.1,
+                stiffness: 69,
+                restDisplacementThreshold: 0.01,
+                restSpeedThreshold: 42,
+            }),
+        );
+    }
+
     // We have 4 animation states that depend on the state of the InProxy:
     const AnimationStateSchema = z.enum([
         // Conduit running but 0 clients connected, the orb will pulse.
@@ -166,69 +184,70 @@ export function ConduitOrbToggle({ size }: { size: number }) {
     ]);
     type AnimationState = z.infer<typeof AnimationStateSchema>;
     const animationState = React.useRef<AnimationState>("Unknown");
-    React.useEffect(() => {
-        if (inProxyStatus === "RUNNING") {
-            if (inProxyCurrentConnectedClients === 0) {
-                if (animationState.current !== "ProxyAnnouncing") {
-                    animateProxyAnnouncing();
-                    animationState.current = "ProxyAnnouncing";
-                }
-            } else {
-                if (animationState.current !== "ProxyInUse") {
-                    animateProxyInUse();
-                    animationState.current = "ProxyInUse";
-                }
-            }
-        } else if (inProxyStatus === "STOPPED") {
-            if (
-                animationState.current !== "ProxyIdle" &&
-                animationState.current !== "Unknown"
-            ) {
-                animateTurnOffProxy();
-                animationState.current = "ProxyIdle";
-            }
-        }
-        // implicit do nothing if status is UNKNOWN
-    }, [inProxyStatus, inProxyCurrentConnectedClients]);
 
     // In addition to the 4 inProxyStatus dependent animation states above, we
     // also have an intro animation to play when the app is opened.
+    // Use initialStateDetermined ref to track the very first render
+    const [showVideo, setShowVideo] = React.useState(false);
     const introVideoPlayer = useVideoPlayer(
         require("@/assets/video/particle-swirl.mp4"),
-        (player) => {
-            player.loop = false;
-            player.play();
-        },
     );
     // If InProxy is already RUNNING when the app is opened, the intro animation
     // will be a quick fade in of the UI. If the InProxy is STOPPED when the app
     // is opened, this fade should be delayed until the particle animation video
     // has played.
     // The inProxyStatus will begin as UNKNOWN, and then become RUNNING or
-    // STOPPED once the module is hooked up. We need only want to play the
-    // particle effect intro if the proxy is stopped when the app is opened.
-    const [showVideo, setShowVideo] = React.useState(false);
-    const initialStateDetermined = React.useRef(false);
+    // STOPPED once the module is hooked up.
+    // Use this in initialStateDetermined state variable to coordiate the order
+    // of animations: first we want the intro to play, then we want to be hooked
+    // up to InProxyStatus changes.
+    const [initialStateDetermined, setInitialStateDetermined] =
+        React.useState(false);
     React.useEffect(() => {
-        if (!initialStateDetermined.current) {
+        if (!initialStateDetermined) {
             if (inProxyStatus === "RUNNING") {
-                // Already Running: play intro animation without delay
                 setShowVideo(false);
                 animateIntro(0);
-                initialStateDetermined.current = true;
+                setInitialStateDetermined(true);
             } else if (inProxyStatus === "STOPPED") {
-                // Stopped: play intro video and delay animation
-                setShowVideo(true);
-                setTimeout(() => {
+                introVideoPlayer.addListener("playToEnd", () => {
                     setShowVideo(false);
-                }, 2800);
-                animateIntro(2800);
-                initialStateDetermined.current = true;
-                animationState.current = "ProxyIdle";
+                });
+                setShowVideo(true);
+                animateIntro(PARTICLE_VIDEO_DELAY_MS);
+                introVideoPlayer.play();
+                setInitialStateDetermined(true);
             }
             // implicit do nothing if status is UNKNOWN
         }
     }, [inProxyStatus]);
+
+    React.useEffect(() => {
+        if (initialStateDetermined) {
+            if (inProxyStatus === "RUNNING") {
+                if (inProxyCurrentConnectedClients === 0) {
+                    if (animationState.current !== "ProxyAnnouncing") {
+                        animateProxyAnnouncing();
+                        animationState.current = "ProxyAnnouncing";
+                    }
+                } else {
+                    if (animationState.current !== "ProxyInUse") {
+                        animateProxyInUse();
+                        animationState.current = "ProxyInUse";
+                    }
+                }
+            } else if (inProxyStatus === "STOPPED") {
+                if (
+                    animationState.current !== "ProxyIdle" &&
+                    animationState.current !== "Unknown"
+                ) {
+                    animateTurnOffProxy();
+                    animationState.current = "ProxyIdle";
+                }
+            }
+        }
+        // implicit do nothing if status is UNKNOWN
+    }, [inProxyStatus, initialStateDetermined]);
 
     // This morphLayer creates a neat effect where elements that are close to
     // each other appear to morph together. Any overlapping elements in the
@@ -251,12 +270,10 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         );
     }, []);
 
+    // TODO: switch to the newer Paragraph model
     const font = useFont(fonts.JuraRegular, 20);
-    if (!font) {
-        return null;
-    }
-    const orbTextXOffset = -font.measureText(orbText).width / 2;
-    const orbTextYOffset = font.measureText(orbText).height / 2;
+    const orbTextXOffset = font ? -font.measureText(orbText).width / 2 : 0;
+    const orbTextYOffset = font ? font.measureText(orbText).height / 2 : 0;
 
     return (
         <View
@@ -381,8 +398,11 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                     },
                 ]}
                 onPress={() => {
+                    Haptics.selectionAsync();
+                    animateOrbPressed();
                     toggleInProxy();
                 }}
+                disabled={showVideo}
             />
         </View>
     );

@@ -55,7 +55,7 @@
         "string": "Max Peers"
     },
     "MBPS_PER_PEER_I18N": {
-        "string": "MBps Per Peer"
+        "string": "Mbps Per Peer"
     },
     "MAX_BANDWIDTH_USAGE_I18N": {
         "string": "Max Bandwidth Usage"
@@ -64,7 +64,10 @@
         "string": "Send Diagnostic"
     },
     "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
-        "string": "Changing Conduit settings requires restarting your Conduit Station. Any connected users will be disconnected. Confirm changes?"
+        "string": "Changing Conduit settings requires restarting your Conduit Station. Any connected users will be disconnected."
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "Confirm Changes?"
     },
     "NOTIFICATIONS_I18N": {
         "string": "Notifications"
@@ -86,5 +89,11 @@
     },
     "UNKNOWN_I18N": {
         "string": "UNKNOWN"
+    },
+    "SETTINGS_I18N": {
+        "string": "Settings"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "Privacy Policy"
     }
 }

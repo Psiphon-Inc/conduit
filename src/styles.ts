@@ -36,6 +36,7 @@ export const palette = {
     purpleShade4: "#1b131e",
     purpleShade5: "#09060a",
     white: "#E0E0E0",
+    midGrey: "#909090",
     grey: "#342F2F",
     transparent: "rgba(0,0,0,0)",
     transparentBlue: "rgba(59,122,150,0.5)",
@@ -216,7 +217,7 @@ export const sharedStyles = StyleSheet.create({
         flexWrap: "wrap",
     },
     bodyFont: {
-        fontSize: 20,
+        fontSize: 18,
         fontFamily: "JuraRegular",
     },
     largeFont: {
@@ -235,7 +236,7 @@ export const sharedStyles = StyleSheet.create({
         color: palette.white,
     },
     greyText: {
-        color: palette.grey,
+        color: palette.midGrey,
     },
     blackText: {
         color: palette.black,
@@ -253,7 +254,11 @@ export const sharedStyles = StyleSheet.create({
     },
     greyBorderBottom: {
         borderBottomWidth: 1,
-        borderColor: palette.grey,
+        borderColor: palette.midGrey,
+    },
+    greyBorderTop: {
+        borderBottomWidth: 1,
+        borderColor: palette.midGrey,
     },
     blackBg: {
         backgroundColor: palette.black,
@@ -278,8 +283,6 @@ export const sharedStyles = StyleSheet.create({
         height: "70%",
         width: "100%",
         position: "absolute",
-        backgroundColor: palette.black,
-        padding: 20,
         bottom: 0,
     },
     modalCenter: {
@@ -351,6 +354,16 @@ export const sharedStyles = StyleSheet.create({
         top: 10,
         right: 10,
     },
+    absoluteBottomLeft: {
+        position: "absolute",
+        left: 10,
+        bottom: 10,
+    },
+    absoluteBottomRight: {
+        position: "absolute",
+        right: 10,
+        bottom: 10,
+    },
     underlay: {
         position: "absolute",
         left: 0,
@@ -367,6 +380,14 @@ export const lineItemStyle = [
     sharedStyles.row,
     sharedStyles.height60,
     sharedStyles.greyBorderBottom,
+];
+
+export const iconButton = [
+    sharedStyles.rounded5,
+    sharedStyles.justifyCenter,
+    sharedStyles.alignCenter,
+    sharedStyles.halfPadded,
+    sharedStyles.whiteBg,
 ];
 
 export const fonts = {

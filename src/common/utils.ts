@@ -1,4 +1,4 @@
-import { handleError, wrapError } from "@/src/common/errors";
+import { wrapError } from "@/src/common/errors";
 
 export function byteArraysAreEqual(a: Uint8Array, b: Uint8Array): boolean {
     if (!a || !b || a.length !== b.length) {
@@ -16,7 +16,7 @@ export function uint8ArrayToJsonObject(arr: Uint8Array): any {
     return JSON.parse(new TextDecoder().decode(arr));
 }
 
-export function niceBytes(bytes: number) {
+export function niceBytes(bytes: number, errorHandler: (error: Error) => void) {
     var units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
     var unit = units.shift() as string;
     try {
@@ -25,7 +25,7 @@ export function niceBytes(bytes: number) {
             unit = units.shift() as string;
         }
     } catch (error) {
-        handleError(wrapError(error, "Error converting number to niceBytes"));
+        errorHandler(wrapError(error, "Error converting number to niceBytes"));
     }
 
     return `${bytes.toFixed(1)} ${unit}`;

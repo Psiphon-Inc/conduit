@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { ConduitStatus } from "@/src/components/ConduitStatus";
+import { GitHash } from "@/src/components/GitHash";
 import { LogoWordmark } from "@/src/components/LogoWordmark";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 
@@ -35,8 +36,10 @@ export default function HomeScreen() {
                 width={totalUsableWidth}
                 height={conduitStatusHeight}
             />
-            {/* Settings icon is absolutely positioned */}
+            {/* Settings icon is absolutely positioned bottom right */}
             <ConduitSettings />
+            {/* GIT_HASH absolutely positioned bottom left */}
+            <GitHash />
         </SafeAreaView>
     );
 }

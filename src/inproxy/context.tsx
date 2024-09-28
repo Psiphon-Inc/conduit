@@ -5,13 +5,13 @@ import { NativeEventEmitter } from "react-native";
 
 import { useAccountContext } from "@/src/account/context";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
-import { handleError, wrapError } from "@/src/common/errors";
+import { unpackErrorMessage, wrapError } from "@/src/common/errors";
 import {
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
-//import { ConduitModule } from "@/src/inproxy/module";
-import { ConduitModule } from "@/src/inproxy/mockModule";
+import { ConduitModule } from "@/src/inproxy/module";
+//import { ConduitModule } from "@/src/inproxy/mockModule";
 import {
     InProxyActivityStats,
     InProxyActivityStatsSchema,
@@ -44,17 +44,19 @@ export function useInProxyContext(): InProxyContextValue {
  * The InProxyProvider exposes the ConduitModule API.
  */
 export function InProxyProvider({ children }: { children: React.ReactNode }) {
-    const [inProxyParameters, setInProxyParameters] =
-        React.useState<InProxyParameters>(getDefaultInProxyParameters());
-
     const { conduitKeyPair } = useAccountContext();
 
-    const queryClient = useQueryClient();
+    // This provider handles tracking the user-selected InProxy parameters, and
+    // persisting them in AsyncStorage.
+    const [inProxyParameters, setInProxyParameters] =
+        React.useState<InProxyParameters>(getDefaultInProxyParameters());
 
     // This provider makes use of react-query to track the data emitted by the
     // native module. When an event is received, the provider updates the query
     // data for the corresponding useQuery cache. The hooks the app uses to read
     // these values are implemented in `hooks.ts`.
+    const queryClient = useQueryClient();
+
     React.useEffect(() => {
         // this manages InProxyEvent subscription and connects it to the handler
         const emitter = new NativeEventEmitter(ConduitModule);
@@ -76,7 +78,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                 try {
                     handleProxyState(ProxyStateSchema.parse(inProxyEvent.data));
                 } catch (error) {
-                    handleError(
+                    logErrorToDiagnostic(
                         wrapError(error, "Failed to handle proxyState"),
                     );
                 }
@@ -85,7 +87,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                 try {
                     handleProxyError(ProxyErrorSchema.parse(inProxyEvent.data));
                 } catch (error) {
-                    handleError(
+                    logErrorToDiagnostic(
                         wrapError(error, "Failed to handle proxyError"),
                     );
                 }
@@ -96,7 +98,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                         InProxyActivityStatsSchema.parse(inProxyEvent.data),
                     );
                 } catch (error) {
-                    handleError(
+                    logErrorToDiagnostic(
                         wrapError(
                             error,
                             "Failed to handle inProxyActivityStats",
@@ -105,7 +107,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                 }
                 break;
             default:
-                handleError(
+                logErrorToDiagnostic(
                     new Error(`Unhandled event type: ${inProxyEvent.type}`),
                 );
         }
@@ -124,12 +126,6 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             queryClient.setQueryData(["inProxyMustUpgrade"], true);
         } else {
             // TODO: display other errors in UI?
-            handleError(
-                wrapError(
-                    new Error(inProxyError.action),
-                    "Received from ConduitModule",
-                ),
-            );
         }
     }
 
@@ -161,6 +157,22 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     // the module/tunnel-core uses. The values stored in AsyncStorage will be
     // taken as the source of truth.
     async function loadInProxyParameters() {
+        if (conduitKeyPair.error) {
+            const conduitKeyError = wrapError(
+                conduitKeyPair.error,
+                "Error retrieving conduit key pair",
+            );
+            logErrorToDiagnostic(conduitKeyError);
+            console.error(conduitKeyError);
+            return;
+        }
+        if (!conduitKeyPair.data) {
+            console.log(
+                "wait until conduitKeyPair is loaded before loading other parameters",
+            );
+            return;
+        }
+        console.log("initial load of InProxyParameters from AsyncStorage");
         try {
             // Retrieve stored inproxy parameters from the application layer
             const storedInProxyMaxClients =
@@ -172,7 +184,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
 
             // Prepare the stored/default parameters from the application layer
             const storedInProxyParameters = InProxyParametersSchema.parse({
-                privateKey: keyPairToBase64nopad(conduitKeyPair),
+                privateKey: keyPairToBase64nopad(conduitKeyPair.data),
                 maxClients: storedInProxyMaxClients
                     ? parseInt(storedInProxyMaxClients)
                     : DEFAULT_INPROXY_MAX_CLIENTS,
@@ -189,7 +201,9 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             // parameters, so an explicit call to sync them is not needed.
             await selectInProxyParameters(storedInProxyParameters);
         } catch (error) {
-            handleError(wrapError(error, "Failed to load inproxy parameters"));
+            logErrorToDiagnostic(
+                wrapError(error, "Failed to load inproxy parameters"),
+            );
         }
     }
 
@@ -213,7 +227,9 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                 params.privateKey,
             );
         } catch (error) {
-            handleError(new Error("ConduitModule.paramsChanged(...) failed"));
+            logErrorToDiagnostic(
+                new Error("ConduitModule.paramsChanged(...) failed"),
+            );
             return;
         }
         console.log(
@@ -221,6 +237,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         );
     }
 
+    // ConduitModule.toggleInProxy
     async function toggleInProxy(): Promise<void> {
         try {
             await ConduitModule.toggleInProxy(
@@ -231,10 +248,13 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             );
             console.log(`ConduitModule.toggleInProxy(...) invoked`);
         } catch (error) {
-            handleError(new Error("ConduitModule.toggleInProxy(...) failed"));
+            logErrorToDiagnostic(
+                new Error("ConduitModule.toggleInProxy(...) failed"),
+            );
         }
     }
 
+    // ConduitModule.sendFeedback
     async function sendFeedback(): Promise<void> {
         try {
             const feedbackResult = await ConduitModule.sendFeedback();
@@ -248,20 +268,26 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                 );
             }
         } catch (error) {
-            handleError(wrapError(error, "Failed to send feedback"));
+            logErrorToDiagnostic(wrapError(error, "Failed to send feedback"));
         }
     }
 
+    // Wraps ConduitModule.logError
+    function logErrorToDiagnostic(error: Error): void {
+        const errorMessage = unpackErrorMessage(error, false);
+        ConduitModule.logError("ConduitAppErrors", errorMessage);
+    }
+
     React.useEffect(() => {
-        // Loads InProxy parameters on first render.
         loadInProxyParameters();
-    }, []);
+    }, [conduitKeyPair]);
 
     const value = {
-        inProxyParameters,
         toggleInProxy,
-        selectInProxyParameters,
         sendFeedback,
+        inProxyParameters,
+        selectInProxyParameters,
+        logErrorToDiagnostic,
     };
 
     return (
