@@ -1,28 +1,20 @@
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import React from "react";
 
-import { AccountProvider } from "@/src/account/context";
-import { useAuthContext } from "@/src/auth/context";
+import { timedLog } from "@/src/common/utils";
 import { InProxyProvider } from "@/src/inproxy/context";
 
 export default function AppLayout() {
-    const { mnemonic, deviceNonce } = useAuthContext();
-
-    if (!mnemonic || !deviceNonce) {
-        // We are not authenticated
-        return <Redirect href="/" />;
-    }
+    timedLog("AppLayout");
     return (
-        <AccountProvider mnemonic={mnemonic} deviceNonce={deviceNonce}>
-            <InProxyProvider>
-                <Stack
-                    screenOptions={{
-                        headerShown: false,
-                    }}
-                >
-                    <Stack.Screen name="index" />
-                </Stack>
-            </InProxyProvider>
-        </AccountProvider>
+        <InProxyProvider>
+            <Stack
+                screenOptions={{
+                    headerShown: false,
+                }}
+            >
+                <Stack.Screen name="index" />
+            </Stack>
+        </InProxyProvider>
     );
 }

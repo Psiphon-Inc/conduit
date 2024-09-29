@@ -11,6 +11,7 @@ import {
     useSVG,
     vec,
 } from "@shopify/react-native-skia";
+import * as Haptics from "expo-haptics";
 import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -23,95 +24,101 @@ import {
     View,
     useWindowDimensions,
 } from "react-native";
-import {
+import Animated, {
     useDerivedValue,
     useSharedValue,
     withDelay,
     withTiming,
 } from "react-native-reanimated";
 
-import { useAccountContext } from "@/src/account/context";
+import { useConduitKeyPair } from "@/src/auth/hooks";
 import { wrapError } from "@/src/common/errors";
 import { MBToBytes, bytesToMB } from "@/src/common/utils";
+import { AnimatedText } from "@/src/components/AnimatedText";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
+import { Icon } from "@/src/components/Icon";
 import { NotificationsStatus } from "@/src/components/NotificationsStatus";
 import { ProxyID } from "@/src/components/ProxyID";
-import { PARTICLE_VIDEO_DELAY_MS, PRIVACY_POLICY_URL } from "@/src/constants";
+import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
+import {
+    INPROXY_MAX_CLIENTS_MAX,
+    INPROXY_MAX_MBPS_PER_PEER,
+    PARTICLE_VIDEO_DELAY_MS,
+    PRIVACY_POLICY_URL,
+} from "@/src/constants";
 import { useInProxyContext } from "@/src/inproxy/context";
 import { useInProxyStatus } from "@/src/inproxy/hooks";
-import { InProxyParametersSchema } from "@/src/inproxy/types";
-import { getProxyId } from "@/src/inproxy/utils";
 import {
-    iconButton,
-    lineItemStyle,
-    palette,
-    sharedStyles as ss,
-} from "@/src/styles";
-import { Icon } from "./Icon";
-
-// TODO: better way to make a copy?
-function makeCopy(data: any) {
-    return JSON.parse(JSON.stringify(data));
-}
+    InProxyParameters,
+    InProxyParametersSchema,
+} from "@/src/inproxy/types";
+import { getProxyId } from "@/src/inproxy/utils";
+import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitSettings() {
     const { t } = useTranslation();
     const win = useWindowDimensions();
-    const { conduitKeyPair } = useAccountContext();
-    const {
-        inProxyParameters,
-        selectInProxyParameters,
-        sendFeedback,
-        logErrorToDiagnostic,
-    } = useInProxyContext();
+    const conduitKeyPair = useConduitKeyPair();
+    const { inProxyParameters, selectInProxyParameters, logErrorToDiagnostic } =
+        useInProxyContext();
 
     const { data: inProxyStatus } = useInProxyStatus();
 
     const [modalOpen, setModalOpen] = React.useState(false);
-    const [displayTotalMaxMbps, setDisplayTotalMaxMbps] = React.useState(
-        bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond) *
-            inProxyParameters.maxClients,
-    );
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
         React.useState(false);
+    const modifiedMaxPeers = useSharedValue(inProxyParameters.maxClients);
+    const modifiedMaxMBps = useSharedValue(
+        bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond),
+    );
+    const displayTotalMBps = useDerivedValue(() => {
+        return `${modifiedMaxPeers.value * modifiedMaxMBps.value} MB/s`;
+    });
+    const applyChangesNoteOpacity = useSharedValue(0);
+    const changesPending = useDerivedValue(() => {
+        let settingsChanged = false;
+        if (modifiedMaxPeers.value !== inProxyParameters.maxClients) {
+            settingsChanged = true;
+        } else if (
+            MBToBytes(modifiedMaxMBps.value) !==
+            inProxyParameters.limitUpstreamBytesPerSecond
+        ) {
+            settingsChanged = true;
+        }
+        if (settingsChanged) {
+            applyChangesNoteOpacity.value = withTiming(1, { duration: 500 });
+        } else {
+            applyChangesNoteOpacity.value = 0;
+        }
+        return settingsChanged;
+    });
 
-    const [modifiedInProxyParameters, setModifiedInProxyParameters] =
-        React.useState(makeCopy(inProxyParameters));
-    React.useEffect(() => {
-        // need to update modified in proxy params whenever they change, since
-        // we start from a default set
-        setModifiedInProxyParameters(makeCopy(inProxyParameters));
-        setDisplayTotalMaxMbps(
-            bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond) *
-                inProxyParameters.maxClients,
+    function resetSettingsFromInProxyProvider() {
+        modifiedMaxPeers.value = inProxyParameters.maxClients;
+        modifiedMaxMBps.value = bytesToMB(
+            inProxyParameters.limitUpstreamBytesPerSecond,
         );
+    }
+    React.useEffect(() => {
+        resetSettingsFromInProxyProvider();
     }, [inProxyParameters]);
 
     async function updateInProxyMaxClients(newValue: number) {
-        modifiedInProxyParameters.maxClients = newValue;
-        setModifiedInProxyParameters(modifiedInProxyParameters);
-        setDisplayTotalMaxMbps(
-            bytesToMB(
-                newValue *
-                    modifiedInProxyParameters.limitUpstreamBytesPerSecond,
-            ),
-        );
+        modifiedMaxPeers.value = newValue;
     }
 
     async function updateInProxyLimitBytesPerSecond(newValue: number) {
         // This value is configured as MBps in UI, so multiply out to raw bytes
-        modifiedInProxyParameters.limitUpstreamBytesPerSecond =
-            MBToBytes(newValue);
-        modifiedInProxyParameters.limitDownstreamBytesPerSecond =
-            MBToBytes(newValue);
-        setModifiedInProxyParameters(modifiedInProxyParameters);
-        setDisplayTotalMaxMbps(newValue * modifiedInProxyParameters.maxClients);
+        modifiedMaxMBps.value = newValue;
     }
 
     async function commitChanges() {
-        const newInProxyParameters = InProxyParametersSchema.safeParse(
-            modifiedInProxyParameters,
-        );
+        const newInProxyParameters = InProxyParametersSchema.safeParse({
+            maxClients: modifiedMaxPeers.value,
+            limitUpstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
+            limitDownstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
+            privateKey: inProxyParameters.privateKey,
+        } as InProxyParameters);
         if (newInProxyParameters.error) {
             logErrorToDiagnostic(
                 wrapError(
@@ -125,19 +132,8 @@ export function ConduitSettings() {
     }
 
     async function onSettingsClose() {
-        let settingsChanged = false;
-        if (
-            modifiedInProxyParameters.maxClients !==
-            inProxyParameters.maxClients
-        ) {
-            settingsChanged = true;
-        } else if (
-            modifiedInProxyParameters.limitUpstreamBytesPerSecond !==
-            inProxyParameters.limitUpstreamBytesPerSecond
-        ) {
-            settingsChanged = true;
-        }
-        if (settingsChanged) {
+        applyChangesNoteOpacity.value = withTiming(0, { duration: 300 });
+        if (changesPending.value) {
             if (inProxyStatus === "RUNNING") {
                 setDisplayRestartConfirmation(true);
             } else {
@@ -160,24 +156,52 @@ export function ConduitSettings() {
                         ss.greyBorderBottom,
                     ]}
                 >
-                    <Pressable
-                        style={[
-                            ss.rounded20,
-                            ss.alignFlexStart,
-                            ss.justifyFlexStart,
-                            ss.padded,
-                        ]}
-                        onPress={onSettingsClose}
-                    >
-                        <Icon
-                            name={"chevron-down"}
-                            color={palette.white}
-                            size={30}
-                        />
-                    </Pressable>
-                    <Text style={[ss.whiteText, ss.extraLargeFont]}>
-                        {t("SETTINGS_I18N.string")}
-                    </Text>
+                    <View style={[ss.row]}>
+                        <Pressable
+                            style={[ss.rounded20, ss.alignFlexStart, ss.padded]}
+                            onPress={onSettingsClose}
+                        >
+                            <Icon
+                                name={"chevron-down"}
+                                color={palette.white}
+                                size={30}
+                            />
+                        </Pressable>
+                        <Text style={[ss.whiteText, ss.extraLargeFont]}>
+                            {t("SETTINGS_I18N.string")}
+                        </Text>
+                    </View>
+                    <View style={[ss.row, ss.flex, ss.justifyFlexEnd]}>
+                        <Animated.View
+                            style={[
+                                ss.column,
+                                ss.alignCenter,
+                                ss.nogap,
+                                {
+                                    opacity: applyChangesNoteOpacity,
+                                },
+                            ]}
+                        >
+                            <Text
+                                style={[
+                                    ss.bodyFont,
+                                    ss.whiteText,
+                                    { fontSize: 12 },
+                                ]}
+                            >
+                                {t("CHANGES_PENDING_I18N.string")}
+                            </Text>
+                            <Text
+                                style={[
+                                    ss.bodyFont,
+                                    ss.whiteText,
+                                    { fontSize: 12 },
+                                ]}
+                            >
+                                {t("CLOSE_TO_APPLY_I18N.string")}
+                            </Text>
+                        </Animated.View>
+                    </View>
                 </View>
                 <ScrollView
                     contentContainerStyle={{
@@ -187,23 +211,21 @@ export function ConduitSettings() {
                     <View>
                         <EditableNumberSlider
                             label={t("MAX_PEERS_I18N.string")}
-                            originalValue={modifiedInProxyParameters.maxClients}
+                            originalValue={inProxyParameters.maxClients}
                             min={1}
-                            max={30}
-                            step={1}
+                            max={INPROXY_MAX_CLIENTS_MAX}
                             style={[...lineItemStyle, ss.alignCenter]}
-                            onCommit={updateInProxyMaxClients}
+                            onChange={updateInProxyMaxClients}
                         />
                         <EditableNumberSlider
-                            label={t("MBPS_PER_PEER_I18N.string")}
+                            label={t("MAX_MBPS_PER_PEER_I18N.string")}
                             originalValue={bytesToMB(
-                                modifiedInProxyParameters.limitUpstreamBytesPerSecond,
+                                inProxyParameters.limitUpstreamBytesPerSecond,
                             )}
                             min={8}
-                            max={100}
-                            step={2}
+                            max={INPROXY_MAX_MBPS_PER_PEER}
                             style={[...lineItemStyle, ss.alignCenter]}
-                            onCommit={updateInProxyLimitBytesPerSecond}
+                            onChange={updateInProxyLimitBytesPerSecond}
                         />
                         <View
                             style={[
@@ -214,11 +236,14 @@ export function ConduitSettings() {
                             ]}
                         >
                             <Text style={[ss.bodyFont, ss.whiteText]}>
-                                {t("MAX_BANDWIDTH_USAGE_I18N.string")}
+                                {t("REQUIRED_BANDWIDTH_I18N.string")}
                             </Text>
-                            <Text style={[ss.bodyFont, ss.whiteText]}>
-                                {displayTotalMaxMbps} Mbps
-                            </Text>
+                            <AnimatedText
+                                text={displayTotalMBps}
+                                color={palette.white}
+                                fontFamily={ss.bodyFont.fontFamily}
+                                fontSize={ss.bodyFont.fontSize}
+                            />
                         </View>
                         <View
                             style={[
@@ -253,18 +278,7 @@ export function ConduitSettings() {
                             <Text style={[ss.bodyFont, ss.whiteText]}>
                                 {t("SEND_DIAGNOSTIC_I18N.string")}
                             </Text>
-                            <Pressable
-                                style={iconButton}
-                                onPress={() => {
-                                    sendFeedback();
-                                }}
-                            >
-                                <Icon
-                                    name="send"
-                                    size={34}
-                                    color={palette.white}
-                                />
-                            </Pressable>
+                            <SendDiagnosticButton />
                         </View>
                         <View
                             style={[
@@ -325,6 +339,9 @@ export function ConduitSettings() {
                                 { backgroundColor: palette.white },
                             ]}
                             onPress={async () => {
+                                Haptics.impactAsync(
+                                    Haptics.ImpactFeedbackStyle.Medium,
+                                );
                                 await commitChanges();
                                 setModalOpen(false);
                                 setDisplayRestartConfirmation(false);
@@ -341,6 +358,7 @@ export function ConduitSettings() {
                                 { backgroundColor: palette.grey },
                             ]}
                             onPress={() => {
+                                resetSettingsFromInProxyProvider();
                                 setDisplayRestartConfirmation(false);
                                 setModalOpen(false);
                             }}

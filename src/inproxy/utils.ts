@@ -4,10 +4,8 @@ import { z } from "zod";
 
 import {
     Ed25519KeyPair,
-    generateEd25519KeyPair,
     keyPairToBase64nopad,
 } from "@/src/common/cryptography";
-import { wrapError } from "@/src/common/errors";
 import {
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
@@ -20,13 +18,11 @@ import {
 } from "@/src/inproxy/types";
 
 export function getDefaultInProxyParameters(): InProxyParameters {
-    const ephemeralKey = generateEd25519KeyPair();
-    if (ephemeralKey instanceof Error) {
-        throw wrapError(
-            ephemeralKey,
-            "Failed to get default InProxyParameters",
-        );
-    }
+    const ephemeralKey = {
+        privateKey: new Uint8Array(32),
+        publicKey: new Uint8Array(32),
+    };
+
     return InProxyParametersSchema.parse({
         privateKey: keyPairToBase64nopad(ephemeralKey),
         maxClients: DEFAULT_INPROXY_MAX_CLIENTS,

@@ -17,7 +17,7 @@ export function uint8ArrayToJsonObject(arr: Uint8Array): any {
 }
 
 export function niceBytes(bytes: number, errorHandler: (error: Error) => void) {
-    var units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
+    var units = ["bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
     var unit = units.shift() as string;
     try {
         while (units.length > 0 && bytes >= 1024) {
@@ -28,13 +28,23 @@ export function niceBytes(bytes: number, errorHandler: (error: Error) => void) {
         errorHandler(wrapError(error, "Error converting number to niceBytes"));
     }
 
-    return `${bytes.toFixed(1)} ${unit}`;
+    return `${bytes.toFixed(bytes > 0 ? 1 : 0)} ${unit}`;
 }
 
 export function bytesToMB(bytes: number) {
+    "worklet";
     return bytes / 1024 / 1024;
 }
 
 export function MBToBytes(MB: number) {
+    "worklet";
     return MB * 1024 * 1024;
+}
+
+let lastLogTime = new Date();
+export function timedLog(message: string) {
+    const now = new Date();
+    const diff = now.getTime() - lastLogTime.getTime();
+    lastLogTime = new Date();
+    console.log(`${now.toISOString()} (+${diff}): ${message}`);
 }

@@ -27,7 +27,6 @@
   "dependencies": {
     "@noble/curves": "^1.6.0",
     "@react-native-async-storage/async-storage": "^2.0.0",
-    "@react-native-community/slider": "^4.5.3",
     "@react-navigation/native": "^6.0.2",
     "@scure/base": "^1.1.8",
     "@scure/bip39": "^1.4.0",

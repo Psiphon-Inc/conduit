@@ -6,8 +6,8 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
-// @ts-ignore (this file is gitignored)
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
+// @ts-ignore (this file is gitignored)
 import { GIT_HASH } from "@/src/git-hash";
 import { useInProxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";

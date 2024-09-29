@@ -54,11 +54,11 @@
     "MAX_PEERS_I18N": {
         "string": "Max Peers"
     },
-    "MBPS_PER_PEER_I18N": {
-        "string": "Mbps Per Peer"
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "Max MB/s Per Peer"
     },
-    "MAX_BANDWIDTH_USAGE_I18N": {
-        "string": "Max Bandwidth Usage"
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "Required Bandwidth"
     },
     "SEND_DIAGNOSTIC_I18N": {
         "string": "Send Diagnostic"
@@ -81,6 +81,9 @@
     "PROXY_STATUS_I18N": {
         "string": "Conduit Station is {{ status }}"
     },
+    "CONDUIT_STATION_I18N": {
+        "string": "Conduit Station"
+    },
     "RUNNING_I18N": {
         "string": "RUNNING"
     },
@@ -95,5 +98,17 @@
     },
     "PRIVACY_POLICY_I18N": {
         "string": "Privacy Policy"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "Sent, thanks!"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "Hold to Turn Off"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "changes pending"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "close to apply"
     }
 }

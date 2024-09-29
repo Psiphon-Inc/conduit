@@ -11,7 +11,16 @@ import {
 import React from "react";
 import { View } from "react-native";
 
+const ICONS = {
+    check: require("@/assets/images/icons/check.svg"),
+    "chevron-down": require("@/assets/images/icons/chevron-down.svg"),
+    copy: require("@/assets/images/icons/copy.svg"),
+    edit: require("@/assets/images/icons/edit.svg"),
+    send: require("@/assets/images/icons/send.svg"),
+};
+
 type IconName = "check" | "chevron-down" | "copy" | "edit" | "send";
+
 export function Icon({
     name,
     size,
@@ -21,15 +30,7 @@ export function Icon({
     size: number;
     color: string;
 }) {
-    const icons = {
-        check: require("@/assets/images/icons/check.svg"),
-        "chevron-down": require("@/assets/images/icons/chevron-down.svg"),
-        copy: require("@/assets/images/icons/copy.svg"),
-        edit: require("@/assets/images/icons/edit.svg"),
-        send: require("@/assets/images/icons/send.svg"),
-    };
-
-    const iconSvg = useSVG(icons[name]);
+    const iconSvg = useSVG(ICONS[name]);
     const paint = React.useMemo(() => Skia.Paint(), []);
     paint.setColorFilter(
         Skia.ColorFilter.MakeBlend(Skia.Color(color), BlendMode.SrcIn),

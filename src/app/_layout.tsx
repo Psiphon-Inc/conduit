@@ -12,12 +12,14 @@ import i18nService from "@/src/i18n/i18n";
 i18nService.initI18n();
 
 import { AuthProvider } from "@/src/auth/context";
+import { timedLog } from "@/src/common/utils";
 import { fonts, palette } from "@/src/styles";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+    timedLog("RootLayout");
     const [loaded] = useFonts({
         JuraRegular: fonts.JuraRegular,
         JuraBold: fonts.JuraBold,

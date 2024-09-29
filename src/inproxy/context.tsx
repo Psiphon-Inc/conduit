@@ -3,15 +3,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { NativeEventEmitter } from "react-native";
 
-import { useAccountContext } from "@/src/account/context";
+import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
 import { unpackErrorMessage, wrapError } from "@/src/common/errors";
+import { timedLog } from "@/src/common/utils";
 import {
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
 import { ConduitModule } from "@/src/inproxy/module";
-//import { ConduitModule } from "@/src/inproxy/mockModule";
 import {
     InProxyActivityStats,
     InProxyActivityStatsSchema,
@@ -25,7 +25,10 @@ import {
     ProxyState,
     ProxyStateSchema,
 } from "@/src/inproxy/types";
-import { getDefaultInProxyParameters } from "@/src/inproxy/utils";
+import {
+    getDefaultInProxyParameters,
+    getZeroedInProxyActivityStats,
+} from "@/src/inproxy/utils";
 
 const InProxyContext = React.createContext<InProxyContextValue | null>(null);
 
@@ -44,7 +47,8 @@ export function useInProxyContext(): InProxyContextValue {
  * The InProxyProvider exposes the ConduitModule API.
  */
 export function InProxyProvider({ children }: { children: React.ReactNode }) {
-    const { conduitKeyPair } = useAccountContext();
+    timedLog("InProxyProvider");
+    const conduitKeyPair = useConduitKeyPair();
 
     // This provider handles tracking the user-selected InProxy parameters, and
     // persisting them in AsyncStorage.
@@ -64,11 +68,11 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             "ConduitEvent",
             handleInProxyEvent,
         );
-        console.log("InProxyEvent subscription added");
+        timedLog("InProxyEvent subscription added");
 
         return () => {
             subscription.remove();
-            console.log("InProxyEvent subscription removed");
+            timedLog("InProxyEvent subscription removed");
         };
     }, []);
 
@@ -114,10 +118,14 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     function handleProxyState(proxyState: ProxyState): void {
-        queryClient.setQueryData(
-            ["inProxyStatus"],
-            InProxyStatusEnumSchema.parse(proxyState.status),
-        );
+        timedLog(`handleProxyState: ${JSON.stringify(proxyState)}`);
+        const inProxyStatus = InProxyStatusEnumSchema.parse(proxyState.status);
+        queryClient.setQueryData(["inProxyStatus"], inProxyStatus);
+        // The module does not send an update for ActivityData when the InProxy
+        // is stopped, so reset it when we receive a non-running status.
+        if (inProxyStatus !== "RUNNING") {
+            handleInProxyActivityStats(getZeroedInProxyActivityStats());
+        }
         // NOTE: proxyState.networkState is currently ignored
     }
 
@@ -157,22 +165,11 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     // the module/tunnel-core uses. The values stored in AsyncStorage will be
     // taken as the source of truth.
     async function loadInProxyParameters() {
-        if (conduitKeyPair.error) {
-            const conduitKeyError = wrapError(
-                conduitKeyPair.error,
-                "Error retrieving conduit key pair",
-            );
-            logErrorToDiagnostic(conduitKeyError);
-            console.error(conduitKeyError);
-            return;
-        }
         if (!conduitKeyPair.data) {
-            console.log(
-                "wait until conduitKeyPair is loaded before loading other parameters",
-            );
+            // this shouldn't be possible as the key gets set before we render
             return;
         }
-        console.log("initial load of InProxyParameters from AsyncStorage");
+        timedLog("load InProxyParameters from AsyncStorage");
         try {
             // Retrieve stored inproxy parameters from the application layer
             const storedInProxyMaxClients =
@@ -196,9 +193,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                     : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
             });
 
-            // sets the inproxy parameters in the psiphon context. This call
-            // also updates the context's state value for the inproxy
-            // parameters, so an explicit call to sync them is not needed.
+            // This call updates the context's state value for the parameters.
             await selectInProxyParameters(storedInProxyParameters);
         } catch (error) {
             logErrorToDiagnostic(
@@ -232,7 +227,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             );
             return;
         }
-        console.log(
+        timedLog(
             "InProxy parameters selected successfully, ConduitModule.paramsChanged(...) invoked",
         );
     }
@@ -246,7 +241,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                 inProxyParameters.limitDownstreamBytesPerSecond,
                 inProxyParameters.privateKey,
             );
-            console.log(`ConduitModule.toggleInProxy(...) invoked`);
+            timedLog(`ConduitModule.toggleInProxy(...) invoked`);
         } catch (error) {
             logErrorToDiagnostic(
                 new Error("ConduitModule.toggleInProxy(...) failed"),
@@ -258,13 +253,12 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     async function sendFeedback(): Promise<void> {
         try {
             const feedbackResult = await ConduitModule.sendFeedback();
-            console.log("ConduitModule.sendFeedback() invoked");
+            timedLog("ConduitModule.sendFeedback() invoked");
             if (feedbackResult === null) {
-                console.log("Feedback enqueued successfully");
+                timedLog("Feedback enqueued successfully");
             } else {
-                console.log(
-                    "sendFeedback returned non-null value: ",
-                    feedbackResult,
+                timedLog(
+                    `sendFeedback returned non-null value: ${feedbackResult}`,
                 );
             }
         } catch (error) {
@@ -280,7 +274,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
 
     React.useEffect(() => {
         loadInProxyParameters();
-    }, [conduitKeyPair]);
+    }, [conduitKeyPair.data]);
 
     const value = {
         toggleInProxy,

@@ -43,7 +43,7 @@ export function LogoWordmark({
     if (inProxyStatus !== "UNKNOWN") {
         fadeIn.value = withDelay(
             inProxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
-            withTiming(0.8, { duration: 2000 }),
+            withTiming(1, { duration: 2000 }),
         );
     }
 

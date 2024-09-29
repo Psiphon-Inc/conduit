@@ -72,7 +72,7 @@ export function ConduitStatus({
         const paragraphStyle = {
             textAlign: TextAlign.Center,
         };
-        const textStyle = {
+        const mainTextStyle = {
             color: Skia.Color(palette.statusTextBlue),
             fontFamilies: ["Jura"],
             fontSize: 20,
@@ -81,10 +81,18 @@ export function ConduitStatus({
             },
             letterSpacing: 1, // 5% of 20
         };
+        const runningTextStyle = {
+            color: Skia.Color(palette.red),
+            fontFamilies: ["Jura"],
+            fontSize: 20,
+            fontStyle: {
+                weight: 300,
+            },
+            letterSpacing: 1, // 5% of 20
+        };
 
-        const proxyStatusText = t("PROXY_STATUS_I18N.string", {
-            status: t(`${inProxyStatus}_I18N.string`),
-        });
+        const conduitStationText = t("CONDUIT_STATION_I18N.string");
+        const proxyStatusText = t(`${inProxyStatus}_I18N.string`);
         const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
             peers: connectedPeers,
         });
@@ -104,8 +112,11 @@ export function ConduitStatus({
         );
 
         return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
-            .pushStyle(textStyle)
-            .addText(proxyStatusText + "\n")
+            .pushStyle(mainTextStyle)
+            .addText(conduitStationText + " ")
+            .pushStyle(runningTextStyle)
+            .addText(proxyStatusText + "\n\n")
+            .pop()
             .addText(connectedPeersText + "\n")
             .addText(connectingPeersText + "\n")
             .addText(totalBytesTransferredText + "\n")
