@@ -1,4 +1,3 @@
-import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
@@ -31,11 +30,6 @@ function RequestPermissionsPrompt({
                 >
                     {t("NOTIFICATIONS_I18N.string")}
                 </Text>
-                <Feather
-                    name="alert-triangle"
-                    color={palette.redShade2}
-                    size={20}
-                />
             </View>
             <Pressable
                 onPress={onPress}

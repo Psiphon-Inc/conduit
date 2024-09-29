@@ -1,4 +1,3 @@
-import { Feather } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +9,7 @@ import {
     palette,
     sharedStyles as ss,
 } from "@/src/styles";
+import { Icon } from "./Icon";
 
 export function EditableNumberSlider({
     label,
@@ -66,11 +66,7 @@ export function EditableNumberSlider({
                         style={iconButton}
                         onPress={() => setIsEditing(true)}
                     >
-                        <Feather
-                            name="edit-2"
-                            size={24}
-                            color={palette.black}
-                        />
+                        <Icon name="edit" size={34} color={palette.white} />
                     </Pressable>
                 </View>
             </View>

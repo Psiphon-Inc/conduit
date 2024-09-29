@@ -16,10 +16,9 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import { VideoView, useVideoPlayer } from "expo-video";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, View } from "react-native";
+import { Pressable, Image as RNImage, View } from "react-native";
 import {
     useDerivedValue,
     useSharedValue,
@@ -52,7 +51,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
     // representing the Psiphon Network the InProxy is proxying traffic towards.
     const dotsPng = useImage(require("@/assets/images/dots.png"));
     const psiphonLogoPng = useImage(
-        require("@/assets/images/psiphon-logo.png"),
+        require("@/assets/images/psiphon-logo.png")
     );
     // the dots and Psiphon logo will fade in
     const dotsOpacity = useSharedValue(0);
@@ -87,7 +86,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
         return interpolateColors(
             orbTextColorIndex.value,
             [0, 1],
-            orbTextColors,
+            orbTextColors
         );
     });
     // The orb will pop into existence at the start, animating from radius 0 up
@@ -111,7 +110,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 duration: 2000,
             }),
             -1,
-            true,
+            true
         );
         orbTextColorIndex.value = withTiming(0, { duration: 500 });
         dotsOpacity.value = withTiming(1, { duration: 1000 });
@@ -140,18 +139,18 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 stiffness: 100,
                 restDisplacementThreshold: 0.01,
                 restSpeedThreshold: 2,
-            }),
+            })
         );
         dotsOpacity.value = withDelay(
             delay,
-            withTiming(0.2, { duration: 1000 }),
+            withTiming(0.2, { duration: 1000 })
         );
         if (delay > 0) {
             // if we're introing with a delay, it means the InProxy is stopped,
             // so we will fade in our button text.
             orbTextColorIndex.value = withDelay(
                 delay,
-                withTiming(1, { duration: 1000 }),
+                withTiming(1, { duration: 1000 })
             );
         }
     }
@@ -167,7 +166,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 stiffness: 69,
                 restDisplacementThreshold: 0.01,
                 restSpeedThreshold: 42,
-            }),
+            })
         );
     }
 
@@ -186,12 +185,8 @@ export function ConduitOrbToggle({ size }: { size: number }) {
     const animationState = React.useRef<AnimationState>("Unknown");
 
     // In addition to the 4 inProxyStatus dependent animation states above, we
-    // also have an intro animation to play when the app is opened.
+    // also have an intro animation gif to play when the app is opened.
     // Use initialStateDetermined ref to track the very first render
-    const [showVideo, setShowVideo] = React.useState(false);
-    const introVideoPlayer = useVideoPlayer(
-        require("@/assets/video/particle-swirl.mp4"),
-    );
     // If InProxy is already RUNNING when the app is opened, the intro animation
     // will be a quick fade in of the UI. If the InProxy is STOPPED when the app
     // is opened, this fade should be delayed until the particle animation video
@@ -201,21 +196,22 @@ export function ConduitOrbToggle({ size }: { size: number }) {
     // Use this in initialStateDetermined state variable to coordiate the order
     // of animations: first we want the intro to play, then we want to be hooked
     // up to InProxyStatus changes.
+    const [showParticleSwirl, setShowParticleSwirl] = React.useState(false);
     const [initialStateDetermined, setInitialStateDetermined] =
         React.useState(false);
     React.useEffect(() => {
         if (!initialStateDetermined) {
             if (inProxyStatus === "RUNNING") {
-                setShowVideo(false);
+                setShowParticleSwirl(false);
                 animateIntro(0);
                 setInitialStateDetermined(true);
             } else if (inProxyStatus === "STOPPED") {
-                introVideoPlayer.addListener("playToEnd", () => {
-                    setShowVideo(false);
-                });
-                setShowVideo(true);
+                setShowParticleSwirl(true);
+                setTimeout(
+                    () => setShowParticleSwirl(false),
+                    PARTICLE_VIDEO_DELAY_MS
+                );
                 animateIntro(PARTICLE_VIDEO_DELAY_MS);
-                introVideoPlayer.play();
                 setInitialStateDetermined(true);
             }
             // implicit do nothing if status is UNKNOWN
@@ -282,19 +278,15 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                 height: size,
             }}
         >
-            {/* intro video played if Conduit Station is off on start */}
-            {showVideo && (
-                <VideoView
-                    style={[
-                        ss.absolute,
-                        {
-                            top: finalOrbRadius / 2,
-                            width: size,
-                            height: size,
-                        },
-                    ]}
-                    player={introVideoPlayer}
-                    nativeControls={false}
+            {/* intro GIF played if Conduit Station is off on start */}
+            {showParticleSwirl && (
+                <RNImage
+                    source={require("@/assets/images/particle-swirl.gif")}
+                    style={{
+                        width: size,
+                        height: size,
+                        top: finalOrbRadius / 2,
+                    }}
                 />
             )}
             <Canvas style={[ss.flex]}>
@@ -402,7 +394,7 @@ export function ConduitOrbToggle({ size }: { size: number }) {
                     animateOrbPressed();
                     toggleInProxy();
                 }}
-                disabled={showVideo}
+                disabled={showParticleSwirl}
             />
         </View>
     );

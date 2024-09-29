@@ -1,4 +1,3 @@
-import { Feather } from "@expo/vector-icons";
 import {
     BlendMode,
     Canvas,
@@ -48,6 +47,7 @@ import {
     palette,
     sharedStyles as ss,
 } from "@/src/styles";
+import { Icon } from "./Icon";
 
 // TODO: better way to make a copy?
 function makeCopy(data: any) {
@@ -68,9 +68,6 @@ export function ConduitSettings() {
     const { data: inProxyStatus } = useInProxyStatus();
 
     const [modalOpen, setModalOpen] = React.useState(false);
-    const [sendDiagnosticIcon, setSendDiagnosticIcon] = React.useState(
-        <Feather name="send" size={24} color={palette.black} />,
-    );
     const [displayTotalMaxMbps, setDisplayTotalMaxMbps] = React.useState(
         bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond) *
             inProxyParameters.maxClients,
@@ -168,13 +165,14 @@ export function ConduitSettings() {
                             ss.rounded20,
                             ss.alignFlexStart,
                             ss.justifyFlexStart,
+                            ss.padded,
                         ]}
                         onPress={onSettingsClose}
                     >
-                        <Feather
+                        <Icon
                             name={"chevron-down"}
                             color={palette.white}
-                            size={60}
+                            size={30}
                         />
                     </Pressable>
                     <Text style={[ss.whiteText, ss.extraLargeFont]}>
@@ -259,25 +257,13 @@ export function ConduitSettings() {
                                 style={iconButton}
                                 onPress={() => {
                                     sendFeedback();
-                                    setSendDiagnosticIcon(
-                                        <Feather
-                                            name="check"
-                                            size={24}
-                                            color={palette.black}
-                                        />,
-                                    );
-                                    setTimeout(() => {
-                                        setSendDiagnosticIcon(
-                                            <Feather
-                                                name="send"
-                                                size={24}
-                                                color={palette.black}
-                                            />,
-                                        );
-                                    }, 3000);
                                 }}
                             >
-                                {sendDiagnosticIcon}
+                                <Icon
+                                    name="send"
+                                    size={34}
+                                    color={palette.white}
+                                />
                             </Pressable>
                         </View>
                         <View

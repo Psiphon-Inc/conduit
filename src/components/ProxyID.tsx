@@ -1,8 +1,8 @@
-import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 
+import { Icon } from "@/src/components/Icon";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ProxyID({
@@ -14,15 +14,13 @@ export function ProxyID({
 }) {
     // proxyId is a base64nopad encoded X25519 public key
     const [copyIcon, setCopyIcon] = React.useState(
-        <Feather name="copy" size={24} color={palette.black} />,
+        <Icon name="copy" size={24} color={palette.black} />,
     );
 
     function showCopySuccess() {
-        setCopyIcon(<Feather name="check" size={24} color={palette.black} />);
+        setCopyIcon(<Icon name="check" size={24} color={palette.black} />);
         setTimeout(() => {
-            setCopyIcon(
-                <Feather name="copy" size={24} color={palette.black} />,
-            );
+            setCopyIcon(<Icon name="copy" size={24} color={palette.black} />);
         }, 2500);
     }
 

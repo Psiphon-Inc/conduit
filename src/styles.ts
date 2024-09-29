@@ -387,10 +387,10 @@ export const iconButton = [
     sharedStyles.justifyCenter,
     sharedStyles.alignCenter,
     sharedStyles.halfPadded,
-    sharedStyles.whiteBg,
 ];
 
 export const fonts = {
-    JuraRegular: require("@/assets/fonts/Jura-Regular.ttf"),
-    JuraBold: require("@/assets/fonts/Jura-Bold.ttf"),
+    JuraRegular: require("@/assets/fonts/Jura-Regular.otf"),
+    JuraBold: require("@/assets/fonts/Jura-Bold.otf"),
+    Rajdhani: require("@/assets/fonts/Rajdhani-Regular.otf"),
 };
