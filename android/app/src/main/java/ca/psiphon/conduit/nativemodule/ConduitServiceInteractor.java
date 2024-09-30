@@ -108,8 +108,9 @@ public class ConduitServiceInteractor {
         intent.putExtra(LIMIT_DOWNSTREAM_BYTES, limitDownstreamBytesPerSecond);
         intent.putExtra(PROXY_PRIVATE_KEY, privateKey);
 
-        // Always start the service and let it handle the logic in onStartCommand
-        ContextCompat.startForegroundService(context, intent);
+        // Send the intent to the service to toggle the proxy
+        // and let the service handle the logic in onStartCommand
+        sendStartCommandToService(context, intent);
     }
 
     public void paramsChanged(Context context, int maxClients, int limitUpstreamBytesPerSecond,
@@ -123,8 +124,21 @@ public class ConduitServiceInteractor {
         intent.putExtra(LIMIT_DOWNSTREAM_BYTES, limitDownstreamBytesPerSecond);
         intent.putExtra(PROXY_PRIVATE_KEY, privateKey);
 
-        // Start the service to handle the paramsChanged action
-        ContextCompat.startForegroundService(context, intent);
+        // Send the intent to the service to update the parameters
+        // and let the service handle the logic in onStartCommand
+        sendStartCommandToService(context, intent);
+    }
+
+    // Internal method to start the ConduitService with the provided intent
+    private void sendStartCommandToService(Context context, Intent intent) {
+        // Using startService instead of startForegroundService because the service might need to shut down
+        // quickly without ever showing a foreground notification. Calling startForegroundService implies
+        // that we must call startForeground() shortly after, but ConduitService handles different types of
+        // actions, and sometimes it might determine there's no need to keep running (e.g., shuts down immediately
+        // if there's no real work). By using startService, we avoid the requirement to show a notification
+        // if the service ends quickly. If it ends up starting the Psiphon tunnel or doing other long-running work,
+        // we'll upgrade it to a foreground service at that point.
+        context.startService(intent);
     }
 
     public void onStart(Context context) {
