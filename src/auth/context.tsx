@@ -1,16 +1,20 @@
 import * as bip39 from "@scure/bip39";
 import { wordlist as englishWordlist } from "@scure/bip39/wordlists/english";
+import { useQueryClient } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
-import React, { useCallback } from "react";
+import React from "react";
 
+import {
+    base64nopadToKeyPair,
+    deriveEd25519KeyPair,
+    keyPairToBase64nopad,
+} from "@/src/common/cryptography";
 import { wrapError } from "@/src/common/errors";
+import { formatConduitBip32Path } from "@/src/inproxy/utils";
 
 export interface AuthContextValue {
     signIn: () => Promise<null | Error>;
-    signOut: () => void;
     deleteAccount: () => void;
-    mnemonic?: string | null;
-    deviceNonce?: number | null;
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -31,22 +35,23 @@ export function useAuthContext() {
 }
 
 export function AuthProvider(props: React.PropsWithChildren) {
-    const [mnemonic, setMnemonic] = React.useState<string | null>(null);
-    const [deviceNonce, setDeviceNonce] = React.useState<number | null>(null);
+    const queryClient = useQueryClient();
 
-    const signIn = React.useCallback(async () => {
+    async function signIn() {
         try {
+            let mnemonic: string;
             // Load mnemonic from SecureStore
             const storedMnemonic = await SecureStore.getItemAsync("mnemonic");
             if (!storedMnemonic) {
                 const newMnemonic = bip39.generateMnemonic(englishWordlist);
                 await SecureStore.setItemAsync("mnemonic", newMnemonic);
-                setMnemonic(newMnemonic);
+                mnemonic = newMnemonic;
             } else {
-                setMnemonic(storedMnemonic);
+                mnemonic = storedMnemonic;
             }
 
             // Load device nonce from SecureStore
+            let deviceNonce: number;
             const storedDeviceNonce =
                 await SecureStore.getItemAsync("deviceNonce");
             if (!storedDeviceNonce) {
@@ -55,32 +60,55 @@ export function AuthProvider(props: React.PropsWithChildren) {
                     "deviceNonce",
                     newDeviceNonce.toString(),
                 );
-                setDeviceNonce(newDeviceNonce);
+                deviceNonce = newDeviceNonce;
             } else {
-                setDeviceNonce(parseInt(storedDeviceNonce));
+                deviceNonce = parseInt(storedDeviceNonce);
+            }
+            const storedConduitKeyPairBase64nopad =
+                await SecureStore.getItemAsync("conduitKeyPairBase64nopad");
+            if (!storedConduitKeyPairBase64nopad) {
+                const derived = deriveEd25519KeyPair(
+                    mnemonic,
+                    formatConduitBip32Path(deviceNonce),
+                );
+                if (derived instanceof Error) {
+                    throw derived;
+                }
+                const conduitKeyPairBase64NoPad = keyPairToBase64nopad(derived);
+                if (conduitKeyPairBase64NoPad instanceof Error) {
+                    throw conduitKeyPairBase64NoPad;
+                }
+                await SecureStore.setItemAsync(
+                    "conduitKeyPairBase64nopad",
+                    conduitKeyPairBase64NoPad,
+                );
+                queryClient.setQueryData(["conduitKeyPair"], derived);
+            } else {
+                const storedConduitKeyPair = base64nopadToKeyPair(
+                    storedConduitKeyPairBase64nopad,
+                );
+                if (storedConduitKeyPair instanceof Error) {
+                    throw storedConduitKeyPair;
+                }
+                queryClient.setQueryData(
+                    ["conduitKeyPair"],
+                    storedConduitKeyPair,
+                );
             }
         } catch (error) {
             return wrapError(error, "Error signing in");
         }
+    }
 
-        return null;
-    }, [setMnemonic]);
-
-    const signOut = useCallback(() => {
-        setMnemonic(null);
-    }, [setMnemonic]);
-
-    const deleteAccount = useCallback(async () => {
+    async function deleteAccount() {
         await SecureStore.deleteItemAsync("mnemonic");
-        signOut();
-    }, [signOut]);
+        await SecureStore.deleteItemAsync("deviceNonce");
+        await SecureStore.deleteItemAsync("conduitKeyPairBase64nopad");
+    }
 
     const value = {
         signIn,
-        signOut,
         deleteAccount,
-        mnemonic,
-        deviceNonce,
     } as AuthContextValue;
 
     return (

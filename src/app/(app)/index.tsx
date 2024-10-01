@@ -2,41 +2,52 @@ import React from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { timedLog } from "@/src/common/utils";
 import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { ConduitStatus } from "@/src/components/ConduitStatus";
+import { GitHash } from "@/src/components/GitHash";
 import { LogoWordmark } from "@/src/components/LogoWordmark";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function HomeScreen() {
+    timedLog("HomeScreen");
     const win = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
+    // NOTE this assumes a portrait layout.
     const totalUsableHeight = win.height - insets.top - insets.bottom;
     const totalUsableWidth = win.width - insets.left - insets.right;
     const logoWordmarkHeight = totalUsableHeight * 0.1;
-    // orb takes up a square with dimensions = width
-    // NOTE this assumes a portrait layout.
-    const conduitOrbToggleHeight = totalUsableWidth;
+    const conduitOrbToggleHeight = totalUsableHeight - logoWordmarkHeight;
+    // orb scene takes up a square of with dimensions = width
     const conduitStatusHeight =
-        totalUsableHeight - logoWordmarkHeight - conduitOrbToggleHeight;
+        totalUsableHeight - totalUsableWidth - logoWordmarkHeight;
 
     return (
-        <SafeAreaView>
-            {/* Header takes up 10% of vertical space */}
-            <LogoWordmark
-                width={totalUsableWidth}
-                height={logoWordmarkHeight}
-            />
-            {/* Orb takes up a square, full width */}
-            <ConduitOrbToggle size={conduitOrbToggleHeight} />
-            {/* Status takes up the rest of the vertical space */}
-            <ConduitStatus
-                width={totalUsableWidth}
-                height={conduitStatusHeight}
-            />
-            {/* Settings icon is absolutely positioned */}
-            <ConduitSettings />
-        </SafeAreaView>
+        <GestureHandlerRootView>
+            <SafeAreaView>
+                {/* Header takes up 10% of vertical space */}
+                <LogoWordmark
+                    width={totalUsableWidth}
+                    height={logoWordmarkHeight}
+                />
+                {/* Status is an absolutely positioned background */}
+                <ConduitStatus
+                    width={totalUsableWidth}
+                    height={conduitStatusHeight}
+                />
+                {/* Orb takes up the rest of the height not used by LogoWordmark */}
+                <ConduitOrbToggle
+                    width={totalUsableWidth}
+                    height={conduitOrbToggleHeight}
+                />
+                {/* Settings icon is absolutely positioned bottom right */}
+                <ConduitSettings />
+                {/* GIT_HASH absolutely positioned bottom left */}
+                <GitHash />
+            </SafeAreaView>
+        </GestureHandlerRootView>
     );
 }

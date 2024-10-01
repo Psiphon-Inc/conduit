@@ -25,10 +25,8 @@
     ]
   },
   "dependencies": {
-    "@expo/vector-icons": "^14.0.2",
     "@noble/curves": "^1.6.0",
     "@react-native-async-storage/async-storage": "^2.0.0",
-    "@react-native-community/slider": "^4.5.3",
     "@react-navigation/native": "^6.0.2",
     "@scure/base": "^1.1.8",
     "@scure/bip39": "^1.4.0",
@@ -38,6 +36,7 @@
     "expo-clipboard": "^6.0.3",
     "expo-constants": "~16.0.2",
     "expo-font": "~12.0.9",
+    "expo-haptics": "~13.0.1",
     "expo-linking": "~6.3.1",
     "expo-notifications": "^0.28.16",
     "expo-router": "~3.5.23",
@@ -46,7 +45,6 @@
     "expo-standard-web-crypto": "^1.8.1",
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
-    "expo-video": "^1.2.6",
     "i18next": "^23.15.1",
     "micro-key-producer": "^0.7.0",
     "react": "18.2.0",

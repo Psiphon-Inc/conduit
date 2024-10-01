@@ -4,7 +4,7 @@
         "developer_comment": "Text displayed when the app is loading content."
     },
     "TURN_ON_I18N": {
-        "string": "Turn ON",
+        "string": "Turn On",
         "developer_comment": "Text displayed on a button to turn on a feature."
     },
     "CONDUIT_OFF_I18N": {
@@ -54,17 +54,20 @@
     "MAX_PEERS_I18N": {
         "string": "Max Peers"
     },
-    "MBPS_PER_PEER_I18N": {
-        "string": "MBps Per Peer"
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "Max MB/s Per Peer"
     },
-    "MAX_BANDWIDTH_USAGE_I18N": {
-        "string": "Max Bandwidth Usage"
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "Required Bandwidth"
     },
     "SEND_DIAGNOSTIC_I18N": {
         "string": "Send Diagnostic"
     },
     "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
-        "string": "Changing Conduit settings requires restarting your Conduit Station. Any connected users will be disconnected. Confirm changes?"
+        "string": "Changing Conduit settings requires restarting your Conduit Station. Any connected users will be disconnected."
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "Confirm Changes?"
     },
     "NOTIFICATIONS_I18N": {
         "string": "Notifications"
@@ -74,5 +77,38 @@
     },
     "ENABLED_I18N": {
         "string": "Enabled"
+    },
+    "PROXY_STATUS_I18N": {
+        "string": "Conduit Station is {{ status }}"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "Conduit Station"
+    },
+    "RUNNING_I18N": {
+        "string": "RUNNING"
+    },
+    "STOPPED_I18N": {
+        "string": "STOPPED"
+    },
+    "UNKNOWN_I18N": {
+        "string": "UNKNOWN"
+    },
+    "SETTINGS_I18N": {
+        "string": "Settings"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "Privacy Policy"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "Sent, thanks!"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "Hold to Turn Off"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "changes pending"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "close to apply"
     }
 }

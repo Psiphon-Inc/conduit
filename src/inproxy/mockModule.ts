@@ -1,29 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeEventEmitter } from "react-native";
 
+import { timedLog } from "@/src/common/utils";
 import { ConduitModuleAPI } from "@/src/inproxy/module";
 import { InProxyActivityStats } from "@/src/inproxy/types";
 import { getZeroedInProxyActivityStats } from "@/src/inproxy/utils";
 
-//toggleInProxy: (
-//    maxClients: number,
-//    limitUpstreamBytesPerSecond: number,
-//    limitDownstreamBytesPerSecond: number,
-//    privateKey: string,
-//) => Promise<void>;
-//paramsChanged: (
-//    maxClients: number,
-//    limitUpstreamBytesPerSecond: number,
-//    limitDownstreamBytesPerSecond: number,
-//    privateKey: string,
-//) => Promise<void>;
-//addListener: (eventName: string) => void;
-//removeListeners: (count: number) => void;
-//sendFeedback: () => Promise<null | string>;
-//logInfo: (tag: string, msg: string) => void;
-//logError: (tag: string, msg: string) => void;
-//logWarn: (tag: string, msg: string) => void;
-//
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function* generateMockData(
     maxClients: number,
@@ -40,8 +22,8 @@ async function* generateMockData(
         data.dataByPeriod["1000ms"].bytesUp.shift();
         data.dataByPeriod["1000ms"].bytesDown.shift();
 
-        // 5% chance to drop a connected client
-        if (Math.random() > 0.95 && data.currentConnectedClients > 0) {
+        // 25% chance to drop a connected client
+        if (Math.random() > 0.75 && data.currentConnectedClients > 0) {
             data.currentConnectedClients--;
         }
 
@@ -149,7 +131,7 @@ class ConduitModuleMock {
     private async emitMockData(maxClients: number, limitBandwidth: number) {
         this.mockDataGenerator = generateMockData(maxClients, limitBandwidth);
 
-        console.log("MOCK: Initializing mock data generation");
+        timedLog("MOCK: Initializing mock data generation");
         let data = (await this.mockDataGenerator.next()).value;
         while (data) {
             if (data) {
@@ -167,30 +149,29 @@ class ConduitModuleMock {
     }
     private async stopMockData() {
         if (this.mockDataGenerator) {
-            console.log("MOCK: Stopping mock data generation");
-            await this.mockDataGenerator.return(
-                getZeroedInProxyActivityStats(),
-            );
+            timedLog("MOCK: Stopping mock data generation");
+            const lastData = (await this.mockDataGenerator.next()).value;
+            await this.mockDataGenerator.return(lastData);
         }
     }
 
     public addListener(name: string) {
-        console.log(`ConduitModuleMock.addListener(${name})`);
+        timedLog(`ConduitModuleMock.addListener(${name})`);
         this.emitState();
     }
 
     public removeListeners(count: number) {
-        console.log(`ConduitModuleMock.removeListeners(${count})`);
+        timedLog(`ConduitModuleMock.removeListeners(${count})`);
         this.emitState();
     }
 
     public async sendFeedback() {
-        console.log("ConduitModuleMock.sendFeedback()");
+        timedLog("ConduitModuleMock.sendFeedback()");
         return null;
     }
 
     public logInfo(tag: string, msg: string) {
-        console.log(`ConduitModuleMock.logInfo TAG=${tag} msg=${msg}`);
+        timedLog(`ConduitModuleMock.logInfo TAG=${tag} msg=${msg}`);
     }
 
     public logWarn(tag: string, msg: string) {
@@ -207,7 +188,7 @@ class ConduitModuleMock {
         limitDownstreamBytesPerSecond: number,
         _: string,
     ) {
-        console.log(
+        timedLog(
             `ConduitModuleMock.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.running = !this.running;
@@ -232,7 +213,7 @@ class ConduitModuleMock {
         limitDownstreamBytesPerSecond: number,
         privateKey: string,
     ) {
-        console.log(
+        timedLog(
             `ConduitModuleMock.paramsChanged(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.emitState();

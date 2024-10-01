@@ -12,14 +12,17 @@ import i18nService from "@/src/i18n/i18n";
 i18nService.initI18n();
 
 import { AuthProvider } from "@/src/auth/context";
-import { palette } from "@/src/styles";
+import { timedLog } from "@/src/common/utils";
+import { fonts, palette } from "@/src/styles";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+    timedLog("RootLayout");
     const [loaded] = useFonts({
-        SpaceMono: require("@/assets/fonts/SpaceMono-Regular.ttf"),
+        JuraRegular: fonts.JuraRegular,
+        JuraBold: fonts.JuraBold,
     });
 
     useEffect(() => {
@@ -41,6 +44,7 @@ export default function RootLayout() {
                         <Stack
                             screenOptions={{
                                 headerShown: false,
+                                animation: "none",
                             }}
                         >
                             <Stack.Screen name="(app)" />

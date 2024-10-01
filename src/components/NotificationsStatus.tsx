@@ -1,4 +1,3 @@
-import { MaterialIcons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
@@ -31,21 +30,16 @@ function RequestPermissionsPrompt({
                 >
                     {t("NOTIFICATIONS_I18N.string")}
                 </Text>
-                <MaterialIcons
-                    name="warning-amber"
-                    color={palette.red}
-                    size={20}
-                />
             </View>
             <Pressable
                 onPress={onPress}
                 style={[
-                    ss.padded,
-                    ss.rounded40,
-                    { backgroundColor: palette.redTint2 },
+                    ss.rounded5,
+                    ss.halfPadded,
+                    { backgroundColor: palette.white },
                 ]}
             >
-                <Text style={[ss.bodyFont, ss.whiteText]}>
+                <Text style={[ss.bodyFont, ss.blackText]}>
                     {t("ENABLE_I18N.string")}
                 </Text>
             </Pressable>
@@ -65,7 +59,6 @@ function PermissionsGranted() {
                 <Text style={[ss.bodyFont, ss.whiteText]}>
                     {t("ENABLED_I18N.string")}
                 </Text>
-                <MaterialIcons name="check" color={palette.white} size={20} />
             </View>
         </View>
     );

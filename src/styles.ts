@@ -35,11 +35,13 @@ export const palette = {
     purpleShade3: "#2e2132",
     purpleShade4: "#1b131e",
     purpleShade5: "#09060a",
-    white: "#ffffff",
+    white: "#E0E0E0",
+    midGrey: "#909090",
     grey: "#342F2F",
     transparent: "rgba(0,0,0,0)",
     transparentBlue: "rgba(59,122,150,0.5)",
     transparentPurple: "rgba(93,66,100,0.4)",
+    statusTextBlue: "#4B7993",
 };
 
 export const sharedStyles = StyleSheet.create({
@@ -215,26 +217,26 @@ export const sharedStyles = StyleSheet.create({
         flexWrap: "wrap",
     },
     bodyFont: {
-        fontSize: 16,
-        fontFamily: "SpaceMono",
+        fontSize: 18,
+        fontFamily: "JuraRegular",
     },
     largeFont: {
         fontSize: 24,
-        fontFamily: "SpaceMono",
+        fontFamily: "JuraRegular",
     },
     extraLargeFont: {
         fontSize: 32,
-        fontFamily: "SpaceMono",
+        fontFamily: "JuraRegular",
     },
     boldFont: {
         fontSize: 20,
-        fontFamily: "SpaceMono",
+        fontFamily: "JuraBold",
     },
     whiteText: {
         color: palette.white,
     },
     greyText: {
-        color: palette.grey,
+        color: palette.midGrey,
     },
     blackText: {
         color: palette.black,
@@ -252,7 +254,11 @@ export const sharedStyles = StyleSheet.create({
     },
     greyBorderBottom: {
         borderBottomWidth: 1,
-        borderColor: palette.grey,
+        borderColor: palette.midGrey,
+    },
+    greyBorderTop: {
+        borderBottomWidth: 1,
+        borderColor: palette.midGrey,
     },
     blackBg: {
         backgroundColor: palette.black,
@@ -277,8 +283,6 @@ export const sharedStyles = StyleSheet.create({
         height: "70%",
         width: "100%",
         position: "absolute",
-        backgroundColor: palette.black,
-        padding: 20,
         bottom: 0,
     },
     modalCenter: {
@@ -350,6 +354,16 @@ export const sharedStyles = StyleSheet.create({
         top: 10,
         right: 10,
     },
+    absoluteBottomLeft: {
+        position: "absolute",
+        left: 10,
+        bottom: 10,
+    },
+    absoluteBottomRight: {
+        position: "absolute",
+        right: 10,
+        bottom: 10,
+    },
     underlay: {
         position: "absolute",
         left: 0,
@@ -367,3 +381,16 @@ export const lineItemStyle = [
     sharedStyles.height60,
     sharedStyles.greyBorderBottom,
 ];
+
+export const iconButton = [
+    sharedStyles.rounded5,
+    sharedStyles.justifyCenter,
+    sharedStyles.alignCenter,
+    sharedStyles.halfPadded,
+];
+
+export const fonts = {
+    JuraRegular: require("@/assets/fonts/Jura-Regular.otf"),
+    JuraBold: require("@/assets/fonts/Jura-Bold.otf"),
+    Rajdhani: require("@/assets/fonts/Rajdhani-Regular.otf"),
+};
