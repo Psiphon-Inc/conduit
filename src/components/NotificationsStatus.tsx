@@ -64,14 +64,17 @@ function PermissionsGranted() {
     );
 }
 
-export function NotificationsStatus() {
-    const permissions = useQuery({
+export const useNotificationsPermissions = () =>
+    useQuery({
         queryKey: ["sync-notifications-permissions"],
         queryFn: async () => {
             return await Notifications.getPermissionsAsync();
         },
         refetchInterval: 2000,
     });
+
+export function NotificationsStatus() {
+    const permissions = useNotificationsPermissions();
 
     if (permissions.data) {
         if (

@@ -9,6 +9,7 @@ import { timedLog } from "@/src/common/utils";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { PsiphonConduitLoading } from "@/src/components/canvas/PsiphonConduitLoading";
 import { sharedStyles as ss } from "@/src/styles";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
     const { signIn } = useAuthContext();
@@ -18,25 +19,25 @@ export default function Index() {
 
     const opacity = useSharedValue(0);
 
-    function doSignIn() {
+    async function doSignIn() {
         timedLog("Starting signIn");
-        signIn().then((result) => {
-            if (result instanceof Error) {
-                // TODO: Right now we will never learn about signIn errors since
-                // we can't record error into feedback log yet
-                // Show some error state in the UI with some steps to fix?
-                console.error(result);
-            } else {
-                // Route to home screen as soon as the credentials are loaded,
-                // this may happen before the splash animation fully completes
-                // replace as we do not want user to be able to go "back" to
-                // the splash screen
-                timedLog("signIn complete");
-                opacity.value = withTiming(0, { duration: 400 }, () => {
+        const signInResult = await signIn();
+        if (signInResult instanceof Error) {
+            // TODO: Right now we will never learn about signIn errors since
+            // we can't record error into feedback log yet
+            // Show some error state in the UI with some steps to fix?
+            console.error(signInResult);
+        } else {
+            const hasOnboarded = await AsyncStorage.getItem("hasOnboarded");
+            timedLog(`signIn complete, hasOnboarded: ${hasOnboarded}`);
+            opacity.value = withTiming(0, { duration: 400 }, () => {
+                if (hasOnboarded !== null) {
                     runOnJS(router.replace)("/(app)/");
-                });
-            }
-        });
+                } else {
+                    runOnJS(router.replace)("/(app)/onboarding");
+                }
+            });
+        }
     }
 
     React.useEffect(() => {

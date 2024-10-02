@@ -1,18 +1,13 @@
 import {
     BlendMode,
     Canvas,
-    ColorMatrix,
-    Group,
-    ImageSVG,
     LinearGradient,
-    Paint,
     RoundedRect,
     Skia,
-    useSVG,
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import * as Linking from "expo-linking";
+import { router } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -44,7 +39,6 @@ import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_MBPS_PER_PEER,
     PARTICLE_VIDEO_DELAY_MS,
-    PRIVACY_POLICY_URL,
 } from "@/src/constants";
 import { useInProxyContext } from "@/src/inproxy/context";
 import { useInProxyStatus } from "@/src/inproxy/hooks";
@@ -54,6 +48,7 @@ import {
 } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import { PrivacyPolicyLink } from "./PrivacyPolicyLink";
 
 export function ConduitSettings() {
     const { t } = useTranslation();
@@ -292,20 +287,7 @@ export function ConduitSettings() {
                         </View>
                     </View>
                 </ScrollView>
-                <Pressable
-                    style={[
-                        ss.absolute,
-                        ss.row,
-                        ss.fullWidth,
-                        ss.justifyCenter,
-                        { bottom: 0 },
-                    ]}
-                    onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
-                >
-                    <Text style={[ss.greyText, ss.bodyFont]}>
-                        {t("PRIVACY_POLICY_I18N.string")}
-                    </Text>
-                </Pressable>
+                <PrivacyPolicyLink />
             </View>
         );
     }
@@ -384,28 +366,18 @@ export function ConduitSettings() {
         );
     }
 
-    const settingsIconSvg = useSVG(require("@/assets/images/settings.svg"));
     const settingsIconSize = win.width * 0.2;
     const paint = React.useMemo(() => Skia.Paint(), []);
     paint.setColorFilter(
         Skia.ColorFilter.MakeBlend(Skia.Color(palette.blue), BlendMode.SrcIn),
     );
-    const opacityMatrix = useDerivedValue(() => {
-        // prettier-ignore
-        return [
-     // R, G, B, A, Bias
-        1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0, 1, 0, 0,
-        0, 0, 0, fadeIn.value, 0,
-    ];
-    });
 
     return (
         <>
             <View
                 style={[
                     ss.absolute,
+                    ss.doublePadded,
                     {
                         bottom: 0,
                         right: 0,
@@ -414,31 +386,43 @@ export function ConduitSettings() {
                     },
                 ]}
             >
-                <Canvas style={[ss.flex]}>
-                    <Group
-                        layer={
-                            <Paint>
-                                <ColorMatrix matrix={opacityMatrix} />
-                            </Paint>
-                        }
-                    >
-                        <Group layer={paint}>
-                            <ImageSVG
-                                svg={settingsIconSvg}
-                                width={settingsIconSize * 0.6}
-                                height={settingsIconSize * 0.6}
-                                y={settingsIconSize * 0.2}
-                                x={settingsIconSize * 0.2}
-                            />
-                        </Group>
-                    </Group>
-                </Canvas>
                 <Pressable
-                    style={[ss.absoluteFill]}
                     onPress={() => {
                         setModalOpen(true);
                     }}
-                />
+                >
+                    <Icon
+                        name="settings"
+                        size={settingsIconSize - ss.doublePadded.padding * 2}
+                        color={palette.blueTint2}
+                        opacity={fadeIn}
+                    />
+                </Pressable>
+            </View>
+            <View
+                style={[
+                    ss.absolute,
+                    ss.doublePadded,
+                    {
+                        bottom: 0,
+                        right: settingsIconSize,
+                        width: settingsIconSize,
+                        height: settingsIconSize,
+                    },
+                ]}
+            >
+                <Pressable
+                    onPress={() => {
+                        router.push("/(app)/onboarding");
+                    }}
+                >
+                    <Icon
+                        name="question"
+                        size={settingsIconSize - ss.doublePadded.padding * 2}
+                        color={palette.blueTint2}
+                        opacity={fadeIn}
+                    />
+                </Pressable>
             </View>
             {/* this empty modal fades in the opacity overlay */}
             <Modal

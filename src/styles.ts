@@ -35,6 +35,7 @@ export const palette = {
     purpleShade3: "#2e2132",
     purpleShade4: "#1b131e",
     purpleShade5: "#09060a",
+    maroon: "#513241",
     white: "#E0E0E0",
     midGrey: "#909090",
     grey: "#342F2F",
