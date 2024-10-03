@@ -15,7 +15,7 @@ pipeline {
     stages {
         stage('Android build APK') {
             when {
-                branch 'tasker/ci'; 
+                branch 'main'; 
             }
 
             steps {
