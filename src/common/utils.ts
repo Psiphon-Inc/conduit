@@ -54,7 +54,6 @@ export function timedLog(message: string) {
 export function drawBigFont(win: ScaledSize) {
     // used to determine if we should scale font size down for smaller screens
     // only currently applied to skia-rendered paragraphs
-    console.log(win.height * win.scale);
     if (win.height * win.scale > 1000) {
         return true;
     } else {

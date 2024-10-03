@@ -137,7 +137,7 @@ export default function OnboardingScreen() {
     const headerSize = {
         width: usableWidth * 0.96,
     };
-    // image takes up the next 28% of usableHeight (43% total)
+    // image takes up the next 33% of usableHeight (48% total)
     const imageTransform = [
         { translateY: usableHeight * 0.15 },
         { translateX: usableWidth * 0.18 },
@@ -146,24 +146,24 @@ export default function OnboardingScreen() {
         width: usableWidth * 0.66,
         height: usableHeight * 0.25,
     };
-    // body takes up the next 35% of usableHeight (78% total)
+    // body takes up the next 31% of usableHeight (79% total)
     const bodyTransform = [
-        { translateY: usableHeight * 0.43 },
+        { translateY: usableHeight * 0.48 },
         { translateX: usableWidth * 0.06 },
     ];
     const bodySize = {
         width: usableWidth * 0.88,
-        height: usableHeight * 0.3,
+        height: usableHeight * 0.31,
     };
-    // indicator dots take up the next 3% of usableHeight (81% total)
+    // indicator dots take up the next 3% of usableHeight (82% total)
     const dotWidth = 24;
     const dotsTransform = [
-        { translateY: usableHeight * 0.78 },
+        { translateY: usableHeight * 0.79 },
         { translateX: usableWidth * 0.5 - (dotWidth * (views.length - 1)) / 2 },
     ];
-    // button claims the next 8% of usableHeight (89% total)
+    // button claims the next 8% of usableHeight (90% total)
     const buttonTransform = [
-        { translateY: usableHeight * 0.81 },
+        { translateY: usableHeight * 0.82 },
         { translateX: usableWidth * 0.06 },
     ];
     const buttonSize = {
@@ -171,7 +171,7 @@ export default function OnboardingScreen() {
         height: usableHeight * 0.08,
     };
     const buttonBorderRadius = 15;
-    // 11% of usable height is left for the Privacy Policy link to appear in
+    // 10% of usable height is left for the Privacy Policy link to appear in
 
     const fontMgr = useFonts({
         Rajdhani: [fonts.Rajdhani],
@@ -255,7 +255,7 @@ export default function OnboardingScreen() {
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.blueTint2),
             fontFamilies: ["Jura"],
-            fontSize: bigFontSize,
+            fontSize: bigFontSize * 0.8,
             fontStyle: {
                 weight: 400,
             },
