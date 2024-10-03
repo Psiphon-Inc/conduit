@@ -31,7 +31,7 @@ export function GitHash() {
                     ss.bodyFont,
                 ]}
             >
-                v.{GIT_HASH.substr(0, 8)}
+                v.{GIT_HASH.substr(0, 12)}
             </Animated.Text>
         </View>
     );
