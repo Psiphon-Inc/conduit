@@ -242,12 +242,9 @@ export default function OnboardingScreen() {
         const backListener = BackHandler.addEventListener(
             "hardwareBackPress",
             () => {
-                console.log("HARDWARE BACK, current view", currentView.value);
                 if (currentView.value === 0) {
-                    console.log("HARDWARE BACK ALLOWED");
                     return false; // allow hardware back from first view only
                 } else {
-                    console.log("HARDWARE BACK DISALLOWED");
                     return true; // disable hardware back, we'll handle the gesture
                 }
             },
@@ -269,9 +266,16 @@ export default function OnboardingScreen() {
             runOnJS(goToMainApp)();
         }
     }
+    function replaceOrGoBack() {
+        if (router.canGoBack()) {
+            router.back();
+        } else {
+            router.replace("/(app)/");
+        }
+    }
     async function goToMainApp() {
         everythingOpacity.value = withTiming(0, { duration: 500 }, () => {
-            runOnJS(router.replace)("/(app)/");
+            runOnJS(replaceOrGoBack)();
         });
         await AsyncStorage.setItem("hasOnboarded", "true");
     }

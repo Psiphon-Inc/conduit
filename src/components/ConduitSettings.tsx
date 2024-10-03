@@ -413,7 +413,7 @@ export function ConduitSettings() {
             >
                 <Pressable
                     onPress={() => {
-                        router.push("/(app)/onboarding");
+                        router.navigate("/(app)/onboarding");
                     }}
                 >
                     <Icon

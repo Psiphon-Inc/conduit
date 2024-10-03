@@ -269,6 +269,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     // Wraps ConduitModule.logError
     function logErrorToDiagnostic(error: Error): void {
         const errorMessage = unpackErrorMessage(error, false);
+        console.error("logErrorToDiagnostic: ", errorMessage);
         ConduitModule.logError("ConduitAppErrors", errorMessage);
     }
 
