@@ -110,5 +110,44 @@
     },
     "CLOSE_TO_APPLY_I18N": {
         "string": "close to apply"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "Welcome to Conduit!"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "Turn your phone into an Internet Freedom badass.\n\nParticipate and make a difference around the world by running your own Conduit Station."
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "Next"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "What is Conduit?"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "When running a Conduit Station, your phone acts as a beacon of Internet Freedom, bouncing people in censored regions of the world through your phone and into the Psiphon Network proper."
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "Next"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "Allow Notifications"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "Conduit recommends you turn on notifications so we can provide critical updates about your Conduit Station.\n\nThese will only appear in your status bar, we have no time for spam."
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "Next"
+    },
+    "ONBOARDING_ENABLE_NOTIFICATIONS_BUTTON_I18N": {
+        "string": "Enable Notifications"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "Privacy Policy"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "We do not collect any personally identifiable information (PII) from users who run Conduit Stations.\n\nBy using Conduit, you accept the entire privacy policy, available below."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "Accept"
     }
 }

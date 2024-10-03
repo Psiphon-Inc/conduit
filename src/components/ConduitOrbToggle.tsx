@@ -55,6 +55,8 @@ export function ConduitOrbToggle({
     width: number;
     height: number;
 }) {
+    timedLog("ConduitOrbToggle");
+
     const { t } = useTranslation();
     const { toggleInProxy } = useInProxyContext();
     const { data: inProxyStatus } = useInProxyStatus();

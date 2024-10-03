@@ -27,11 +27,11 @@ export function GitHash() {
         <View style={[ss.absoluteBottomLeft]}>
             <Animated.Text
                 style={[
-                    { color: palette.purple, opacity: opacity },
+                    { color: palette.blueShade2, opacity: opacity },
                     ss.bodyFont,
                 ]}
             >
-                v.{GIT_HASH}
+                v.{GIT_HASH.substr(0, 8)}
             </Animated.Text>
         </View>
     );
