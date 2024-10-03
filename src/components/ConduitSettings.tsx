@@ -287,7 +287,7 @@ export function ConduitSettings() {
                         </View>
                     </View>
                 </ScrollView>
-                <PrivacyPolicyLink />
+                <PrivacyPolicyLink textStyle={{ ...ss.greyText }} />
             </View>
         );
     }

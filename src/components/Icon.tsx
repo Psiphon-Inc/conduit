@@ -22,6 +22,7 @@ const ICONS = {
     send: require("@/assets/images/icons/send.svg"),
     settings: require("@/assets/images/icons/settings.svg"),
     question: require("@/assets/images/icons/question.svg"),
+    "external-link": require("@/assets/images/icons/external-link.svg"),
 };
 
 type IconName =
@@ -31,7 +32,8 @@ type IconName =
     | "edit"
     | "send"
     | "settings"
-    | "question";
+    | "question"
+    | "external-link";
 
 export function Icon({
     name,

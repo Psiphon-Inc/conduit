@@ -72,7 +72,7 @@ export default function OnboardingScreen() {
             image: useImage(require("@/assets/images/onboarding-welcome.png")),
             bodyText: t("ONBOARDING_WELCOME_BODY_I18N.string"),
             buttonText: t("ONBOARDING_WELCOME_BUTTON_I18N.string"),
-            buttonBeforeNext: undefined,
+            beforeNext: undefined,
         },
         {
             // INFO_1
@@ -82,7 +82,7 @@ export default function OnboardingScreen() {
             ),
             bodyText: t("ONBOARDING_INFO_1_BODY_I18N.string"),
             buttonText: t("ONBOARDING_INFO_1_BUTTON_I18N.string"),
-            buttonBeforeNext: undefined,
+            beforeNext: undefined,
         },
         {
             // PERMISSIONS
@@ -94,7 +94,7 @@ export default function OnboardingScreen() {
             buttonText: shouldAskForNotifications
                 ? t("ONBOARDING_ENABLE_NOTIFICATIONS_BUTTON_I18N.string")
                 : t("ONBOARDING_PERMISSIONS_BUTTON_I18N.string"),
-            buttonBeforeNext: async () => {
+            beforeNext: async () => {
                 if (shouldAskForNotifications) {
                     await Notifications.requestPermissionsAsync();
                 }
@@ -108,11 +108,16 @@ export default function OnboardingScreen() {
             ),
             bodyText: t("ONBOARDING_PRIVACY_POLICY_BODY_I18N.string"),
             buttonText: t("ONBOARDING_PRIVACY_POLICY_BUTTON_I18N.string"),
-            buttonBeforeNext: undefined,
+            beforeNext: undefined,
         },
     ];
 
     const currentView = useSharedValue(0);
+    const privacyPolicyLinkOpacity = useDerivedValue(() => {
+        console.log(currentView.value, views.length - 1);
+        return currentView.value === views.length - 1 ? 1 : 0;
+    });
+
     const headerText = useDerivedValue(() => {
         return views[currentView.value].headerText;
     });
@@ -257,7 +262,7 @@ export default function OnboardingScreen() {
 
     async function goToNext() {
         if (currentView.value < views.length - 1) {
-            const beforeNext = views[currentView.value].buttonBeforeNext;
+            const beforeNext = views[currentView.value].beforeNext;
             if (beforeNext) {
                 await beforeNext();
             }
@@ -340,6 +345,7 @@ export default function OnboardingScreen() {
                                 start={vec(win.width / 2, 0)}
                                 end={vec(win.width / 2, win.height)}
                                 colors={[
+                                    palette.black,
                                     palette.black,
                                     palette.black,
                                     palette.purpleShade3,
@@ -481,7 +487,11 @@ export default function OnboardingScreen() {
                 </GestureDetector>
             </GestureHandlerRootView>
             <Animated.View style={{ opacity: everythingOpacity }}>
-                <PrivacyPolicyLink />
+                <Animated.View style={{ opacity: privacyPolicyLinkOpacity }}>
+                    <PrivacyPolicyLink
+                        textStyle={{ ...ss.boldFont, ...ss.whiteText }}
+                    />
+                </Animated.View>
             </Animated.View>
         </SafeAreaView>
     );
