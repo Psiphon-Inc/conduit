@@ -25,7 +25,6 @@ export function PrivacyPolicyLink({ textStyle }: { textStyle: TextStyle }) {
                 ss.row,
                 ss.justifyCenter,
                 ss.fullWidth,
-                ss.padded,
                 { bottom: 0 },
             ]}
             onPress={() => {

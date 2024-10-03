@@ -11,3 +11,6 @@ export const PRIVACY_POLICY_URL = "https://psiphon.ca/en/privacy.html";
 // Hard code a common delay value for animations that fade in to wait until the
 // particle video is done playing.
 export const PARTICLE_VIDEO_DELAY_MS = 2800;
+
+// Window height cutoff used to render smaller text in Skia Paragraphs
+export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;

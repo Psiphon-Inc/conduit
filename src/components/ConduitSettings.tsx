@@ -285,9 +285,18 @@ export function ConduitSettings() {
                         >
                             <NotificationsStatus />
                         </View>
+                        <View
+                            style={[
+                                ss.height60,
+                                ss.flex,
+                                ss.alignCenter,
+                                ss.justifyCenter,
+                            ]}
+                        >
+                            <PrivacyPolicyLink textStyle={{ ...ss.greyText }} />
+                        </View>
                     </View>
                 </ScrollView>
-                <PrivacyPolicyLink textStyle={{ ...ss.greyText }} />
             </View>
         );
     }

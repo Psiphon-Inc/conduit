@@ -10,6 +10,7 @@ import {
     Paragraph,
     RoundedRect,
     SkImage,
+    SkParagraphStyle,
     SkTextStyle,
     Skia,
     TextAlign,
@@ -27,6 +28,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
+import { drawBigFont } from "@/src/common/utils";
 import { useNotificationsPermissions } from "@/src/components/NotificationsStatus";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
@@ -114,7 +116,6 @@ export default function OnboardingScreen() {
 
     const currentView = useSharedValue(0);
     const privacyPolicyLinkOpacity = useDerivedValue(() => {
-        console.log(currentView.value, views.length - 1);
         return currentView.value === views.length - 1 ? 1 : 0;
     });
 
@@ -128,10 +129,57 @@ export default function OnboardingScreen() {
         return views[currentView.value].buttonText;
     });
 
+    // header takes up the first 15% of usableHeight
+    const headerTransform = [
+        { translateY: usableHeight * 0.05 },
+        { translateX: usableWidth * 0.02 },
+    ];
+    const headerSize = {
+        width: usableWidth * 0.96,
+    };
+    // image takes up the next 28% of usableHeight (43% total)
+    const imageTransform = [
+        { translateY: usableHeight * 0.15 },
+        { translateX: usableWidth * 0.18 },
+    ];
+    const imageSize = {
+        width: usableWidth * 0.66,
+        height: usableHeight * 0.25,
+    };
+    // body takes up the next 35% of usableHeight (78% total)
+    const bodyTransform = [
+        { translateY: usableHeight * 0.43 },
+        { translateX: usableWidth * 0.06 },
+    ];
+    const bodySize = {
+        width: usableWidth * 0.88,
+        height: usableHeight * 0.3,
+    };
+    // indicator dots take up the next 3% of usableHeight (81% total)
+    const dotWidth = 24;
+    const dotsTransform = [
+        { translateY: usableHeight * 0.78 },
+        { translateX: usableWidth * 0.5 - (dotWidth * (views.length - 1)) / 2 },
+    ];
+    // button claims the next 8% of usableHeight (89% total)
+    const buttonTransform = [
+        { translateY: usableHeight * 0.81 },
+        { translateX: usableWidth * 0.06 },
+    ];
+    const buttonSize = {
+        width: usableWidth * 0.88,
+        height: usableHeight * 0.08,
+    };
+    const buttonBorderRadius = 15;
+    // 11% of usable height is left for the Privacy Policy link to appear in
+
     const fontMgr = useFonts({
         Rajdhani: [fonts.Rajdhani],
         Jura: [fonts.JuraRegular],
     });
+
+    const bigFontSize = drawBigFont(win) ? 34 : 24;
+    const fontSize = drawBigFont(win) ? 20 : 16;
 
     const headerP = useDerivedValue(() => {
         if (!fontMgr) {
@@ -143,7 +191,7 @@ export default function OnboardingScreen() {
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.white),
             fontFamilies: ["Jura"],
-            fontSize: 34,
+            fontSize: bigFontSize,
             fontStyle: {
                 weight: 500,
             },
@@ -164,17 +212,17 @@ export default function OnboardingScreen() {
         if (!fontMgr) {
             return null;
         }
-        const paragraphStyle = {
+        const paragraphStyle: SkParagraphStyle = {
             textAlign: TextAlign.Left,
         };
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.white),
             fontFamilies: ["Rajdhani"],
-            fontSize: 20,
+            fontSize: fontSize,
             fontStyle: {
                 weight: 400,
             },
-            letterSpacing: 1,
+            letterSpacing: fontSize * 0.05,
         };
 
         return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
@@ -182,19 +230,7 @@ export default function OnboardingScreen() {
             .addText(bodyText.value)
             .build();
     });
-    const bodyTransform = [
-        { translateY: usableHeight * 0.55 },
-        { translateX: usableWidth * 0.06 },
-    ];
-    const bodySize = {
-        width: usableWidth * 0.88,
-    };
 
-    const dotWidth = 24;
-    const dotsTransform = [
-        { translateY: usableHeight * 0.8 },
-        { translateX: usableWidth * 0.5 - (dotWidth * (views.length - 1)) / 2 },
-    ];
     const dot0Fill = useDerivedValue(() => {
         return currentView.value >= 0 ? palette.blueTint2 : palette.transparent;
     });
@@ -219,11 +255,11 @@ export default function OnboardingScreen() {
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.blueTint2),
             fontFamilies: ["Jura"],
-            fontSize: 28,
+            fontSize: bigFontSize,
             fontStyle: {
                 weight: 400,
             },
-            letterSpacing: 1,
+            letterSpacing: bigFontSize * 0.05,
         };
 
         return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
@@ -231,16 +267,6 @@ export default function OnboardingScreen() {
             .addText(buttonText.value)
             .build();
     });
-
-    const buttonTransform = [
-        { translateY: usableHeight * 0.85 },
-        { translateX: usableWidth * 0.06 },
-    ];
-    const buttonSize = {
-        width: usableWidth * 0.88,
-        height: usableHeight * 0.08,
-    };
-    const buttonBorderRadius = 17;
 
     // Take over "Back" Navigation from the system, we'll use gestures below
     React.useEffect(() => {
@@ -362,24 +388,19 @@ export default function OnboardingScreen() {
                                 </Paint>
                             }
                         >
-                            <Group
-                                transform={[{ translateY: win.height * 0.1 }]}
-                            >
+                            <Group transform={headerTransform}>
                                 <Paragraph
                                     paragraph={headerP}
                                     x={0}
                                     y={0}
-                                    width={usableWidth}
+                                    width={headerSize.width}
                                 />
                             </Group>
-                            <Group
-                                transform={[{ translateY: win.height * 0.2 }]}
-                            >
+                            <Group transform={imageTransform}>
                                 <Image
                                     image={image}
-                                    x={usableWidth * 0.18}
-                                    width={usableWidth * 0.66}
-                                    height={win.height * 0.3}
+                                    width={imageSize.width}
+                                    height={imageSize.height}
                                 />
                             </Group>
                             <Group transform={bodyTransform}>

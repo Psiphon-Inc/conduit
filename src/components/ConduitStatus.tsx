@@ -14,7 +14,7 @@ import {
 } from "@shopify/react-native-skia";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import {
     useDerivedValue,
     useSharedValue,
@@ -22,7 +22,7 @@ import {
     withTiming,
 } from "react-native-reanimated";
 
-import { niceBytes } from "@/src/common/utils";
+import { drawBigFont, niceBytes } from "@/src/common/utils";
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
 import { useInProxyContext } from "@/src/inproxy/context";
 import {
@@ -41,6 +41,7 @@ export function ConduitStatus({
     height: number;
 }) {
     const { t } = useTranslation();
+    const win = useWindowDimensions();
 
     const { logErrorToDiagnostic } = useInProxyContext();
     const { data: inProxyStatus } = useInProxyStatus();
@@ -111,6 +112,7 @@ export function ConduitStatus({
     // implicit do nothing if inProxyStatus is "unknown"
 
     const fontMgr = useFonts({ Jura: [fonts.JuraRegular] });
+    const fontSize = drawBigFont(win) ? 20 : 16;
     const statusParagraph = useDerivedValue(() => {
         if (!fontMgr) {
             return null;
@@ -121,7 +123,7 @@ export function ConduitStatus({
         const mainTextStyle = {
             color: Skia.Color(palette.statusTextBlue),
             fontFamilies: ["Jura"],
-            fontSize: 20,
+            fontSize: fontSize,
             fontStyle: {
                 weight: 300,
             },
@@ -130,7 +132,7 @@ export function ConduitStatus({
         const runningTextStyle = {
             color: Skia.Color(palette.red),
             fontFamilies: ["Jura"],
-            fontSize: 20,
+            fontSize: fontSize,
             fontStyle: {
                 weight: 300,
             },

@@ -1,3 +1,5 @@
+import { ScaledSize } from "react-native";
+
 import { wrapError } from "@/src/common/errors";
 
 export function byteArraysAreEqual(a: Uint8Array, b: Uint8Array): boolean {
@@ -47,4 +49,15 @@ export function timedLog(message: string) {
     const diff = now.getTime() - lastLogTime.getTime();
     lastLogTime = new Date();
     console.log(`${now.toISOString()} (+${diff}): ${message}`);
+}
+
+export function drawBigFont(win: ScaledSize) {
+    // used to determine if we should scale font size down for smaller screens
+    // only currently applied to skia-rendered paragraphs
+    console.log(win.height * win.scale);
+    if (win.height * win.scale > 1000) {
+        return true;
+    } else {
+        return false;
+    }
 }
