@@ -5,17 +5,17 @@ pipeline {
         buildDiscarder(logRotator(artifactDaysToKeepStr: '30', artifactNumToKeepStr: '10'))
     }
 
+    environment {
+        PSIPHON_CONFIG = 'op://Jenkins/Conduit Psiphon Config/android_psiphon_config'
+        EMBEDDED_SERVER_ENTRIES = 'op://Jenkins/Conduit Psiphon Config/android_embedded_server_entries'
+        ANDROID_UPLOAD_KEYSTORE = 'op://Jenkins/Conduit Upload Signing Key/upload-keystore.jks.base64'
+        ANDROID_UPLOAD_KEYSTORE_PROPERTIES = 'op://Jenkins/Conduit Upload Signing Key/keystore.properties'
+    }
+
     stages {
         stage('Android build APK') {
             when {
-                branch 'main'; 
-            }
-
-            environment {
-                PSIPHON_CONFIG = 'op://Jenkins/Conduit Psiphon Config/android_psiphon_config'
-                EMBEDDED_SERVER_ENTRIES = 'op://Jenkins/Conduit Psiphon Config/android_embedded_server_entries'
-                ANDROID_UPLOAD_KEYSTORE = 'op://Jenkins/Conduit Upload Signing Key/upload-keystore.jks.base64'
-                ANDROID_UPLOAD_KEYSTORE_PROPERTIES = 'op://Jenkins/Conduit Upload Signing Key/keystore.properties'
+                branch 'tasker/ci'; 
             }
 
             steps {
@@ -42,23 +42,21 @@ pipeline {
             }
         }
 
-        stage('Android bundle release') {
+        stage('Android bundle AAB') {
             when {
                 tag "release-*";
             }
-
-            environment {
-                PSIPHON_CONFIG = 'op://Jenkins/Conduit Psiphon Config/android_psiphon_config'
-                EMBEDDED_SERVER_ENTRIES = 'op://Jenkins/Conduit Psiphon Config/android_embedded_server_entries'
-                ANDROID_UPLOAD_KEYSTORE = 'op://Jenkins/Conduit Upload Signing Key/upload-keystore.jks.base64'
-                ANDROID_UPLOAD_KEYSTORE_PROPERTIES = 'op://Jenkins/Conduit Upload Signing Key/keystore.properties'
-            }
+            
 
             steps {
 
                 sh 'npm ci'
+               
+                script {
+                    releaseName = TAG_NAME.minus("release-")
+                }
 
-                writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${TAG_NAME}';"
+                writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${releaseName}';"
 
                 dir('android') {
 
@@ -71,7 +69,7 @@ pipeline {
 
                     sh './gradlew clean bundleRelease'
 
-                    sh "mv app/build/outputs/bundle/release/app-release.aab app/build/outputs/bundle/release/conduit-${TAG_NAME}.aab"
+                    sh "mv app/build/outputs/bundle/release/app-release.aab app/build/outputs/bundle/release/conduit-${releaseName}.aab"
                 }
 
                 archiveArtifacts artifacts: 'android/app/build/outputs/bundle/release/*.aab', fingerprint: true, onlyIfSuccessful: true
