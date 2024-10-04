@@ -3,6 +3,7 @@ import {
     Blur,
     Circle,
     Group,
+    SkPoint,
     interpolateColors,
     interpolateVector,
     vec,
@@ -27,14 +28,22 @@ export function ConduitConnectionLight({
     active,
     canvasWidth,
     orbRadius,
-    orbCenterY,
-    psiphonLogoSize,
+    midPoint,
+    secondLastPoint,
+    endPoint,
+    randomize,
+    x0init = 0,
+    y0init = 0,
 }: {
     active: boolean;
     canvasWidth: number;
     orbRadius: number;
-    orbCenterY: number;
-    psiphonLogoSize: number;
+    midPoint: SkPoint;
+    secondLastPoint: SkPoint;
+    endPoint: SkPoint;
+    randomize: boolean;
+    x0init?: number;
+    y0init?: number;
 }) {
     // A connection light will be rendered for every connection to the Conduit.
     // Each light will start at a random position horizontally off-screen, fly
@@ -45,11 +54,10 @@ export function ConduitConnectionLight({
     const lfo = React.useRef(useSharedValue(-1));
     const periodMs = 5000;
 
-    const y0 = useSharedValue(0);
-    const x0 = useSharedValue(0);
+    const y0 = useSharedValue(y0init);
+    const x0 = useSharedValue(x0init);
 
     // interpolate trajectory between semi-random vectors
-    const endY = -(orbCenterY - psiphonLogoSize / 2); // land in P logo
     const trajectory = useDerivedValue(() => {
         return interpolateVector(
             lfo.current.value,
@@ -60,9 +68,9 @@ export function ConduitConnectionLight({
                     (x0.value / canvasWidth) * orbRadius,
                     (y0.value / canvasWidth) * orbRadius,
                 ),
-                vec(0, 0),
-                vec(0, -orbRadius),
-                vec(0, endY),
+                midPoint,
+                secondLastPoint,
+                endPoint,
             ],
         );
     });
@@ -108,7 +116,17 @@ export function ConduitConnectionLight({
         if (active) {
             lfo.current.value = -1;
             lightOpacity.value = withTiming(1, { duration: 1000 });
-            randomizeXYSpin();
+            if (randomize) {
+                randomizeXYSpin();
+            } else {
+                lfo.current.value = withRepeat(
+                    withTiming(1, {
+                        duration: periodMs,
+                    }),
+                    -1,
+                    true,
+                );
+            }
         } else {
             lightOpacity.value = withTiming(0, { duration: 1000 }, () => {
                 cancelAnimation(lfo.current);

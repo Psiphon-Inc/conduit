@@ -425,8 +425,19 @@ export function ConduitOrbToggle({
                                             }
                                             canvasWidth={width}
                                             orbRadius={finalOrbRadius}
-                                            orbCenterY={orbCenterY}
-                                            psiphonLogoSize={psiphonLogoSize}
+                                            midPoint={vec(0, 0)}
+                                            secondLastPoint={vec(
+                                                0,
+                                                -finalOrbRadius,
+                                            )}
+                                            endPoint={vec(
+                                                0,
+                                                -(
+                                                    orbCenterY -
+                                                    psiphonLogoSize / 2
+                                                ),
+                                            )} // land in P logo
+                                            randomize={true}
                                         />
                                     );
                                 },
