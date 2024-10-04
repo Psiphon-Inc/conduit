@@ -4,18 +4,15 @@ import {
     ColorMatrix,
     Fill,
     Group,
-    Image,
     LinearGradient,
     Paint,
     Paragraph,
     RoundedRect,
-    SkImage,
     SkParagraphStyle,
     SkTextStyle,
     Skia,
     TextAlign,
     useFonts,
-    useImage,
     vec,
 } from "@shopify/react-native-skia";
 import * as Notifications from "expo-notifications";
@@ -32,6 +29,7 @@ import { drawBigFont } from "@/src/common/utils";
 import { useNotificationsPermissions } from "@/src/components/NotificationsStatus";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -71,7 +69,6 @@ export default function OnboardingScreen() {
         {
             // WELCOME
             headerText: t("ONBOARDING_WELCOME_HEADER_I18N.string"),
-            image: useImage(require("@/assets/images/onboarding-welcome.png")),
             bodyText: t("ONBOARDING_WELCOME_BODY_I18N.string"),
             buttonText: t("ONBOARDING_WELCOME_BUTTON_I18N.string"),
             beforeNext: undefined,
@@ -79,9 +76,6 @@ export default function OnboardingScreen() {
         {
             // INFO_1
             headerText: t("ONBOARDING_INFO_1_HEADER_I18N.string"),
-            image: useImage(
-                require("@/assets/images/onboarding-instructions.png"),
-            ),
             bodyText: t("ONBOARDING_INFO_1_BODY_I18N.string"),
             buttonText: t("ONBOARDING_INFO_1_BUTTON_I18N.string"),
             beforeNext: undefined,
@@ -89,9 +83,6 @@ export default function OnboardingScreen() {
         {
             // PERMISSIONS
             headerText: t("ONBOARDING_PERMISSIONS_HEADER_I18N.string"),
-            image: useImage(
-                require("@/assets/images/onboarding-permissions.png"),
-            ),
             bodyText: t("ONBOARDING_PERMISSIONS_BODY_I18N.string"),
             buttonText: shouldAskForNotifications
                 ? t("ONBOARDING_ENABLE_NOTIFICATIONS_BUTTON_I18N.string")
@@ -105,9 +96,6 @@ export default function OnboardingScreen() {
         {
             // PRIVACY POLICY
             headerText: t("ONBOARDING_PRIVACY_POLICY_HEADER_I18N.string"),
-            image: useImage(
-                require("@/assets/images/onboarding-privacy-policy.png"),
-            ),
             bodyText: t("ONBOARDING_PRIVACY_POLICY_BODY_I18N.string"),
             buttonText: t("ONBOARDING_PRIVACY_POLICY_BUTTON_I18N.string"),
             beforeNext: undefined,
@@ -138,12 +126,12 @@ export default function OnboardingScreen() {
         width: usableWidth * 0.96,
     };
     // image takes up the next 33% of usableHeight (48% total)
-    const imageTransform = [
+    const sceneTransform = [
         { translateY: usableHeight * 0.15 },
-        { translateX: usableWidth * 0.18 },
+        //{ translateX: usableWidth * 0.18 },
     ];
-    const imageSize = {
-        width: usableWidth * 0.66,
+    const sceneSize = {
+        width: usableWidth,
         height: usableHeight * 0.25,
     };
     // body takes up the next 31% of usableHeight (79% total)
@@ -171,6 +159,7 @@ export default function OnboardingScreen() {
         height: usableHeight * 0.08,
     };
     const buttonBorderRadius = 15;
+    const privacyPolicyHeight = usableHeight * 0.05;
     // 10% of usable height is left for the Privacy Policy link to appear in
 
     const fontMgr = useFonts({
@@ -202,10 +191,6 @@ export default function OnboardingScreen() {
             .pushStyle(textStyle)
             .addText(headerText.value)
             .build();
-    });
-
-    const image = useDerivedValue<SkImage | null>(() => {
-        return views[currentView.value].image;
     });
 
     const bodyP = useDerivedValue(() => {
@@ -396,11 +381,11 @@ export default function OnboardingScreen() {
                                     width={headerSize.width}
                                 />
                             </Group>
-                            <Group transform={imageTransform}>
-                                <Image
-                                    image={image}
-                                    width={imageSize.width}
-                                    height={imageSize.height}
+                            <Group transform={sceneTransform}>
+                                <OnboardingScene
+                                    currentView={currentView}
+                                    sceneWidth={sceneSize.width}
+                                    sceneHeight={sceneSize.height}
                                 />
                             </Group>
                             <Group transform={bodyTransform}>
@@ -511,6 +496,7 @@ export default function OnboardingScreen() {
                 <Animated.View style={{ opacity: privacyPolicyLinkOpacity }}>
                     <PrivacyPolicyLink
                         textStyle={{ ...ss.boldFont, ...ss.whiteText }}
+                        containerHeight={privacyPolicyHeight}
                     />
                 </Animated.View>
             </Animated.View>

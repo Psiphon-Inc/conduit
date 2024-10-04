@@ -115,7 +115,7 @@
         "string": "Welcome to Conduit!"
     },
     "ONBOARDING_WELCOME_BODY_I18N": {
-        "string": "Turn your phone into an Internet Freedom badass.\n\nParticipate and make a difference around the world by running your own Conduit Station."
+        "string": "Turn your phone into an Internet Freedom badass.\n\nYou can help people around the world break through restrictive networks and access the global internet securely through the Psiphon Network."
     },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "Next"
@@ -124,7 +124,7 @@
         "string": "What is Conduit?"
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
-        "string": "When running a Conduit Station, your phone acts as a beacon of Internet Freedom, bouncing people in censored regions of the world through your phone and into the Psiphon Network proper."
+        "string": "When you run a Conduit Station, your phone acts as a beacon of Internet Freedom.\n\nPeople in censored regions will bounce through your phone and into the Psiphon Network proper, creating a more open internet."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Next"
@@ -133,21 +133,24 @@
         "string": "Allow Notifications"
     },
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
-        "string": "Conduit recommends you turn on notifications so we can provide critical updates about your Conduit Station.\n\nThese will only appear in your status bar, we have no time for spam."
+        "string": "Conduit recommends you enable notifications so we can provide critical updates about your Conduit Station.\n\nThese notifications will only appear in your status bar."
     },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "Next"
     },
     "ONBOARDING_ENABLE_NOTIFICATIONS_BUTTON_I18N": {
-        "string": "Enable Notifications"
+        "string": "Next"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Privacy Policy"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
-        "string": "We do not collect any personally identifiable information (PII) from users who run Conduit Stations.\n\nBy using Conduit, you accept the entire privacy policy, available below."
+        "string": "Before we begin, some ground rules: We do not collect any personally identifiable information (PII) from users who run Conduit Stations.\n\nBy using Conduit, you accept the entire privacy policy, available below."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
-        "string": "Accept"
+        "string": "Accept & Begin"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "Replay Intro"
     }
 }

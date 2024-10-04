@@ -34,7 +34,7 @@ export default function Index() {
                 if (hasOnboarded !== null) {
                     runOnJS(router.replace)("/(app)/");
                 } else {
-                    runOnJS(router.replace)("/(app)/onboarding");
+                    runOnJS(router.replace)("/(app)/intro");
                 }
             });
         }

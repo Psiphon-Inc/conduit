@@ -287,13 +287,36 @@ export function ConduitSettings() {
                         </View>
                         <View
                             style={[
+                                ...lineItemStyle,
+                                ss.flex,
+                                ss.alignCenter,
+                                ss.justifyCenter,
+                            ]}
+                        >
+                            <View style={[ss.flex]} />
+                            <Pressable
+                                onPress={() => {
+                                    setModalOpen(false);
+                                    router.push("/(app)/intro");
+                                }}
+                            >
+                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                    {t("REPLAY_INTRO_I18N.string")}
+                                </Text>
+                            </Pressable>
+                        </View>
+                        <View
+                            style={[
                                 ss.height60,
                                 ss.flex,
                                 ss.alignCenter,
                                 ss.justifyCenter,
                             ]}
                         >
-                            <PrivacyPolicyLink textStyle={{ ...ss.greyText }} />
+                            <PrivacyPolicyLink
+                                textStyle={{ ...ss.greyText }}
+                                containerHeight={60}
+                            />
                         </View>
                     </View>
                 </ScrollView>

@@ -7,7 +7,13 @@ import { PRIVACY_POLICY_URL } from "@/src/constants";
 import { sharedStyles as ss } from "@/src/styles";
 import { Icon } from "./Icon";
 
-export function PrivacyPolicyLink({ textStyle }: { textStyle: TextStyle }) {
+export function PrivacyPolicyLink({
+    containerHeight,
+    textStyle,
+}: {
+    containerHeight: number;
+    textStyle: TextStyle;
+}) {
     const { t } = useTranslation();
 
     const style = {
@@ -24,8 +30,9 @@ export function PrivacyPolicyLink({ textStyle }: { textStyle: TextStyle }) {
                 ss.absolute,
                 ss.row,
                 ss.justifyCenter,
+                ss.alignCenter,
                 ss.fullWidth,
-                { bottom: 0 },
+                { bottom: 0, height: containerHeight },
             ]}
             onPress={() => {
                 Linking.openURL(PRIVACY_POLICY_URL);
