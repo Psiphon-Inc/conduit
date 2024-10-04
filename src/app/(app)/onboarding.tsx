@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
     Canvas,
     Circle,
@@ -16,14 +17,22 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Notifications from "expo-notifications";
+import { router } from "expo-router";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler, useWindowDimensions } from "react-native";
+import {
+    Gesture,
+    GestureDetector,
+    GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import Animated, {
     runOnJS,
     useDerivedValue,
     useSharedValue,
     withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { drawBigFont } from "@/src/common/utils";
 import { useNotificationsPermissions } from "@/src/components/NotificationsStatus";
@@ -31,15 +40,6 @@ import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router } from "expo-router";
-import React from "react";
-import {
-    Gesture,
-    GestureDetector,
-    GestureHandlerRootView,
-} from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function OnboardingScreen() {
     const win = useWindowDimensions();

@@ -1,4 +1,5 @@
 import { Group, Path, fitbox, rect } from "@shopify/react-native-skia";
+import React from "react";
 import {
     Easing,
     SharedValue,
@@ -13,7 +14,6 @@ import {
 } from "react-native-reanimated";
 
 import { palette } from "@/src/styles";
-import React from "react";
 
 export function Chains({
     size,

@@ -24,7 +24,8 @@ import {
     withTiming,
 } from "react-native-reanimated";
 import { SharedValue } from "react-native-reanimated/lib/typescript/Animated";
-import { ConduitConnectionLight } from "./ConduitConnectionLight";
+
+import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
 
 interface PhoneProps {
     currentView: SharedValue<number>;

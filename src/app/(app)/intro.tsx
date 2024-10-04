@@ -15,6 +15,7 @@ import {
     useSVG,
     vec,
 } from "@shopify/react-native-skia";
+import { router } from "expo-router";
 import React from "react";
 import { View, useWindowDimensions } from "react-native";
 import {
@@ -27,10 +28,9 @@ import {
     withSpring,
     withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { palette, sharedStyles as ss } from "@/src/styles";
-import { router } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function Orb({ cx, cy, r }: { cx: number; cy: number; r: number }) {
     const win = useWindowDimensions();

@@ -3,7 +3,7 @@ import { SharedValue } from "react-native-reanimated";
 
 import { Chains } from "@/src/components/canvas/Chains";
 import { FlexibleOrb } from "@/src/components/canvas/FlexibleOrb";
-import { Phone } from "./Phone";
+import { Phone } from "@/src/components/canvas/Phone";
 
 interface OnboardingSceneProps {
     currentView: SharedValue<number>;
