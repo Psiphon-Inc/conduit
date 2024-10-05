@@ -16,6 +16,7 @@ import {
 import React from "react";
 import {
     Easing,
+    SharedValue,
     cancelAnimation,
     useAnimatedReaction,
     useSharedValue,
@@ -23,7 +24,6 @@ import {
     withRepeat,
     withTiming,
 } from "react-native-reanimated";
-import { SharedValue } from "react-native-reanimated/lib/typescript/Animated";
 
 import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
 
