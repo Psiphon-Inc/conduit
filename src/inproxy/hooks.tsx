@@ -54,3 +54,11 @@ export const useInProxyTotalBytesTransferred =
             initialData: 0,
             enabled: false,
         });
+
+export const useInProxyMustUpgrade = (): DefinedUseQueryResult<boolean> =>
+    useQuery({
+        queryKey: ["inProxyMustUpgrade"],
+        queryFn: () => undefined,
+        initialData: false,
+        enabled: false,
+    });
