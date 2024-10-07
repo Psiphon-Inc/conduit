@@ -43,6 +43,7 @@ import {
 import { useInProxyContext } from "@/src/inproxy/context";
 import {
     useInProxyCurrentConnectedClients,
+    useInProxyMustUpgrade,
     useInProxyStatus,
 } from "@/src/inproxy/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
@@ -62,6 +63,7 @@ export function ConduitOrbToggle({
     const { data: inProxyStatus } = useInProxyStatus();
     const { data: inProxyCurrentConnectedClients } =
         useInProxyCurrentConnectedClients();
+    const { data: inProxyMustUpgrade } = useInProxyMustUpgrade();
 
     // At the top of the canvas there is a grid of dots around the Psiphon logo,
     // representing the Psiphon Network the InProxy is proxying traffic towards.
@@ -293,6 +295,21 @@ export function ConduitOrbToggle({
     // disconnect users, we will show instruction to long press to turn off.
     const longPressInstructionOpacity = useSharedValue(0);
 
+    // If the module reports that inProxy must upgrade, show instructions
+    const upgradeRequiredInstructionOpacity = useSharedValue(0);
+
+    function toggle() {
+        if (inProxyMustUpgrade) {
+            upgradeRequiredInstructionOpacity.value = withSequence(
+                withTiming(1, { duration: 1000 }),
+                withTiming(1, { duration: 4000 }),
+                withTiming(0, { duration: 1000 }),
+            );
+        } else {
+            toggleInProxy();
+        }
+    }
+
     function animateOrbGiggle() {
         "worklet";
         orbRadius.value = withSequence(
@@ -315,7 +332,7 @@ export function ConduitOrbToggle({
                 runOnJS(Haptics.impactAsync)(
                     Haptics.ImpactFeedbackStyle.Medium,
                 );
-                runOnJS(toggleInProxy)();
+                runOnJS(toggle)();
             } else {
                 animateOrbGiggle();
                 longPressInstructionOpacity.value = withSequence(
@@ -336,7 +353,7 @@ export function ConduitOrbToggle({
             })
             .onStart(() => {
                 runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Heavy);
-                runOnJS(toggleInProxy)();
+                runOnJS(toggle)();
                 longPressInstructionOpacity.value = withTiming(0, {
                     duration: 500,
                 });
@@ -502,6 +519,23 @@ export function ConduitOrbToggle({
                 ]}
             >
                 {t("HOLD_TO_TURN_OFF_I18N.string")}
+            </Animated.Text>
+            <Animated.Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[
+                    ss.whiteText,
+                    ss.bodyFont,
+                    ss.absolute,
+                    {
+                        top: orbCenterY + finalOrbRadius + ss.padded.padding,
+                        width: "100%",
+                        textAlign: "center",
+                        opacity: upgradeRequiredInstructionOpacity,
+                    },
+                ]}
+            >
+                {t("UPGRADE_REQUIRED_I18N.string")}
             </Animated.Text>
         </View>
     );

@@ -152,5 +152,8 @@
     },
     "REPLAY_INTRO_I18N": {
         "string": "Replay Intro"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "Please upgrade the app"
     }
 }
