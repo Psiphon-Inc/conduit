@@ -1,6 +1,6 @@
 "use strict";
 
-const fs = require("fs").promises;
+import { promises as fs } from "fs";
 const path = require("path");
 const pseudo = require("./pseudo").PSEUDO;
 
@@ -14,7 +14,7 @@ let englishLines,
 async function getEnglishLines() {
     const data = await fs.readFile(
         path.resolve(__dirname, "locales/en/translation.json"),
-        (err, data) => {
+        (err, _) => {
             if (err) throw err;
         },
     );

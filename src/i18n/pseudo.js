@@ -67,17 +67,17 @@ function mapContent(fn, val) {
     return modified.join("");
 }
 
-function Pseudo(id, name, charMap, modFn) {
-    this.id = id;
-    this.translate = mapContent.bind(null, function (val) {
-        return replaceChars(charMap, modFn(val));
-    });
-    this.name = this.translate(name);
+class Pseudo {
+    constructor(id, name, charMap, modFn) {
+        this.id = id;
+        this.translate = mapContent.bind(null, function (val) {
+            return replaceChars(charMap, modFn(val));
+        });
+        this.name = this.translate(name);
+    }
 }
 
-var PSEUDO = {
+export const PSEUDO = {
     xa: new Pseudo("xa", "Packaged Accented", ACCENTED_MAP, makeLonger),
     xb: new Pseudo("xb", "Packaged Mirrored", FLIPPED_MAP, makeRTL),
 };
-
-exports.PSEUDO = PSEUDO;
