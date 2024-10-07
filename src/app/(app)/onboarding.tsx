@@ -27,6 +27,7 @@ import {
     GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
+    SharedValue,
     runOnJS,
     useDerivedValue,
     useSharedValue,
@@ -216,19 +217,6 @@ export default function OnboardingScreen() {
             .build();
     });
 
-    const dot0Fill = useDerivedValue(() => {
-        return currentView.value >= 0 ? palette.blueTint2 : palette.transparent;
-    });
-    const dot1Fill = useDerivedValue(() => {
-        return currentView.value >= 1 ? palette.blueTint2 : palette.transparent;
-    });
-    const dot2Fill = useDerivedValue(() => {
-        return currentView.value >= 2 ? palette.blueTint2 : palette.transparent;
-    });
-    const dot3Fill = useDerivedValue(() => {
-        return currentView.value >= 3 ? palette.blueTint2 : palette.transparent;
-    });
-
     const buttonP = useDerivedValue(() => {
         buttonTextChanged.value;
         if (!fontMgr) {
@@ -258,10 +246,12 @@ export default function OnboardingScreen() {
         const backListener = BackHandler.addEventListener(
             "hardwareBackPress",
             () => {
+                // when this callback returns false, the hardware back is
+                // actuated, when it returns true the hardware back is ignored.
                 if (currentView.value === 0) {
                     return false; // allow hardware back from first view only
                 } else {
-                    return true; // disable hardware back, we'll handle the gesture
+                    return true;
                 }
             },
         );
@@ -271,29 +261,31 @@ export default function OnboardingScreen() {
         };
     }, []);
 
-    async function goToNext() {
-        if (currentView.value < views.length - 1) {
-            const beforeNext = views[currentView.value].beforeNext;
-            if (beforeNext) {
-                await beforeNext();
-            }
-            currentView.value += 1;
-        } else {
-            runOnJS(goToMainApp)();
-        }
-    }
     function replaceOrGoBack() {
+        // this will be called in an animation callback using runOnJS, need to
+        // encapsulate so we can consume the output of a synchronous function.
         if (router.canGoBack()) {
             router.back();
         } else {
             router.replace("/(app)/");
         }
     }
-    async function goToMainApp() {
-        everythingOpacity.value = withTiming(0, { duration: 500 }, () => {
-            runOnJS(replaceOrGoBack)();
-        });
-        await AsyncStorage.setItem("hasOnboarded", "true");
+
+    async function goToNext() {
+        if (currentView.value < views.length - 1) {
+            // continue onboarding
+            const beforeNext = views[currentView.value].beforeNext;
+            if (beforeNext) {
+                await beforeNext();
+            }
+            currentView.value += 1;
+        } else {
+            // onboarding done, record completion and fade to main view
+            await AsyncStorage.setItem("hasOnboarded", "true");
+            everythingOpacity.value = withTiming(0, { duration: 500 }, () => {
+                runOnJS(replaceOrGoBack)();
+            });
+        }
     }
 
     const buttonGesture = Gesture.Tap().onEnd(goToNext).runOnJS(true);
@@ -397,57 +389,9 @@ export default function OnboardingScreen() {
                                 />
                             </Group>
                             <Group transform={dotsTransform}>
-                                <Circle
-                                    c={vec(dotWidth * 0, 0)}
-                                    r={dotWidth / 4}
-                                    style={"stroke"}
-                                    strokeWidth={1}
-                                    color={palette.blueTint2}
-                                />
-                                <Circle
-                                    c={vec(dotWidth * 0, 0)}
-                                    r={dotWidth / 4}
-                                    style={"fill"}
-                                    color={dot0Fill}
-                                />
-                                <Circle
-                                    c={vec(dotWidth * 1, 0)}
-                                    r={dotWidth / 4}
-                                    style={"stroke"}
-                                    strokeWidth={1}
-                                    color={palette.blueTint2}
-                                />
-                                <Circle
-                                    c={vec(dotWidth * 1, 0)}
-                                    r={dotWidth / 4}
-                                    style={"fill"}
-                                    color={dot1Fill}
-                                />
-                                <Circle
-                                    c={vec(dotWidth * 2, 0)}
-                                    r={dotWidth / 4}
-                                    style={"stroke"}
-                                    strokeWidth={1}
-                                    color={palette.blueTint2}
-                                />
-                                <Circle
-                                    c={vec(dotWidth * 2, 0)}
-                                    r={dotWidth / 4}
-                                    style={"fill"}
-                                    color={dot2Fill}
-                                />
-                                <Circle
-                                    c={vec(dotWidth * 3, 0)}
-                                    r={dotWidth / 4}
-                                    style={"stroke"}
-                                    strokeWidth={1}
-                                    color={palette.blueTint2}
-                                />
-                                <Circle
-                                    c={vec(dotWidth * 3, 0)}
-                                    r={dotWidth / 4}
-                                    style={"fill"}
-                                    color={dot3Fill}
+                                <ProgressDots
+                                    dotWidth={dotWidth}
+                                    currentView={currentView}
                                 />
                             </Group>
                             <Group transform={buttonTransform}>
@@ -501,5 +445,84 @@ export default function OnboardingScreen() {
                 </Animated.View>
             </Animated.View>
         </SafeAreaView>
+    );
+}
+
+function ProgressDots({
+    dotWidth,
+    currentView,
+}: {
+    dotWidth: number;
+    currentView: SharedValue<number>;
+}) {
+    // Couldn't figure out a way to avoid hardcoding these
+    const dot0Fill = useDerivedValue(() => {
+        return currentView.value >= 0 ? palette.blueTint2 : palette.transparent;
+    });
+    const dot1Fill = useDerivedValue(() => {
+        return currentView.value >= 1 ? palette.blueTint2 : palette.transparent;
+    });
+    const dot2Fill = useDerivedValue(() => {
+        return currentView.value >= 2 ? palette.blueTint2 : palette.transparent;
+    });
+    const dot3Fill = useDerivedValue(() => {
+        return currentView.value >= 3 ? palette.blueTint2 : palette.transparent;
+    });
+
+    return (
+        <Group>
+            <Circle
+                c={vec(dotWidth * 0, 0)}
+                r={dotWidth / 4}
+                style={"stroke"}
+                strokeWidth={1}
+                color={palette.blueTint2}
+            />
+            <Circle
+                c={vec(dotWidth * 0, 0)}
+                r={dotWidth / 4}
+                style={"fill"}
+                color={dot0Fill}
+            />
+            <Circle
+                c={vec(dotWidth * 1, 0)}
+                r={dotWidth / 4}
+                style={"stroke"}
+                strokeWidth={1}
+                color={palette.blueTint2}
+            />
+            <Circle
+                c={vec(dotWidth * 1, 0)}
+                r={dotWidth / 4}
+                style={"fill"}
+                color={dot1Fill}
+            />
+            <Circle
+                c={vec(dotWidth * 2, 0)}
+                r={dotWidth / 4}
+                style={"stroke"}
+                strokeWidth={1}
+                color={palette.blueTint2}
+            />
+            <Circle
+                c={vec(dotWidth * 2, 0)}
+                r={dotWidth / 4}
+                style={"fill"}
+                color={dot2Fill}
+            />
+            <Circle
+                c={vec(dotWidth * 3, 0)}
+                r={dotWidth / 4}
+                style={"stroke"}
+                strokeWidth={1}
+                color={palette.blueTint2}
+            />
+            <Circle
+                c={vec(dotWidth * 3, 0)}
+                r={dotWidth / 4}
+                style={"fill"}
+                color={dot3Fill}
+            />
+        </Group>
     );
 }

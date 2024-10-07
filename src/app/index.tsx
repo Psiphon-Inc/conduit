@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Canvas } from "@shopify/react-native-skia";
 import { router } from "expo-router";
 import React from "react";
@@ -9,7 +10,6 @@ import { timedLog } from "@/src/common/utils";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { PsiphonConduitLoading } from "@/src/components/canvas/PsiphonConduitLoading";
 import { sharedStyles as ss } from "@/src/styles";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Index() {
     const { signIn } = useAuthContext();
