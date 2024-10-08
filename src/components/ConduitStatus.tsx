@@ -62,6 +62,7 @@ export function ConduitStatus({
     const totalBytesTransferredText = t("TOTAL_BYTES_TRANSFERRED_I18N.string", {
         niceBytes: niceBytes(totalBytesTransferred, logErrorToDiagnostic),
     });
+    const waitingForPeersText = t("WAITING_FOR_PEERS_I18N.string");
 
     // Fade in gradient on app start
     const fadeIn = useSharedValue(0);
@@ -139,11 +140,24 @@ export function ConduitStatus({
             letterSpacing: 1, // 5% of 20
         };
 
+        const waitingTextStyle = {
+            color: Skia.Color(palette.grey),
+            fontFamilies: ["Jura"],
+            fontSize: fontSize,
+            fontStyle: {
+                weight: 300,
+            },
+            letterSpacing: 1, // 5% of 20
+        };
+
         return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
             .pushStyle(mainTextStyle)
             .addText(conduitStationText + " ")
             .pushStyle(runningTextStyle)
-            .addText(proxyStatusText + "\n\n")
+            .addText(proxyStatusText + "\n")
+            .pop()
+            .pushStyle(waitingTextStyle)
+            .addText(connectedPeers === 0 ? waitingForPeersText + "\n" : "\n")
             .pop()
             .addText(connectedPeersText + "\n")
             .addText(connectingPeersText + "\n")

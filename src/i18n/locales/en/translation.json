@@ -155,5 +155,8 @@
     },
     "UPGRADE_REQUIRED_I18N": {
         "string": "Please upgrade the app"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "Waiting for peers"
     }
 }

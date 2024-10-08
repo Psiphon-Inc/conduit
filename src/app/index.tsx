@@ -1,7 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Canvas } from "@shopify/react-native-skia";
-import { router } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
+import { useRouter } from "expo-router";
 import React from "react";
 import { View, useWindowDimensions } from "react-native";
 import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
@@ -12,18 +11,16 @@ import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { PsiphonConduitLoading } from "@/src/components/canvas/PsiphonConduitLoading";
 import { sharedStyles as ss } from "@/src/styles";
 
-SplashScreen.preventAutoHideAsync();
-
 export default function Index() {
     const { signIn } = useAuthContext();
     const win = useWindowDimensions();
+    const router = useRouter();
 
     const canvasSize = win.width / 3;
 
     const opacity = useSharedValue(0);
 
     async function doSignIn() {
-        await SplashScreen.hideAsync();
         timedLog("Starting signIn");
         const signInResult = await signIn();
         if (signInResult instanceof Error) {

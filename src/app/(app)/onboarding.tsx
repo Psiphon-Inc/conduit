@@ -17,7 +17,7 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Notifications from "expo-notifications";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler, useWindowDimensions } from "react-native";
@@ -47,9 +47,11 @@ export default function OnboardingScreen() {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const notificationPermissions = useNotificationsPermissions();
+    const router = useRouter();
 
     const [shouldAskForNotifications, setShouldAskForNotifications] =
         React.useState(false);
+
     const buttonTextChanged = useSharedValue(false);
 
     React.useEffect(() => {
