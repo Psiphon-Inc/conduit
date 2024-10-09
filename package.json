@@ -1,7 +1,7 @@
 {
   "name": "conduit",
   "main": "src/entrypoint",
-  "version": "1.0.0",
+  "version": "app.json",
   "scripts": {
     "android": "npm run  get-git-hash && expo run:android",
     "ios": "npm run  get-git-hash && expo run:ios",

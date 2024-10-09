@@ -2,7 +2,7 @@
   "expo": {
     "name": "conduit",
     "slug": "conduit",
-    "version": "1.0.0",
+    "version": "1.0.0-RC.6",
     "orientation": "portrait",
     "scheme": "conduit",
     "userInterfaceStyle": "automatic",
@@ -16,6 +16,7 @@
       "bundleIdentifier": "ca.psiphon.conduit"
     },
     "android": {
+      "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png"
