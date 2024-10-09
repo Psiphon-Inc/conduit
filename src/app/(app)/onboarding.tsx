@@ -29,6 +29,7 @@ import {
 import Animated, {
     SharedValue,
     runOnJS,
+    useAnimatedStyle,
     useDerivedValue,
     useSharedValue,
     withTiming,
@@ -104,8 +105,14 @@ export default function OnboardingScreen() {
     ];
 
     const currentView = useSharedValue(0);
-    const privacyPolicyLinkOpacity = useDerivedValue(() => {
-        return currentView.value === 2 ? 1 : 0;
+    const privacyPolicyLinkStyle = useAnimatedStyle(() => {
+        return currentView.value === 2
+            ? {
+                  display: "flex",
+              }
+            : {
+                  display: "none",
+              };
     });
 
     const headerText = useDerivedValue(() => {
@@ -437,7 +444,7 @@ export default function OnboardingScreen() {
                 </GestureDetector>
             </GestureHandlerRootView>
             <Animated.View style={{ opacity: everythingOpacity }}>
-                <Animated.View style={{ opacity: privacyPolicyLinkOpacity }}>
+                <Animated.View style={privacyPolicyLinkStyle}>
                     <PrivacyPolicyLink
                         textStyle={{ ...ss.boldFont, ...ss.whiteText }}
                         containerHeight={privacyPolicyHeight}
