@@ -5,7 +5,6 @@ import { timedLog } from "@/src/common/utils";
 import { InProxyProvider } from "@/src/inproxy/context";
 
 export default function AppLayout() {
-    timedLog("AppLayout");
     return (
         <InProxyProvider>
             <Stack

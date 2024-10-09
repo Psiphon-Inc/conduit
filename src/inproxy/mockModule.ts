@@ -156,30 +156,30 @@ class ConduitModuleMock {
     }
 
     public addListener(name: string) {
-        timedLog(`ConduitModuleMock.addListener(${name})`);
+        timedLog(`MOCK: ConduitModule.addListener(${name})`);
         this.emitState();
     }
 
     public removeListeners(count: number) {
-        timedLog(`ConduitModuleMock.removeListeners(${count})`);
+        timedLog(`MOCK: ConduitModuleMock.removeListeners(${count})`);
         this.emitState();
     }
 
     public async sendFeedback() {
-        timedLog("ConduitModuleMock.sendFeedback()");
+        timedLog("MOCK: ConduitModuleMock.sendFeedback()");
         return null;
     }
 
     public logInfo(tag: string, msg: string) {
-        timedLog(`ConduitModuleMock.logInfo TAG=${tag} msg=${msg}`);
+        timedLog(`MOCK: ConduitModuleMock.logInfo TAG=${tag} msg=${msg}`);
     }
 
     public logWarn(tag: string, msg: string) {
-        console.warn(`ConduitModuleMock.logWarn TAG=${tag} msg=${msg}`);
+        console.warn(`MOCK: ConduitModuleMock.logWarn TAG=${tag} msg=${msg}`);
     }
 
     public logError(tag: string, msg: string) {
-        console.error(`ConduitModuleMock.logError TAG=${tag} msg=${msg}`);
+        console.error(`MOCK: ConduitModuleMock.logError TAG=${tag} msg=${msg}`);
     }
 
     public async toggleInProxy(
@@ -189,7 +189,7 @@ class ConduitModuleMock {
         _: string,
     ) {
         timedLog(
-            `ConduitModuleMock.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
+            `MOCK: ConduitModule.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.running = !this.running;
         await AsyncStorage.setItem(
@@ -214,7 +214,7 @@ class ConduitModuleMock {
         privateKey: string,
     ) {
         timedLog(
-            `ConduitModuleMock.paramsChanged(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
+            `MOCK: ConduitModule.paramsChanged(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.emitState();
         if (this.running) {

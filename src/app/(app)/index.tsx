@@ -2,7 +2,6 @@ import React from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { timedLog } from "@/src/common/utils";
 import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { ConduitStatus } from "@/src/components/ConduitStatus";
@@ -12,7 +11,6 @@ import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function HomeScreen() {
-    timedLog("HomeScreen");
     const win = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
