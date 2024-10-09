@@ -124,7 +124,7 @@
         "string": "What is Conduit?"
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
-        "string": "When you run a Conduit Station, your phone acts as a beacon of Internet Freedom.\n\nPeople in censored regions will bounce through your phone and into the Psiphon Network proper, creating a more open internet."
+        "string": "When you run a Conduit Station, your phone acts as a beacon of Internet Freedom.\n\nPeople in censored regions will bounce through your phone and into the Psiphon Network, creating a more open internet."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Next"
@@ -133,22 +133,19 @@
         "string": "Allow Notifications"
     },
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
-        "string": "Conduit recommends you enable notifications so we can provide critical updates about your Conduit Station.\n\nThese notifications will only appear in your status bar."
+        "string": "Conduit recommends you enable notifications so we can provide critical updates about your Conduit Station.\n\nReady to begin?"
     },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
-        "string": "Next"
-    },
-    "ONBOARDING_ENABLE_NOTIFICATIONS_BUTTON_I18N": {
-        "string": "Next"
+        "string": "Begin"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Privacy Policy"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
-        "string": "Before we begin, some ground rules: We do not collect any personally identifiable information (PII) from users who run Conduit Stations.\n\nBy using Conduit, you accept the entire privacy policy, available below."
+        "string": "Before we begin, some ground rules: We do not collect any personally identifiable information from users who run Conduit Stations.\n\nBy using Conduit, you accept the entire privacy policy, available below."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
-        "string": "Accept & Begin"
+        "string": "Accept"
     },
     "REPLAY_INTRO_I18N": {
         "string": "Replay Intro"

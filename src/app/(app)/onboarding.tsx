@@ -84,30 +84,28 @@ export default function OnboardingScreen() {
             beforeNext: undefined,
         },
         {
-            // PERMISSIONS
-            headerText: t("ONBOARDING_PERMISSIONS_HEADER_I18N.string"),
-            bodyText: t("ONBOARDING_PERMISSIONS_BODY_I18N.string"),
-            buttonText: shouldAskForNotifications
-                ? t("ONBOARDING_ENABLE_NOTIFICATIONS_BUTTON_I18N.string")
-                : t("ONBOARDING_PERMISSIONS_BUTTON_I18N.string"),
-            beforeNext: async () => {
-                if (shouldAskForNotifications) {
-                    await Notifications.requestPermissionsAsync();
-                }
-            },
-        },
-        {
             // PRIVACY POLICY
             headerText: t("ONBOARDING_PRIVACY_POLICY_HEADER_I18N.string"),
             bodyText: t("ONBOARDING_PRIVACY_POLICY_BODY_I18N.string"),
             buttonText: t("ONBOARDING_PRIVACY_POLICY_BUTTON_I18N.string"),
             beforeNext: undefined,
         },
+        {
+            // PERMISSIONS
+            headerText: t("ONBOARDING_PERMISSIONS_HEADER_I18N.string"),
+            bodyText: t("ONBOARDING_PERMISSIONS_BODY_I18N.string"),
+            buttonText: t("ONBOARDING_PERMISSIONS_BUTTON_I18N.string"),
+            beforeNext: async () => {
+                if (shouldAskForNotifications) {
+                    await Notifications.requestPermissionsAsync();
+                }
+            },
+        },
     ];
 
     const currentView = useSharedValue(0);
     const privacyPolicyLinkOpacity = useDerivedValue(() => {
-        return currentView.value === views.length - 1 ? 1 : 0;
+        return currentView.value === 2 ? 1 : 0;
     });
 
     const headerText = useDerivedValue(() => {
@@ -274,12 +272,12 @@ export default function OnboardingScreen() {
     }
 
     async function goToNext() {
+        const beforeNext = views[currentView.value].beforeNext;
+        if (beforeNext) {
+            await beforeNext();
+        }
         if (currentView.value < views.length - 1) {
             // continue onboarding
-            const beforeNext = views[currentView.value].beforeNext;
-            if (beforeNext) {
-                await beforeNext();
-            }
             currentView.value += 1;
         } else {
             // onboarding done, record completion and fade to main view

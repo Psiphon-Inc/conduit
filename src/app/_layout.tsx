@@ -62,7 +62,6 @@ export default function RootLayout() {
                             animation: "none",
                         }}
                     >
-                        <Stack.Screen name="/index" />
                         <Stack.Screen name="(app)" />
                     </Stack>
                 </AuthProvider>
