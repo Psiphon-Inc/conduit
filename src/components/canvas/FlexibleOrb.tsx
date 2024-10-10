@@ -64,8 +64,14 @@ export function FlexibleOrb({
             if (previous === 0) {
                 cancelAnimation(radius);
             }
-            if (previous === 1) {
+            if (previous === 1 && current === 0) {
                 radius.value = initialRadius;
+            }
+            if (previous === 2) {
+                privacyPolicyOpacity.value = withTiming(0, { duration: 1000 });
+            }
+            if (previous === 3) {
+                backgroundOpacity.value = withTiming(0);
             }
             if (current === 0) {
                 cx.value = withTiming(sceneWidth * 0.5);
@@ -104,8 +110,15 @@ export function FlexibleOrb({
                         restSpeedThreshold: 2,
                     }),
                 );
-                backgroundOpacity.value = withTiming(0, { duration: 300 });
             } else if (current === 2) {
+                privacyPolicyOpacity.value = withTiming(1, { duration: 1000 });
+                radius.value = withSpring(sceneHeight / 4.5, {
+                    mass: 2.2,
+                    damping: 20,
+                    stiffness: 100,
+                    restDisplacementThreshold: 0.01,
+                    restSpeedThreshold: 2,
+                });
                 cx.value = withSpring(sceneWidth * 0.3, {
                     mass: 3.2,
                     damping: 10,
@@ -113,6 +126,7 @@ export function FlexibleOrb({
                     restDisplacementThreshold: 0.01,
                     restSpeedThreshold: 2,
                 });
+            } else if (current === 3) {
                 radius.value = withSpring(sceneHeight / 3.5, {
                     mass: 2.2,
                     damping: 20,
@@ -121,10 +135,6 @@ export function FlexibleOrb({
                     restSpeedThreshold: 2,
                 });
                 backgroundOpacity.value = withTiming(1, { duration: 1000 });
-                privacyPolicyOpacity.value = withTiming(0);
-            } else if (current === 3) {
-                backgroundOpacity.value = withTiming(0);
-                privacyPolicyOpacity.value = withTiming(1, { duration: 1000 });
             }
         },
     );

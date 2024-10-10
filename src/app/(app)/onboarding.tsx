@@ -17,7 +17,7 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Notifications from "expo-notifications";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { BackHandler, useWindowDimensions } from "react-native";
@@ -29,6 +29,7 @@ import {
 import Animated, {
     SharedValue,
     runOnJS,
+    useAnimatedStyle,
     useDerivedValue,
     useSharedValue,
     withTiming,
@@ -47,9 +48,11 @@ export default function OnboardingScreen() {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
     const notificationPermissions = useNotificationsPermissions();
+    const router = useRouter();
 
     const [shouldAskForNotifications, setShouldAskForNotifications] =
         React.useState(false);
+
     const buttonTextChanged = useSharedValue(false);
 
     React.useEffect(() => {
@@ -82,30 +85,34 @@ export default function OnboardingScreen() {
             beforeNext: undefined,
         },
         {
-            // PERMISSIONS
-            headerText: t("ONBOARDING_PERMISSIONS_HEADER_I18N.string"),
-            bodyText: t("ONBOARDING_PERMISSIONS_BODY_I18N.string"),
-            buttonText: shouldAskForNotifications
-                ? t("ONBOARDING_ENABLE_NOTIFICATIONS_BUTTON_I18N.string")
-                : t("ONBOARDING_PERMISSIONS_BUTTON_I18N.string"),
-            beforeNext: async () => {
-                if (shouldAskForNotifications) {
-                    await Notifications.requestPermissionsAsync();
-                }
-            },
-        },
-        {
             // PRIVACY POLICY
             headerText: t("ONBOARDING_PRIVACY_POLICY_HEADER_I18N.string"),
             bodyText: t("ONBOARDING_PRIVACY_POLICY_BODY_I18N.string"),
             buttonText: t("ONBOARDING_PRIVACY_POLICY_BUTTON_I18N.string"),
             beforeNext: undefined,
         },
+        {
+            // PERMISSIONS
+            headerText: t("ONBOARDING_PERMISSIONS_HEADER_I18N.string"),
+            bodyText: t("ONBOARDING_PERMISSIONS_BODY_I18N.string"),
+            buttonText: t("ONBOARDING_PERMISSIONS_BUTTON_I18N.string"),
+            beforeNext: async () => {
+                if (shouldAskForNotifications) {
+                    await Notifications.requestPermissionsAsync();
+                }
+            },
+        },
     ];
 
     const currentView = useSharedValue(0);
-    const privacyPolicyLinkOpacity = useDerivedValue(() => {
-        return currentView.value === views.length - 1 ? 1 : 0;
+    const privacyPolicyLinkStyle = useAnimatedStyle(() => {
+        return currentView.value === 2
+            ? {
+                  display: "flex",
+              }
+            : {
+                  display: "none",
+              };
     });
 
     const headerText = useDerivedValue(() => {
@@ -272,12 +279,12 @@ export default function OnboardingScreen() {
     }
 
     async function goToNext() {
+        const beforeNext = views[currentView.value].beforeNext;
+        if (beforeNext) {
+            await beforeNext();
+        }
         if (currentView.value < views.length - 1) {
             // continue onboarding
-            const beforeNext = views[currentView.value].beforeNext;
-            if (beforeNext) {
-                await beforeNext();
-            }
             currentView.value += 1;
         } else {
             // onboarding done, record completion and fade to main view
@@ -417,6 +424,10 @@ export default function OnboardingScreen() {
                 </Canvas>
                 <GestureDetector gesture={anywhereGesture}>
                     <Animated.View
+                        accessible={true}
+                        accessibilityLabel={"Onboarding Info, will update"}
+                        accessibilityRole={"text"}
+                        aria-valuetext={bodyText}
                         style={{
                             position: "absolute",
                             width: usableWidth,
@@ -426,6 +437,9 @@ export default function OnboardingScreen() {
                 </GestureDetector>
                 <GestureDetector gesture={buttonGesture}>
                     <Animated.View
+                        accessible={true}
+                        accessibilityLabel={buttonText}
+                        accessibilityRole={"button"}
                         style={{
                             position: "absolute",
                             borderRadius: buttonBorderRadius,
@@ -437,7 +451,7 @@ export default function OnboardingScreen() {
                 </GestureDetector>
             </GestureHandlerRootView>
             <Animated.View style={{ opacity: everythingOpacity }}>
-                <Animated.View style={{ opacity: privacyPolicyLinkOpacity }}>
+                <Animated.View style={privacyPolicyLinkStyle}>
                     <PrivacyPolicyLink
                         textStyle={{ ...ss.boldFont, ...ss.whiteText }}
                         containerHeight={privacyPolicyHeight}

@@ -26,6 +26,8 @@ export function PrivacyPolicyLink({
 
     return (
         <Pressable
+            accessible={true}
+            accessibilityLabel={"Link to privacy policy"}
             style={[
                 ss.absolute,
                 ss.row,

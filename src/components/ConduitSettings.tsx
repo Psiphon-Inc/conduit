@@ -7,7 +7,7 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -53,15 +53,17 @@ import { PrivacyPolicyLink } from "./PrivacyPolicyLink";
 export function ConduitSettings() {
     const { t } = useTranslation();
     const win = useWindowDimensions();
+    const router = useRouter();
+
     const conduitKeyPair = useConduitKeyPair();
     const { inProxyParameters, selectInProxyParameters, logErrorToDiagnostic } =
         useInProxyContext();
-
     const { data: inProxyStatus } = useInProxyStatus();
 
     const [modalOpen, setModalOpen] = React.useState(false);
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
         React.useState(false);
+
     const modifiedMaxPeers = useSharedValue(inProxyParameters.maxClients);
     const modifiedMaxMBps = useSharedValue(
         bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond),
@@ -419,6 +421,9 @@ export function ConduitSettings() {
                 ]}
             >
                 <Pressable
+                    accessible={true}
+                    accessibilityLabel={t("SETTINGS_I18N.string")}
+                    accessibilityRole={"button"}
                     onPress={() => {
                         setModalOpen(true);
                     }}

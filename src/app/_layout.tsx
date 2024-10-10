@@ -12,14 +12,12 @@ import i18nService from "@/src/i18n/i18n";
 i18nService.initI18n();
 
 import { AuthProvider } from "@/src/auth/context";
-import { timedLog } from "@/src/common/utils";
 import { fonts, palette } from "@/src/styles";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-    timedLog("RootLayout");
     const [loaded] = useFonts({
         JuraRegular: fonts.JuraRegular,
         JuraBold: fonts.JuraBold,
@@ -30,28 +28,42 @@ export default function RootLayout() {
             SplashScreen.hideAsync();
         }
     }, [loaded]);
+
     useEffect(() => {
         SystemUI.setBackgroundColorAsync(palette.black).then(() => {});
     }, []);
 
-    const queryClient = new QueryClient();
+    // Splash screens should be showing until we're done loading
+    if (!loaded) {
+        return null;
+    }
+
+    // By default, react-query won't run requests when there is no network, but
+    // we're not actually using any networked queries, so we want these to fire
+    // always, regardless of network. The Conduit module has it's own network
+    // state handling.
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: {
+                networkMode: "always",
+            },
+        },
+    });
 
     return (
         <ThemeProvider value={DarkTheme}>
-            {!loaded ? null : (
-                <QueryClientProvider client={queryClient}>
-                    <AuthProvider>
-                        <Stack
-                            screenOptions={{
-                                headerShown: false,
-                                animation: "none",
-                            }}
-                        >
-                            <Stack.Screen name="(app)" />
-                        </Stack>
-                    </AuthProvider>
-                </QueryClientProvider>
-            )}
+            <QueryClientProvider client={queryClient}>
+                <AuthProvider>
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                            animation: "none",
+                        }}
+                    >
+                        <Stack.Screen name="(app)" />
+                    </Stack>
+                </AuthProvider>
+            </QueryClientProvider>
         </ThemeProvider>
     );
 }

@@ -15,7 +15,7 @@ import {
     useSVG,
     vec,
 } from "@shopify/react-native-skia";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React from "react";
 import { View, useWindowDimensions } from "react-native";
 import {
@@ -90,6 +90,7 @@ function Orb({ cx, cy, r }: { cx: number; cy: number; r: number }) {
 export default function IntroScreen() {
     const win = useWindowDimensions();
     const insets = useSafeAreaInsets();
+    const router = useRouter();
 
     const fullHeight = win.height + insets.top + insets.bottom;
     const fullWidth = win.width + insets.left + insets.right;

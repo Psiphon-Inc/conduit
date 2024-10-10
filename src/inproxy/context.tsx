@@ -47,7 +47,6 @@ export function useInProxyContext(): InProxyContextValue {
  * The InProxyProvider exposes the ConduitModule API.
  */
 export function InProxyProvider({ children }: { children: React.ReactNode }) {
-    timedLog("InProxyProvider");
     const conduitKeyPair = useConduitKeyPair();
 
     // This provider handles tracking the user-selected InProxy parameters, and
@@ -118,7 +117,6 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     function handleProxyState(proxyState: ProxyState): void {
-        timedLog(`handleProxyState: ${JSON.stringify(proxyState)}`);
         const inProxyStatus = InProxyStatusEnumSchema.parse(proxyState.status);
         queryClient.setQueryData(["inProxyStatus"], inProxyStatus);
         // The module does not send an update for ActivityData when the InProxy
@@ -169,7 +167,6 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             // this shouldn't be possible as the key gets set before we render
             return;
         }
-        timedLog("load InProxyParameters from AsyncStorage");
         try {
             // Retrieve stored inproxy parameters from the application layer
             const storedInProxyMaxClients =
@@ -254,11 +251,9 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         try {
             const feedbackResult = await ConduitModule.sendFeedback();
             timedLog("ConduitModule.sendFeedback() invoked");
-            if (feedbackResult === null) {
-                timedLog("Feedback enqueued successfully");
-            } else {
+            if (!feedbackResult === null) {
                 timedLog(
-                    `sendFeedback returned non-null value: ${feedbackResult}`,
+                    `ConduitModule.sendFeedback() returned non-null value: ${feedbackResult}`,
                 );
             }
         } catch (error) {
