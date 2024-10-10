@@ -424,6 +424,10 @@ export default function OnboardingScreen() {
                 </Canvas>
                 <GestureDetector gesture={anywhereGesture}>
                     <Animated.View
+                        accessible={true}
+                        accessibilityLabel={"Onboarding Info, will update"}
+                        accessibilityRole={"text"}
+                        aria-valuetext={bodyText}
                         style={{
                             position: "absolute",
                             width: usableWidth,
@@ -433,6 +437,9 @@ export default function OnboardingScreen() {
                 </GestureDetector>
                 <GestureDetector gesture={buttonGesture}>
                     <Animated.View
+                        accessible={true}
+                        accessibilityLabel={buttonText}
+                        accessibilityRole={"button"}
                         style={{
                             position: "absolute",
                             borderRadius: buttonBorderRadius,

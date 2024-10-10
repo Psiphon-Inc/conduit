@@ -489,6 +489,10 @@ export function ConduitOrbToggle({
             {/* Pressable overlay over orb to handle gestures */}
             <GestureDetector gesture={orbGesture}>
                 <Animated.View
+                    accessible={true}
+                    accessibilityLabel={"Toggle Conduit from current state"}
+                    accessibilityRole={"button"}
+                    aria-valuetext={inProxyStatus}
                     style={[
                         ss.absolute,
                         {

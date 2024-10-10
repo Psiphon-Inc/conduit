@@ -421,6 +421,9 @@ export function ConduitSettings() {
                 ]}
             >
                 <Pressable
+                    accessible={true}
+                    accessibilityLabel={t("SETTINGS_I18N.string")}
+                    accessibilityRole={"button"}
                     onPress={() => {
                         setModalOpen(true);
                     }}
