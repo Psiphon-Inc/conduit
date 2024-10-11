@@ -327,7 +327,7 @@ export function ConduitOrbToggle({
     }
     const orbGesture = Gesture.Exclusive(
         Gesture.Tap().onEnd(() => {
-            if (inProxyCurrentConnectedClients === 0) {
+            if (inProxyStatus !== "RUNNING") {
                 animateOrbGiggle();
                 runOnJS(Haptics.impactAsync)(
                     Haptics.ImpactFeedbackStyle.Medium,
