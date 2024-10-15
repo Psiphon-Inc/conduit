@@ -21,20 +21,41 @@ struct ConduitParams: Equatable {
     let privateKey: String?
 }
 
+struct ActivitySeries: Equatable {
+    private(set) var bytesUp: [Int] = [Int](repeating: 0, count: 288)
+    private(set) var bytesDown: [Int] = [Int](repeating: 0, count: 288)
+    private(set) var connectingClients: [Int] = [Int](repeating: 0, count: 288)
+    private(set) var connectedClients: [Int] = [Int](repeating: 0, count: 288)
+
+    mutating func pushDataPoints(
+        _ bytesUp: Int,_ bytesDown: Int,
+        _ connectingClients: Int,_ connectedClients: Int
+    ) {
+        // TODO: look at importing stack-like collection (enda)
+        self.bytesUp.removeFirst()
+        self.bytesUp.append(bytesUp)
+        self.bytesDown.removeFirst()
+        self.bytesDown.append(bytesDown)
+        self.connectingClients.removeFirst()
+        self.connectingClients.append(connectingClients)
+        self.connectedClients.removeFirst()
+        self.connectedClients.append(connectedClients)
+    }
+}
+
 struct ActivityStats: Equatable {
-    
     let startTime: TimeInterval
     private(set) var lastUpdate: TimeInterval
     private(set) var totalBytesUp: UInt64 = 0
     private(set) var totalBytesDown: UInt64 = 0
-    private(set) var bytesUp: Int = 0
-    private(set) var bytesDown: Int = 0
-    private(set) var connectingClients: Int = 0
-    private(set) var connectedClients: Int = 0
+    private(set) var currentConnectingClients: Int = 0
+    private(set) var currentConnectedClients: Int = 0
+    private(set) var series: ActivitySeries = ActivitySeries()
+    private(set) var bucketMillis: UInt64 = 1000
     
     /// Time elapsed since Conduit start in milliseconds.
-    var elapsedTimeMilliseconds: UInt64 {
-        UInt64((lastUpdate - startTime) / 1000)
+    var elapsedTimeMillis: UInt64 {
+        UInt64((lastUpdate - startTime) * 1000)
     }
     
     init() {
@@ -46,15 +67,27 @@ struct ActivityStats: Equatable {
         bytesUp: Int, bytesDown: Int,
         connectingClients: Int, connectedClients: Int
     ) {
-        self.lastUpdate = Date().timeIntervalSinceReferenceDate
+        let now = Date().timeIntervalSinceReferenceDate
+
         self.totalBytesUp += UInt64(bytesUp)
         self.totalBytesDown += UInt64(bytesDown)
-        self.bytesUp = bytesUp
-        self.bytesDown = bytesDown
-        self.connectingClients = connectingClients
-        self.connectedClients = connectedClients
+        self.currentConnectingClients = connectingClients
+        self.currentConnectedClients = connectedClients
+
+        let elapsedMillis = UInt64(now - lastUpdate) * 1000
+        let elapsedBucket = UInt64(elapsedMillis / self.bucketMillis)
+        if elapsedBucket > 0 {
+            for _ in 1...elapsedBucket {
+                series.pushDataPoints(0,0,0,0)
+            }
+        }
+        series.pushDataPoints(
+            bytesUp, bytesDown,
+            connectingClients, connectedClients
+        )
+        
+        self.lastUpdate = now
     }
-    
 }
 
 actor ConduitManager {
@@ -224,8 +257,8 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
             _ connectingClients: Int, connectedClients: Int,
             bytesUp: Int, bytesDown: Int)
     }
-    
-    struct DynamicConfigs {
+
+   struct DynamicConfigs {
         let conduitParams: ConduitParams
         let clientVersion: String
     }

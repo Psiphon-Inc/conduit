@@ -69,19 +69,12 @@ extension ReactProxyError: ReactNativeEncodable {
 
 struct ReactInProxyActivityStats: Codable {
     
-    struct Period: Codable {
-        var bytesUp: [Int]
-        var bytesDown: [Int]
-        var connectingClients: [Int]
-        var connectedClients: [Int]
-        
-        init() {
-            bytesUp = .init(repeating: 0, count: 288)
-            bytesDown = .init(repeating: 0, count: 288)
-            connectingClients = .init(repeating: 0, count: 288)
-            connectedClients = .init(repeating: 0, count: 288)
-        }
-        
+    struct DataByPeriod: Codable {
+        let bytesUp: [Int]
+        let bytesDown: [Int]
+        let connectingClients: [Int]
+        let connectedClients: [Int]
+        let bucketPeriod: String
     }
     
     /// Total elapsed time in milliseconds.
@@ -99,7 +92,8 @@ struct ReactInProxyActivityStats: Codable {
     /// Number of connected clients.
     let currentConnectedClients: Int
     
-    let dataByPeriod: [String: Period]
+    /// Time series arrays for multiple fields, where each index corresponds to a bucket.
+    let dataByPeriod: DataByPeriod
 }
 
 extension ReactInProxyActivityStats: ReactNativeEncodable {
@@ -110,18 +104,20 @@ extension ReactInProxyActivityStats: ReactNativeEncodable {
             "totalBytesDown": totalBytesDown,
             "currentConnectingClients": currentConnectingClients,
             "currentConnectedClients": currentConnectedClients,
-            "dataByPeriod": dataByPeriod.mapValues { $0.asDictionary },
+            "dataByPeriod": dataByPeriod.asDictionary,
         ]
     }
 }
 
-extension ReactInProxyActivityStats.Period: ReactNativeEncodable {
+extension ReactInProxyActivityStats.DataByPeriod: ReactNativeEncodable {
     var asDictionary: [String : Any?] {
         [
-            "bytesUp": bytesUp,
-            "bytesDown": bytesDown,
-            "connectingClients": connectingClients,
-            "connectedClients": connectedClients
+            bucketPeriod : [
+                "bytesUp": bytesUp,
+                "bytesDown": bytesDown,
+                "connectingClients": connectingClients,
+                "connectedClients": connectedClients
+            ]
         ]
     }
 }
@@ -174,7 +170,7 @@ final class ConduitModule: RCTEventEmitter {
     // synchronous execution to reuse the same thread.
     // Note that using `.sync` and targeting the same queue will result in a deadlock.
     let dispatchQueue: dispatch_queue_t
-    
+
     let psiphonInfo: PsiphonInfo
     
     override init() {
@@ -250,7 +246,7 @@ extension ConduitModule {
             resolve(nil)
         }
     }
-    
+
     @objc(paramsChanged:limitUpstream:limitDownstream:privateKey:withResolver:withRejecter:)
     func paramsChanged(
         _ maxClients: Int, limitUpstream: Int, limitDownsteram: Int, privateKey: String?,
@@ -395,14 +391,22 @@ extension ConduitModule: ConduitManager.Listener {
         sendEvent(
             .inProxyActivityStats(
                 ReactInProxyActivityStats(
-                    elapsedTime: stats.elapsedTimeMilliseconds,
+                    elapsedTime: stats.elapsedTimeMillis,
                     totalBytesUp: stats.totalBytesUp,
                     totalBytesDown: stats.totalBytesDown,
-                    currentConnectingClients: stats.connectingClients,
-                    currentConnectedClients: stats.connectedClients,
-                    dataByPeriod: ["1000ms": .init()])))
+                    currentConnectingClients: stats.currentConnectingClients,
+                    currentConnectedClients: stats.currentConnectedClients,
+                    dataByPeriod: ReactInProxyActivityStats.DataByPeriod(
+                        bytesUp: stats.series.bytesUp,
+                        bytesDown: stats.series.bytesDown,
+                        connectingClients: stats.series.connectingClients,
+                        connectedClients: stats.series.connectedClients,
+                        bucketPeriod: "\(stats.bucketMillis)ms"
+                    )
+                )
+            )
+        )
     }
-    
 }
 
 func readPsiphonInfo() throws -> PsiphonInfo {
