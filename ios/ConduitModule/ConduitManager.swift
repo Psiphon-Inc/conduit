@@ -257,8 +257,8 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
             _ connectingClients: Int, connectedClients: Int,
             bytesUp: Int, bytesDown: Int)
     }
-
-   struct DynamicConfigs {
+    
+    struct DynamicConfigs {
         let conduitParams: ConduitParams
         let clientVersion: String
     }

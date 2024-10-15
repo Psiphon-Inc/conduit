@@ -246,7 +246,7 @@ extension ConduitModule {
             resolve(nil)
         }
     }
-
+    
     @objc(paramsChanged:limitUpstream:limitDownstream:privateKey:withResolver:withRejecter:)
     func paramsChanged(
         _ maxClients: Int, limitUpstream: Int, limitDownsteram: Int, privateKey: String?,
