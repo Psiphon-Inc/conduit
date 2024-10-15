@@ -26,8 +26,9 @@ struct ActivitySeries: Equatable {
     private(set) var bytesDown: [Int] = [Int](repeating: 0, count: 288)
     private(set) var connectingClients: [Int] = [Int](repeating: 0, count: 288)
     private(set) var connectedClients: [Int] = [Int](repeating: 0, count: 288)
+    private(set) var msBucketPeriod: UInt64 = 1000
 
-    mutating func pushDataPoints(
+    mutating private func pushDataPoints(
         _ bytesUp: Int,_ bytesDown: Int,
         _ connectingClients: Int,_ connectedClients: Int
     ) {
@@ -41,6 +42,23 @@ struct ActivitySeries: Equatable {
         self.connectedClients.removeFirst()
         self.connectedClients.append(connectedClients)
     }
+
+    mutating func updateSeries(
+        msSinceUpdate: UInt64, _ bytesUp: Int, _ bytesDown: Int,
+        _ connectingClients: Int, _ connectedClients: Int
+    ) {
+        
+        let elapsedBucketCount = Int(msSinceUpdate / self.msBucketPeriod)
+        if elapsedBucketCount > 0 {
+            for _ in 1...elapsedBucketCount {
+                pushDataPoints(0,0,0,0)
+            }
+        }
+        pushDataPoints(
+            bytesUp, bytesDown,
+            connectingClients, connectedClients
+        )
+    }
 }
 
 struct ActivityStats: Equatable {
@@ -51,10 +69,9 @@ struct ActivityStats: Equatable {
     private(set) var currentConnectingClients: Int = 0
     private(set) var currentConnectedClients: Int = 0
     private(set) var series: ActivitySeries = ActivitySeries()
-    private(set) var bucketMillis: UInt64 = 1000
     
     /// Time elapsed since Conduit start in milliseconds.
-    var elapsedTimeMillis: UInt64 {
+    var msElapsedTime: UInt64 {
         UInt64((lastUpdate - startTime) * 1000)
     }
     
@@ -74,14 +91,10 @@ struct ActivityStats: Equatable {
         self.currentConnectingClients = connectingClients
         self.currentConnectedClients = connectedClients
 
-        let elapsedMillis = UInt64(now - lastUpdate) * 1000
-        let elapsedBucketCount = Int(elapsedMillis / self.bucketMillis)
-        if elapsedBucketCount > 0 {
-            for _ in 1...elapsedBucketCount {
-                series.pushDataPoints(0,0,0,0)
-            }
-        }
-        series.pushDataPoints(
+        let msSinceUpdate = UInt64(now - lastUpdate) * 1000
+        
+        self.series.updateSeries(
+            msSinceUpdate: msSinceUpdate,
             bytesUp, bytesDown,
             connectingClients, connectedClients
         )
@@ -257,7 +270,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
             _ connectingClients: Int, connectedClients: Int,
             bytesUp: Int, bytesDown: Int)
     }
-    
+
     struct DynamicConfigs {
         let conduitParams: ConduitParams
         let clientVersion: String

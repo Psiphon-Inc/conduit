@@ -246,7 +246,7 @@ extension ConduitModule {
             resolve(nil)
         }
     }
-    
+
     @objc(paramsChanged:limitUpstream:limitDownstream:privateKey:withResolver:withRejecter:)
     func paramsChanged(
         _ maxClients: Int, limitUpstream: Int, limitDownsteram: Int, privateKey: String?,
@@ -391,7 +391,7 @@ extension ConduitModule: ConduitManager.Listener {
         sendEvent(
             .inProxyActivityStats(
                 ReactInProxyActivityStats(
-                    elapsedTime: stats.elapsedTimeMillis,
+                    elapsedTime: stats.msElapsedTime,
                     totalBytesUp: stats.totalBytesUp,
                     totalBytesDown: stats.totalBytesDown,
                     currentConnectingClients: stats.currentConnectingClients,
@@ -401,7 +401,7 @@ extension ConduitModule: ConduitManager.Listener {
                         bytesDown: stats.series.bytesDown,
                         connectingClients: stats.series.connectingClients,
                         connectedClients: stats.series.connectedClients,
-                        bucketPeriod: "\(stats.bucketMillis)ms"
+                        bucketPeriod: "\(stats.series.msBucketPeriod)ms"
                     )
                 )
             )
