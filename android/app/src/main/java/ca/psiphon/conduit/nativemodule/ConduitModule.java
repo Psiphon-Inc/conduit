@@ -442,6 +442,10 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
             }
             bucketMap.putArray("connectedClients", connectedClients);
 
+            // Include the number of buckets (size)
+            int numBuckets = stats.getNumBuckets(i);
+            bucketMap.putInt("numBuckets", numBuckets);
+
             String key = stats.getBucketCollection(i).getDurationMillis() + "ms";
             dataByPeriodMap.putMap(key, bucketMap);
         }
