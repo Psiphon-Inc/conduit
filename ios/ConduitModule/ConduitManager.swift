@@ -75,9 +75,9 @@ struct ActivityStats: Equatable {
         self.currentConnectedClients = connectedClients
 
         let elapsedMillis = UInt64(now - lastUpdate) * 1000
-        let elapsedBucket = UInt64(elapsedMillis / self.bucketMillis)
-        if elapsedBucket > 0 {
-            for _ in 1...elapsedBucket {
+        let elapsedBucketCount = Int(elapsedMillis / self.bucketMillis)
+        if elapsedBucketCount > 0 {
+            for _ in 1...elapsedBucketCount {
                 series.pushDataPoints(0,0,0,0)
             }
         }
