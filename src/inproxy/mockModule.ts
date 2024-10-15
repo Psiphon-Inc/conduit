@@ -207,12 +207,13 @@ class ConduitModuleMock {
         }
     }
 
-    public async paramsChanged(
-        maxClients: number,
-        limitUpstreamBytesPerSecond: number,
-        limitDownstreamBytesPerSecond: number,
-        privateKey: string,
-    ) {
+    public async paramsChanged(params: { [key: string]: any }) {
+        const {
+            maxClients,
+            limitUpstreamBytesPerSecond,
+            limitDownstreamBytesPerSecond,
+            privateKey,
+        } = params;
         timedLog(
             `MOCK: ConduitModule.paramsChanged(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );

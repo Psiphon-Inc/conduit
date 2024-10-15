@@ -1,6 +1,13 @@
 package ca.psiphon.conduit.nativemodule;
 
+import java.util.Map;
+
 public class ConduitServiceParameters {
+    static final String MAX_CLIENTS_KEY = "maxClients";
+    static final String LIMIT_UPSTREAM_BYTES_KEY = "limitUpstreamBytes";
+    static final String LIMIT_DOWNSTREAM_BYTES_KEY = "limitDownstreamBytes";
+    static final String INPROXY_PRIVATE_KEY_KEY = "inProxyPrivateKey";
+
     private int maxClients;
     private int limitUpstreamBytes;
     private int limitDownstreamBytes;
@@ -37,14 +44,38 @@ public class ConduitServiceParameters {
         this.proxyPrivateKey = privateKey;
     }
 
-    public boolean updateParametersIfChanged(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey) {
-        boolean paramsChanged = maxClients != this.maxClients ||
-                limitUpstreamBytes != this.limitUpstreamBytes ||
-                limitDownstreamBytes != this.limitDownstreamBytes ||
-                (privateKey != null && !privateKey.equals(this.proxyPrivateKey));
+    public boolean updateParametersFromMap (Map<String, Object> params) {
+        boolean paramsChanged = false;
+        if (params.containsKey(MAX_CLIENTS_KEY)) {
+            Integer maxClients = (Integer) params.get(MAX_CLIENTS_KEY);
+            if (maxClients != null && maxClients != getMaxClients()) {
+                storeParameters(maxClients, getLimitUpstreamBytes(), getLimitDownstreamBytes(), getProxyPrivateKey());
+                paramsChanged = true;
+            }
+        }
 
-        if (paramsChanged) {
-            storeParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, privateKey);
+        if (params.containsKey(LIMIT_UPSTREAM_BYTES_KEY)) {
+            Integer limitUpstreamBytes = (Integer) params.get(LIMIT_UPSTREAM_BYTES_KEY);
+            if (limitUpstreamBytes != null && limitUpstreamBytes != getLimitUpstreamBytes()) {
+                storeParameters(getMaxClients(), limitUpstreamBytes, getLimitDownstreamBytes(), getProxyPrivateKey());
+                paramsChanged = true;
+            }
+        }
+
+        if (params.containsKey(LIMIT_DOWNSTREAM_BYTES_KEY)) {
+            Integer limitDownstreamBytes = (Integer) params.get(LIMIT_DOWNSTREAM_BYTES_KEY);
+            if (limitDownstreamBytes != null && limitDownstreamBytes != getLimitDownstreamBytes()) {
+                storeParameters(getMaxClients(), getLimitUpstreamBytes(), limitDownstreamBytes, getProxyPrivateKey());
+                paramsChanged = true;
+            }
+        }
+
+        if (params.containsKey(INPROXY_PRIVATE_KEY_KEY)) {
+            String privateKey = (String) params.get(INPROXY_PRIVATE_KEY_KEY);
+            if (privateKey != null && !privateKey.equals(getProxyPrivateKey())) {
+                storeParameters(getMaxClients(), getLimitUpstreamBytes(), getLimitDownstreamBytes(), privateKey);
+                paramsChanged = true;
+            }
         }
 
         return paramsChanged;

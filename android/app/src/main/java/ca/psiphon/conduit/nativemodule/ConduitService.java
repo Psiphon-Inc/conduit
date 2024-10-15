@@ -28,8 +28,10 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -288,7 +290,9 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                     case STOPPED -> {
                         if (INTENT_ACTION_TOGGLE_IN_PROXY.equals(action)) {
                             // Update stored parameters before starting the service
-                            updateParameters(intent);
+                            Map<String, Object> params = extractParametersFromIntent(intent);
+                            conduitServiceParameters.updateParametersFromMap(params);
+
                             startForegroundService();
                             yield START_REDELIVER_INTENT;
                         } else if (INTENT_ACTION_PARAMS_CHANGED.equals(action)) {
@@ -307,7 +311,9 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     }
 
     private void handleParamsChanged(Intent intent) {
-        if (updateParameters(intent)) {
+        Map<String, Object> params = extractParametersFromIntent(intent);
+
+        if (conduitServiceParameters.updateParametersFromMap(params)) {
             // Restart the tunnel core
             MyLog.i(TAG, "Conduit parameters changed; restarting.");
             try {
@@ -327,15 +333,34 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
     }
 
-    private boolean updateParameters(Intent intent) {
-        int maxClients = intent.getIntExtra(ConduitServiceInteractor.MAX_CLIENTS, 0);
-        int limitUpstreamBytesPerSecond = intent.getIntExtra(ConduitServiceInteractor.LIMIT_UPSTREAM_BYTES, 0);
-        int limitDownstreamBytesPerSecond = intent.getIntExtra(ConduitServiceInteractor.LIMIT_DOWNSTREAM_BYTES, 0);
-        String proxyPrivateKey = intent.getStringExtra(ConduitServiceInteractor.PROXY_PRIVATE_KEY);
+    private Map<String, Object> extractParametersFromIntent(Intent intent) {
+        // Create a map to hold the parameters from the intent
+        Map<String, Object> params = new HashMap<>();
 
-        return conduitServiceParameters.updateParametersIfChanged(maxClients, limitUpstreamBytesPerSecond,
-                limitDownstreamBytesPerSecond, proxyPrivateKey);
+        // Extract parameters from the intent and put them in the map
+        if (intent.hasExtra(ConduitServiceInteractor.MAX_CLIENTS)) {
+            int maxClients = intent.getIntExtra(ConduitServiceInteractor.MAX_CLIENTS, 0);
+            params.put(ConduitServiceParameters.MAX_CLIENTS_KEY, maxClients);
+        }
+
+        if (intent.hasExtra(ConduitServiceInteractor.LIMIT_UPSTREAM_BYTES)) {
+            int limitUpstreamBytesPerSecond = intent.getIntExtra(ConduitServiceInteractor.LIMIT_UPSTREAM_BYTES, 0);
+            params.put(ConduitServiceParameters.LIMIT_UPSTREAM_BYTES_KEY, limitUpstreamBytesPerSecond);
+        }
+
+        if (intent.hasExtra(ConduitServiceInteractor.LIMIT_DOWNSTREAM_BYTES)) {
+            int limitDownstreamBytesPerSecond = intent.getIntExtra(ConduitServiceInteractor.LIMIT_DOWNSTREAM_BYTES, 0);
+            params.put(ConduitServiceParameters.LIMIT_DOWNSTREAM_BYTES_KEY, limitDownstreamBytesPerSecond);
+        }
+
+        if (intent.hasExtra(ConduitServiceInteractor.INPROXY_PRIVATE_KEY)) {
+            String proxyPrivateKey = intent.getStringExtra(ConduitServiceInteractor.INPROXY_PRIVATE_KEY);
+            params.put(ConduitServiceParameters.INPROXY_PRIVATE_KEY_KEY, proxyPrivateKey);
+        }
+
+        return params;
     }
+
     private synchronized void startForegroundService() {
         if (!currentState.compareAndSet(ServiceState.STOPPED, ServiceState.STARTING)) {
             MyLog.i(TAG, "Service is not stopped; cannot start.");

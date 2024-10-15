@@ -212,12 +212,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         );
         setInProxyParameters(params);
         try {
-            await ConduitModule.paramsChanged(
-                params.maxClients,
-                params.limitUpstreamBytesPerSecond,
-                params.limitDownstreamBytesPerSecond,
-                params.privateKey,
-            );
+            await ConduitModule.paramsChanged(params);
         } catch (error) {
             logErrorToDiagnostic(
                 new Error("ConduitModule.paramsChanged(...) failed"),

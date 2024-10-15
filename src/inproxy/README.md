@@ -33,12 +33,14 @@ const changeParams = async (
     privateKey,
 ) => {
     try {
-        await ConduitModule.paramsChanged(
-            maxClients,
-            limitUpstream,
-            limitDownstream,
-            privateKey,
-        );
+        const params = {
+            maxClients: maxClients,
+            limitUpstreamBytesPerSecond: limitUpstream,
+            limitDownstreamBytesPerSecond: limitDownstream,
+            inProxyPrivateKey: privateKey,
+        };
+
+        await ConduitModule.paramsChanged(params);
         console.log("Parameters updated successfully");
     } catch (error) {
         console.error("Failed to change parameters:", error);
@@ -90,11 +92,11 @@ These events are related to error conditions that occur within the proxy service
 
 -   **Event Name (`type`)**: `proxyError`
 -   **Data Included (`data`)**:
-    -   `action`: Specific action corresponding to the error (e.g., `proxyStartFailed`, `proxyRestartFailed`).
+    -   `action`: Specific action corresponding to the error (e.g., `inProxyStartFailed`, `inProxyRestartFailed`).
     -   Arbitrary keys with additional error details, which may vary based on the error context.
 -   **Possible Actions**:
-    -   `proxyStartFailed`: Emitted when the proxy fails to start.
-    -   `proxyRestartFailed`: Emitted when the proxy fails to restart.
+    -   `inProxyStartFailed`: Emitted when the proxy fails to start.
+    -   `inProxyRestartFailed`: Emitted when the proxy fails to restart.
     -   `inProxyMustUpgrade`: Emitted when an in-proxy upgrade is required.
 
 **Note**: The `data` object may include further arbitrary keys, providing additional context or information about the error.

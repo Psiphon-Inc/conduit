@@ -7,12 +7,7 @@ export interface ConduitModuleAPI {
         limitDownstreamBytesPerSecond: number,
         privateKey: string,
     ) => Promise<void>;
-    paramsChanged: (
-        maxClients: number,
-        limitUpstreamBytesPerSecond: number,
-        limitDownstreamBytesPerSecond: number,
-        privateKey: string,
-    ) => Promise<void>;
+    paramsChanged: (params: { [key: string]: any }) => Promise<void>;
     addListener: (eventName: string) => void;
     removeListeners: (count: number) => void;
     sendFeedback: () => Promise<null | string>;

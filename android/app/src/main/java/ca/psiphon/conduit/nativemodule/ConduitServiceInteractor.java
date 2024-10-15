@@ -17,6 +17,7 @@ import com.jakewharton.rxrelay2.BehaviorRelay;
 import com.jakewharton.rxrelay2.Relay;
 
 import java.util.List;
+import java.util.Map;
 
 import ca.psiphon.conduit.nativemodule.logging.MyLog;
 import ca.psiphon.conduit.nativemodule.stats.ProxyActivityStats;
@@ -27,7 +28,7 @@ public class ConduitServiceInteractor {
     public static final String MAX_CLIENTS = "maxClients";
     public static final String LIMIT_UPSTREAM_BYTES = "limitUpstreamBytesPerSecond";
     public static final String LIMIT_DOWNSTREAM_BYTES = "limitDownstreamBytesPerSecond";
-    public static final String PROXY_PRIVATE_KEY = "proxyPrivateKey";
+    public static final String INPROXY_PRIVATE_KEY = "inProxyPrivateKey";
 
     public static final String SERVICE_STARTING_BROADCAST_PERMISSION = "ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION";
     public static final String SERVICE_STARTING_BROADCAST_INTENT = "ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_INTENT";
@@ -106,23 +107,39 @@ public class ConduitServiceInteractor {
         intent.putExtra(MAX_CLIENTS, maxClients);
         intent.putExtra(LIMIT_UPSTREAM_BYTES, limitUpstreamBytesPerSecond);
         intent.putExtra(LIMIT_DOWNSTREAM_BYTES, limitDownstreamBytesPerSecond);
-        intent.putExtra(PROXY_PRIVATE_KEY, privateKey);
+        intent.putExtra(INPROXY_PRIVATE_KEY, privateKey);
 
         // Send the intent to the service to toggle the proxy
         // and let the service handle the logic in onStartCommand
         sendStartCommandToService(context, intent);
     }
 
-    public void paramsChanged(Context context, int maxClients, int limitUpstreamBytesPerSecond,
-            int limitDownstreamBytesPerSecond, String privateKey) {
+    public void paramsChanged(Context context, Map<String, Object> params) {
         Intent intent = new Intent(context, ConduitService.class);
         intent.setAction(ConduitService.INTENT_ACTION_PARAMS_CHANGED);
 
-        // Add parameters to the intent using the keys from ConduitServiceParameters
-        intent.putExtra(MAX_CLIENTS, maxClients);
-        intent.putExtra(LIMIT_UPSTREAM_BYTES, limitUpstreamBytesPerSecond);
-        intent.putExtra(LIMIT_DOWNSTREAM_BYTES, limitDownstreamBytesPerSecond);
-        intent.putExtra(PROXY_PRIVATE_KEY, privateKey);
+        // Add known parameters to the intent
+        if (params.containsKey(MAX_CLIENTS)) {
+            Integer maxClients = (Integer) params.get(MAX_CLIENTS);
+            if (maxClients != null) {
+                intent.putExtra(MAX_CLIENTS, maxClients);
+            }
+        }
+        if (params.containsKey(LIMIT_UPSTREAM_BYTES)) {
+            Integer limitUpstreamBytes = (Integer) params.get(LIMIT_UPSTREAM_BYTES);
+            if (limitUpstreamBytes != null) {
+                intent.putExtra(LIMIT_UPSTREAM_BYTES, limitUpstreamBytes);
+            }
+        }
+        if (params.containsKey(LIMIT_DOWNSTREAM_BYTES)) {
+            Integer limitDownstreamBytes = (Integer) params.get(LIMIT_DOWNSTREAM_BYTES);
+            if (limitDownstreamBytes != null) {
+                intent.putExtra(LIMIT_DOWNSTREAM_BYTES, limitDownstreamBytes);
+            }
+        }
+        if (params.containsKey(INPROXY_PRIVATE_KEY)) {
+            intent.putExtra(INPROXY_PRIVATE_KEY, (String) params.get(INPROXY_PRIVATE_KEY));
+        }
 
         // Send the intent to the service to update the parameters
         // and let the service handle the logic in onStartCommand
