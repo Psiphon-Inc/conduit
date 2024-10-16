@@ -5,6 +5,7 @@
 
 import Foundation
 import PsiphonTunnel
+import Collections
 
 extension Logger {
     private static var subsystem = Bundle.main.bundleIdentifier!
@@ -22,17 +23,27 @@ struct ConduitParams: Equatable {
 }
 
 struct ActivitySeries: Equatable {
-    private(set) var bytesUp: [Int] = [Int](repeating: 0, count: 288)
-    private(set) var bytesDown: [Int] = [Int](repeating: 0, count: 288)
-    private(set) var connectingClients: [Int] = [Int](repeating: 0, count: 288)
-    private(set) var connectedClients: [Int] = [Int](repeating: 0, count: 288)
-    private(set) var msBucketPeriod: UInt64 = 1000
+    let msBucketPeriod: UInt64
+    let numBuckets: Int
+    private(set) var bytesUp: Deque<Int>
+    private(set) var bytesDown: Deque<Int>
+    private(set) var connectingClients: Deque<Int>
+    private(set) var connectedClients: Deque<Int>
+    
+    init(msBucketPeriod: UInt64, numBuckets: Int){
+        self.msBucketPeriod = msBucketPeriod
+        self.numBuckets = numBuckets
+        
+        bytesDown = Deque(repeating: 0, count: numBuckets)
+        bytesUp = Deque(repeating: 0, count: numBuckets)
+        connectingClients = Deque(repeating: 0, count: numBuckets)
+        connectedClients = Deque(repeating: 0, count: numBuckets)
+    }
 
     mutating private func pushDataPoints(
         _ bytesUp: Int,_ bytesDown: Int,
         _ connectingClients: Int,_ connectedClients: Int
     ) {
-        // TODO: look at importing stack-like collection (enda)
         self.bytesUp.removeFirst()
         self.bytesUp.append(bytesUp)
         self.bytesDown.removeFirst()
@@ -48,12 +59,12 @@ struct ActivitySeries: Equatable {
         _ connectingClients: Int, _ connectedClients: Int
     ) {
         
-        let elapsedBucketCount = Int(msSinceUpdate / self.msBucketPeriod)
-        if elapsedBucketCount > 0 {
-            for _ in 1...elapsedBucketCount {
-                pushDataPoints(0,0,0,0)
-            }
+        var elapsedBucketCount = Int(msSinceUpdate / (self.msBucketPeriod + 1))
+        if elapsedBucketCount > numBuckets {
+            elapsedBucketCount = numBuckets
         }
+        (1...elapsedBucketCount).forEach { _ in pushDataPoints(0, 0, 0, 0) }
+        
         pushDataPoints(
             bytesUp, bytesDown,
             connectingClients, connectedClients
@@ -68,7 +79,7 @@ struct ActivityStats: Equatable {
     private(set) var totalBytesDown: UInt64 = 0
     private(set) var currentConnectingClients: Int = 0
     private(set) var currentConnectedClients: Int = 0
-    private(set) var series: ActivitySeries = ActivitySeries()
+    private(set) var seriesFast: ActivitySeries = ActivitySeries(msBucketPeriod: 1000, numBuckets: 288)
     
     /// Time elapsed since Conduit start in milliseconds.
     var msElapsedTime: UInt64 {
@@ -93,7 +104,7 @@ struct ActivityStats: Equatable {
 
         let msSinceUpdate = UInt64(now - lastUpdate) * 1000
         
-        self.series.updateSeries(
+        self.seriesFast.updateSeries(
             msSinceUpdate: msSinceUpdate,
             bytesUp, bytesDown,
             connectingClients, connectedClients
@@ -186,15 +197,15 @@ actor ConduitManager {
         bytesUp: Int, bytesDown: Int
     ) {
         
-        guard var activityStats else {
+        guard activityStats != nil else {
             return
         }
         
-        activityStats.update(
+        activityStats!.update(
             bytesUp: bytesUp, bytesDown: bytesDown,
             connectingClients: connectingClients, connectedClients: connectedClients)
         
-        self.listener.onInproxyProxyActivity(stats: activityStats)
+        self.listener.onInproxyProxyActivity(stats: activityStats!)
     }
     
 }

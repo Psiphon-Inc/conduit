@@ -397,11 +397,11 @@ extension ConduitModule: ConduitManager.Listener {
                     currentConnectingClients: stats.currentConnectingClients,
                     currentConnectedClients: stats.currentConnectedClients,
                     dataByPeriod: ReactInProxyActivityStats.DataByPeriod(
-                        bytesUp: stats.series.bytesUp,
-                        bytesDown: stats.series.bytesDown,
-                        connectingClients: stats.series.connectingClients,
-                        connectedClients: stats.series.connectedClients,
-                        bucketPeriod: "\(stats.series.msBucketPeriod)ms"
+                        bytesUp: Array(stats.seriesFast.bytesUp),
+                        bytesDown: Array(stats.seriesFast.bytesDown),
+                        connectingClients: Array(stats.seriesFast.connectingClients),
+                        connectedClients: Array(stats.seriesFast.connectedClients),
+                        bucketPeriod: "\(stats.seriesFast.msBucketPeriod)ms"
                     )
                 )
             )
