@@ -22,6 +22,7 @@
 		29EB55312CA726790042B1B4 /* ios_embedded_server_entries in Resources */ = {isa = PBXBuildFile; fileRef = 29EB552F2CA726790042B1B4 /* ios_embedded_server_entries */; };
 		29EB55322CA726790042B1B4 /* ios_psiphon_config in Resources */ = {isa = PBXBuildFile; fileRef = 29EB55302CA726790042B1B4 /* ios_psiphon_config */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
+		67A1F0232CC027D600AE7C39 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 67A1F0222CC027D600AE7C39 /* Collections */; };
 		96905EF65AED1B983A6B3ABC /* libPods-conduit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-conduit.a */; };
 		A86CEE5837C5BBF9CD8BB436 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 23B8187366DE26611566EC73 /* PrivacyInfo.xcprivacy */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
@@ -78,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				67A1F0232CC027D600AE7C39 /* Collections in Frameworks */,
 				96905EF65AED1B983A6B3ABC /* libPods-conduit.a in Frameworks */,
 				29A9CA032CA715720054431A /* PsiphonTunnel.xcframework in Frameworks */,
 			);
@@ -217,6 +219,9 @@
 			dependencies = (
 			);
 			name = conduit;
+			packageProductDependencies = (
+				67A1F0222CC027D600AE7C39 /* Collections */,
+			);
 			productName = conduit;
 			productReference = 13B07F961A680F5B00A75B9A /* conduit.app */;
 			productType = "com.apple.product-type.application";
@@ -243,6 +248,9 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			packageReferences = (
+				673EB98A2CC01E25003A3E39 /* XCRemoteSwiftPackageReference "swift-collections" */,
+			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -526,10 +534,7 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -587,10 +592,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -620,6 +622,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		673EB98A2CC01E25003A3E39 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		67A1F0222CC027D600AE7C39 /* Collections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 673EB98A2CC01E25003A3E39 /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }
