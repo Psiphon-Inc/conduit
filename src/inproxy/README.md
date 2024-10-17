@@ -61,11 +61,10 @@ const sendFeedback = async () => {
     }
 };
 
-// Example of logging info
-ConduitModule.logInfo("Tag", "This is an informational message");
-
-// Example of logging errors
-ConduitModule.logError("Tag", "This is an error message");
+// Log information examples
+ConduitModule.logInfo('MyTag', 'This is an info message');
+ConduitModule.logWarn('MyTag', 'This is a warning message');
+ConduitModule.logError('MyTag', 'This is an error message');
 ```
 
 ### Events Emitted to React Native Host
