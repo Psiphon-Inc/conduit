@@ -122,6 +122,8 @@ actor ConduitManager {
             internetReachable: Bool?)
        
         func onInproxyProxyActivity(stats: ActivityStats)
+        
+        func onInproxyMustUpgrade()
     }
     
     enum ConduitStatus {
@@ -207,7 +209,7 @@ actor ConduitManager {
         
         self.listener.onInproxyProxyActivity(stats: activityStats!)
     }
-    
+
 }
 
 extension ConduitManager: PsiphonTunnelListener.Listener {
@@ -228,6 +230,13 @@ extension ConduitManager: PsiphonTunnelListener.Listener {
             await self.updateActivityStats(
                 connectingClients: connectingClients, connectedClients: connectedClients,
                 bytesUp: bytesUp, bytesDown: bytesDown)
+        }
+    }
+    
+    nonisolated func onInproxyMustUpgrade() {
+        Task {
+            await self.listener.onInproxyMustUpgrade()
+            await self.stopConduit()
         }
     }
     
@@ -280,6 +289,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
         func onInproxyProxyActivity(
             _ connectingClients: Int, connectedClients: Int,
             bytesUp: Int, bytesDown: Int)
+        func onInproxyMustUpgrade()
     }
 
     struct DynamicConfigs {
@@ -358,6 +368,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
     }
     
     func onInproxyMustUpgrade() {
+        listener.onInproxyMustUpgrade()
     }
     
     func onStartedWaitingForNetworkConnectivity() {

@@ -410,6 +410,10 @@ extension ConduitModule: ConduitManager.Listener {
             )
         )
     }
+        
+    func onInproxyMustUpgrade() {
+        sendEvent(.proxyError(.inProxyMustUpgrade))
+    }
 }
 
 func readPsiphonInfo() throws -> PsiphonInfo {
