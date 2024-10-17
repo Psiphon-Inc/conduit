@@ -62,9 +62,9 @@ const sendFeedback = async () => {
 };
 
 // Log information examples
-ConduitModule.logInfo('MyTag', 'This is an info message');
-ConduitModule.logWarn('MyTag', 'This is a warning message');
-ConduitModule.logError('MyTag', 'This is an error message');
+ConduitModule.logInfo("MyTag", "This is an info message");
+ConduitModule.logWarn("MyTag", "This is a warning message");
+ConduitModule.logError("MyTag", "This is an error message");
 ```
 
 ### Events Emitted to React Native Host
