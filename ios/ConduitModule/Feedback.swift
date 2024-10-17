@@ -316,11 +316,17 @@ func validatePsiphonConfig(_ config: [String: Any?]) throws {
 
 public actor FeedbackUploadService : NSObject {
     
+    public protocol Listener {
+        func onDiagnosticMessage(_ message: String, withTimestamp timestamp: String)
+    }
+    
     public enum Errors : Error {
         case feedbackUploadCancelled
     }
     
     static let live = FeedbackUploadService()
+    
+    private(set) var listener: Listener?
     
     private let psiphonTunnelFeedback: PsiphonTunnelFeedback
     private var sendContinuation: CheckedContinuation<(), Error>?
@@ -329,6 +335,10 @@ public actor FeedbackUploadService : NSObject {
         self.psiphonTunnelFeedback = PsiphonTunnelFeedback()
         self.sendContinuation = nil
         super.init()
+    }
+    
+    public func setListener(_ listener: Listener) {
+        self.listener = listener
     }
     
     /// - throws: type `FeedbackUpload.Errors`
@@ -369,7 +379,7 @@ public actor FeedbackUploadService : NSObject {
         self.sendContinuation = nil
     }
     
-    func feedbackUploadDidFinish(err: Error?) {
+    private func feedbackUploadDidFinish(err: Error?) {
         if let err {
             self.sendContinuation?.resume(throwing: err)
         } else {
@@ -383,6 +393,9 @@ public actor FeedbackUploadService : NSObject {
 extension FeedbackUploadService : PsiphonTunnelLoggerDelegate, PsiphonTunnelFeedbackDelegate {
     
     public nonisolated func onDiagnosticMessage(_ message: String, withTimestamp timestamp: String) {
+        Task {
+            await self.listener?.onDiagnosticMessage(message, withTimestamp: timestamp)
+        }
     }
     
     public nonisolated func sendFeedbackCompleted(_ err: (any Error)?) {

@@ -13,6 +13,8 @@ extension Logger {
     private static var subsystem = Bundle.main.bundleIdentifier!
     
     static let conduitModule = Logger(subsystem: subsystem, category: "ConduitModule")
+    
+    static let feedbackUploadService = Logger(subsystem: subsystem, category: "FeedbackUploadService")
 }
 
 /// A type that is used for cross-langauge interaction with JavaScript codebase.
@@ -182,6 +184,9 @@ final class ConduitModule: RCTEventEmitter {
         super.init()
         
         conduitManager = ConduitManager(listener: self)
+        Task {
+            await FeedbackUploadService.live.setListener(self)
+        }
     }
     
     override var methodQueue: dispatch_queue_t! {
@@ -415,6 +420,14 @@ extension ConduitModule: ConduitManager.Listener {
     func onInproxyMustUpgrade() {
         sendEvent(.proxyError(.inProxyMustUpgrade))
     }
+}
+
+extension ConduitModule: FeedbackUploadService.Listener {
+    
+    func onDiagnosticMessage(_ message: String, withTimestamp timestamp: String) {
+        Logger.feedbackUploadService.info("DiagnosticMessage: \(timestamp, privacy: .public) \(message, privacy: .public)")
+    }
+    
 }
 
 func readPsiphonInfo() throws -> PsiphonInfo {
