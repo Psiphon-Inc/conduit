@@ -70,6 +70,7 @@ extension ReactProxyError: ReactNativeEncodable {
 struct ReactInProxyActivityStats: Codable {
     
     struct DataByPeriod: Codable {
+        let numBuckets: Int
         let bytesUp: [Int]
         let bytesDown: [Int]
         let connectingClients: [Int]
@@ -113,6 +114,7 @@ extension ReactInProxyActivityStats.DataByPeriod: ReactNativeEncodable {
     var asDictionary: [String : Any?] {
         [
             bucketPeriod : [
+                "numBuckets": numBuckets,
                 "bytesUp": bytesUp,
                 "bytesDown": bytesDown,
                 "connectingClients": connectingClients,
@@ -397,6 +399,7 @@ extension ConduitModule: ConduitManager.Listener {
                     currentConnectingClients: stats.currentConnectingClients,
                     currentConnectedClients: stats.currentConnectedClients,
                     dataByPeriod: ReactInProxyActivityStats.DataByPeriod(
+                        numBuckets: stats.seriesFast.numBuckets,
                         bytesUp: Array(stats.seriesFast.bytesUp),
                         bytesDown: Array(stats.seriesFast.bytesDown),
                         connectingClients: Array(stats.seriesFast.connectingClients),
