@@ -12,7 +12,6 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		293BD6822CB6FA3C006B04D3 /* Feedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293BD6812CB6FA3C006B04D3 /* Feedback.swift */; };
 		293BD69A2CB84246006B04D3 /* FeedbackLogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */; };
-		294484BB2CACB69D00451B61 /* Unsafe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294484BA2CACB69D00451B61 /* Unsafe.swift */; };
 		294484BD2CACF05C00451B61 /* Resources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294484BC2CACF05C00451B61 /* Resources.swift */; };
 		29A9C9FD2CA5FFDD0054431A /* ConduitModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */; };
 		29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = 29A9C9FE2CA600220054431A /* ConduitModule.mm */; };
@@ -55,7 +54,6 @@
 		23B8187366DE26611566EC73 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = conduit/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		293BD6812CB6FA3C006B04D3 /* Feedback.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Feedback.swift; sourceTree = "<group>"; tabWidth = 4; };
 		293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackLogReader.swift; sourceTree = "<group>"; };
-		294484BA2CACB69D00451B61 /* Unsafe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Unsafe.swift; sourceTree = "<group>"; };
 		294484BC2CACF05C00451B61 /* Resources.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Resources.swift; sourceTree = "<group>"; tabWidth = 4; };
 		29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = ConduitModule.swift; sourceTree = "<group>"; tabWidth = 4; };
 		29A9C9FE2CA600220054431A /* ConduitModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ConduitModule.mm; sourceTree = "<group>"; };
@@ -117,7 +115,6 @@
 				29A9C9FE2CA600220054431A /* ConduitModule.mm */,
 				29A9CA002CA602340054431A /* ConduitModule-Bridging-Header.h */,
 				29A9CA062CA715DF0054431A /* ConduitManager.swift */,
-				294484BA2CACB69D00451B61 /* Unsafe.swift */,
 				294484BC2CACF05C00451B61 /* Resources.swift */,
 				293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */,
 			);
@@ -391,7 +388,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */,
-				294484BB2CACB69D00451B61 /* Unsafe.swift in Sources */,
 				293BD6822CB6FA3C006B04D3 /* Feedback.swift in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,

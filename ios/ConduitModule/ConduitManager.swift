@@ -130,7 +130,7 @@ actor ConduitManager {
         case starting, started, stopping, stopped
     }
     
-    // TODO: PsiphonTunnel doesn't hold a strong reference to the delegate object.
+    // Note: PsiphonTunnel doesn't hold a strong reference to the delegate object.
     private var psiphonTunnelListener: PsiphonTunnelListener?
     private var psiphonTunnel: PsiphonTunnelAsyncWrapper?
     
