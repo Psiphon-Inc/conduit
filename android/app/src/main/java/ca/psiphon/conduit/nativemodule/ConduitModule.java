@@ -25,6 +25,8 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -33,7 +35,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -123,16 +127,14 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
-    public void paramsChanged(int maxClients, int limitUpstreamBytesPerSecond, int limitDownstreamBytesPerSecond,
-            String privateKey, Promise promise) {
+    public void paramsChanged(ReadableMap params, Promise promise) {
         try {
-            conduitServiceInteractor.paramsChanged(getReactApplicationContext(), maxClients,
-                    limitUpstreamBytesPerSecond, limitDownstreamBytesPerSecond, privateKey);
+            Map<String, Object> paramsMap = toMap(params);
+            conduitServiceInteractor.paramsChanged(getReactApplicationContext(), paramsMap);
             promise.resolve(null);
-
         } catch (Exception e) {
-            MyLog.e(TAG, "Failed to toggle conduit service: " + e);
-            promise.reject("TOGGLE_SERVICE_ERROR", "Failed to toggle conduit service", e);
+            MyLog.e(TAG, "Failed to change conduit service params: " + e);
+            promise.reject("PARAMS_CHANGED_ERROR", "Failed to change service params", e);
         }
     }
 
@@ -373,10 +375,10 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
         Bundle extras = intent.getExtras();
         if (ConduitService.INTENT_ACTION_PSIPHON_START_FAILED.equals(action)) {
             // Error starting the tunnel
-            emitProxyError("proxyStartFailed", extras);
+            emitProxyError("inProxyStartFailed", extras);
         } else if (ConduitService.INTENT_ACTION_PSIPHON_RESTART_FAILED.equals(action)) {
             // Error restarting the tunnel
-            emitProxyError("proxyRestartFailed", extras);
+            emitProxyError("inProxyRestartFailed", extras);
         } else if (ConduitService.INTENT_ACTION_INPROXY_MUST_UPGRADE.equals(action)) {
             // Error running in-proxy mode because the app must be upgraded
             emitProxyError("inProxyMustUpgrade", null);
@@ -442,6 +444,10 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
             }
             bucketMap.putArray("connectedClients", connectedClients);
 
+            // Include the number of buckets (size)
+            int numBuckets = stats.getNumBuckets(i);
+            bucketMap.putInt("numBuckets", numBuckets);
+
             String key = stats.getBucketCollection(i).getDurationMillis() + "ms";
             dataByPeriodMap.putMap(key, bucketMap);
         }
@@ -489,5 +495,34 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
             eventData.putNull("data");
         }
         return eventData;
+    }
+
+    private Map<String, Object> toMap(ReadableMap readableMap) {
+        Map<String, Object> map = new HashMap<>();
+        ReadableMapKeySetIterator iterator = readableMap.keySetIterator();
+        while (iterator.hasNextKey()) {
+            String key = iterator.nextKey();
+            switch (readableMap.getType(key)) {
+                case Boolean:
+                    map.put(key, readableMap.getBoolean(key));
+                    break;
+                case Number:
+                    // Check if the number is an integer or a double
+                    double value = readableMap.getDouble(key);
+                    if (value == Math.rint(value)) { // Check if the number is an integer
+                        map.put(key, (int) value);   // Cast to Integer if it's a whole number
+                    } else {
+                        map.put(key, value);         // Keep it as Double otherwise
+                    }
+                    break;
+                case String:
+                    map.put(key, readableMap.getString(key));
+                    break;
+                default:
+                    map.put(key, null);
+                    break;
+            }
+        }
+        return map;
     }
 }

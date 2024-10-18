@@ -15,8 +15,8 @@ export const ProxyStateSchema = z.object({
 
 export const ProxyErrorSchema = z.object({
     action: z.enum([
-        "proxyStartFailed",
-        "proxyRestartFailed",
+        "inProxyStartFailed",
+        "inProxyRestartFailed",
         "inProxyMustUpgrade",
     ]),
 });

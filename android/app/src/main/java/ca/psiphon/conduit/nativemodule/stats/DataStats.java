@@ -38,6 +38,10 @@ public abstract class DataStats {
     throw new IndexOutOfBoundsException("Index " + index + " out of bounds for bucket collections.");
   }
 
+  public int getNumBuckets(int index) {
+    return getBucketCollection(index).buckets.size();
+  }
+
   protected long now() {
     return SystemClock.elapsedRealtime();
   }
