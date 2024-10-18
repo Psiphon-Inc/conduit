@@ -1,5 +1,7 @@
 import { NativeModules } from "react-native";
 
+import { InProxyParameters } from "@/src/inproxy/types";
+
 export interface ConduitModuleAPI {
     toggleInProxy: (
         maxClients: number,
@@ -7,7 +9,9 @@ export interface ConduitModuleAPI {
         limitDownstreamBytesPerSecond: number,
         privateKey: string,
     ) => Promise<void>;
-    paramsChanged: (params: { [key: string]: any }) => Promise<void>;
+    // Technically the Android implementation can accept a subset of the
+    // InProxyParameters, but we will always be sending them all.
+    paramsChanged: (params: InProxyParameters) => Promise<void>;
     addListener: (eventName: string) => void;
     removeListeners: (count: number) => void;
     sendFeedback: () => Promise<null | string>;

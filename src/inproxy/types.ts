@@ -22,10 +22,11 @@ export const ProxyErrorSchema = z.object({
 });
 
 export const InProxyActivityDataByPeriodSchema = z.object({
-    bytesUp: z.array(z.number()).length(288),
-    bytesDown: z.array(z.number()).length(288),
-    connectingClients: z.array(z.number()).length(288),
-    connectedClients: z.array(z.number()).length(288),
+    bytesUp: z.array(z.number()),
+    bytesDown: z.array(z.number()),
+    connectingClients: z.array(z.number()),
+    connectedClients: z.array(z.number()),
+    numBuckets: z.number(),
 });
 
 export const InProxyActivityStatsSchema = z.object({
