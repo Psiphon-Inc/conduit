@@ -27,6 +27,7 @@ import {
 } from "@/src/inproxy/types";
 import {
     getDefaultInProxyParameters,
+    getProxyId,
     getZeroedInProxyActivityStats,
 } from "@/src/inproxy/utils";
 
@@ -243,6 +244,18 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
 
     // ConduitModule.sendFeedback
     async function sendFeedback(): Promise<void> {
+        // Log the public key before sending feedback to try to guarantee it'll
+        // be in the feedback logs.
+        if (conduitKeyPair.data) {
+            ConduitModule.logInfo("InProxyID", getProxyId(conduitKeyPair.data));
+        } else {
+            // Shouldn't really be possible to get here
+            ConduitModule.logError(
+                "InProxyID",
+                "Unknown at time of sendFeedback()",
+            );
+        }
+
         try {
             const feedbackResult = await ConduitModule.sendFeedback();
             timedLog("ConduitModule.sendFeedback() invoked");
