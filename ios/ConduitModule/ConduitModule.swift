@@ -52,16 +52,16 @@ extension ReactProxyState: ReactNativeEncodable {
 }
 
 enum ReactProxyError: Error, Codable {
-    case proxyStartFailed
-    case proxyRestartFailed
+    case inProxyStartFailed
+    case inProxyRestartFailed
     case inProxyMustUpgrade
 }
 
 extension ReactProxyError: ReactNativeEncodable {
     var asDictionary: [String : Any?] {
         let action: String = switch self {
-        case .proxyStartFailed: "proxyStartFailed"
-        case .proxyRestartFailed: "proxyRestartFailed"
+        case .inProxyStartFailed: "inProxyStartFailed"
+        case .inProxyRestartFailed: "inProxyRestartFailed"
         case .inProxyMustUpgrade: "inProxyMustUpgrade"
         }
         return [
@@ -238,10 +238,10 @@ extension ConduitModule {
                 do {
                     let success = try await self.conduitManager.startConduit(params)
                     if !success {
-                        sendEvent(.proxyError(.proxyStartFailed))
+                        sendEvent(.proxyError(.inProxyStartFailed))
                     }
                 } catch {
-                    sendEvent(.proxyError(.proxyStartFailed))
+                    sendEvent(.proxyError(.inProxyStartFailed))
                     Logger.conduitModule.error(
                         "Proxy start failed: \(String(describing: error), privacy: .public)")
                 }
@@ -280,11 +280,11 @@ extension ConduitModule {
                 do {
                     let success = try await self.conduitManager.startConduit(params)
                     if !success {
-                        sendEvent(.proxyError(.proxyRestartFailed))
+                        sendEvent(.proxyError(.inProxyRestartFailed))
                     }
                     resolve(nil)
                 } catch {
-                    sendEvent(.proxyError(.proxyRestartFailed))
+                    sendEvent(.proxyError(.inProxyRestartFailed))
                 }
             }
         }

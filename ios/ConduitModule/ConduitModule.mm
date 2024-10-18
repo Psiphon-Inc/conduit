@@ -15,7 +15,7 @@ RCT_EXTERN_METHOD(toggleInProxy:(NSInteger)maxClients
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(paramsChanged:(NSInteger)maxClients
+RCT_EXTERN_METHOD(paramsChanged:(NSInteger)maxClients // TODO: params into map/json/dict
                   limitUpstream:(NSInteger)limitUpstream
                   limitDownstream:(NSInteger)limitDownstream
                   privateKey:(NSString *_Nullable)privateKey
