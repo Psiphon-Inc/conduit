@@ -256,18 +256,16 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     async function sendFeedback(): Promise<void> {
         // Log the public key before sending feedback to try to guarantee it'll
         // be in the feedback logs.
+        let inproxyId: string;
         if (conduitKeyPair.data) {
-            ConduitModule.logInfo("InproxyID", getProxyId(conduitKeyPair.data));
+            inproxyId = getProxyId(conduitKeyPair.data);
         } else {
             // Shouldn't really be possible to get here
-            ConduitModule.logError(
-                "InproxyID",
-                "Unknown at time of sendFeedback()",
-            );
+            inproxyId = "unknown";
         }
 
         try {
-            const feedbackResult = await ConduitModule.sendFeedback();
+            const feedbackResult = await ConduitModule.sendFeedback(inproxyId);
             timedLog("ConduitModule.sendFeedback() invoked");
             if (!feedbackResult === null) {
                 timedLog(

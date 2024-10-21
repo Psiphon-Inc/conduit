@@ -14,7 +14,7 @@ export interface ConduitModuleAPI {
     paramsChanged: (params: InproxyParameters) => Promise<void>;
     addListener: (eventName: string) => void;
     removeListeners: (count: number) => void;
-    sendFeedback: () => Promise<null | string>;
+    sendFeedback: (inproxyId: string) => Promise<null | string>;
     logInfo: (tag: string, msg: string) => void;
     logError: (tag: string, msg: string) => void;
     logWarn: (tag: string, msg: string) => void;

@@ -139,7 +139,7 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
-    public void sendFeedback(Promise promise) {
+    public void sendFeedback(String inproxyId, Promise promise) {
         final String FEEDBACK_UPLOAD_WORK_NAME = "FeedbackUploadWork";
         final String TAG = "FeedbackUpload"; // Add TAG constant
 
@@ -172,6 +172,7 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
                         Data inputData = new Data.Builder()
                                 .putString("feedbackId", feedbackId)
                                 .putLong("feedbackTimestamp", System.currentTimeMillis())
+                                .putString("inproxyId", inproxyId)
                                 .build();
 
                         // Define constraints to ensure the work only runs when connected to the internet
