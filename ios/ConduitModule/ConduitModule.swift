@@ -377,6 +377,24 @@ extension ConduitModule {
         }
     }
     
+    @objc(logInfo:msg:withResolver:withRejecter:)
+    func logInfo(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        resolve(nil)
+    }
+    
+    @objc(logWarn:msg:withResolver:withRejecter:)
+    func logWarn(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        resolve(nil)
+    }
+
+    @objc(logError:msg:withResolver:withRejecter:)
+    func logError(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        resolve(nil)
+    }
+
 }
 
 

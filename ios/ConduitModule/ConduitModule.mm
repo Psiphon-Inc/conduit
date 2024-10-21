@@ -22,6 +22,21 @@ RCT_EXTERN_METHOD(paramsChanged:(NSDictionary *)params
 RCT_EXTERN_METHOD(sendFeedback:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(logInfo:(NSString *)tag
+                  msg:(NSString *)msg
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(logWarn:(NSString *)tag
+                  msg:(NSString *)msg
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(logError:(NSString *)tag
+                  msg:(NSString *)msg
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+
 + (BOOL)requiresMainQueueSetup {
     // This module does not required access to UIKit.
     return NO;
