@@ -302,9 +302,21 @@ export function ConduitSettings() {
                                     router.push("/(app)/intro");
                                 }}
                             >
-                                <Text style={[ss.bodyFont, ss.whiteText]}>
-                                    {t("REPLAY_INTRO_I18N.string")}
-                                </Text>
+                                <View
+                                    style={[
+                                        ss.row,
+                                        ss.alignCenter,
+                                        ss.rounded5,
+                                        ss.halfPadded,
+                                        {
+                                            backgroundColor: palette.white,
+                                        },
+                                    ]}
+                                >
+                                    <Text style={[ss.bodyFont, ss.blackText]}>
+                                        {t("REPLAY_INTRO_I18N.string")}
+                                    </Text>
+                                </View>
                             </Pressable>
                         </View>
                         <View
@@ -447,20 +459,7 @@ export function ConduitSettings() {
                         height: settingsIconSize,
                     },
                 ]}
-            >
-                <Pressable
-                    onPress={() => {
-                        router.navigate("/(app)/onboarding");
-                    }}
-                >
-                    <Icon
-                        name="question"
-                        size={settingsIconSize - ss.doublePadded.padding * 2}
-                        color={palette.blueTint2}
-                        opacity={fadeIn}
-                    />
-                </Pressable>
-            </View>
+            ></View>
             {/* this empty modal fades in the opacity overlay */}
             <Modal
                 animationType="fade"
