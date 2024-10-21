@@ -8,9 +8,18 @@ import { keyPairToBase64nopad } from "@/src/common/cryptography";
 import { unpackErrorMessage, wrapError } from "@/src/common/errors";
 import { timedLog } from "@/src/common/utils";
 import {
+    ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
+    ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
+    QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
+    QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
+    QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
+    QUERYKEY_INPROXY_MUST_UPGRADE,
+    QUERYKEY_INPROXY_STATUS,
+    QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
 } from "@/src/constants";
+
 import { ConduitModule } from "@/src/inproxy/module";
 import {
     InproxyActivityStats,
@@ -96,7 +105,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                     );
                 }
                 break;
-            case "inproxyActivityStats":
+            case "inProxyActivityStats":
                 try {
                     handleInproxyActivityStats(
                         InproxyActivityStatsSchema.parse(inproxyEvent.data),
@@ -119,7 +128,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
 
     function handleProxyState(proxyState: ProxyState): void {
         const inproxyStatus = InproxyStatusEnumSchema.parse(proxyState.status);
-        queryClient.setQueryData(["inproxyStatus"], inproxyStatus);
+        queryClient.setQueryData([QUERYKEY_INPROXY_STATUS], inproxyStatus);
         // The module does not send an update for ActivityData when the Inproxy
         // is stopped, so reset it when we receive a non-running status.
         if (inproxyStatus !== "RUNNING") {
@@ -129,8 +138,8 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     function handleProxyError(inproxyError: ProxyError): void {
-        if (inproxyError.action === "inproxyMustUpgrade") {
-            queryClient.setQueryData(["inproxyMustUpgrade"], true);
+        if (inproxyError.action === "inProxyMustUpgrade") {
+            queryClient.setQueryData([QUERYKEY_INPROXY_MUST_UPGRADE], true);
         } else {
             // TODO: display other errors in UI?
         }
@@ -140,20 +149,20 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         inproxyActivityStats: InproxyActivityStats,
     ): void {
         queryClient.setQueryData(
-            ["inproxyCurrentConnectedClients"],
+            [QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS],
             inproxyActivityStats.currentConnectedClients,
         );
         queryClient.setQueryData(
-            ["inproxyCurrentConnectingClients"],
+            [QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS],
             inproxyActivityStats.currentConnectingClients,
         );
         queryClient.setQueryData(
-            ["inproxyTotalBytesTransferred"],
+            [QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED],
             inproxyActivityStats.totalBytesUp +
                 inproxyActivityStats.totalBytesDown,
         );
         queryClient.setQueryData(
-            ["inproxyActivityBy1000ms"],
+            [QUERYKEY_INPROXY_ACTIVITY_BY_1000MS],
             inproxyActivityStats.dataByPeriod["1000ms"],
         );
     }
@@ -170,11 +179,12 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         }
         try {
             // Retrieve stored inproxy parameters from the application layer
-            const storedInproxyMaxClients =
-                await AsyncStorage.getItem("InproxyMaxClients");
+            const storedInproxyMaxClients = await AsyncStorage.getItem(
+                ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+            );
 
             const storedInproxyLimitBytesPerSecond = await AsyncStorage.getItem(
-                "InproxyLimitBytesPerSecond",
+                ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             );
 
             // Prepare the stored/default parameters from the application layer
@@ -204,11 +214,11 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         params: InproxyParameters,
     ): Promise<void> {
         await AsyncStorage.setItem(
-            "InproxyMaxClients",
+            ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
             params.maxClients.toString(),
         );
         await AsyncStorage.setItem(
-            "InproxyLimitBytesPerSecond",
+            ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             params.limitUpstreamBytesPerSecond.toString(),
         );
         setInproxyParameters(params);

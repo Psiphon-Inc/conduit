@@ -44,6 +44,7 @@ export function getZeroedInproxyActivityStats(): InproxyActivityStats {
                 bytesDown: new Array(288).fill(0),
                 connectedClients: new Array(288).fill(0),
                 connectingClients: new Array(288).fill(0),
+                numBuckets: 288,
             },
         },
     });

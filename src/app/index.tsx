@@ -8,6 +8,7 @@ import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 import { useAuthContext } from "@/src/auth/context";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { PsiphonConduitLoading } from "@/src/components/canvas/PsiphonConduitLoading";
+import { ASYNCSTORAGE_HAS_ONBOARDED_KEY } from "@/src/constants";
 import { sharedStyles as ss } from "@/src/styles";
 
 export default function Index() {
@@ -25,7 +26,9 @@ export default function Index() {
             // Throw the error so we know about it, signIn must succeed.
             throw signInResult;
         } else {
-            const hasOnboarded = await AsyncStorage.getItem("hasOnboarded");
+            const hasOnboarded = await AsyncStorage.getItem(
+                ASYNCSTORAGE_HAS_ONBOARDED_KEY,
+            );
             opacity.value = withTiming(0, { duration: 400 }, () => {
                 if (hasOnboarded !== null) {
                     runOnJS(router.replace)("/(app)/");

@@ -64,9 +64,11 @@ function PermissionsGranted() {
     );
 }
 
+const NOTIFICATIONS_PERMISSIONS_QUERY_KEY = "sync-notifications-permissions";
+
 export const useNotificationsPermissions = () =>
     useQuery({
-        queryKey: ["sync-notifications-permissions"],
+        queryKey: [NOTIFICATIONS_PERMISSIONS_QUERY_KEY],
         queryFn: async () => {
             return await Notifications.getPermissionsAsync();
         },

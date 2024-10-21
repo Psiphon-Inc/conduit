@@ -15,3 +15,33 @@ export const PARTICLE_VIDEO_DELAY_MS = 2800;
 
 // Window height cutoff used to render smaller text in Skia Paragraphs
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;
+
+// AsyncStorage keys, centralized to prevent accidental collision
+export const ASYNCSTORAGE_HAS_ONBOARDED_KEY = "hasOnboarded";
+export const ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY = "MockInproxyRunning";
+export const ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY = "InproxyMaxClients";
+export const ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY =
+    "InproxyLimitBytesPerSecond";
+
+// SecureStore keys, centralized to prevent accidental collision
+export const SECURESTORE_MNEMONIC_KEY = "mnemonic";
+export const SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY =
+    "accountKeyPairBase64nopad";
+export const SECURESTORE_DEVICE_NONCE_KEY = "deviceNonce";
+export const SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY =
+    "inproxyKeyPairBase64nopad";
+
+// useQuery query keys, centralized to prevent accidental collision
+// auth
+export const QUERYKEY_ACCOUNT_KEYPAIR = "accountKeyPair";
+export const QUERYKEY_INPROXY_KEYPAIR = "conduitKeyPair";
+// inproxy
+export const QUERYKEY_INPROXY_STATUS = "inproxyStatus";
+export const QUERYKEY_INPROXY_ACTIVITY_BY_1000MS = "inproxyActivityBy1000ms";
+export const QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS =
+    "inproxyCurrentConnectedClients";
+export const QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS =
+    "inproxyCurrentConnectingClients";
+export const QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED =
+    "inproxyTotalBytesTransferred";
+export const QUERYKEY_INPROXY_MUST_UPGRADE = "inproxyMustUpgrade";

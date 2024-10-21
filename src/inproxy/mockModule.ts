@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeEventEmitter } from "react-native";
 
 import { timedLog } from "@/src/common/utils";
+import { ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY } from "@/src/constants";
 import { ConduitModuleAPI } from "@/src/inproxy/module";
 import { InproxyActivityStats } from "@/src/inproxy/types";
 import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
@@ -104,7 +105,7 @@ class ConduitModuleMock {
     private nativeEventEmitter: NativeEventEmitter;
 
     constructor() {
-        AsyncStorage.getItem("MockInproxyRunning").then(
+        AsyncStorage.getItem(ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY).then(
             (wasRunning: string | null) => {
                 if (wasRunning === "1") {
                     this.running = true;
@@ -193,7 +194,7 @@ class ConduitModuleMock {
         );
         this.running = !this.running;
         await AsyncStorage.setItem(
-            "MockInproxyRunning",
+            ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY,
             this.running ? "1" : "0",
         );
         this.emitState();

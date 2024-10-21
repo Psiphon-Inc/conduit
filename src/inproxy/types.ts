@@ -68,9 +68,9 @@ export type InproxyActivityByPeriod = z.infer<
 export type InproxyEvent = z.infer<typeof InproxyEventSchema>;
 
 export interface InproxyContextValue {
+    inproxyParameters: InproxyParameters;
     toggleInproxy: () => Promise<void>;
     sendFeedback: () => Promise<void>;
-    inProxyParameters: InproxyParameters;
     selectInproxyParameters: (params: InproxyParameters) => Promise<void>;
     logErrorToDiagnostic: (error: Error) => void;
 }

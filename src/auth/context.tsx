@@ -5,16 +5,21 @@ import * as SecureStore from "expo-secure-store";
 import React from "react";
 
 import {
-    ACCOUNT_KEYPAIR_QUERY_KEY,
-    INPROXY_KEYPAIR_QUERY_KEY,
-} from "@/src/auth/hooks";
-import {
     base64nopadToKeyPair,
     deriveEd25519KeyPair,
     keyPairToBase64nopad,
 } from "@/src/common/cryptography";
 import { wrapError } from "@/src/common/errors";
 import { formatConduitBip32Path } from "@/src/inproxy/utils";
+
+import {
+    QUERYKEY_ACCOUNT_KEYPAIR,
+    QUERYKEY_INPROXY_KEYPAIR,
+    SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
+    SECURESTORE_DEVICE_NONCE_KEY,
+    SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
+    SECURESTORE_MNEMONIC_KEY,
+} from "@/src/constants";
 
 export interface AuthContextValue {
     signIn: () => Promise<null | Error>;
@@ -37,12 +42,6 @@ export function useAuthContext() {
 
     return value;
 }
-
-const SECURESTORE_MNEMONIC_KEY = "mnemonic";
-const SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY = "accountKeyPairBase64nopad";
-const SECURESTORE_DEVICE_NONCE_KEY = "deviceNonce";
-// TODO: change this, but it'll create new keys on existing clients
-const SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY = "conduitKeyPairBase64nopad";
 
 export function AuthProvider(props: React.PropsWithChildren) {
     const queryClient = useQueryClient();
@@ -83,7 +82,7 @@ export function AuthProvider(props: React.PropsWithChildren) {
                     SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
                     accountKeyPairBase64nopad,
                 );
-                queryClient.setQueryData([ACCOUNT_KEYPAIR_QUERY_KEY], derived);
+                queryClient.setQueryData([QUERYKEY_ACCOUNT_KEYPAIR], derived);
             } else {
                 const storedAccountKeyPair = base64nopadToKeyPair(
                     storedAccountKeyPairBase64nopad,
@@ -92,7 +91,7 @@ export function AuthProvider(props: React.PropsWithChildren) {
                     throw storedAccountKeyPair;
                 }
                 queryClient.setQueryData(
-                    [ACCOUNT_KEYPAIR_QUERY_KEY],
+                    [QUERYKEY_ACCOUNT_KEYPAIR],
                     storedAccountKeyPair,
                 );
             }
@@ -134,7 +133,7 @@ export function AuthProvider(props: React.PropsWithChildren) {
                     SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
                     conduitKeyPairBase64nopad,
                 );
-                queryClient.setQueryData([INPROXY_KEYPAIR_QUERY_KEY], derived);
+                queryClient.setQueryData([QUERYKEY_INPROXY_KEYPAIR], derived);
             } else {
                 const storedConduitKeyPair = base64nopadToKeyPair(
                     storedConduitKeyPairBase64nopad,
@@ -143,7 +142,7 @@ export function AuthProvider(props: React.PropsWithChildren) {
                     throw storedConduitKeyPair;
                 }
                 queryClient.setQueryData(
-                    [INPROXY_KEYPAIR_QUERY_KEY],
+                    [QUERYKEY_INPROXY_KEYPAIR],
                     storedConduitKeyPair,
                 );
             }
