@@ -183,14 +183,14 @@ class ConduitModuleMock {
         console.error(`MOCK: ConduitModuleMock.logError TAG=${tag} msg=${msg}`);
     }
 
-    public async toggleInproxy(
+    public async toggleInProxy(
         maxClients: number,
         limitUpstreamBytesPerSecond: number,
         limitDownstreamBytesPerSecond: number,
         _: string,
     ) {
         timedLog(
-            `MOCK: ConduitModule.toggleInproxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
+            `MOCK: ConduitModule.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.running = !this.running;
         await AsyncStorage.setItem(
@@ -220,13 +220,13 @@ class ConduitModuleMock {
         );
         this.emitState();
         if (this.running) {
-            await this.toggleInproxy(
+            await this.toggleInProxy(
                 maxClients,
                 limitUpstreamBytesPerSecond,
                 limitDownstreamBytesPerSecond,
                 privateKey,
             );
-            await this.toggleInproxy(
+            await this.toggleInProxy(
                 maxClients,
                 limitUpstreamBytesPerSecond,
                 limitDownstreamBytesPerSecond,

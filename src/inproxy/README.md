@@ -6,7 +6,7 @@
 import ConduitModule from "<specify correct import path>";
 
 // Example of toggling in-proxy with parameters
-const toggleInProxy = async (
+const toggleInproxy = async (
     maxClients,
     limitUpstream,
     limitDownstream,
