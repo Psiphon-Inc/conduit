@@ -9,16 +9,16 @@ import Animated, {
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
 // @ts-ignore (this file is gitignored)
 import { GIT_HASH } from "@/src/git-hash";
-import { useInProxyStatus } from "@/src/inproxy/hooks";
+import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function GitHash() {
-    const { data: inProxyStatus } = useInProxyStatus();
+    const { data: inproxyStatus } = useInproxyStatus();
 
     const opacity = useSharedValue(0);
-    if (inProxyStatus !== "UNKNOWN") {
+    if (inproxyStatus !== "UNKNOWN") {
         opacity.value = withDelay(
-            inProxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
+            inproxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
             withTiming(0.8, { duration: 2000 }),
         );
     }

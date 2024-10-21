@@ -40,11 +40,11 @@ import {
     INPROXY_MAX_CLIENTS_MAX,
     PARTICLE_VIDEO_DELAY_MS,
 } from "@/src/constants";
-import { useInProxyContext } from "@/src/inproxy/context";
+import { useInproxyContext } from "@/src/inproxy/context";
 import {
-    useInProxyCurrentConnectedClients,
-    useInProxyMustUpgrade,
-    useInProxyStatus,
+    useInproxyCurrentConnectedClients,
+    useInproxyMustUpgrade,
+    useInproxyStatus,
 } from "@/src/inproxy/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -59,14 +59,14 @@ export function ConduitOrbToggle({
     timedLog("ConduitOrbToggle");
 
     const { t } = useTranslation();
-    const { toggleInProxy } = useInProxyContext();
-    const { data: inProxyStatus } = useInProxyStatus();
-    const { data: inProxyCurrentConnectedClients } =
-        useInProxyCurrentConnectedClients();
-    const { data: inProxyMustUpgrade } = useInProxyMustUpgrade();
+    const { toggleInproxy } = useInproxyContext();
+    const { data: inproxyStatus } = useInproxyStatus();
+    const { data: inproxyCurrentConnectedClients } =
+        useInproxyCurrentConnectedClients();
+    const { data: inproxyMustUpgrade } = useInproxyMustUpgrade();
 
     // At the top of the canvas there is a grid of dots around the Psiphon logo,
-    // representing the Psiphon Network the InProxy is proxying traffic towards.
+    // representing the Psiphon Network the Inproxy is proxying traffic towards.
     const dotsPng = useImage(require("@/assets/images/dots.png"));
     const psiphonLogoPng = useImage(
         require("@/assets/images/psiphon-logo.png"),
@@ -78,8 +78,8 @@ export function ConduitOrbToggle({
         return dotsOpacity.value - 0.2;
     }, [dotsOpacity]);
 
-    // In the center of the canvas is the orb, a button that toggles InProxy.
-    // The orb will have an animated gradient depending on InProxyState, flowing
+    // In the center of the canvas is the orb, a button that toggles Inproxy.
+    // The orb will have an animated gradient depending on InproxyState, flowing
     // between the following colors
     const orbColors = [
         palette.black,
@@ -170,7 +170,7 @@ export function ConduitOrbToggle({
             withTiming(0.2, { duration: 1000 }),
         );
         if (delay > 0) {
-            // if we're introing with a delay, it means the InProxy is stopped,
+            // if we're introing with a delay, it means the Inproxy is stopped,
             // so we will fade in our button text.
             orbTextColorIndex.value = withDelay(
                 delay,
@@ -179,7 +179,7 @@ export function ConduitOrbToggle({
         }
     }
 
-    // We have 4 animation states that depend on the state of the InProxy:
+    // We have 4 animation states that depend on the state of the Inproxy:
     const AnimationStateSchema = z.enum([
         // Conduit running but 0 clients connected, the orb will pulse.
         "ProxyAnnouncing",
@@ -187,24 +187,24 @@ export function ConduitOrbToggle({
         "ProxyInUse",
         // Conduit stopped, animates values towards the "off" state
         "ProxyIdle",
-        // InProxy Status is not yet known, so we don't animate anything yet
+        // Inproxy Status is not yet known, so we don't animate anything yet
         "Unknown",
     ]);
     type AnimationState = z.infer<typeof AnimationStateSchema>;
     const animationState = React.useRef<AnimationState>("Unknown");
 
-    // In addition to the 4 inProxyStatus dependent animation states above, we
+    // In addition to the 4 inproxyStatus dependent animation states above, we
     // also have an intro animation gif to play when the app is opened.
     // Use initialStateDetermined ref to track the very first render
-    // If InProxy is already RUNNING when the app is opened, the intro animation
-    // will be a quick fade in of the UI. If the InProxy is STOPPED when the app
+    // If Inproxy is already RUNNING when the app is opened, the intro animation
+    // will be a quick fade in of the UI. If the Inproxy is STOPPED when the app
     // is opened, this fade should be delayed until the particle animation video
     // has played.
-    // The inProxyStatus will begin as UNKNOWN, and then become RUNNING or
+    // The inproxyStatus will begin as UNKNOWN, and then become RUNNING or
     // STOPPED once the module is hooked up.
     // Use this in initialStateDetermined state variable to coordiate the order
     // of animations: first we want the intro to play, then we want to be hooked
-    // up to InProxyStatus changes.
+    // up to InproxyStatus changes.
     const particleSwirlPaused = useSharedValue(true);
     const particleSwirlOpacity = useSharedValue(0);
     const particleSwirlGif = useAnimatedImageValue(
@@ -215,10 +215,10 @@ export function ConduitOrbToggle({
         React.useState(false);
     React.useEffect(() => {
         if (!initialStateDetermined) {
-            if (inProxyStatus === "RUNNING") {
+            if (inproxyStatus === "RUNNING") {
                 animateIntro(0);
                 setInitialStateDetermined(true);
-            } else if (inProxyStatus === "STOPPED") {
+            } else if (inproxyStatus === "STOPPED") {
                 particleSwirlPaused.value = false;
                 particleSwirlOpacity.value = 1;
                 particleSwirlOpacity.value = withDelay(
@@ -232,12 +232,12 @@ export function ConduitOrbToggle({
             }
             // implicit do nothing if status is UNKNOWN
         }
-    }, [inProxyStatus]);
+    }, [inproxyStatus]);
 
     React.useEffect(() => {
         if (initialStateDetermined) {
-            if (inProxyStatus === "RUNNING") {
-                if (inProxyCurrentConnectedClients === 0) {
+            if (inproxyStatus === "RUNNING") {
+                if (inproxyCurrentConnectedClients === 0) {
                     if (animationState.current !== "ProxyAnnouncing") {
                         animateProxyAnnouncing();
                         animationState.current = "ProxyAnnouncing";
@@ -248,7 +248,7 @@ export function ConduitOrbToggle({
                         animationState.current = "ProxyInUse";
                     }
                 }
-            } else if (inProxyStatus === "STOPPED") {
+            } else if (inproxyStatus === "STOPPED") {
                 if (
                     animationState.current !== "ProxyIdle" &&
                     animationState.current !== "Unknown"
@@ -261,7 +261,7 @@ export function ConduitOrbToggle({
             // get here since initialStateDetermined will be false while proxy
             // status is UNKNOWN)
         }
-    }, [inProxyStatus, inProxyCurrentConnectedClients, initialStateDetermined]);
+    }, [inproxyStatus, inproxyCurrentConnectedClients, initialStateDetermined]);
 
     // This morphLayer creates a neat effect where elements that are close to
     // each other appear to morph together. Any overlapping elements in the
@@ -295,18 +295,18 @@ export function ConduitOrbToggle({
     // disconnect users, we will show instruction to long press to turn off.
     const longPressInstructionOpacity = useSharedValue(0);
 
-    // If the module reports that inProxy must upgrade, show instructions
+    // If the module reports that inproxy must upgrade, show instructions
     const upgradeRequiredInstructionOpacity = useSharedValue(0);
 
     function toggle() {
-        if (inProxyMustUpgrade) {
+        if (inproxyMustUpgrade) {
             upgradeRequiredInstructionOpacity.value = withSequence(
                 withTiming(1, { duration: 1000 }),
                 withTiming(1, { duration: 4000 }),
                 withTiming(0, { duration: 1000 }),
             );
         } else {
-            toggleInProxy();
+            toggleInproxy();
         }
     }
 
@@ -327,7 +327,7 @@ export function ConduitOrbToggle({
     }
     const orbGesture = Gesture.Exclusive(
         Gesture.Tap().onEnd(() => {
-            if (inProxyCurrentConnectedClients === 0) {
+            if (inproxyStatus !== "RUNNING") {
                 animateOrbGiggle();
                 runOnJS(Haptics.impactAsync)(
                     Haptics.ImpactFeedbackStyle.Medium,
@@ -437,7 +437,7 @@ export function ConduitOrbToggle({
                                         <ConduitConnectionLight
                                             key={i}
                                             active={
-                                                inProxyCurrentConnectedClients >
+                                                inproxyCurrentConnectedClients >
                                                 i
                                             }
                                             canvasWidth={width}
@@ -492,7 +492,7 @@ export function ConduitOrbToggle({
                     accessible={true}
                     accessibilityLabel={"Toggle Conduit from current state"}
                     accessibilityRole={"button"}
-                    aria-valuetext={inProxyStatus}
+                    aria-valuetext={inproxyStatus}
                     style={[
                         ss.absolute,
                         {

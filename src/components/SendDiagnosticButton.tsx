@@ -4,11 +4,11 @@ import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
 import { Icon } from "@/src/components/Icon";
-import { useInProxyContext } from "@/src/inproxy/context";
+import { useInproxyContext } from "@/src/inproxy/context";
 import { iconButton, palette, sharedStyles as ss } from "@/src/styles";
 
 export function SendDiagnosticButton() {
-    const { sendFeedback } = useInProxyContext();
+    const { sendFeedback } = useInproxyContext();
     const { t } = useTranslation();
 
     const [showThankYou, setShowThankYou] = React.useState(false);

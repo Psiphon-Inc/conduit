@@ -1,11 +1,11 @@
 import { Stack } from "expo-router";
 import React from "react";
 
-import { InProxyProvider } from "@/src/inproxy/context";
+import { InproxyProvider } from "@/src/inproxy/context";
 
 export default function AppLayout() {
     return (
-        <InProxyProvider>
+        <InproxyProvider>
             <Stack
                 screenOptions={{
                     headerShown: false,
@@ -15,6 +15,6 @@ export default function AppLayout() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="onboarding" />
             </Stack>
-        </InProxyProvider>
+        </InproxyProvider>
     );
 }

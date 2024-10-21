@@ -2,18 +2,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeEventEmitter } from "react-native";
 
 import { timedLog } from "@/src/common/utils";
+import { ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY } from "@/src/constants";
 import { ConduitModuleAPI } from "@/src/inproxy/module";
-import { InProxyActivityStats } from "@/src/inproxy/types";
-import { getZeroedInProxyActivityStats } from "@/src/inproxy/utils";
+import { InproxyActivityStats } from "@/src/inproxy/types";
+import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function* generateMockData(
     maxClients: number,
     limitBandwidth: number,
-): AsyncGenerator<InProxyActivityStats> {
+): AsyncGenerator<InproxyActivityStats> {
     // initial empty data, representing no usage
     // TODO: this is a crappy way to clone
-    const data = getZeroedInProxyActivityStats();
+    const data = getZeroedInproxyActivityStats();
 
     async function doTick() {
         // shift every array to drop the first value
@@ -104,7 +105,7 @@ class ConduitModuleMock {
     private nativeEventEmitter: NativeEventEmitter;
 
     constructor() {
-        AsyncStorage.getItem("MockInProxyRunning").then(
+        AsyncStorage.getItem(ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY).then(
             (wasRunning: string | null) => {
                 if (wasRunning === "1") {
                     this.running = true;
@@ -144,7 +145,7 @@ class ConduitModuleMock {
         }
         this.nativeEventEmitter.emit("ConduitEvent", {
             type: "inProxyActivityStats",
-            data: getZeroedInProxyActivityStats(),
+            data: getZeroedInproxyActivityStats(),
         });
     }
     private async stopMockData() {
@@ -193,7 +194,7 @@ class ConduitModuleMock {
         );
         this.running = !this.running;
         await AsyncStorage.setItem(
-            "MockInProxyRunning",
+            ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY,
             this.running ? "1" : "0",
         );
         this.emitState();
@@ -207,12 +208,13 @@ class ConduitModuleMock {
         }
     }
 
-    public async paramsChanged(
-        maxClients: number,
-        limitUpstreamBytesPerSecond: number,
-        limitDownstreamBytesPerSecond: number,
-        privateKey: string,
-    ) {
+    public async paramsChanged(params: { [key: string]: any }) {
+        const {
+            maxClients,
+            limitUpstreamBytesPerSecond,
+            limitDownstreamBytesPerSecond,
+            privateKey,
+        } = params;
         timedLog(
             `MOCK: ConduitModule.paramsChanged(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );

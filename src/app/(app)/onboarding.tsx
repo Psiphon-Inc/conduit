@@ -41,6 +41,7 @@ import { useNotificationsPermissions } from "@/src/components/NotificationsStatu
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
+import { ASYNCSTORAGE_HAS_ONBOARDED_KEY } from "@/src/constants";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 
 export default function OnboardingScreen() {
@@ -288,7 +289,7 @@ export default function OnboardingScreen() {
             currentView.value += 1;
         } else {
             // onboarding done, record completion and fade to main view
-            await AsyncStorage.setItem("hasOnboarded", "true");
+            await AsyncStorage.setItem(ASYNCSTORAGE_HAS_ONBOARDED_KEY, "true");
             everythingOpacity.value = withTiming(0, { duration: 500 }, () => {
                 runOnJS(replaceOrGoBack)();
             });

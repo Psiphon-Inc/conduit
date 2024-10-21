@@ -32,6 +32,7 @@ public class FeedbackWorker extends RxWorker {
 
   private final String feedbackId;
   private final long feedbackTimestamp;
+  private final String inproxyId;
   private Thread shutdownHook;
 
 
@@ -43,6 +44,7 @@ public class FeedbackWorker extends RxWorker {
     super(appContext, workerParams);
     feedbackId = workerParams.getInputData().getString("feedbackId");
     feedbackTimestamp = workerParams.getInputData().getLong("feedbackTimestamp", 0);
+    inproxyId = workerParams.getInputData().getString("inproxyId");
   }
 
   @Override
@@ -67,7 +69,7 @@ public class FeedbackWorker extends RxWorker {
     return psiphonConfigJsonSingle()
             .flatMapCompletable(configJson -> {
               String feedbackData = createFeedbackData(getApplicationContext(), configJson,
-                      feedbackId, feedbackTimestamp);
+                      feedbackId, feedbackTimestamp, inproxyId);
               return sendFeedback(getApplicationContext(), configJson.toString(), feedbackData);
             })
             .andThen(Flowable.just(Result.success()))
@@ -104,7 +106,8 @@ public class FeedbackWorker extends RxWorker {
 
   private static @NonNull String createFeedbackData(Context context, JSONObject psiphonConfigJson,
           String feedbackId,
-          long feedbackTimestamp) throws JSONException, IOException, PackageManager.NameNotFoundException {
+          long feedbackTimestamp,
+          String inproxyId) throws JSONException, IOException, PackageManager.NameNotFoundException {
     // Top level json object
     JSONObject feedbackJsonObject = new JSONObject();
 
@@ -116,6 +119,7 @@ public class FeedbackWorker extends RxWorker {
     metadata.put("id", feedbackId);
     metadata.put("date!!timestamp", LogUtils.getRfc3339Timestamp(feedbackTimestamp));
     metadata.put("appName", "conduit");
+    metadata.put("inproxyID", inproxyId);
 
     // Add the metadata to the top level json object
     feedbackJsonObject.put("Metadata", metadata);

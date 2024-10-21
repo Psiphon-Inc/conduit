@@ -24,12 +24,12 @@ import {
 
 import { drawBigFont, niceBytes } from "@/src/common/utils";
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
-import { useInProxyContext } from "@/src/inproxy/context";
+import { useInproxyContext } from "@/src/inproxy/context";
 import {
-    useInProxyCurrentConnectedClients,
-    useInProxyCurrentConnectingClients,
-    useInProxyStatus,
-    useInProxyTotalBytesTransferred,
+    useInproxyCurrentConnectedClients,
+    useInproxyCurrentConnectingClients,
+    useInproxyStatus,
+    useInproxyTotalBytesTransferred,
 } from "@/src/inproxy/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 
@@ -43,14 +43,14 @@ export function ConduitStatus({
     const { t } = useTranslation();
     const win = useWindowDimensions();
 
-    const { logErrorToDiagnostic } = useInProxyContext();
-    const { data: inProxyStatus } = useInProxyStatus();
-    const { data: connectedPeers } = useInProxyCurrentConnectedClients();
-    const { data: connectingPeers } = useInProxyCurrentConnectingClients();
-    const { data: totalBytesTransferred } = useInProxyTotalBytesTransferred();
+    const { logErrorToDiagnostic } = useInproxyContext();
+    const { data: inproxyStatus } = useInproxyStatus();
+    const { data: connectedPeers } = useInproxyCurrentConnectedClients();
+    const { data: connectingPeers } = useInproxyCurrentConnectingClients();
+    const { data: totalBytesTransferred } = useInproxyTotalBytesTransferred();
 
     const conduitStationText = t("CONDUIT_STATION_I18N.string");
-    const proxyStatusText = t(`${inProxyStatus}_I18N.string`);
+    const proxyStatusText = t(`${inproxyStatus}_I18N.string`);
     const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
         peers: connectedPeers,
     });
@@ -66,9 +66,9 @@ export function ConduitStatus({
 
     // Fade in gradient on app start
     const fadeIn = useSharedValue(0);
-    if (inProxyStatus !== "UNKNOWN") {
+    if (inproxyStatus !== "UNKNOWN") {
         fadeIn.value = withDelay(
-            inProxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
+            inproxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
             withTiming(1, { duration: 2000 }),
         );
     }
@@ -77,13 +77,13 @@ export function ConduitStatus({
     const fader = useSharedValue(0);
     const shouldAnimateIn = React.useRef(true);
     const shouldAnimateOut = React.useRef(true);
-    if (inProxyStatus === "RUNNING") {
+    if (inproxyStatus === "RUNNING") {
         if (shouldAnimateIn.current) {
             fader.value = withTiming(1, { duration: 1000 });
             shouldAnimateIn.current = false;
             shouldAnimateOut.current = true;
         }
-    } else if (inProxyStatus === "STOPPED") {
+    } else if (inproxyStatus === "STOPPED") {
         if (shouldAnimateOut.current) {
             fader.value = withTiming(0, { duration: 1000 });
             shouldAnimateIn.current = true;
@@ -110,7 +110,7 @@ export function ConduitStatus({
             interpolateColors(fader.value, [0, 1], gradientPairs[5]),
         ];
     });
-    // implicit do nothing if inProxyStatus is "unknown"
+    // implicit do nothing if inproxyStatus is "unknown"
 
     const fontMgr = useFonts({ Jura: [fonts.JuraRegular] });
     const fontSize = drawBigFont(win) ? 20 : 16;

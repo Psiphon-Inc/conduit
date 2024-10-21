@@ -40,11 +40,11 @@ import {
     INPROXY_MAX_MBPS_PER_PEER,
     PARTICLE_VIDEO_DELAY_MS,
 } from "@/src/constants";
-import { useInProxyContext } from "@/src/inproxy/context";
-import { useInProxyStatus } from "@/src/inproxy/hooks";
+import { useInproxyContext } from "@/src/inproxy/context";
+import { useInproxyStatus } from "@/src/inproxy/hooks";
 import {
-    InProxyParameters,
-    InProxyParametersSchema,
+    InproxyParameters,
+    InproxyParametersSchema,
 } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
@@ -56,17 +56,17 @@ export function ConduitSettings() {
     const router = useRouter();
 
     const conduitKeyPair = useConduitKeyPair();
-    const { inProxyParameters, selectInProxyParameters, logErrorToDiagnostic } =
-        useInProxyContext();
-    const { data: inProxyStatus } = useInProxyStatus();
+    const { inproxyParameters, selectInproxyParameters, logErrorToDiagnostic } =
+        useInproxyContext();
+    const { data: inproxyStatus } = useInproxyStatus();
 
     const [modalOpen, setModalOpen] = React.useState(false);
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
         React.useState(false);
 
-    const modifiedMaxPeers = useSharedValue(inProxyParameters.maxClients);
+    const modifiedMaxPeers = useSharedValue(inproxyParameters.maxClients);
     const modifiedMaxMBps = useSharedValue(
-        bytesToMB(inProxyParameters.limitUpstreamBytesPerSecond),
+        bytesToMB(inproxyParameters.limitUpstreamBytesPerSecond),
     );
     const displayTotalMBps = useDerivedValue(() => {
         return `${modifiedMaxPeers.value * modifiedMaxMBps.value} MB/s`;
@@ -74,11 +74,11 @@ export function ConduitSettings() {
     const applyChangesNoteOpacity = useSharedValue(0);
     const changesPending = useDerivedValue(() => {
         let settingsChanged = false;
-        if (modifiedMaxPeers.value !== inProxyParameters.maxClients) {
+        if (modifiedMaxPeers.value !== inproxyParameters.maxClients) {
             settingsChanged = true;
         } else if (
             MBToBytes(modifiedMaxMBps.value) !==
-            inProxyParameters.limitUpstreamBytesPerSecond
+            inproxyParameters.limitUpstreamBytesPerSecond
         ) {
             settingsChanged = true;
         }
@@ -90,48 +90,52 @@ export function ConduitSettings() {
         return settingsChanged;
     });
 
-    function resetSettingsFromInProxyProvider() {
-        modifiedMaxPeers.value = inProxyParameters.maxClients;
+    function resetSettingsFromInproxyProvider() {
+        modifiedMaxPeers.value = inproxyParameters.maxClients;
         modifiedMaxMBps.value = bytesToMB(
-            inProxyParameters.limitUpstreamBytesPerSecond,
+            inproxyParameters.limitUpstreamBytesPerSecond,
         );
     }
     React.useEffect(() => {
-        resetSettingsFromInProxyProvider();
-    }, [inProxyParameters]);
+        resetSettingsFromInproxyProvider();
+    }, [inproxyParameters]);
 
-    async function updateInProxyMaxClients(newValue: number) {
+    async function updateInproxyMaxClients(newValue: number) {
         modifiedMaxPeers.value = newValue;
     }
 
-    async function updateInProxyLimitBytesPerSecond(newValue: number) {
+    async function updateInproxyLimitBytesPerSecond(newValue: number) {
         // This value is configured as MBps in UI, so multiply out to raw bytes
         modifiedMaxMBps.value = newValue;
     }
 
     async function commitChanges() {
-        const newInProxyParameters = InProxyParametersSchema.safeParse({
+        const newInproxyParameters = InproxyParametersSchema.safeParse({
             maxClients: modifiedMaxPeers.value,
             limitUpstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             limitDownstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
-            privateKey: inProxyParameters.privateKey,
-        } as InProxyParameters);
-        if (newInProxyParameters.error) {
+            privateKey: inproxyParameters.privateKey,
+        } as InproxyParameters);
+        if (newInproxyParameters.error) {
             logErrorToDiagnostic(
                 wrapError(
-                    newInProxyParameters.error,
-                    "Error parsing updated InProxyParameters",
+                    newInproxyParameters.error,
+                    "Error parsing updated InproxyParameters",
                 ),
             );
             return;
         }
-        selectInProxyParameters(newInProxyParameters.data);
+        selectInproxyParameters(newInproxyParameters.data);
     }
 
+    // onSettingsClose has different behaviour depending on whether there are
+    // pending changes to the settings, and if the inproxy is running or not.
     async function onSettingsClose() {
         applyChangesNoteOpacity.value = withTiming(0, { duration: 300 });
         if (changesPending.value) {
-            if (inProxyStatus === "RUNNING") {
+            if (inproxyStatus === "RUNNING") {
+                // Since applying changes restarts inproxy, connections will be
+                // lost, so we ask the user for confirmation about this.
                 setDisplayRestartConfirmation(true);
             } else {
                 await commitChanges();
@@ -208,21 +212,21 @@ export function ConduitSettings() {
                     <View>
                         <EditableNumberSlider
                             label={t("MAX_PEERS_I18N.string")}
-                            originalValue={inProxyParameters.maxClients}
+                            originalValue={inproxyParameters.maxClients}
                             min={1}
                             max={INPROXY_MAX_CLIENTS_MAX}
                             style={[...lineItemStyle, ss.alignCenter]}
-                            onChange={updateInProxyMaxClients}
+                            onChange={updateInproxyMaxClients}
                         />
                         <EditableNumberSlider
                             label={t("MAX_MBPS_PER_PEER_I18N.string")}
                             originalValue={bytesToMB(
-                                inProxyParameters.limitUpstreamBytesPerSecond,
+                                inproxyParameters.limitUpstreamBytesPerSecond,
                             )}
                             min={8}
                             max={INPROXY_MAX_MBPS_PER_PEER}
                             style={[...lineItemStyle, ss.alignCenter]}
-                            onChange={updateInProxyLimitBytesPerSecond}
+                            onChange={updateInproxyLimitBytesPerSecond}
                         />
                         <View
                             style={[
@@ -302,9 +306,21 @@ export function ConduitSettings() {
                                     router.push("/(app)/intro");
                                 }}
                             >
-                                <Text style={[ss.bodyFont, ss.whiteText]}>
-                                    {t("REPLAY_INTRO_I18N.string")}
-                                </Text>
+                                <View
+                                    style={[
+                                        ss.row,
+                                        ss.alignCenter,
+                                        ss.rounded5,
+                                        ss.halfPadded,
+                                        {
+                                            backgroundColor: palette.white,
+                                        },
+                                    ]}
+                                >
+                                    <Text style={[ss.bodyFont, ss.blackText]}>
+                                        {t("REPLAY_INTRO_I18N.string")}
+                                    </Text>
+                                </View>
                             </Pressable>
                         </View>
                         <View
@@ -374,7 +390,7 @@ export function ConduitSettings() {
                                 { backgroundColor: palette.grey },
                             ]}
                             onPress={() => {
-                                resetSettingsFromInProxyProvider();
+                                resetSettingsFromInproxyProvider();
                                 setDisplayRestartConfirmation(false);
                                 setModalOpen(false);
                             }}
@@ -393,9 +409,9 @@ export function ConduitSettings() {
 
     // fadeIn on first load
     const fadeIn = useSharedValue(0);
-    if (inProxyStatus !== "UNKNOWN") {
+    if (inproxyStatus !== "UNKNOWN") {
         fadeIn.value = withDelay(
-            inProxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
+            inproxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
             withTiming(0.8, { duration: 2000 }),
         );
     }
@@ -447,20 +463,7 @@ export function ConduitSettings() {
                         height: settingsIconSize,
                     },
                 ]}
-            >
-                <Pressable
-                    onPress={() => {
-                        router.navigate("/(app)/onboarding");
-                    }}
-                >
-                    <Icon
-                        name="question"
-                        size={settingsIconSize - ss.doublePadded.padding * 2}
-                        color={palette.blueTint2}
-                        opacity={fadeIn}
-                    />
-                </Pressable>
-            </View>
+            ></View>
             {/* this empty modal fades in the opacity overlay */}
             <Modal
                 animationType="fade"

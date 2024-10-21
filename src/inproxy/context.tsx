@@ -8,35 +8,45 @@ import { keyPairToBase64nopad } from "@/src/common/cryptography";
 import { unpackErrorMessage, wrapError } from "@/src/common/errors";
 import { timedLog } from "@/src/common/utils";
 import {
+    ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
+    ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
+    QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
+    QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
+    QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
+    QUERYKEY_INPROXY_MUST_UPGRADE,
+    QUERYKEY_INPROXY_STATUS,
+    QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
 } from "@/src/constants";
+
 import { ConduitModule } from "@/src/inproxy/module";
 import {
-    InProxyActivityStats,
-    InProxyActivityStatsSchema,
-    InProxyContextValue,
-    InProxyEvent,
-    InProxyParameters,
-    InProxyParametersSchema,
-    InProxyStatusEnumSchema,
+    InproxyActivityStats,
+    InproxyActivityStatsSchema,
+    InproxyContextValue,
+    InproxyEvent,
+    InproxyParameters,
+    InproxyParametersSchema,
+    InproxyStatusEnumSchema,
     ProxyError,
     ProxyErrorSchema,
     ProxyState,
     ProxyStateSchema,
 } from "@/src/inproxy/types";
 import {
-    getDefaultInProxyParameters,
-    getZeroedInProxyActivityStats,
+    getDefaultInproxyParameters,
+    getProxyId,
+    getZeroedInproxyActivityStats,
 } from "@/src/inproxy/utils";
 
-const InProxyContext = React.createContext<InProxyContextValue | null>(null);
+const InproxyContext = React.createContext<InproxyContextValue | null>(null);
 
-export function useInProxyContext(): InProxyContextValue {
-    const value = React.useContext(InProxyContext);
+export function useInproxyContext(): InproxyContextValue {
+    const value = React.useContext(InproxyContext);
     if (!value) {
         throw new Error(
-            "useInProxyContext must be used within a InProxyProvider",
+            "useInproxyContext must be used within a InproxyProvider",
         );
     }
 
@@ -44,15 +54,15 @@ export function useInProxyContext(): InProxyContextValue {
 }
 
 /**
- * The InProxyProvider exposes the ConduitModule API.
+ * The InproxyProvider exposes the ConduitModule API.
  */
-export function InProxyProvider({ children }: { children: React.ReactNode }) {
+export function InproxyProvider({ children }: { children: React.ReactNode }) {
     const conduitKeyPair = useConduitKeyPair();
 
-    // This provider handles tracking the user-selected InProxy parameters, and
+    // This provider handles tracking the user-selected Inproxy parameters, and
     // persisting them in AsyncStorage.
-    const [inProxyParameters, setInProxyParameters] =
-        React.useState<InProxyParameters>(getDefaultInProxyParameters());
+    const [inproxyParameters, setInproxyParameters] =
+        React.useState<InproxyParameters>(getDefaultInproxyParameters());
 
     // This provider makes use of react-query to track the data emitted by the
     // native module. When an event is received, the provider updates the query
@@ -61,25 +71,25 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     const queryClient = useQueryClient();
 
     React.useEffect(() => {
-        // this manages InProxyEvent subscription and connects it to the handler
+        // this manages InproxyEvent subscription and connects it to the handler
         const emitter = new NativeEventEmitter(ConduitModule);
         const subscription = emitter.addListener(
             "ConduitEvent",
-            handleInProxyEvent,
+            handleInproxyEvent,
         );
-        timedLog("InProxyEvent subscription added");
+        timedLog("InproxyEvent subscription added");
 
         return () => {
             subscription.remove();
-            timedLog("InProxyEvent subscription removed");
+            timedLog("InproxyEvent subscription removed");
         };
     }, []);
 
-    function handleInProxyEvent(inProxyEvent: InProxyEvent): void {
-        switch (inProxyEvent.type) {
+    function handleInproxyEvent(inproxyEvent: InproxyEvent): void {
+        switch (inproxyEvent.type) {
             case "proxyState":
                 try {
-                    handleProxyState(ProxyStateSchema.parse(inProxyEvent.data));
+                    handleProxyState(ProxyStateSchema.parse(inproxyEvent.data));
                 } catch (error) {
                     logErrorToDiagnostic(
                         wrapError(error, "Failed to handle proxyState"),
@@ -88,7 +98,7 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                 break;
             case "proxyError":
                 try {
-                    handleProxyError(ProxyErrorSchema.parse(inProxyEvent.data));
+                    handleProxyError(ProxyErrorSchema.parse(inproxyEvent.data));
                 } catch (error) {
                     logErrorToDiagnostic(
                         wrapError(error, "Failed to handle proxyError"),
@@ -97,101 +107,102 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
                 break;
             case "inProxyActivityStats":
                 try {
-                    handleInProxyActivityStats(
-                        InProxyActivityStatsSchema.parse(inProxyEvent.data),
+                    handleInproxyActivityStats(
+                        InproxyActivityStatsSchema.parse(inproxyEvent.data),
                     );
                 } catch (error) {
                     logErrorToDiagnostic(
                         wrapError(
                             error,
-                            "Failed to handle inProxyActivityStats",
+                            "Failed to handle inproxyActivityStats",
                         ),
                     );
                 }
                 break;
             default:
                 logErrorToDiagnostic(
-                    new Error(`Unhandled event type: ${inProxyEvent.type}`),
+                    new Error(`Unhandled event type: ${inproxyEvent.type}`),
                 );
         }
     }
 
     function handleProxyState(proxyState: ProxyState): void {
-        const inProxyStatus = InProxyStatusEnumSchema.parse(proxyState.status);
-        queryClient.setQueryData(["inProxyStatus"], inProxyStatus);
-        // The module does not send an update for ActivityData when the InProxy
+        const inproxyStatus = InproxyStatusEnumSchema.parse(proxyState.status);
+        queryClient.setQueryData([QUERYKEY_INPROXY_STATUS], inproxyStatus);
+        // The module does not send an update for ActivityData when the Inproxy
         // is stopped, so reset it when we receive a non-running status.
-        if (inProxyStatus !== "RUNNING") {
-            handleInProxyActivityStats(getZeroedInProxyActivityStats());
+        if (inproxyStatus !== "RUNNING") {
+            handleInproxyActivityStats(getZeroedInproxyActivityStats());
         }
         // NOTE: proxyState.networkState is currently ignored
     }
 
-    function handleProxyError(inProxyError: ProxyError): void {
-        if (inProxyError.action === "inProxyMustUpgrade") {
-            queryClient.setQueryData(["inProxyMustUpgrade"], true);
+    function handleProxyError(inproxyError: ProxyError): void {
+        if (inproxyError.action === "inProxyMustUpgrade") {
+            queryClient.setQueryData([QUERYKEY_INPROXY_MUST_UPGRADE], true);
         } else {
             // TODO: display other errors in UI?
         }
     }
 
-    function handleInProxyActivityStats(
-        inProxyActivityStats: InProxyActivityStats,
+    function handleInproxyActivityStats(
+        inproxyActivityStats: InproxyActivityStats,
     ): void {
         queryClient.setQueryData(
-            ["inProxyCurrentConnectedClients"],
-            inProxyActivityStats.currentConnectedClients,
+            [QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS],
+            inproxyActivityStats.currentConnectedClients,
         );
         queryClient.setQueryData(
-            ["inProxyCurrentConnectingClients"],
-            inProxyActivityStats.currentConnectingClients,
+            [QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS],
+            inproxyActivityStats.currentConnectingClients,
         );
         queryClient.setQueryData(
-            ["inProxyTotalBytesTransferred"],
-            inProxyActivityStats.totalBytesUp +
-                inProxyActivityStats.totalBytesDown,
+            [QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED],
+            inproxyActivityStats.totalBytesUp +
+                inproxyActivityStats.totalBytesDown,
         );
         queryClient.setQueryData(
-            ["inProxyActivityBy1000ms"],
-            inProxyActivityStats.dataByPeriod["1000ms"],
+            [QUERYKEY_INPROXY_ACTIVITY_BY_1000MS],
+            inproxyActivityStats.dataByPeriod["1000ms"],
         );
     }
 
-    // We store the user-controllable InProxy settings in AsyncStorage, so that
+    // We store the user-controllable Inproxy settings in AsyncStorage, so that
     // they can be persisted at the application layer instead of the module
     // layer. This also allows us to have defaults that are different than what
     // the module/tunnel-core uses. The values stored in AsyncStorage will be
     // taken as the source of truth.
-    async function loadInProxyParameters() {
+    async function loadInproxyParameters() {
         if (!conduitKeyPair.data) {
             // this shouldn't be possible as the key gets set before we render
             return;
         }
         try {
             // Retrieve stored inproxy parameters from the application layer
-            const storedInProxyMaxClients =
-                await AsyncStorage.getItem("InProxyMaxClients");
+            const storedInproxyMaxClients = await AsyncStorage.getItem(
+                ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+            );
 
-            const storedInProxyLimitBytesPerSecond = await AsyncStorage.getItem(
-                "InProxyLimitBytesPerSecond",
+            const storedInproxyLimitBytesPerSecond = await AsyncStorage.getItem(
+                ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             );
 
             // Prepare the stored/default parameters from the application layer
-            const storedInProxyParameters = InProxyParametersSchema.parse({
+            const storedInproxyParameters = InproxyParametersSchema.parse({
                 privateKey: keyPairToBase64nopad(conduitKeyPair.data),
-                maxClients: storedInProxyMaxClients
-                    ? parseInt(storedInProxyMaxClients)
+                maxClients: storedInproxyMaxClients
+                    ? parseInt(storedInproxyMaxClients)
                     : DEFAULT_INPROXY_MAX_CLIENTS,
-                limitUpstreamBytesPerSecond: storedInProxyLimitBytesPerSecond
-                    ? parseInt(storedInProxyLimitBytesPerSecond)
+                limitUpstreamBytesPerSecond: storedInproxyLimitBytesPerSecond
+                    ? parseInt(storedInproxyLimitBytesPerSecond)
                     : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
-                limitDownstreamBytesPerSecond: storedInProxyLimitBytesPerSecond
-                    ? parseInt(storedInProxyLimitBytesPerSecond)
+                limitDownstreamBytesPerSecond: storedInproxyLimitBytesPerSecond
+                    ? parseInt(storedInproxyLimitBytesPerSecond)
                     : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
             });
 
             // This call updates the context's state value for the parameters.
-            await selectInProxyParameters(storedInProxyParameters);
+            await selectInproxyParameters(storedInproxyParameters);
         } catch (error) {
             logErrorToDiagnostic(
                 wrapError(error, "Failed to load inproxy parameters"),
@@ -199,25 +210,20 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
-    async function selectInProxyParameters(
-        params: InProxyParameters,
+    async function selectInproxyParameters(
+        params: InproxyParameters,
     ): Promise<void> {
         await AsyncStorage.setItem(
-            "InProxyMaxClients",
+            ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
             params.maxClients.toString(),
         );
         await AsyncStorage.setItem(
-            "InProxyLimitBytesPerSecond",
+            ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             params.limitUpstreamBytesPerSecond.toString(),
         );
-        setInProxyParameters(params);
+        setInproxyParameters(params);
         try {
-            await ConduitModule.paramsChanged(
-                params.maxClients,
-                params.limitUpstreamBytesPerSecond,
-                params.limitDownstreamBytesPerSecond,
-                params.privateKey,
-            );
+            await ConduitModule.paramsChanged(params);
         } catch (error) {
             logErrorToDiagnostic(
                 new Error("ConduitModule.paramsChanged(...) failed"),
@@ -225,18 +231,18 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
             return;
         }
         timedLog(
-            "InProxy parameters selected successfully, ConduitModule.paramsChanged(...) invoked",
+            "Inproxy parameters selected successfully, ConduitModule.paramsChanged(...) invoked",
         );
     }
 
     // ConduitModule.toggleInProxy
-    async function toggleInProxy(): Promise<void> {
+    async function toggleInproxy(): Promise<void> {
         try {
             await ConduitModule.toggleInProxy(
-                inProxyParameters.maxClients,
-                inProxyParameters.limitUpstreamBytesPerSecond,
-                inProxyParameters.limitDownstreamBytesPerSecond,
-                inProxyParameters.privateKey,
+                inproxyParameters.maxClients,
+                inproxyParameters.limitUpstreamBytesPerSecond,
+                inproxyParameters.limitDownstreamBytesPerSecond,
+                inproxyParameters.privateKey,
             );
             timedLog(`ConduitModule.toggleInProxy(...) invoked`);
         } catch (error) {
@@ -248,8 +254,18 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
 
     // ConduitModule.sendFeedback
     async function sendFeedback(): Promise<void> {
+        // Log the public key before sending feedback to try to guarantee it'll
+        // be in the feedback logs.
+        let inproxyId: string;
+        if (conduitKeyPair.data) {
+            inproxyId = getProxyId(conduitKeyPair.data);
+        } else {
+            // Shouldn't really be possible to get here
+            inproxyId = "unknown";
+        }
+
         try {
-            const feedbackResult = await ConduitModule.sendFeedback();
+            const feedbackResult = await ConduitModule.sendFeedback(inproxyId);
             timedLog("ConduitModule.sendFeedback() invoked");
             if (!feedbackResult === null) {
                 timedLog(
@@ -269,20 +285,20 @@ export function InProxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     React.useEffect(() => {
-        loadInProxyParameters();
+        loadInproxyParameters();
     }, [conduitKeyPair.data]);
 
     const value = {
-        toggleInProxy,
+        toggleInproxy,
         sendFeedback,
-        inProxyParameters,
-        selectInProxyParameters,
+        inproxyParameters,
+        selectInproxyParameters,
         logErrorToDiagnostic,
     };
 
     return (
-        <InProxyContext.Provider value={value}>
+        <InproxyContext.Provider value={value}>
             {children}
-        </InProxyContext.Provider>
+        </InproxyContext.Provider>
     );
 }

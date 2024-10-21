@@ -18,7 +18,7 @@ import {
 } from "react-native-reanimated";
 
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
-import { useInProxyStatus } from "@/src/inproxy/hooks";
+import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { sharedStyles as ss } from "@/src/styles";
 
 export function LogoWordmark({
@@ -28,7 +28,7 @@ export function LogoWordmark({
     width: number;
     height: number;
 }) {
-    const { data: inProxyStatus } = useInProxyStatus();
+    const { data: inproxyStatus } = useInproxyStatus();
 
     const conduitWordMarkSvg = useSVG(
         require("@/assets/images/psiphon-conduit-wordmark.svg"),
@@ -40,9 +40,9 @@ export function LogoWordmark({
 
     // fadeIn on first load
     const fadeIn = useSharedValue(0);
-    if (inProxyStatus !== "UNKNOWN") {
+    if (inproxyStatus !== "UNKNOWN") {
         fadeIn.value = withDelay(
-            inProxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
+            inproxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
             withTiming(1, { duration: 2000 }),
         );
     }
