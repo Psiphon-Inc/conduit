@@ -3,7 +3,7 @@ import { NativeModules } from "react-native";
 import { InproxyParameters } from "@/src/inproxy/types";
 
 export interface ConduitModuleAPI {
-    toggleInproxy: (
+    toggleInProxy: (
         maxClients: number,
         limitUpstreamBytesPerSecond: number,
         limitDownstreamBytesPerSecond: number,

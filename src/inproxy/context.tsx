@@ -235,19 +235,19 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         );
     }
 
-    // ConduitModule.toggleInproxy
+    // ConduitModule.toggleInProxy
     async function toggleInproxy(): Promise<void> {
         try {
-            await ConduitModule.toggleInproxy(
+            await ConduitModule.toggleInProxy(
                 inproxyParameters.maxClients,
                 inproxyParameters.limitUpstreamBytesPerSecond,
                 inproxyParameters.limitDownstreamBytesPerSecond,
                 inproxyParameters.privateKey,
             );
-            timedLog(`ConduitModule.toggleInproxy(...) invoked`);
+            timedLog(`ConduitModule.toggleInProxy(...) invoked`);
         } catch (error) {
             logErrorToDiagnostic(
-                new Error("ConduitModule.toggleInproxy(...) failed"),
+                new Error("ConduitModule.toggleInProxy(...) failed"),
             );
         }
     }
