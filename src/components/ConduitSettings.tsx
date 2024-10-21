@@ -128,10 +128,14 @@ export function ConduitSettings() {
         selectInproxyParameters(newInproxyParameters.data);
     }
 
+    // onSettingsClose has different behaviour depending on whether there are
+    // pending changes to the settings, and if the inproxy is running or not.
     async function onSettingsClose() {
         applyChangesNoteOpacity.value = withTiming(0, { duration: 300 });
         if (changesPending.value) {
             if (inproxyStatus === "RUNNING") {
+                // Since applying changes restarts inproxy, connections will be
+                // lost, so we ask the user for confirmation about this.
                 setDisplayRestartConfirmation(true);
             } else {
                 await commitChanges();

@@ -120,7 +120,7 @@ export function EditableNumberSlider({
                 100,
             );
             circleCxPct.value =
-                newCircleCxPct + (circleR.value / usableWidth.value) * 100;
+                newCircleCxPct + 1 + (circleR.value / usableWidth.value) * 100;
             value.value =
                 min + Math.round((newCircleCxPct / 100) * (max - min));
             runOnJS(onChange)(value.value);
