@@ -19,7 +19,8 @@ RCT_EXTERN_METHOD(paramsChanged:(NSDictionary *)params
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(sendFeedback:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(sendFeedback:(NSString *)inproxyId
+                  withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(logInfo:(NSString *)tag

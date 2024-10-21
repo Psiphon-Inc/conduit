@@ -21,14 +21,17 @@ public struct Metadata : Codable {
     
     /// App name.
     let appName: String
+    
+    let inproxyId: String?
 
     @ISO1806MilliCodedDate var date: Date
     
-    init(id: String, appName: String, platform: String, date: Date) {
+    init(id: String, appName: String, platform: String, date: Date, inproxyId: String?) {
         self.id = id
         self.appName = appName
         self.platform = platform
         self.date = date
+        self.inproxyId = inproxyId
     }
     
     enum CodingKeys : String, CodingKey {
@@ -37,6 +40,7 @@ public struct Metadata : Codable {
         case platform = "platform"
         case appName = "appName"
         case date = "date!!timestamp"
+        case inproxyId = "inproxyID"
     }
     
 }

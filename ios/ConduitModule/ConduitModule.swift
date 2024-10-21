@@ -298,8 +298,9 @@ extension ConduitModule {
         }
     }
     
-    @objc(sendFeedback:withRejecter:)
+    @objc(sendFeedback:withResolver:withRejecter:)
     func sendFeedback(
+        _ inproxyId: String,
         resolve: @escaping RCTPromiseResolveBlock,
         reject: @escaping RCTPromiseRejectBlock
     ) {
@@ -335,7 +336,9 @@ extension ConduitModule {
                     id: feedbackId,
                     appName: "conduit",
                     platform: ClientPlatform.platformString,
-                    date: Date()),
+                    date: Date(),
+                    inproxyId: inproxyId
+                ),
                 feedback: nil,
                 diagnosticInfo: DiagnosticInfo(
                     systemInformation: SystemInformation(
