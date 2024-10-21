@@ -5,6 +5,10 @@ import * as SecureStore from "expo-secure-store";
 import React from "react";
 
 import {
+    ACCOUNT_KEYPAIR_QUERY_KEY,
+    INPROXY_KEYPAIR_QUERY_KEY,
+} from "@/src/auth/hooks";
+import {
     base64nopadToKeyPair,
     deriveEd25519KeyPair,
     keyPairToBase64nopad,
@@ -34,38 +38,86 @@ export function useAuthContext() {
     return value;
 }
 
+const SECURESTORE_MNEMONIC_KEY = "mnemonic";
+const SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY = "accountKeyPairBase64nopad";
+const SECURESTORE_DEVICE_NONCE_KEY = "deviceNonce";
+// TODO: change this, but it'll create new keys on existing clients
+const SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY = "conduitKeyPairBase64nopad";
+
 export function AuthProvider(props: React.PropsWithChildren) {
     const queryClient = useQueryClient();
 
     async function signIn() {
         try {
             let mnemonic: string;
-            // Load mnemonic from SecureStore
-            const storedMnemonic = await SecureStore.getItemAsync("mnemonic");
+            // Load mnemonic
+            const storedMnemonic = await SecureStore.getItemAsync(
+                SECURESTORE_MNEMONIC_KEY,
+            );
             if (!storedMnemonic) {
                 const newMnemonic = bip39.generateMnemonic(englishWordlist);
-                await SecureStore.setItemAsync("mnemonic", newMnemonic);
+                await SecureStore.setItemAsync(
+                    SECURESTORE_MNEMONIC_KEY,
+                    newMnemonic,
+                );
                 mnemonic = newMnemonic;
             } else {
                 mnemonic = storedMnemonic;
             }
 
-            // Load device nonce from SecureStore
+            // Load account key
+            const storedAccountKeyPairBase64nopad =
+                await SecureStore.getItemAsync(
+                    SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
+                );
+            if (!storedAccountKeyPairBase64nopad) {
+                const derived = deriveEd25519KeyPair(mnemonic);
+                if (derived instanceof Error) {
+                    throw derived;
+                }
+                const accountKeyPairBase64nopad = keyPairToBase64nopad(derived);
+                if (accountKeyPairBase64nopad instanceof Error) {
+                    throw derived;
+                }
+                await SecureStore.setItemAsync(
+                    SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
+                    accountKeyPairBase64nopad,
+                );
+                queryClient.setQueryData([ACCOUNT_KEYPAIR_QUERY_KEY], derived);
+            } else {
+                const storedAccountKeyPair = base64nopadToKeyPair(
+                    storedAccountKeyPairBase64nopad,
+                );
+                if (storedAccountKeyPair instanceof Error) {
+                    throw storedAccountKeyPair;
+                }
+                queryClient.setQueryData(
+                    [ACCOUNT_KEYPAIR_QUERY_KEY],
+                    storedAccountKeyPair,
+                );
+            }
+
+            // Load device nonce
             let deviceNonce: number;
-            const storedDeviceNonce =
-                await SecureStore.getItemAsync("deviceNonce");
+            const storedDeviceNonce = await SecureStore.getItemAsync(
+                SECURESTORE_DEVICE_NONCE_KEY,
+            );
             if (!storedDeviceNonce) {
                 const newDeviceNonce = Math.floor(Math.random() * 0x80000000);
                 await SecureStore.setItemAsync(
-                    "deviceNonce",
+                    SECURESTORE_DEVICE_NONCE_KEY,
                     newDeviceNonce.toString(),
                 );
                 deviceNonce = newDeviceNonce;
             } else {
                 deviceNonce = parseInt(storedDeviceNonce);
             }
+
+            // Load inproxy key
             const storedConduitKeyPairBase64nopad =
-                await SecureStore.getItemAsync("conduitKeyPairBase64nopad");
+                await SecureStore.getItemAsync(
+                    SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
+                );
             if (!storedConduitKeyPairBase64nopad) {
                 const derived = deriveEd25519KeyPair(
                     mnemonic,
@@ -74,15 +126,15 @@ export function AuthProvider(props: React.PropsWithChildren) {
                 if (derived instanceof Error) {
                     throw derived;
                 }
-                const conduitKeyPairBase64NoPad = keyPairToBase64nopad(derived);
-                if (conduitKeyPairBase64NoPad instanceof Error) {
-                    throw conduitKeyPairBase64NoPad;
+                const conduitKeyPairBase64nopad = keyPairToBase64nopad(derived);
+                if (conduitKeyPairBase64nopad instanceof Error) {
+                    throw conduitKeyPairBase64nopad;
                 }
                 await SecureStore.setItemAsync(
-                    "conduitKeyPairBase64nopad",
-                    conduitKeyPairBase64NoPad,
+                    SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
+                    conduitKeyPairBase64nopad,
                 );
-                queryClient.setQueryData(["conduitKeyPair"], derived);
+                queryClient.setQueryData([INPROXY_KEYPAIR_QUERY_KEY], derived);
             } else {
                 const storedConduitKeyPair = base64nopadToKeyPair(
                     storedConduitKeyPairBase64nopad,
@@ -91,7 +143,7 @@ export function AuthProvider(props: React.PropsWithChildren) {
                     throw storedConduitKeyPair;
                 }
                 queryClient.setQueryData(
-                    ["conduitKeyPair"],
+                    [INPROXY_KEYPAIR_QUERY_KEY],
                     storedConduitKeyPair,
                 );
             }
@@ -101,9 +153,14 @@ export function AuthProvider(props: React.PropsWithChildren) {
     }
 
     async function deleteAccount() {
-        await SecureStore.deleteItemAsync("mnemonic");
-        await SecureStore.deleteItemAsync("deviceNonce");
-        await SecureStore.deleteItemAsync("conduitKeyPairBase64nopad");
+        await SecureStore.deleteItemAsync(SECURESTORE_MNEMONIC_KEY);
+        await SecureStore.deleteItemAsync(
+            SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
+        );
+        await SecureStore.deleteItemAsync(SECURESTORE_DEVICE_NONCE_KEY);
+        await SecureStore.deleteItemAsync(
+            SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
+        );
     }
 
     const value = {
