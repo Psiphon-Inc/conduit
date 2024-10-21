@@ -260,7 +260,7 @@ extension ConduitModule {
         _ params: NSDictionary,
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) {
-        guard let maxClients = params["wrong"] as? Int,
+        guard let maxClients = params["maxClients"] as? Int,
             let limitUpstream = params["limitUpstreamBytesPerSecond"] as? Int,
             let limitDownstream = params["limitDownstreamBytesPerSecond"] as? Int,
             let privateKey = params["inProxyPrivateKey"] as? String? else {
