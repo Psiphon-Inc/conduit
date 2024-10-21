@@ -2,14 +2,14 @@ import { z } from "zod";
 
 import { Base64Unpadded64Bytes } from "@/src/common/validators";
 
-export const InProxyStatusEnumSchema = z.enum([
+export const InproxyStatusEnumSchema = z.enum([
     "RUNNING",
     "STOPPED",
     "UNKNOWN",
 ]);
 
 export const ProxyStateSchema = z.object({
-    status: InProxyStatusEnumSchema,
+    status: InproxyStatusEnumSchema,
     networkState: z.enum(["HAS_INTERNET", "NO_INTERNET"]).nullable(),
 });
 
@@ -21,7 +21,7 @@ export const ProxyErrorSchema = z.object({
     ]),
 });
 
-export const InProxyActivityDataByPeriodSchema = z.object({
+export const InproxyActivityDataByPeriodSchema = z.object({
     bytesUp: z.array(z.number()),
     bytesDown: z.array(z.number()),
     connectingClients: z.array(z.number()),
@@ -29,48 +29,48 @@ export const InProxyActivityDataByPeriodSchema = z.object({
     numBuckets: z.number(),
 });
 
-export const InProxyActivityStatsSchema = z.object({
+export const InproxyActivityStatsSchema = z.object({
     elapsedTime: z.number(),
     totalBytesUp: z.number(),
     totalBytesDown: z.number(),
     currentConnectingClients: z.number(),
     currentConnectedClients: z.number(),
     dataByPeriod: z.object({
-        "1000ms": InProxyActivityDataByPeriodSchema,
+        "1000ms": InproxyActivityDataByPeriodSchema,
     }),
 });
 
-export const InProxyEventSchema = z.object({
+export const InproxyEventSchema = z.object({
     type: z.enum(["proxyState", "proxyError", "inProxyActivityStats"]),
     data: z.union([
         ProxyStateSchema,
         ProxyErrorSchema,
-        InProxyActivityStatsSchema,
+        InproxyActivityStatsSchema,
     ]),
 });
 
 // These are the user-configurable parameters for the inproxy.
-export const InProxyParametersSchema = z.object({
+export const InproxyParametersSchema = z.object({
     privateKey: Base64Unpadded64Bytes,
     maxClients: z.number().int().positive(),
     limitUpstreamBytesPerSecond: z.number().int().positive(),
     limitDownstreamBytesPerSecond: z.number().int().positive(),
 });
 
-export type InProxyParameters = z.infer<typeof InProxyParametersSchema>;
-export type InProxyStatusEnum = z.infer<typeof InProxyStatusEnumSchema>;
+export type InproxyParameters = z.infer<typeof InproxyParametersSchema>;
+export type InproxyStatusEnum = z.infer<typeof InproxyStatusEnumSchema>;
 export type ProxyState = z.infer<typeof ProxyStateSchema>;
 export type ProxyError = z.infer<typeof ProxyErrorSchema>;
-export type InProxyActivityStats = z.infer<typeof InProxyActivityStatsSchema>;
-export type InProxyActivityByPeriod = z.infer<
-    typeof InProxyActivityDataByPeriodSchema
+export type InproxyActivityStats = z.infer<typeof InproxyActivityStatsSchema>;
+export type InproxyActivityByPeriod = z.infer<
+    typeof InproxyActivityDataByPeriodSchema
 >;
-export type InProxyEvent = z.infer<typeof InProxyEventSchema>;
+export type InproxyEvent = z.infer<typeof InproxyEventSchema>;
 
-export interface InProxyContextValue {
-    toggleInProxy: () => Promise<void>;
+export interface InproxyContextValue {
+    toggleInproxy: () => Promise<void>;
     sendFeedback: () => Promise<void>;
-    inProxyParameters: InProxyParameters;
-    selectInProxyParameters: (params: InProxyParameters) => Promise<void>;
+    inProxyParameters: InproxyParameters;
+    selectInproxyParameters: (params: InproxyParameters) => Promise<void>;
     logErrorToDiagnostic: (error: Error) => void;
 }

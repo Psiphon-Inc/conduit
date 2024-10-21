@@ -1,63 +1,63 @@
 import { DefinedUseQueryResult, useQuery } from "@tanstack/react-query";
 
 import {
-    InProxyActivityByPeriod,
-    InProxyStatusEnum,
+    InproxyActivityByPeriod,
+    InproxyStatusEnum,
 } from "@/src/inproxy/types";
-import { getZeroedInProxyActivityStats } from "@/src/inproxy/utils";
+import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
 
 // These useQuery hooks are used to cache the data emitted by the ConduitModule.
 // Note that each queryFn is an empty function, this is because the data cached
-// is controlled by the InProxyContext. Anything the ConduitModule emits that we
+// is controlled by the InproxyContext. Anything the ConduitModule emits that we
 // want to track or share throughout the app should have an associated hook.
 
-export const useInProxyStatus = (): DefinedUseQueryResult<InProxyStatusEnum> =>
+export const useInproxyStatus = (): DefinedUseQueryResult<InproxyStatusEnum> =>
     useQuery({
-        queryKey: ["inProxyStatus"],
+        queryKey: ["inproxyStatus"],
         queryFn: () => undefined,
         initialData: "UNKNOWN",
         enabled: false,
     });
 
-export const useInProxyActivityBy1000ms =
-    (): DefinedUseQueryResult<InProxyActivityByPeriod> =>
+export const useInproxyActivityBy1000ms =
+    (): DefinedUseQueryResult<InproxyActivityByPeriod> =>
         useQuery({
-            queryKey: ["inProxyActivityBy1000ms"],
+            queryKey: ["inproxyActivityBy1000ms"],
             queryFn: () => undefined,
-            initialData: getZeroedInProxyActivityStats().dataByPeriod["1000ms"],
+            initialData: getZeroedInproxyActivityStats().dataByPeriod["1000ms"],
             enabled: false,
         });
 
-export const useInProxyCurrentConnectedClients =
+export const useInproxyCurrentConnectedClients =
     (): DefinedUseQueryResult<number> =>
         useQuery({
-            queryKey: ["inProxyCurrentConnectedClients"],
+            queryKey: ["inproxyCurrentConnectedClients"],
             queryFn: () => undefined,
             initialData: 0,
             enabled: false,
         });
 
-export const useInProxyCurrentConnectingClients =
+export const useInproxyCurrentConnectingClients =
     (): DefinedUseQueryResult<number> =>
         useQuery({
-            queryKey: ["inProxyCurrentConnectingClients"],
+            queryKey: ["inproxyCurrentConnectingClients"],
             queryFn: () => undefined,
             initialData: 0,
             enabled: false,
         });
 
-export const useInProxyTotalBytesTransferred =
+export const useInproxyTotalBytesTransferred =
     (): DefinedUseQueryResult<number> =>
         useQuery({
-            queryKey: ["inProxyTotalBytesTransferred"],
+            queryKey: ["inproxyTotalBytesTransferred"],
             queryFn: () => undefined,
             initialData: 0,
             enabled: false,
         });
 
-export const useInProxyMustUpgrade = (): DefinedUseQueryResult<boolean> =>
+export const useInproxyMustUpgrade = (): DefinedUseQueryResult<boolean> =>
     useQuery({
-        queryKey: ["inProxyMustUpgrade"],
+        queryKey: ["inproxyMustUpgrade"],
         queryFn: () => undefined,
         initialData: false,
         enabled: false,

@@ -11,19 +11,19 @@ import {
     DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
 import {
-    InProxyActivityStats,
-    InProxyActivityStatsSchema,
-    InProxyParameters,
-    InProxyParametersSchema,
+    InproxyActivityStats,
+    InproxyActivityStatsSchema,
+    InproxyParameters,
+    InproxyParametersSchema,
 } from "@/src/inproxy/types";
 
-export function getDefaultInProxyParameters(): InProxyParameters {
+export function getDefaultInproxyParameters(): InproxyParameters {
     const ephemeralKey = {
         privateKey: new Uint8Array(32),
         publicKey: new Uint8Array(32),
     };
 
-    return InProxyParametersSchema.parse({
+    return InproxyParametersSchema.parse({
         privateKey: keyPairToBase64nopad(ephemeralKey),
         maxClients: DEFAULT_INPROXY_MAX_CLIENTS,
         limitUpstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
@@ -31,8 +31,8 @@ export function getDefaultInProxyParameters(): InProxyParameters {
     });
 }
 
-export function getZeroedInProxyActivityStats(): InProxyActivityStats {
-    return InProxyActivityStatsSchema.parse({
+export function getZeroedInproxyActivityStats(): InproxyActivityStats {
+    return InproxyActivityStatsSchema.parse({
         elapsedTime: 0,
         totalBytesUp: 0,
         totalBytesDown: 0,
@@ -65,7 +65,7 @@ export function formatConduitBip32Path(deviceNonce: number): string {
 
 /**
  * Get the base64 nopad encoding of the X25519 public key representation of the
- * Ed25519 InProxy key pair, recorded as proxy_id by psiphond.
+ * Ed25519 Inproxy key pair, recorded as proxy_id by psiphond.
  */
 export function getProxyId(conduitKeyPair: Ed25519KeyPair): string {
     return base64nopad.encode(edwardsToMontgomeryPub(conduitKeyPair.publicKey));

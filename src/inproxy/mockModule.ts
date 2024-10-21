@@ -3,17 +3,17 @@ import { NativeEventEmitter } from "react-native";
 
 import { timedLog } from "@/src/common/utils";
 import { ConduitModuleAPI } from "@/src/inproxy/module";
-import { InProxyActivityStats } from "@/src/inproxy/types";
-import { getZeroedInProxyActivityStats } from "@/src/inproxy/utils";
+import { InproxyActivityStats } from "@/src/inproxy/types";
+import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function* generateMockData(
     maxClients: number,
     limitBandwidth: number,
-): AsyncGenerator<InProxyActivityStats> {
+): AsyncGenerator<InproxyActivityStats> {
     // initial empty data, representing no usage
     // TODO: this is a crappy way to clone
-    const data = getZeroedInProxyActivityStats();
+    const data = getZeroedInproxyActivityStats();
 
     async function doTick() {
         // shift every array to drop the first value
@@ -104,7 +104,7 @@ class ConduitModuleMock {
     private nativeEventEmitter: NativeEventEmitter;
 
     constructor() {
-        AsyncStorage.getItem("MockInProxyRunning").then(
+        AsyncStorage.getItem("MockInproxyRunning").then(
             (wasRunning: string | null) => {
                 if (wasRunning === "1") {
                     this.running = true;
@@ -144,7 +144,7 @@ class ConduitModuleMock {
         }
         this.nativeEventEmitter.emit("ConduitEvent", {
             type: "inProxyActivityStats",
-            data: getZeroedInProxyActivityStats(),
+            data: getZeroedInproxyActivityStats(),
         });
     }
     private async stopMockData() {
@@ -182,18 +182,18 @@ class ConduitModuleMock {
         console.error(`MOCK: ConduitModuleMock.logError TAG=${tag} msg=${msg}`);
     }
 
-    public async toggleInProxy(
+    public async toggleInproxy(
         maxClients: number,
         limitUpstreamBytesPerSecond: number,
         limitDownstreamBytesPerSecond: number,
         _: string,
     ) {
         timedLog(
-            `MOCK: ConduitModule.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
+            `MOCK: ConduitModule.toggleInproxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.running = !this.running;
         await AsyncStorage.setItem(
-            "MockInProxyRunning",
+            "MockInproxyRunning",
             this.running ? "1" : "0",
         );
         this.emitState();
@@ -219,13 +219,13 @@ class ConduitModuleMock {
         );
         this.emitState();
         if (this.running) {
-            await this.toggleInProxy(
+            await this.toggleInproxy(
                 maxClients,
                 limitUpstreamBytesPerSecond,
                 limitDownstreamBytesPerSecond,
                 privateKey,
             );
-            await this.toggleInProxy(
+            await this.toggleInproxy(
                 maxClients,
                 limitUpstreamBytesPerSecond,
                 limitDownstreamBytesPerSecond,
