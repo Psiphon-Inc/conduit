@@ -179,7 +179,7 @@ final class ConduitModule: RCTEventEmitter {
     let psiphonInfo: PsiphonInfo
     
     override init() {
-        dispatchQueue = DispatchQueue(label: "ca.psiphon.ryve.psiphonVpnModule", qos: .default)
+        dispatchQueue = DispatchQueue(label: "ca.psiphon.conduit.module", qos: .default)
         self.psiphonInfo = try! readPsiphonInfo()
         super.init()
         

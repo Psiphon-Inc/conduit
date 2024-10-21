@@ -240,7 +240,7 @@ func generateRandomBytes(count: Int) -> [UInt8]? {
 func generateFeedbackId() throws -> String {
     let numBytes = 8
     guard let randomBytes = generateRandomBytes(count: numBytes) else {
-        throw Err("Failed to genearte random bytes")
+        throw Err("Failed to generate random bytes")
     }
     // Convert the random bytes into a hex string
     let feedbackID = randomBytes.map { String(format: "%02hhX", $0) }.joined()
