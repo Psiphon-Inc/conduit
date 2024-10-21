@@ -223,7 +223,7 @@ extension ConduitModule {
     
     @objc(toggleInProxy:limitUpstream:limitDownstream:privateKey:withResolver:withRejecter:)
     func toggleInProxy(
-        _ maxClients: Int, limitUpstream: Int, limitDownsteram: Int, privateKey: String?,
+        _ maxClients: Int, limitUpstream: Int, limitDownstream: Int, privateKey: String?,
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) {
         Task {
@@ -232,7 +232,7 @@ extension ConduitModule {
                 let params = ConduitParams(
                     maxClients: maxClients,
                     limitUpstream: limitUpstream,
-                    limitDownstream: limitDownsteram,
+                    limitDownstream: limitDownstream,
                     privateKey: privateKey
                 )
                 do {
@@ -255,12 +255,20 @@ extension ConduitModule {
         }
     }
 
-    @objc(paramsChanged:limitUpstream:limitDownstream:privateKey:withResolver:withRejecter:)
+    @objc(paramsChanged:withResolver:withRejecter:)
     func paramsChanged(
-        _ maxClients: Int, limitUpstream: Int, limitDownsteram: Int, privateKey: String?,
+        _ params: NSDictionary,
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) {
-        Task {
+        guard let maxClients = params["wrong"] as? Int,
+            let limitUpstream = params["limitUpstreamBytesPerSecond"] as? Int,
+            let limitDownstream = params["limitDownstreamBytesPerSecond"] as? Int,
+            let privateKey = params["inProxyPrivateKey"] as? String? else {
+                reject("error", "Did not receive four valid key value pairs from params.", nil)
+                return
+            }
+        
+        Task {   
             switch await self.conduitManager.conduitStatus {
             case .stopping, .stopped:
                 // no-op
@@ -274,9 +282,9 @@ extension ConduitModule {
                 let params = ConduitParams(
                     maxClients: maxClients,
                     limitUpstream: limitUpstream,
-                    limitDownstream: limitDownsteram,
+                    limitDownstream: limitDownstream,
                     privateKey: privateKey
-                )
+                ) 
                 do {
                     let success = try await self.conduitManager.startConduit(params)
                     if !success {
