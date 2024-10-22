@@ -63,7 +63,10 @@ struct ActivitySeries: Equatable {
         if elapsedBucketCount > numBuckets {
             elapsedBucketCount = numBuckets
         }
-        (1...elapsedBucketCount).forEach { _ in pushDataPoints(0, 0, 0, 0) }
+        
+        if elapsedBucketCount > 0 {
+            (1...elapsedBucketCount).forEach { _ in pushDataPoints(0, 0, 0, 0) }
+        }
         
         pushDataPoints(
             bytesUp, bytesDown,
