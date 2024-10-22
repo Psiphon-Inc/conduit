@@ -1,17 +1,8 @@
-import * as bip39 from "@scure/bip39";
-import { wordlist as englishWordlist } from "@scure/bip39/wordlists/english";
 import { useQueryClient } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
 
-import {
-    base64nopadToKeyPair,
-    deriveEd25519KeyPair,
-    keyPairToBase64nopad,
-} from "@/src/common/cryptography";
-import { wrapError } from "@/src/common/errors";
-import { formatConduitBip32Path } from "@/src/inproxy/utils";
-
+import { createOrLoadAccount } from "@/src/auth/account";
 import {
     QUERYKEY_ACCOUNT_KEYPAIR,
     QUERYKEY_INPROXY_KEYPAIR,
@@ -22,7 +13,7 @@ import {
 } from "@/src/constants";
 
 export interface AuthContextValue {
-    signIn: () => Promise<null | Error>;
+    signIn: () => Promise<void | Error>;
     deleteAccount: () => void;
 }
 
@@ -47,108 +38,21 @@ export function AuthProvider(props: React.PropsWithChildren) {
     const queryClient = useQueryClient();
 
     async function signIn() {
-        try {
-            let mnemonic: string;
-            // Load mnemonic
-            const storedMnemonic = await SecureStore.getItemAsync(
-                SECURESTORE_MNEMONIC_KEY,
-            );
-            if (!storedMnemonic) {
-                const newMnemonic = bip39.generateMnemonic(englishWordlist);
-                await SecureStore.setItemAsync(
-                    SECURESTORE_MNEMONIC_KEY,
-                    newMnemonic,
-                );
-                mnemonic = newMnemonic;
-            } else {
-                mnemonic = storedMnemonic;
-            }
+        const account = await createOrLoadAccount();
 
-            // Load account key
-            const storedAccountKeyPairBase64nopad =
-                await SecureStore.getItemAsync(
-                    SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
-                );
-            if (!storedAccountKeyPairBase64nopad) {
-                const derived = deriveEd25519KeyPair(mnemonic);
-                if (derived instanceof Error) {
-                    throw derived;
-                }
-                const accountKeyPairBase64nopad = keyPairToBase64nopad(derived);
-                if (accountKeyPairBase64nopad instanceof Error) {
-                    throw derived;
-                }
-                await SecureStore.setItemAsync(
-                    SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
-                    accountKeyPairBase64nopad,
-                );
-                queryClient.setQueryData([QUERYKEY_ACCOUNT_KEYPAIR], derived);
-            } else {
-                const storedAccountKeyPair = base64nopadToKeyPair(
-                    storedAccountKeyPairBase64nopad,
-                );
-                if (storedAccountKeyPair instanceof Error) {
-                    throw storedAccountKeyPair;
-                }
-                queryClient.setQueryData(
-                    [QUERYKEY_ACCOUNT_KEYPAIR],
-                    storedAccountKeyPair,
-                );
-            }
-
-            // Load device nonce
-            let deviceNonce: number;
-            const storedDeviceNonce = await SecureStore.getItemAsync(
-                SECURESTORE_DEVICE_NONCE_KEY,
-            );
-            if (!storedDeviceNonce) {
-                const newDeviceNonce = Math.floor(Math.random() * 0x80000000);
-                await SecureStore.setItemAsync(
-                    SECURESTORE_DEVICE_NONCE_KEY,
-                    newDeviceNonce.toString(),
-                );
-                deviceNonce = newDeviceNonce;
-            } else {
-                deviceNonce = parseInt(storedDeviceNonce);
-            }
-
-            // Load inproxy key
-            const storedConduitKeyPairBase64nopad =
-                await SecureStore.getItemAsync(
-                    SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
-                );
-            if (!storedConduitKeyPairBase64nopad) {
-                const derived = deriveEd25519KeyPair(
-                    mnemonic,
-                    formatConduitBip32Path(deviceNonce),
-                );
-                if (derived instanceof Error) {
-                    throw derived;
-                }
-                const conduitKeyPairBase64nopad = keyPairToBase64nopad(derived);
-                if (conduitKeyPairBase64nopad instanceof Error) {
-                    throw conduitKeyPairBase64nopad;
-                }
-                await SecureStore.setItemAsync(
-                    SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
-                    conduitKeyPairBase64nopad,
-                );
-                queryClient.setQueryData([QUERYKEY_INPROXY_KEYPAIR], derived);
-            } else {
-                const storedConduitKeyPair = base64nopadToKeyPair(
-                    storedConduitKeyPairBase64nopad,
-                );
-                if (storedConduitKeyPair instanceof Error) {
-                    throw storedConduitKeyPair;
-                }
-                queryClient.setQueryData(
-                    [QUERYKEY_INPROXY_KEYPAIR],
-                    storedConduitKeyPair,
-                );
-            }
-        } catch (error) {
-            return wrapError(error, "Error signing in");
+        if (account instanceof Error) {
+            return account;
         }
+
+        // expose the account keys to the rest of the app through useQuery
+        queryClient.setQueryData(
+            [QUERYKEY_ACCOUNT_KEYPAIR],
+            account.accountKey,
+        );
+        queryClient.setQueryData(
+            [QUERYKEY_INPROXY_KEYPAIR],
+            account.inproxyKey,
+        );
     }
 
     async function deleteAccount() {
@@ -160,6 +64,8 @@ export function AuthProvider(props: React.PropsWithChildren) {
         await SecureStore.deleteItemAsync(
             SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
         );
+        queryClient.setQueryData([QUERYKEY_ACCOUNT_KEYPAIR], null);
+        queryClient.setQueryData([QUERYKEY_INPROXY_KEYPAIR], null);
     }
 
     const value = {
