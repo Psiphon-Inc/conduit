@@ -10,7 +10,8 @@
     "test": "jest --verbose",
     "format": "prettier --write ./src",
     "tsc": "tsc --noUnusedLocals --noUnusedParameters",
-    "check": "jest && prettier --check ./src && tsc --noUnusedLocals --noUnusedParameters"
+    "check": "jest && prettier --check ./src && tsc --noUnusedLocals --noUnusedParameters",
+    "dev-server": "expo start"
   },
   "jest": {
     "preset": "jest-expo",

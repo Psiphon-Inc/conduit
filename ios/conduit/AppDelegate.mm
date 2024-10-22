@@ -23,8 +23,8 @@
     }
     UISceneSizeRestrictions *sizeRestrictions = self.window.windowScene.sizeRestrictions;
     sizeRestrictions.allowsFullScreen = false;
-    sizeRestrictions.maximumSize = CGSizeMake(468, 736);
-    sizeRestrictions.minimumSize = CGSizeMake(468, 736);
+    sizeRestrictions.maximumSize = CGSizeMake(540, 900);
+    sizeRestrictions.minimumSize = CGSizeMake(540, 900);
   }
   
   return result;
