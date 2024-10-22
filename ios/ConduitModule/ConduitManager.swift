@@ -105,7 +105,7 @@ struct ActivityStats: Equatable {
         self.currentConnectingClients = connectingClients
         self.currentConnectedClients = connectedClients
 
-        // round to nearest second to absorb minor timing gaps
+        // Round to nearest second to absorb minor timing gaps.
         let msSinceUpdate = UInt64(round(now - lastUpdate)) * 1000
         
         self.seriesFast.updateSeries(
