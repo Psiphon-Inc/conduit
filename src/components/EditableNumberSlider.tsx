@@ -59,14 +59,16 @@ export function EditableNumberSlider({
         return canvasSize.value.width - circleR.value * 2;
     });
     const prevCircleCxPct = useSharedValue(0);
-    const circleCxPct = useSharedValue(Math.round((value.value / max) * 100));
+    const circleCxPct = useSharedValue(
+        Math.round(value.value / (max - min)) * 100,
+    );
     const circleCx = useDerivedValue(() => {
-        return (
-            circleR.value +
-            outlineWidth.value * 2 +
-            (circleCxPct.value / 100) *
-                (usableWidth.value - (circleR.value * 2 + 1))
-        );
+        // offset circleX by 2x circleR so that it fits nicely in the bar
+        const effectiveUsableWidth = usableWidth.value - circleR.value * 2;
+        const newValue =
+            circleR.value * 2 +
+            (circleCxPct.value / 100) * effectiveUsableWidth;
+        return newValue;
     });
     const circleCy = useDerivedValue(() => {
         return canvasSize.value.height / 2;
@@ -119,8 +121,7 @@ export function EditableNumberSlider({
                 0,
                 100,
             );
-            circleCxPct.value =
-                newCircleCxPct + 1 + (circleR.value / usableWidth.value) * 100;
+            circleCxPct.value = newCircleCxPct;
             value.value =
                 min + Math.round((newCircleCxPct / 100) * (max - min));
             runOnJS(onChange)(value.value);

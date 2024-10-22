@@ -1,4 +1,5 @@
 // NOTE: this whole file is copied from @shopify/react-native-skia, see TODO
+
 import { useEffect } from "react";
 
 import {
@@ -69,7 +70,6 @@ export const useAnimatedImageValue = (
         return () => {
             animatedImage?.dispose();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return currentFrame;
 };

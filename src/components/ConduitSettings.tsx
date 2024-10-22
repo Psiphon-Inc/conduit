@@ -37,7 +37,7 @@ import { ProxyID } from "@/src/components/ProxyID";
 import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
 import {
     INPROXY_MAX_CLIENTS_MAX,
-    INPROXY_MAX_MBPS_PER_PEER,
+    INPROXY_MAX_MBPS_PER_PEER_MAX,
     PARTICLE_VIDEO_DELAY_MS,
 } from "@/src/constants";
 import { useInproxyContext } from "@/src/inproxy/context";
@@ -224,7 +224,7 @@ export function ConduitSettings() {
                                 inproxyParameters.limitUpstreamBytesPerSecond,
                             )}
                             min={8}
-                            max={INPROXY_MAX_MBPS_PER_PEER}
+                            max={INPROXY_MAX_MBPS_PER_PEER_MAX}
                             style={[...lineItemStyle, ss.alignCenter]}
                             onChange={updateInproxyLimitBytesPerSecond}
                         />
