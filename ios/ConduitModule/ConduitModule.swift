@@ -176,11 +176,8 @@ final class ConduitModule: RCTEventEmitter {
     // Note that using `.sync` and targeting the same queue will result in a deadlock.
     let dispatchQueue: dispatch_queue_t
 
-    let psiphonInfo: PsiphonInfo
-    
     override init() {
         dispatchQueue = DispatchQueue(label: "ca.psiphon.conduit.module", qos: .default)
-        self.psiphonInfo = try! readPsiphonInfo()
         super.init()
         
         conduitManager = ConduitManager(listener: self)
@@ -330,21 +327,37 @@ extension ConduitModule {
             // Prepare Feedback Diagnostic Report
             
             let feedbackId = try generateFeedbackId()
+            Logger.conduitModule.info("Preparing feedback report with ID = \(feedbackId, privacy: .public)")
+            
+            let psiphonConfig = try defaultPsiphonConfig()
+            
+            guard
+                let propagationChannelId = psiphonConfig["PropagationChannelId"] as? String,
+                let sponsorId = psiphonConfig["SponsorId"] as? String
+            else {
+                throw Err("psiphon config is missing PropagationChannelId or SponsorId")
+            }
+            
+            let psiphonInfo =  PsiphonInfo(
+                clientVersion: getClientVersion(),
+                propagationChannelId: propagationChannelId,
+                sponsorId: sponsorId,
+                inproxyId: inproxyId
+            )
             
             let report = FeedbackDiagnosticReport(
                 metadata: Metadata(
                     id: feedbackId,
                     appName: "conduit",
                     platform: ClientPlatform.platformString,
-                    date: Date(),
-                    inproxyId: inproxyId
+                    date: Date()
                 ),
                 feedback: nil,
                 diagnosticInfo: DiagnosticInfo(
                     systemInformation: SystemInformation(
                         build: DeviceInfo.gatherDeviceInfo(device: .current),
                         tunnelCoreBuildInfo: PsiphonTunnel.getBuildInfo(),
-                        psiphonInfo: self.psiphonInfo,
+                        psiphonInfo: psiphonInfo,
                         isAppStoreBuild: true,
                         isJailbroken: false,
                         language: getLanguageMinimalIdentifier(),
@@ -361,7 +374,7 @@ extension ConduitModule {
                 do {
                     try await FeedbackUploadService.live.startUpload(
                         data: json,
-                        psiphonConfig: defaultPsiphonConfig(),
+                        psiphonConfig: psiphonConfig,
                         uploadPath: "")
                     
                     resolve(nil)
@@ -457,21 +470,4 @@ extension ConduitModule: FeedbackUploadService.Listener {
         Logger.feedbackUploadService.info("DiagnosticMessage: \(timestamp, privacy: .public) \(message, privacy: .public)")
     }
     
-}
-
-func readPsiphonInfo() throws -> PsiphonInfo {
-    let config = try readPsiphonConfig()
-    
-    guard let propagationChannelId = config["PropagationChannelId"] as? String else {
-        throw Err("psiphon config is missing PropagationChannelId")
-    }
-    guard let sponsorId = config["SponsorId"] as? String else {
-        throw Err("psiphon config is missing SponsorId")
-    }
-    
-    return PsiphonInfo(
-        clientVersion: getClientVersion(),
-        propagationChannelId: propagationChannelId,
-        sponsorId: sponsorId
-    )
 }

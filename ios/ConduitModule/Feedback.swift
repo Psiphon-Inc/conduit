@@ -22,16 +22,13 @@ public struct Metadata : Codable {
     /// App name.
     let appName: String
     
-    let inproxyId: String?
-
     @ISO1806MilliCodedDate var date: Date
     
-    init(id: String, appName: String, platform: String, date: Date, inproxyId: String?) {
+    init(id: String, appName: String, platform: String, date: Date) {
         self.id = id
         self.appName = appName
         self.platform = platform
         self.date = date
-        self.inproxyId = inproxyId
     }
     
     enum CodingKeys : String, CodingKey {
@@ -40,21 +37,22 @@ public struct Metadata : Codable {
         case platform = "platform"
         case appName = "appName"
         case date = "date!!timestamp"
-        case inproxyId = "inproxyID"
     }
     
 }
 
 public struct PsiphonInfo : Codable {
     
-    let clientVersion: String
-    let propagationChannelId: String
-    let sponsorId: String
+    let clientVersion: String?
+    let propagationChannelId: String?
+    let sponsorId: String?
+    let inproxyId: String?
     
     enum CodingKeys : String, CodingKey {
         case clientVersion = "CLIENT_VERSION"
         case propagationChannelId = "PROPAGATION_CHANNEL_ID"
         case sponsorId = "SPONSOR_ID"
+        case inproxyId = "INPROXY_ID"
     }
     
 }
