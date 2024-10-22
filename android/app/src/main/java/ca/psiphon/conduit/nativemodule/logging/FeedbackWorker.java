@@ -119,7 +119,6 @@ public class FeedbackWorker extends RxWorker {
     metadata.put("id", feedbackId);
     metadata.put("date!!timestamp", LogUtils.getRfc3339Timestamp(feedbackTimestamp));
     metadata.put("appName", "conduit");
-    metadata.put("inproxyID", inproxyId);
 
     // Add the metadata to the top level json object
     feedbackJsonObject.put("Metadata", metadata);
@@ -175,6 +174,7 @@ public class FeedbackWorker extends RxWorker {
     psiphonInfo.put("SPONSOR_ID", psiphonConfigJson.optString("SponsorId"));
     // Also add CLIENT_VERSION to Psiphon info for backward compatibility
     psiphonInfo.put("CLIENT_VERSION", versionCodeString);
+    psiphonInfo.put("INPROXY_ID", inproxyId);
 
 
     // Add Psiphon information to the top level json object
