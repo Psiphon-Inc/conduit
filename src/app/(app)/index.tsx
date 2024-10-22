@@ -19,7 +19,6 @@ export default function HomeScreen() {
     const totalUsableWidth = win.width - insets.left - insets.right;
     const logoWordmarkHeight = totalUsableHeight * 0.1;
     const conduitOrbToggleHeight = totalUsableHeight - logoWordmarkHeight;
-    // orb scene takes up a square of with dimensions = width
     const conduitStatusHeight =
         totalUsableHeight - totalUsableWidth - logoWordmarkHeight;
 

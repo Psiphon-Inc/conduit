@@ -37,6 +37,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { drawBigFont } from "@/src/common/utils";
+import { LearnMoreLink } from "@/src/components/LearnMoreLink";
 import { useNotificationsPermissions } from "@/src/components/NotificationsStatus";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
@@ -106,6 +107,15 @@ export default function OnboardingScreen() {
     ];
 
     const currentView = useSharedValue(0);
+    const learnMoreLinkStyle = useAnimatedStyle(() => {
+        return currentView.value === 1
+            ? {
+                  display: "flex",
+              }
+            : {
+                  display: "none",
+              };
+    });
     const privacyPolicyLinkStyle = useAnimatedStyle(() => {
         return currentView.value === 2
             ? {
@@ -451,6 +461,14 @@ export default function OnboardingScreen() {
                     />
                 </GestureDetector>
             </GestureHandlerRootView>
+            <Animated.View style={{ opacity: everythingOpacity }}>
+                <Animated.View style={learnMoreLinkStyle}>
+                    <LearnMoreLink
+                        textStyle={{ ...ss.boldFont, ...ss.whiteText }}
+                        containerHeight={privacyPolicyHeight}
+                    />
+                </Animated.View>
+            </Animated.View>
             <Animated.View style={{ opacity: everythingOpacity }}>
                 <Animated.View style={privacyPolicyLinkStyle}>
                     <PrivacyPolicyLink

@@ -155,5 +155,8 @@
     },
     "WAITING_FOR_PEERS_I18N": {
         "string": "Waiting for peers"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "Learn More"
     }
 }

@@ -31,61 +31,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
-function Orb({ cx, cy, r }: { cx: number; cy: number; r: number }) {
-    const win = useWindowDimensions();
-
-    const fullHeight = win.height; // + insets.top + insets.bottom;
-
-    const radius = useSharedValue(0);
-    const shadowPos = useDerivedValue(() => {
-        return radius.value / 5;
-    });
-    const shadowNeg = useDerivedValue(() => {
-        return -radius.value / 5;
-    });
-    const shadowBlur = (r / 80) * 10;
-
-    const computedelayMs = fullHeight - cy + cx * 4;
-
-    React.useEffect(() => {
-        radius.value = withDelay(
-            computedelayMs,
-            withSpring(r, {
-                mass: 1.2,
-                damping: 10,
-                stiffness: 100,
-                restDisplacementThreshold: 0.01,
-                restSpeedThreshold: 2,
-            }),
-        );
-    }, []);
-
-    return (
-        <Circle cx={cx} cy={cy} r={radius}>
-            <Shadow
-                dx={shadowPos}
-                dy={shadowPos}
-                blur={shadowBlur}
-                color={palette.purple}
-                inner
-            />
-            <Shadow
-                dx={shadowNeg}
-                dy={shadowNeg}
-                blur={shadowBlur}
-                color={palette.blue}
-                inner
-            />
-            <RadialGradient
-                c={vec(cx, cy)}
-                r={radius}
-                colors={[palette.redShade3, palette.black]}
-            />
-            <Blur blur={Math.floor((cy * 2) / fullHeight) * 1} />
-        </Circle>
-    );
-}
-
 export default function IntroScreen() {
     const win = useWindowDimensions();
     const insets = useSafeAreaInsets();
@@ -186,5 +131,60 @@ export default function IntroScreen() {
                 </Group>
             </Canvas>
         </View>
+    );
+}
+
+function Orb({ cx, cy, r }: { cx: number; cy: number; r: number }) {
+    const win = useWindowDimensions();
+
+    const fullHeight = win.height;
+
+    const radius = useSharedValue(0);
+    const shadowPos = useDerivedValue(() => {
+        return radius.value / 5;
+    });
+    const shadowNeg = useDerivedValue(() => {
+        return -radius.value / 5;
+    });
+    const shadowBlur = (r / 80) * 10;
+
+    const computedelayMs = fullHeight - cy + cx * 4;
+
+    React.useEffect(() => {
+        radius.value = withDelay(
+            computedelayMs,
+            withSpring(r, {
+                mass: 1.2,
+                damping: 10,
+                stiffness: 100,
+                restDisplacementThreshold: 0.01,
+                restSpeedThreshold: 2,
+            }),
+        );
+    }, []);
+
+    return (
+        <Circle cx={cx} cy={cy} r={radius}>
+            <Shadow
+                dx={shadowPos}
+                dy={shadowPos}
+                blur={shadowBlur}
+                color={palette.purple}
+                inner
+            />
+            <Shadow
+                dx={shadowNeg}
+                dy={shadowNeg}
+                blur={shadowBlur}
+                color={palette.blue}
+                inner
+            />
+            <RadialGradient
+                c={vec(cx, cy)}
+                r={radius}
+                colors={[palette.redShade3, palette.black]}
+            />
+            <Blur blur={Math.floor((cy * 2) / fullHeight) * 1} />
+        </Circle>
     );
 }

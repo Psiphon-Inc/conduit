@@ -36,6 +36,7 @@ import { AnimatedText } from "@/src/components/AnimatedText";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
 import { Icon } from "@/src/components/Icon";
 import { NotificationsStatus } from "@/src/components/NotificationsStatus";
+import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
 import {
@@ -51,7 +52,6 @@ import {
 } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
-import { PrivacyPolicyLink } from "./PrivacyPolicyLink";
 
 export function ConduitSettings() {
     const { t } = useTranslation();
