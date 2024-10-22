@@ -21,6 +21,7 @@ import {
 } from "react-native-reanimated";
 
 import { palette } from "@/src/styles";
+import { FaderGroup } from "./FaderGroup";
 
 export function PsiphonConduitLoading({
     size,
@@ -29,7 +30,9 @@ export function PsiphonConduitLoading({
     size: number;
     opacity: SharedValue<number>;
 }) {
-    // animate the conduit flower logo pulsing with different colors
+    // animate the conduit flower logo to cycle through different colors
+    const lfo = useSharedValue(0);
+
     const conduitFlowerSvg = useSVG(
         require("@/assets/images/conduit-flower-icon.svg"),
     );
@@ -39,7 +42,6 @@ export function PsiphonConduitLoading({
         palette.purple,
         palette.red,
     ];
-    const lfo = useSharedValue(0);
     const flowerColor = useDerivedValue(() => {
         return interpolateColors(
             lfo.value,
@@ -56,6 +58,8 @@ export function PsiphonConduitLoading({
         flowerSize,
         flowerSize,
     );
+
+    // Gives a nice oscillating blur effect
     const morphMatrix = useDerivedValue(() => {
         // prettier-ignore
         return [
@@ -67,34 +71,16 @@ export function PsiphonConduitLoading({
     ]
     });
 
-    // Allow parent to fade loader in and out by passing an animated opacity
-    const opacityMatrix = useDerivedValue(() => {
-        // prettier-ignore
-        return [
-         // R, G, B, A, Bias
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, opacity.value, 0,
-        ];
-    });
-
     React.useEffect(() => {
         lfo.value = withRepeat(withTiming(3, { duration: 3000 }), -1, true);
-        () => {
+        return () => {
             cancelAnimation(lfo);
             lfo.value = 0;
         };
     }, []);
 
     return (
-        <Group
-            layer={
-                <Paint>
-                    <ColorMatrix matrix={opacityMatrix} />
-                </Paint>
-            }
-        >
+        <FaderGroup opacity={opacity}>
             <Group
                 layer={
                     <Paint>
@@ -118,6 +104,6 @@ export function PsiphonConduitLoading({
                     />
                 </Group>
             </Group>
-        </Group>
+        </FaderGroup>
     );
 }

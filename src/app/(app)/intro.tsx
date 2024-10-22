@@ -2,11 +2,9 @@ import {
     Blur,
     Canvas,
     Circle,
-    ColorMatrix,
     Group,
     Image,
     ImageSVG,
-    Paint,
     RadialGradient,
     Shadow,
     fitbox,
@@ -30,6 +28,7 @@ import {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 function Orb({ cx, cy, r }: { cx: number; cy: number; r: number }) {
@@ -140,17 +139,6 @@ export default function IntroScreen() {
         });
     }, []);
 
-    const opacityMatrix = useDerivedValue(() => {
-        // prettier-ignore
-        return [
-         // R, G, B, A, Bias
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, opacity.value, 0,
-        ];
-    });
-
     if (!backgroundEarthPng) {
         return null;
     }
@@ -176,17 +164,11 @@ export default function IntroScreen() {
                     height={bgHeight}
                     opacity={opacity}
                 />
-                <Group
-                    layer={
-                        <Paint>
-                            <ColorMatrix matrix={opacityMatrix} />
-                        </Paint>
-                    }
-                >
+                <FaderGroup opacity={opacity}>
                     <Group transform={wordMarkResizeTransform}>
                         <ImageSVG svg={conduitWordMarkSvg} x={0} y={0} />
                     </Group>
-                </Group>
+                </FaderGroup>
                 <Group transform={orbsPanTransform} opacity={opacity}>
                     <Orb cx={fullWidth * 0.2} cy={fullHeight * 0.9} r={50} />
                     <Orb cx={fullWidth * 0.1} cy={fullHeight * 0.66} r={20} />
