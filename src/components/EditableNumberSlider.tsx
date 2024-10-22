@@ -16,13 +16,13 @@ import Animated, {
     useSharedValue,
 } from "react-native-reanimated";
 
+import { AnimatedText } from "@/src/components/AnimatedText";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 import {
     Gesture,
     GestureDetector,
     ScrollView,
 } from "react-native-gesture-handler";
-import { AnimatedText } from "./AnimatedText";
 
 interface EditableNumberSliderProps {
     label: string;

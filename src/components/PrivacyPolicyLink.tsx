@@ -3,9 +3,9 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, TextStyle } from "react-native";
 
+import { Icon } from "@/src/components/Icon";
 import { PRIVACY_POLICY_URL } from "@/src/constants";
 import { sharedStyles as ss } from "@/src/styles";
-import { Icon } from "./Icon";
 
 export function PrivacyPolicyLink({
     containerHeight,

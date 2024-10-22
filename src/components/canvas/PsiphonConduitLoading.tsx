@@ -20,8 +20,8 @@ import {
     withTiming,
 } from "react-native-reanimated";
 
+import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 import { palette } from "@/src/styles";
-import { FaderGroup } from "./FaderGroup";
 
 export function PsiphonConduitLoading({
     size,

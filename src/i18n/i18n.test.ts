@@ -3,7 +3,7 @@ import i18n from "i18next";
 import path from "path";
 import { findBestLanguageTag } from "react-native-localize";
 
-import i18nService from "./i18n";
+import i18nService from "@/src/i18n/i18n";
 
 jest.mock("react-native-localize", () => ({
     findBestLanguageTag: jest.fn(() => ({ languageTag: "fr" })),

@@ -11,7 +11,8 @@ import {
 import React from "react";
 import { View } from "react-native";
 import { SharedValue } from "react-native-reanimated";
-import { FaderGroup } from "./canvas/FaderGroup";
+
+import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 
 const ICONS = {
     check: require("@/assets/images/icons/check.svg"),

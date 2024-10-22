@@ -10,10 +10,10 @@ import React from "react";
 import { View } from "react-native";
 import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
+import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { sharedStyles as ss } from "@/src/styles";
-import { FaderGroup } from "./canvas/FaderGroup";
 
 export function LogoWordmark({
     width,
