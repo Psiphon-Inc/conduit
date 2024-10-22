@@ -366,7 +366,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
         bytesUp: Int, bytesDown: Int
     ) {
         listener.onInproxyProxyActivity(
-            Int(connectedClients), connectedClients: Int(connectedClients),
+            Int(connectingClients), connectedClients: Int(connectedClients),
             bytesUp: bytesUp, bytesDown: bytesDown)
     }
     
