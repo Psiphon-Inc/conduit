@@ -59,7 +59,7 @@ struct ActivitySeries: Equatable {
         _ connectingClients: Int, _ connectedClients: Int
     ) {
         
-        var elapsedBucketCount = Int(msSinceUpdate / (self.msBucketPeriod + 1))
+        var elapsedBucketCount = Int(msSinceUpdate / self.msBucketPeriod) - 1
         if elapsedBucketCount > numBuckets {
             elapsedBucketCount = numBuckets
         }
@@ -105,7 +105,8 @@ struct ActivityStats: Equatable {
         self.currentConnectingClients = connectingClients
         self.currentConnectedClients = connectedClients
 
-        let msSinceUpdate = UInt64(now - lastUpdate) * 1000
+        // round to nearest second to absorb minor timing gaps
+        let msSinceUpdate = UInt64(round(now - lastUpdate)) * 1000
         
         self.seriesFast.updateSeries(
             msSinceUpdate: msSinceUpdate,
