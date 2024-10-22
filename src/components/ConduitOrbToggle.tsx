@@ -19,6 +19,7 @@ import * as Haptics from "expo-haptics";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     Easing,
     cancelAnimation,
@@ -47,7 +48,6 @@ import {
     useInproxyStatus,
 } from "@/src/inproxy/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 export function ConduitOrbToggle({
     width,

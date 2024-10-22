@@ -16,14 +16,15 @@ export default function Index() {
     const win = useWindowDimensions();
     const router = useRouter();
 
-    const canvasSize = win.width / 3;
+    const loadingIndicatorCanvasSize = win.width / 3;
 
     const opacity = useSharedValue(0);
 
     async function doSignIn() {
         const signInResult = await signIn();
         if (signInResult instanceof Error) {
-            // Throw the error so we know about it, signIn must succeed.
+            // Throw the error so we know about it, signIn must succeed. This
+            // will crash the app.
             throw signInResult;
         } else {
             const hasOnboarded = await AsyncStorage.getItem(
@@ -40,9 +41,8 @@ export default function Index() {
     }
 
     React.useEffect(() => {
-        // NOTE: This is introducing an artificial delay of 1 second to have the
-        // nice fade in before signing in, since sign in is nearly instant now
-        // that we are storing the derived conduit key in SecureStore.
+        // This is introducing an artificial delay of 1 second to have the nice
+        // fade in before signing in, since sign in is nearly instant.
         opacity.value = withTiming(1, { duration: 1000 }, () =>
             runOnJS(doSignIn)(),
         );
@@ -59,13 +59,13 @@ export default function Index() {
             >
                 <View
                     style={{
-                        width: canvasSize,
-                        height: canvasSize,
+                        width: loadingIndicatorCanvasSize,
+                        height: loadingIndicatorCanvasSize,
                     }}
                 >
                     <Canvas style={[ss.flex]}>
                         <PsiphonConduitLoading
-                            size={canvasSize}
+                            size={loadingIndicatorCanvasSize}
                             opacity={opacity}
                         />
                     </Canvas>

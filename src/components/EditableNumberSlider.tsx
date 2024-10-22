@@ -6,7 +6,7 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { Text, View } from "react-native";
 import Animated, {
     clamp,
@@ -16,13 +16,13 @@ import Animated, {
     useSharedValue,
 } from "react-native-reanimated";
 
+import { AnimatedText } from "@/src/components/AnimatedText";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 import {
     Gesture,
     GestureDetector,
-    GestureHandlerRootView,
+    ScrollView,
 } from "react-native-gesture-handler";
-import { AnimatedText } from "./AnimatedText";
 
 interface EditableNumberSliderProps {
     label: string;
@@ -32,6 +32,7 @@ interface EditableNumberSliderProps {
     units?: string;
     style?: any;
     onChange: (newValue: number) => Promise<void>;
+    scrollRef: MutableRefObject<ScrollView | null>;
 }
 export function EditableNumberSlider({
     label,
@@ -41,6 +42,7 @@ export function EditableNumberSlider({
     units = "",
     style = lineItemStyle,
     onChange,
+    scrollRef,
 }: EditableNumberSliderProps) {
     const value = useSharedValue(originalValue);
     const displayText = useDerivedValue(() => {
@@ -59,14 +61,16 @@ export function EditableNumberSlider({
         return canvasSize.value.width - circleR.value * 2;
     });
     const prevCircleCxPct = useSharedValue(0);
-    const circleCxPct = useSharedValue(Math.round((value.value / max) * 100));
+    const circleCxPct = useSharedValue(
+        ((value.value - min) / (max - min)) * 100,
+    );
     const circleCx = useDerivedValue(() => {
-        return (
-            circleR.value +
-            outlineWidth.value * 2 +
-            (circleCxPct.value / 100) *
-                (usableWidth.value - (circleR.value * 2 + 1))
-        );
+        // offset circleX by 2x circleR so that it fits nicely in the bar
+        const effectiveUsableWidth = usableWidth.value - circleR.value * 2;
+        const newValue =
+            circleR.value * 2 +
+            (circleCxPct.value / 100) * effectiveUsableWidth;
+        return newValue;
     });
     const circleCy = useDerivedValue(() => {
         return canvasSize.value.height / 2;
@@ -107,6 +111,7 @@ export function EditableNumberSlider({
     }));
 
     const sliderGesture = Gesture.Pan()
+        .blocksExternalGesture(scrollRef)
         .minDistance(0)
         .onStart(() => {
             runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Soft);
@@ -119,8 +124,7 @@ export function EditableNumberSlider({
                 0,
                 100,
             );
-            circleCxPct.value =
-                newCircleCxPct + 1 + (circleR.value / usableWidth.value) * 100;
+            circleCxPct.value = newCircleCxPct;
             value.value =
                 min + Math.round((newCircleCxPct / 100) * (max - min));
             runOnJS(onChange)(value.value);
@@ -130,60 +134,58 @@ export function EditableNumberSlider({
         <View style={[...style, ss.flex, ss.justifySpaceBetween]}>
             <Text style={[ss.bodyFont, ss.whiteText]}>{label}</Text>
             <View style={[ss.row, ss.flex, { maxWidth: 180 }]}>
-                <GestureHandlerRootView>
-                    <View style={[ss.flex]}>
-                        <Canvas style={[ss.flex]} onSize={canvasSize}>
-                            <RoundedRect
-                                x={circleR}
-                                y={trackY}
-                                width={usableWidth}
-                                height={trackHeight}
-                                style="fill"
-                                color={palette.purpleShade4}
-                                r={circleR}
+                <View style={[ss.flex]}>
+                    <Canvas style={[ss.flex]} onSize={canvasSize}>
+                        <RoundedRect
+                            x={circleR}
+                            y={trackY}
+                            width={usableWidth}
+                            height={trackHeight}
+                            style="fill"
+                            color={palette.purpleShade4}
+                            r={circleR}
+                        />
+                        <RoundedRect
+                            x={circleR}
+                            y={trackY}
+                            width={circleCx}
+                            height={trackHeight}
+                            style="fill"
+                            color={palette.white}
+                            r={circleR}
+                        >
+                            <LinearGradient
+                                start={filledStart}
+                                end={filledEnd}
+                                colors={[
+                                    palette.blueShade2,
+                                    palette.purple,
+                                    palette.red,
+                                ]}
                             />
-                            <RoundedRect
-                                x={circleR}
-                                y={trackY}
-                                width={circleCx}
-                                height={trackHeight}
-                                style="fill"
-                                color={palette.white}
-                                r={circleR}
-                            >
-                                <LinearGradient
-                                    start={filledStart}
-                                    end={filledEnd}
-                                    colors={[
-                                        palette.blueShade2,
-                                        palette.purple,
-                                        palette.red,
-                                    ]}
-                                />
-                            </RoundedRect>
-                            <RoundedRect
-                                x={circleR}
-                                y={trackY}
-                                width={usableWidth}
-                                height={trackHeight}
-                                style="stroke"
-                                strokeWidth={outlineWidth}
-                                color={palette.midGrey}
-                                r={circleR}
-                            />
-                            <Circle
-                                cx={circleCx}
-                                cy={circleCy}
-                                r={circleR}
-                                style="fill"
-                                color={palette.white}
-                            />
-                        </Canvas>
-                        <GestureDetector gesture={sliderGesture}>
-                            <Animated.View style={overlayStyle} />
-                        </GestureDetector>
-                    </View>
-                </GestureHandlerRootView>
+                        </RoundedRect>
+                        <RoundedRect
+                            x={circleR}
+                            y={trackY}
+                            width={usableWidth}
+                            height={trackHeight}
+                            style="stroke"
+                            strokeWidth={outlineWidth}
+                            color={palette.midGrey}
+                            r={circleR}
+                        />
+                        <Circle
+                            cx={circleCx}
+                            cy={circleCy}
+                            r={circleR}
+                            style="fill"
+                            color={palette.white}
+                        />
+                    </Canvas>
+                    <GestureDetector gesture={sliderGesture}>
+                        <Animated.View style={overlayStyle} />
+                    </GestureDetector>
+                </View>
                 <View style={[ss.row, ss.alignCenter]}>
                     <View style={[ss.row, ss.alignCenter, ss.nogap]}>
                         <View

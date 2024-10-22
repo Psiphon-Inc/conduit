@@ -1,19 +1,19 @@
 // NOTE: this whole file is copied from @shopify/react-native-skia, see TODO
-import { useEffect } from "react";
 
 import {
     DataSourceParam,
     SkImage,
     useAnimatedImage,
 } from "@shopify/react-native-skia";
-const DEFAULT_FRAME_DURATION = 60;
-
+import { useEffect } from "react";
 import {
     FrameInfo,
     SharedValue,
     useFrameCallback,
     useSharedValue,
 } from "react-native-reanimated";
+
+const DEFAULT_FRAME_DURATION = 60;
 
 export const useAnimatedImageValue = (
     source: DataSourceParam,
@@ -69,7 +69,6 @@ export const useAnimatedImageValue = (
         return () => {
             animatedImage?.dispose();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return currentFrame;
 };

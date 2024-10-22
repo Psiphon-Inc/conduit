@@ -1,9 +1,6 @@
 import {
     Canvas,
-    ColorMatrix,
-    Group,
     LinearGradient,
-    Paint,
     Paragraph,
     Rect,
     Skia,
@@ -23,6 +20,7 @@ import {
 } from "react-native-reanimated";
 
 import { drawBigFont, niceBytes } from "@/src/common/utils";
+import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
@@ -165,19 +163,6 @@ export function ConduitStatus({
             .build();
     });
 
-    // Text is painted differently by Skia, so we use this opacity matrix to
-    // fade it in and out.
-    const opacityMatrix = useDerivedValue(() => {
-        // prettier-ignore
-        return [
-         // R, G, B, A, Bias
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, fader.value, 0,
-        ];
-    });
-
     return (
         <View
             style={[
@@ -203,20 +188,14 @@ export function ConduitStatus({
                         colors={backgroundGradientColors}
                     />
                 </Rect>
-                <Group
-                    layer={
-                        <Paint>
-                            <ColorMatrix matrix={opacityMatrix} />
-                        </Paint>
-                    }
-                >
+                <FaderGroup opacity={fader}>
                     <Paragraph
                         paragraph={statusParagraph}
                         x={0}
                         y={0}
                         width={width}
                     />
-                </Group>
+                </FaderGroup>
             </Canvas>
         </View>
     );

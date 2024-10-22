@@ -1,22 +1,16 @@
 import {
     Canvas,
-    ColorMatrix,
     Group,
     ImageSVG,
-    Paint,
     fitbox,
     rect,
     useSVG,
 } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
-import {
-    useDerivedValue,
-    useSharedValue,
-    withDelay,
-    withTiming,
-} from "react-native-reanimated";
+import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
+import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { sharedStyles as ss } from "@/src/styles";
@@ -47,17 +41,6 @@ export function LogoWordmark({
         );
     }
 
-    const opacityMatrix = useDerivedValue(() => {
-        // prettier-ignore
-        return [
-         // R, G, B, A, Bias
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, fadeIn.value, 0,
-        ];
-    });
-
     return (
         <View
             style={[
@@ -68,13 +51,7 @@ export function LogoWordmark({
             ]}
         >
             <Canvas style={[ss.flex]}>
-                <Group
-                    layer={
-                        <Paint>
-                            <ColorMatrix matrix={opacityMatrix} />
-                        </Paint>
-                    }
-                >
+                <FaderGroup opacity={fadeIn}>
                     <Group transform={fitbox("contain", src, dst)}>
                         <ImageSVG
                             svg={conduitWordMarkSvg}
@@ -82,7 +59,7 @@ export function LogoWordmark({
                             y={height * 0.1}
                         />
                     </Group>
-                </Group>
+                </FaderGroup>
             </Canvas>
         </View>
     );

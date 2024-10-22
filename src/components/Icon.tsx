@@ -1,10 +1,8 @@
 import {
     BlendMode,
     Canvas,
-    ColorMatrix,
     Group,
     ImageSVG,
-    Paint,
     Skia,
     fitbox,
     rect,
@@ -12,7 +10,9 @@ import {
 } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
-import { SharedValue, useDerivedValue } from "react-native-reanimated";
+import { SharedValue } from "react-native-reanimated";
+
+import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 
 const ICONS = {
     check: require("@/assets/images/icons/check.svg"),
@@ -52,18 +52,6 @@ export function Icon({
         Skia.ColorFilter.MakeBlend(Skia.Color(color), BlendMode.SrcIn),
     );
 
-    const opacityMatrix = useDerivedValue(() => {
-        const a = opacity !== undefined ? opacity.value : 1;
-        // prettier-ignore
-        return [
-          //R, G, B, A, Bias
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, a, 0,
-        ];
-    });
-
     if (!iconSvg) {
         return null;
     }
@@ -78,15 +66,15 @@ export function Icon({
                     layer={paintColor}
                     transform={fitbox("contain", src, dst)}
                 >
-                    <Group
-                        layer={
-                            <Paint>
-                                <ColorMatrix matrix={opacityMatrix} />
-                            </Paint>
-                        }
-                    >
-                        <ImageSVG svg={iconSvg} />
-                    </Group>
+                    {opacity === undefined ? (
+                        <Group>
+                            <ImageSVG svg={iconSvg} />
+                        </Group>
+                    ) : (
+                        <FaderGroup opacity={opacity}>
+                            <ImageSVG svg={iconSvg} />
+                        </FaderGroup>
+                    )}
                 </Group>
             </Canvas>
         </View>

@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Pressable, Text, TextStyle } from "react-native";
 
 import { Icon } from "@/src/components/Icon";
-import { PRIVACY_POLICY_URL } from "@/src/constants";
+import { LEARN_MORE_URL } from "@/src/constants";
 import { sharedStyles as ss } from "@/src/styles";
 
-export function PrivacyPolicyLink({
+export function LearnMoreLink({
     containerHeight,
     textStyle,
 }: {
@@ -27,7 +27,7 @@ export function PrivacyPolicyLink({
     return (
         <Pressable
             accessible={true}
-            accessibilityLabel={"Link to privacy policy"}
+            accessibilityLabel={"Link to information website"}
             style={[
                 ss.absolute,
                 ss.row,
@@ -37,10 +37,10 @@ export function PrivacyPolicyLink({
                 { bottom: 0, height: containerHeight },
             ]}
             onPress={() => {
-                Linking.openURL(PRIVACY_POLICY_URL);
+                Linking.openURL(LEARN_MORE_URL);
             }}
         >
-            <Text style={style}>{t("PRIVACY_POLICY_I18N.string")}</Text>
+            <Text style={style}>{t("LEARN_MORE_I18N.string")}</Text>
             <Icon
                 name="external-link"
                 size={style.fontSize * 1.5}
