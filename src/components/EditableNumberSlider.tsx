@@ -6,7 +6,7 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { Text, View } from "react-native";
 import Animated, {
     clamp,
@@ -20,7 +20,7 @@ import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 import {
     Gesture,
     GestureDetector,
-    GestureHandlerRootView,
+    ScrollView,
 } from "react-native-gesture-handler";
 import { AnimatedText } from "./AnimatedText";
 
@@ -32,6 +32,7 @@ interface EditableNumberSliderProps {
     units?: string;
     style?: any;
     onChange: (newValue: number) => Promise<void>;
+    scrollRef: MutableRefObject<ScrollView | null>;
 }
 export function EditableNumberSlider({
     label,
@@ -41,6 +42,7 @@ export function EditableNumberSlider({
     units = "",
     style = lineItemStyle,
     onChange,
+    scrollRef,
 }: EditableNumberSliderProps) {
     const value = useSharedValue(originalValue);
     const displayText = useDerivedValue(() => {
@@ -60,7 +62,7 @@ export function EditableNumberSlider({
     });
     const prevCircleCxPct = useSharedValue(0);
     const circleCxPct = useSharedValue(
-        Math.round(value.value / (max - min)) * 100,
+        ((value.value - min) / (max - min)) * 100,
     );
     const circleCx = useDerivedValue(() => {
         // offset circleX by 2x circleR so that it fits nicely in the bar
@@ -109,6 +111,7 @@ export function EditableNumberSlider({
     }));
 
     const sliderGesture = Gesture.Pan()
+        .blocksExternalGesture(scrollRef)
         .minDistance(0)
         .onStart(() => {
             runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Soft);
@@ -131,60 +134,58 @@ export function EditableNumberSlider({
         <View style={[...style, ss.flex, ss.justifySpaceBetween]}>
             <Text style={[ss.bodyFont, ss.whiteText]}>{label}</Text>
             <View style={[ss.row, ss.flex, { maxWidth: 180 }]}>
-                <GestureHandlerRootView>
-                    <View style={[ss.flex]}>
-                        <Canvas style={[ss.flex]} onSize={canvasSize}>
-                            <RoundedRect
-                                x={circleR}
-                                y={trackY}
-                                width={usableWidth}
-                                height={trackHeight}
-                                style="fill"
-                                color={palette.purpleShade4}
-                                r={circleR}
+                <View style={[ss.flex]}>
+                    <Canvas style={[ss.flex]} onSize={canvasSize}>
+                        <RoundedRect
+                            x={circleR}
+                            y={trackY}
+                            width={usableWidth}
+                            height={trackHeight}
+                            style="fill"
+                            color={palette.purpleShade4}
+                            r={circleR}
+                        />
+                        <RoundedRect
+                            x={circleR}
+                            y={trackY}
+                            width={circleCx}
+                            height={trackHeight}
+                            style="fill"
+                            color={palette.white}
+                            r={circleR}
+                        >
+                            <LinearGradient
+                                start={filledStart}
+                                end={filledEnd}
+                                colors={[
+                                    palette.blueShade2,
+                                    palette.purple,
+                                    palette.red,
+                                ]}
                             />
-                            <RoundedRect
-                                x={circleR}
-                                y={trackY}
-                                width={circleCx}
-                                height={trackHeight}
-                                style="fill"
-                                color={palette.white}
-                                r={circleR}
-                            >
-                                <LinearGradient
-                                    start={filledStart}
-                                    end={filledEnd}
-                                    colors={[
-                                        palette.blueShade2,
-                                        palette.purple,
-                                        palette.red,
-                                    ]}
-                                />
-                            </RoundedRect>
-                            <RoundedRect
-                                x={circleR}
-                                y={trackY}
-                                width={usableWidth}
-                                height={trackHeight}
-                                style="stroke"
-                                strokeWidth={outlineWidth}
-                                color={palette.midGrey}
-                                r={circleR}
-                            />
-                            <Circle
-                                cx={circleCx}
-                                cy={circleCy}
-                                r={circleR}
-                                style="fill"
-                                color={palette.white}
-                            />
-                        </Canvas>
-                        <GestureDetector gesture={sliderGesture}>
-                            <Animated.View style={overlayStyle} />
-                        </GestureDetector>
-                    </View>
-                </GestureHandlerRootView>
+                        </RoundedRect>
+                        <RoundedRect
+                            x={circleR}
+                            y={trackY}
+                            width={usableWidth}
+                            height={trackHeight}
+                            style="stroke"
+                            strokeWidth={outlineWidth}
+                            color={palette.midGrey}
+                            r={circleR}
+                        />
+                        <Circle
+                            cx={circleCx}
+                            cy={circleCy}
+                            r={circleR}
+                            style="fill"
+                            color={palette.white}
+                        />
+                    </Canvas>
+                    <GestureDetector gesture={sliderGesture}>
+                        <Animated.View style={overlayStyle} />
+                    </GestureDetector>
+                </View>
                 <View style={[ss.row, ss.alignCenter]}>
                     <View style={[ss.row, ss.alignCenter, ss.nogap]}>
                         <View

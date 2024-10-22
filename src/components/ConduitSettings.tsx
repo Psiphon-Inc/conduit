@@ -14,11 +14,14 @@ import {
     ActivityIndicator,
     Modal,
     Pressable,
-    ScrollView,
     Text,
     View,
     useWindowDimensions,
 } from "react-native";
+import {
+    GestureHandlerRootView,
+    ScrollView,
+} from "react-native-gesture-handler";
 import Animated, {
     useDerivedValue,
     useSharedValue,
@@ -146,6 +149,10 @@ export function ConduitSettings() {
         }
     }
 
+    // Pass ref to ScrollView into the sliders so we don't start scrolling while
+    // we're sliding.
+    const scrollRef = React.useRef<ScrollView | null>(null);
+
     function Settings() {
         return (
             <View style={[ss.flex]}>
@@ -204,140 +211,149 @@ export function ConduitSettings() {
                         </Animated.View>
                     </View>
                 </View>
-                <ScrollView
-                    contentContainerStyle={{
-                        width: "100%",
-                    }}
-                >
-                    <View>
-                        <EditableNumberSlider
-                            label={t("MAX_PEERS_I18N.string")}
-                            originalValue={inproxyParameters.maxClients}
-                            min={1}
-                            max={INPROXY_MAX_CLIENTS_MAX}
-                            style={[...lineItemStyle, ss.alignCenter]}
-                            onChange={updateInproxyMaxClients}
-                        />
-                        <EditableNumberSlider
-                            label={t("MAX_MBPS_PER_PEER_I18N.string")}
-                            originalValue={bytesToMB(
-                                inproxyParameters.limitUpstreamBytesPerSecond,
-                            )}
-                            min={8}
-                            max={INPROXY_MAX_MBPS_PER_PEER_MAX}
-                            style={[...lineItemStyle, ss.alignCenter]}
-                            onChange={updateInproxyLimitBytesPerSecond}
-                        />
-                        <View
-                            style={[
-                                ...lineItemStyle,
-                                ss.flex,
-                                ss.alignCenter,
-                                ss.justifySpaceBetween,
-                            ]}
-                        >
-                            <Text style={[ss.bodyFont, ss.whiteText]}>
-                                {t("REQUIRED_BANDWIDTH_I18N.string")}
-                            </Text>
-                            <AnimatedText
-                                text={displayTotalMBps}
-                                color={palette.white}
-                                fontFamily={ss.bodyFont.fontFamily}
-                                fontSize={ss.bodyFont.fontSize}
+                <GestureHandlerRootView>
+                    <ScrollView
+                        contentContainerStyle={{
+                            width: "100%",
+                        }}
+                        ref={scrollRef}
+                    >
+                        <View>
+                            <EditableNumberSlider
+                                label={t("MAX_PEERS_I18N.string")}
+                                originalValue={inproxyParameters.maxClients}
+                                min={1}
+                                max={INPROXY_MAX_CLIENTS_MAX}
+                                style={[...lineItemStyle, ss.alignCenter]}
+                                onChange={updateInproxyMaxClients}
+                                scrollRef={scrollRef}
                             />
-                        </View>
-                        <View
-                            style={[
-                                ...lineItemStyle,
-                                ss.flex,
-                                ss.alignCenter,
-                                ss.justifySpaceBetween,
-                            ]}
-                        >
-                            <Text style={[ss.bodyFont, ss.whiteText]}>
-                                {t("YOUR_ID_I18N.string")}
-                            </Text>
-                            {conduitKeyPair.data ? (
-                                <ProxyID
-                                    proxyId={getProxyId(conduitKeyPair.data)}
-                                />
-                            ) : (
-                                <ActivityIndicator
-                                    size={"small"}
-                                    color={palette.white}
-                                />
-                            )}
-                        </View>
-                        <View
-                            style={[
-                                ...lineItemStyle,
-                                ss.flex,
-                                ss.alignCenter,
-                                ss.justifySpaceBetween,
-                            ]}
-                        >
-                            <Text style={[ss.bodyFont, ss.whiteText]}>
-                                {t("SEND_DIAGNOSTIC_I18N.string")}
-                            </Text>
-                            <SendDiagnosticButton />
-                        </View>
-                        <View
-                            style={[
-                                ...lineItemStyle,
-                                ss.flex,
-                                ss.alignCenter,
-                                ss.justifySpaceBetween,
-                            ]}
-                        >
-                            <NotificationsStatus />
-                        </View>
-                        <View
-                            style={[
-                                ...lineItemStyle,
-                                ss.flex,
-                                ss.alignCenter,
-                                ss.justifyCenter,
-                            ]}
-                        >
-                            <View style={[ss.flex]} />
-                            <Pressable
-                                onPress={() => {
-                                    setModalOpen(false);
-                                    router.push("/(app)/intro");
-                                }}
+                            <EditableNumberSlider
+                                label={t("MAX_MBPS_PER_PEER_I18N.string")}
+                                originalValue={bytesToMB(
+                                    inproxyParameters.limitUpstreamBytesPerSecond,
+                                )}
+                                min={8}
+                                max={INPROXY_MAX_MBPS_PER_PEER_MAX}
+                                style={[...lineItemStyle, ss.alignCenter]}
+                                onChange={updateInproxyLimitBytesPerSecond}
+                                scrollRef={scrollRef}
+                            />
+                            <View
+                                style={[
+                                    ...lineItemStyle,
+                                    ss.flex,
+                                    ss.alignCenter,
+                                    ss.justifySpaceBetween,
+                                ]}
                             >
-                                <View
-                                    style={[
-                                        ss.row,
-                                        ss.alignCenter,
-                                        ss.rounded5,
-                                        ss.halfPadded,
-                                        {
-                                            backgroundColor: palette.white,
-                                        },
-                                    ]}
+                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                    {t("REQUIRED_BANDWIDTH_I18N.string")}
+                                </Text>
+                                <AnimatedText
+                                    text={displayTotalMBps}
+                                    color={palette.white}
+                                    fontFamily={ss.bodyFont.fontFamily}
+                                    fontSize={ss.bodyFont.fontSize}
+                                />
+                            </View>
+                            <View
+                                style={[
+                                    ...lineItemStyle,
+                                    ss.flex,
+                                    ss.alignCenter,
+                                    ss.justifySpaceBetween,
+                                ]}
+                            >
+                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                    {t("YOUR_ID_I18N.string")}
+                                </Text>
+                                {conduitKeyPair.data ? (
+                                    <ProxyID
+                                        proxyId={getProxyId(
+                                            conduitKeyPair.data,
+                                        )}
+                                    />
+                                ) : (
+                                    <ActivityIndicator
+                                        size={"small"}
+                                        color={palette.white}
+                                    />
+                                )}
+                            </View>
+                            <View
+                                style={[
+                                    ...lineItemStyle,
+                                    ss.flex,
+                                    ss.alignCenter,
+                                    ss.justifySpaceBetween,
+                                ]}
+                            >
+                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                    {t("SEND_DIAGNOSTIC_I18N.string")}
+                                </Text>
+                                <SendDiagnosticButton />
+                            </View>
+                            <View
+                                style={[
+                                    ...lineItemStyle,
+                                    ss.flex,
+                                    ss.alignCenter,
+                                    ss.justifySpaceBetween,
+                                ]}
+                            >
+                                <NotificationsStatus />
+                            </View>
+                            <View
+                                style={[
+                                    ...lineItemStyle,
+                                    ss.flex,
+                                    ss.alignCenter,
+                                    ss.justifyCenter,
+                                ]}
+                            >
+                                <View style={[ss.flex]} />
+                                <Pressable
+                                    onPress={() => {
+                                        setModalOpen(false);
+                                        router.push("/(app)/intro");
+                                    }}
                                 >
-                                    <Text style={[ss.bodyFont, ss.blackText]}>
-                                        {t("REPLAY_INTRO_I18N.string")}
-                                    </Text>
-                                </View>
-                            </Pressable>
+                                    <View
+                                        style={[
+                                            ss.row,
+                                            ss.alignCenter,
+                                            ss.rounded5,
+                                            ss.halfPadded,
+                                            {
+                                                backgroundColor: palette.white,
+                                            },
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[ss.bodyFont, ss.blackText]}
+                                        >
+                                            {t("REPLAY_INTRO_I18N.string")}
+                                        </Text>
+                                    </View>
+                                </Pressable>
+                            </View>
+                            <View
+                                style={[
+                                    ss.height60,
+                                    ss.flex,
+                                    ss.alignCenter,
+                                    ss.justifyCenter,
+                                ]}
+                            >
+                                <PrivacyPolicyLink
+                                    textStyle={{ ...ss.greyText }}
+                                    containerHeight={60}
+                                />
+                            </View>
                         </View>
-                        <View
-                            style={[
-                                ss.height60,
-                                ss.flex,
-                                ss.alignCenter,
-                                ss.justifyCenter,
-                            ]}
-                        >
-                            <PrivacyPolicyLink
-                                textStyle={{ ...ss.greyText }}
-                                containerHeight={60}
-                            />
-                        </View>
-                    </View>
-                </ScrollView>
+                    </ScrollView>
+                </GestureHandlerRootView>
             </View>
         );
     }
