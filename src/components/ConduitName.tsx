@@ -19,7 +19,12 @@ export function ConduitName() {
         },
     });
 
-    if (conduitName.data) {
+    if (conduitName.error) {
+        return <Text>Error</Text>;
+    }
+
+    // empty string "" is falsy, so we check specifically
+    if (conduitName.data !== null && conduitName.data !== undefined) {
         return <EditableConduitName initialName={conduitName.data} />;
     } else {
         return null;
@@ -69,25 +74,27 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
     }
 
     return (
-        <View style={[ss.fullHeight, ss.fullWidth, ss.row, ss.alignCenter]}>
+        <View style={[ss.fullHeight, ss.flex, ss.row, ss.alignCenter]}>
             <TextInput
                 style={[
                     ss.flex,
                     ss.whiteText,
                     ss.bodyFont,
-                    ss.greyBorder,
+                    ss.midGreyBorder,
                     ss.rounded10,
                     ss.paddedHorizontal,
                     { height: "100%" },
                 ]}
                 placeholder={t("NAME_YOUR_CONDUIT_I18N.string")}
-                placeholderTextColor={palette.grey}
+                placeholderTextColor={palette.midGrey}
                 onChangeText={onChangeText}
                 onFocus={onFocus}
                 onBlur={onBlur}
                 value={value}
                 selectionColor={palette.blue}
                 maxLength={maxLength}
+                autoCorrect={false}
+                autoComplete={"off"}
             />
             {showCharsUsed && (
                 <View style={[ss.absoluteBottomRight]}>

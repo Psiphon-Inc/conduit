@@ -167,5 +167,8 @@
     },
     "ID_I18N": {
         "string": "ID"
+    },
+    "ALIAS_I18N": {
+        "string": "Alias"
     }
 }

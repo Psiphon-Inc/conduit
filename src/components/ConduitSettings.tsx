@@ -302,6 +302,9 @@ export function ConduitSettings() {
                                     )}
                                 </View>
                                 <View style={[ss.flex, ss.row, ss.alignCenter]}>
+                                    <Text style={[ss.whiteText, ss.bodyFont]}>
+                                        {t("ALIAS_I18N.string")}:
+                                    </Text>
                                     <ConduitName />
                                 </View>
                             </View>
@@ -520,7 +523,7 @@ export function ConduitSettings() {
                 transparent={true}
                 onRequestClose={onSettingsClose}
             >
-                <View style={[ss.modalHalfBottom]}>
+                <View style={[ss.modalBottom90]}>
                     <Canvas style={[ss.flex]}>
                         <RoundedRect
                             x={0}
@@ -537,13 +540,12 @@ export function ConduitSettings() {
                                     palette.purple,
                                     palette.black,
                                     palette.black,
-                                    palette.black,
                                 ]}
                             />
                         </RoundedRect>
                     </Canvas>
                 </View>
-                <View style={[ss.modalHalfBottom]}>
+                <View style={[ss.modalBottom90]}>
                     {displayRestartConfirmation ? (
                         <RestartConfirmation />
                     ) : (

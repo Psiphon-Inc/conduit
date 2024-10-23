@@ -282,14 +282,18 @@ export const sharedStyles = StyleSheet.create({
         borderColor: palette.grey,
         borderWidth: 1,
     },
+    midGreyBorder: {
+        borderColor: palette.midGrey,
+        borderWidth: 1,
+    },
     absoluteFill: {
         position: "absolute",
         height: "100%",
         width: "100%",
     },
-    modalHalfBottom: {
+    modalBottom90: {
         flex: 1,
-        height: "70%",
+        height: "90%",
         width: "100%",
         position: "absolute",
         bottom: 0,
