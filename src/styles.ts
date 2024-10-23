@@ -217,6 +217,10 @@ export const sharedStyles = StyleSheet.create({
     flexWrap: {
         flexWrap: "wrap",
     },
+    tinyFont: {
+        fontSize: 12,
+        fontFamily: "JuraRegular",
+    },
     bodyFont: {
         fontSize: 18,
         fontFamily: "JuraRegular",
@@ -274,14 +278,22 @@ export const sharedStyles = StyleSheet.create({
         borderColor: palette.white,
         borderWidth: 1,
     },
+    greyBorder: {
+        borderColor: palette.grey,
+        borderWidth: 1,
+    },
+    midGreyBorder: {
+        borderColor: palette.midGrey,
+        borderWidth: 1,
+    },
     absoluteFill: {
         position: "absolute",
         height: "100%",
         width: "100%",
     },
-    modalHalfBottom: {
+    modalBottom90: {
         flex: 1,
-        height: "70%",
+        height: "90%",
         width: "100%",
         position: "absolute",
         bottom: 0,

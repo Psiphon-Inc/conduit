@@ -30,6 +30,7 @@ export const SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY =
 export const SECURESTORE_DEVICE_NONCE_KEY = "deviceNonce";
 export const SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY =
     "inproxyKeyPairBase64nopad";
+export const SECURESTORE_CONDUIT_NAME_KEY = "conduitName";
 
 // useQuery query keys, centralized to prevent accidental collision
 // auth
@@ -45,3 +46,4 @@ export const QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS =
 export const QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED =
     "inproxyTotalBytesTransferred";
 export const QUERYKEY_INPROXY_MUST_UPGRADE = "inproxyMustUpgrade";
+export const QUERYKEY_CONDUIT_NAME = "conduitName";

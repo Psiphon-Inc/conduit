@@ -18,9 +18,12 @@ export function uint8ArrayToJsonObject(arr: Uint8Array): any {
     return JSON.parse(new TextDecoder().decode(arr));
 }
 
-export function niceBytes(bytes: number, errorHandler: (error: Error) => void) {
-    var units = ["bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
-    var unit = units.shift() as string;
+export function niceBytes(
+    bytes: number,
+    errorHandler: (error: Error) => void,
+): string {
+    let units = ["bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
+    let unit = units.shift() as string;
     try {
         while (units.length > 0 && bytes >= 1024) {
             bytes /= 1024;
@@ -33,12 +36,12 @@ export function niceBytes(bytes: number, errorHandler: (error: Error) => void) {
     return `${bytes.toFixed(bytes > 0 ? 1 : 0)} ${unit}`;
 }
 
-export function bytesToMB(bytes: number) {
+export function bytesToMB(bytes: number): number {
     "worklet";
     return bytes / 1024 / 1024;
 }
 
-export function MBToBytes(MB: number) {
+export function MBToBytes(MB: number): number {
     "worklet";
     return MB * 1024 * 1024;
 }
@@ -51,7 +54,7 @@ export function timedLog(message: string) {
     console.log(`${now.toISOString()} (+${diff}): ${message}`);
 }
 
-export function drawBigFont(win: ScaledSize) {
+export function drawBigFont(win: ScaledSize): boolean {
     // used to determine if we should scale font size down for smaller screens
     // only currently applied to skia-rendered paragraphs
     if (win.height * win.scale > 1000) {
@@ -59,4 +62,43 @@ export function drawBigFont(win: ScaledSize) {
     } else {
         return false;
     }
+}
+
+// hexToHueDegrees extracts Hue in degrees from a hex string
+// https://en.wikipedia.org/wiki/Hue
+export function hexToHueDegrees(hex: string): number {
+    if (hex.length != 7 || !hex.startsWith("#")) {
+        console.error("Could not convert hex to hsl, invalid hex format");
+        return 0;
+    }
+
+    let r = parseInt(hex.substring(1, 3), 16);
+    let g = parseInt(hex.substring(3, 5), 16);
+    let b = parseInt(hex.substring(5, 8), 16);
+    (r /= 255), (g /= 255), (b /= 255);
+    let max = Math.max(r, g, b);
+    let min = Math.min(r, g, b);
+
+    // "Defining hue in terms of RGB" from wikipedia
+    let h = 0;
+    if (max === min) {
+        // leave as zero
+    } else {
+        let d = max - min;
+        switch (max) {
+            case r:
+                h = (g - b) / d + (g < b ? 6 : 0);
+                break;
+            case g:
+                h = (b - r) / d + 2;
+                break;
+            case b:
+                h = (r - g) / d + 4;
+                break;
+        }
+
+        h /= 6;
+    }
+
+    return Math.round(360 * h);
 }

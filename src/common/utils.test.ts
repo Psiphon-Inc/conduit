@@ -11,4 +11,12 @@ describe("utils", () => {
         expect(utils.byteArraysAreEqual(byteArrayA, byteArrayB)).toBe(false);
         expect(utils.byteArraysAreEqual(byteArrayA, byteArrayC)).toBe(false);
     });
+
+    it("hexToHueDegrees", () => {
+        expect(utils.hexToHueDegrees("#E0E0E0")).toEqual(0);
+        expect(utils.hexToHueDegrees("#000000")).toEqual(0);
+        expect(utils.hexToHueDegrees("#d54028")).toEqual(8);
+        expect(utils.hexToHueDegrees("#3b7a96")).toEqual(198);
+        expect(utils.hexToHueDegrees("#5d4264")).toEqual(288);
+    });
 });
