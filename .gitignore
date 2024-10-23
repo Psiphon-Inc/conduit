@@ -26,3 +26,9 @@ src/git-hash.ts
 # tunnel core config files
 psiphon_config
 embedded_server_entries
+ios_psiphon_config
+ios_embedded_server_entries
+
+# VSCode
+.idea/
+
