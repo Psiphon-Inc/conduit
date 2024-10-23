@@ -14,7 +14,17 @@ import { palette, sharedStyles as ss } from "@/src/styles";
 
 // useful for setting these values: https://jdenticon.com/icon-designer.html
 const defaultConfig: jdenticon.JdenticonConfig = {
-    hues: [hexToHueDegrees(palette.red)],
+    hues: [
+        hexToHueDegrees(palette.red),
+        hexToHueDegrees(palette.blue),
+        hexToHueDegrees(palette.maroon),
+        hexToHueDegrees(palette.red),
+        hexToHueDegrees(palette.blue),
+        hexToHueDegrees(palette.maroon),
+        hexToHueDegrees(palette.red),
+        hexToHueDegrees(palette.blue),
+        hexToHueDegrees(palette.maroon),
+    ],
     lightness: {
         color: [0.4, 0.8],
         grayscale: [0.15, 0.9],
