@@ -14,7 +14,6 @@ export function ConduitName() {
     const conduitName = useQuery({
         queryKey: [QUERYKEY_CONDUIT_NAME],
         queryFn: async () => {
-            console.log("Getting conduit name from secure store");
             return await SecureStore.getItemAsync(SECURESTORE_CONDUIT_NAME_KEY);
         },
     });
@@ -40,7 +39,6 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
     const mutateConduitName = useMutation({
         mutationFn: async (name: string) => {
             await SecureStore.setItemAsync(SECURESTORE_CONDUIT_NAME_KEY, name);
-            console.log("mutate applied");
         },
         onSuccess: () => {
             queryClient.invalidateQueries({
