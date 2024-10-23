@@ -33,6 +33,7 @@ import { useConduitKeyPair } from "@/src/auth/hooks";
 import { wrapError } from "@/src/common/errors";
 import { MBToBytes, bytesToMB } from "@/src/common/utils";
 import { AnimatedText } from "@/src/components/AnimatedText";
+import { ConduitName } from "@/src/components/ConduitName";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
 import { Icon } from "@/src/components/Icon";
 import { NotificationsStatus } from "@/src/components/NotificationsStatus";
@@ -262,24 +263,47 @@ export function ConduitSettings() {
                                     ...lineItemStyle,
                                     ss.flex,
                                     ss.alignCenter,
-                                    ss.justifySpaceBetween,
+                                    ss.height120,
+                                    ss.column,
                                 ]}
                             >
-                                <Text style={[ss.bodyFont, ss.whiteText]}>
-                                    {t("YOUR_ID_I18N.string")}
-                                </Text>
-                                {conduitKeyPair.data ? (
-                                    <ProxyID
-                                        proxyId={getProxyId(
-                                            conduitKeyPair.data,
-                                        )}
-                                    />
-                                ) : (
-                                    <ActivityIndicator
-                                        size={"small"}
-                                        color={palette.white}
-                                    />
-                                )}
+                                <View
+                                    style={[
+                                        ss.row,
+                                        ss.fullWidth,
+                                        ss.justifySpaceBetween,
+                                        ss.alignCenter,
+                                    ]}
+                                >
+                                    <Text style={[ss.bodyFont, ss.whiteText]}>
+                                        {t("YOUR_CONDUIT_I18N.string")}
+                                    </Text>
+                                    {conduitKeyPair.data ? (
+                                        <View style={[ss.row, ss.alignCenter]}>
+                                            <Text
+                                                style={[
+                                                    ss.bodyFont,
+                                                    ss.whiteText,
+                                                ]}
+                                            >
+                                                {t("ID_I18N.string")}:
+                                            </Text>
+                                            <ProxyID
+                                                proxyId={getProxyId(
+                                                    conduitKeyPair.data,
+                                                )}
+                                            />
+                                        </View>
+                                    ) : (
+                                        <ActivityIndicator
+                                            size={"small"}
+                                            color={palette.white}
+                                        />
+                                    )}
+                                </View>
+                                <View style={[ss.flex, ss.row, ss.alignCenter]}>
+                                    <ConduitName />
+                                </View>
                             </View>
                             <View
                                 style={[
