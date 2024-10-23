@@ -14,16 +14,23 @@ export function ConduitName() {
     const conduitName = useQuery({
         queryKey: [QUERYKEY_CONDUIT_NAME],
         queryFn: async () => {
-            return await SecureStore.getItemAsync(SECURESTORE_CONDUIT_NAME_KEY);
+            const storedConduitName = await SecureStore.getItemAsync(
+                SECURESTORE_CONDUIT_NAME_KEY,
+            );
+            if (storedConduitName == null) {
+                return "";
+            } else {
+                return storedConduitName;
+            }
         },
     });
 
     if (conduitName.error) {
-        return <Text>Error</Text>;
+        return <Text style={[ss.whiteText, ss.bodyFont]}>Error</Text>;
     }
 
-    // empty string "" is falsy, so we check specifically
-    if (conduitName.data !== null && conduitName.data !== undefined) {
+    // empty string is falsy, so we check specifically
+    if (conduitName.data !== undefined) {
         return <EditableConduitName initialName={conduitName.data} />;
     } else {
         return null;
