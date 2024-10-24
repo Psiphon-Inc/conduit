@@ -332,10 +332,12 @@ export function ConduitSettings() {
                                     ...lineItemStyle,
                                     ss.flex,
                                     ss.alignCenter,
-                                    ss.justifyCenter,
+                                    ss.justifySpaceBetween,
                                 ]}
                             >
-                                <View style={[ss.flex]} />
+                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                    {t("LEARN_MORE_I18N.string")}
+                                </Text>
                                 <Pressable
                                     onPress={() => {
                                         setModalOpen(false);
