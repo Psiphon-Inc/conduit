@@ -32,9 +32,6 @@ export function ProxyID({
 
     return (
         <View style={[ss.row, ss.alignCenter, ss.rounded5]}>
-            <Text style={[ss.whiteText, ss.bodyFont]}>
-                {proxyId.substring(0, 4)}...
-            </Text>
             <View
                 style={{
                     width: 40,
@@ -43,6 +40,9 @@ export function ProxyID({
             >
                 <Jdenticon value={proxyId} size={40} />
             </View>
+            <Text style={[ss.greyText, ss.bodyFont]}>
+                ({proxyId.substring(0, 4)}...)
+            </Text>
             {copyable && (
                 <Pressable
                     onPress={copyProxyIdToClipboard}
