@@ -11,8 +11,8 @@
         "string": "Conduit is OFF",
         "developer_comment": "Indicates to the user that Conduit is off. The name 'Conduit' is the app name and should not be translated."
     },
-    "YOUR_CONDUIT_I18N": {
-        "string": "Your Conduit",
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "Your Conduit ID",
         "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
     },
     "ANNOUNCING_I18N": {

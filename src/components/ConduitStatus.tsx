@@ -22,6 +22,7 @@ import {
 import { drawBigFont, niceBytes } from "@/src/common/utils";
 import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
+import { useConduitName } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
     useInproxyCurrentConnectedClients,
@@ -46,8 +47,15 @@ export function ConduitStatus({
     const { data: connectedPeers } = useInproxyCurrentConnectedClients();
     const { data: connectingPeers } = useInproxyCurrentConnectingClients();
     const { data: totalBytesTransferred } = useInproxyTotalBytesTransferred();
+    const { data: conduitName } = useConduitName();
 
-    const conduitStationText = t("CONDUIT_STATION_I18N.string");
+    // use conduitName if user has set it
+    let conduitStationText: string;
+    if (conduitName) {
+        conduitStationText = conduitName;
+    } else {
+        conduitStationText = t("CONDUIT_STATION_I18N.string");
+    }
     const proxyStatusText = t(`${inproxyStatus}_I18N.string`);
     const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
         peers: connectedPeers,

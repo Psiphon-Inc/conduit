@@ -137,6 +137,11 @@ export const sharedStyles = StyleSheet.create({
         maxHeight: 120,
         minHeight: 120,
     },
+    height180: {
+        height: 180,
+        maxHeight: 180,
+        minHeight: 180,
+    },
     height200: {
         height: 200,
         maxHeight: 200,

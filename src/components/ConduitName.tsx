@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -8,22 +8,11 @@ import {
     QUERYKEY_CONDUIT_NAME,
     SECURESTORE_CONDUIT_NAME_KEY,
 } from "@/src/constants";
+import { useConduitName } from "@/src/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitName() {
-    const conduitName = useQuery({
-        queryKey: [QUERYKEY_CONDUIT_NAME],
-        queryFn: async () => {
-            const storedConduitName = await SecureStore.getItemAsync(
-                SECURESTORE_CONDUIT_NAME_KEY,
-            );
-            if (storedConduitName == null) {
-                return "";
-            } else {
-                return storedConduitName;
-            }
-        },
-    });
+    const conduitName = useConduitName();
 
     if (conduitName.error) {
         return <Text style={[ss.whiteText, ss.bodyFont]}>Error</Text>;
@@ -60,7 +49,7 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
     const [value, setValue] = React.useState(initialName);
     const [charsUsed, setCharsUsed] = React.useState(initialName.length);
     const [showCharsUsed, setShowCharsUsed] = React.useState(false);
-    const maxLength = 30;
+    const maxLength = 22;
 
     async function onFocus() {
         setShowCharsUsed(true);
@@ -87,8 +76,7 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
                     ss.bodyFont,
                     ss.midGreyBorder,
                     ss.rounded10,
-                    ss.paddedHorizontal,
-                    { height: "100%" },
+                    ss.padded,
                 ]}
                 placeholder={t("NAME_YOUR_CONDUIT_I18N.string")}
                 placeholderTextColor={palette.midGrey}

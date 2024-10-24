@@ -15,13 +15,13 @@ export function ProxyID({
 }) {
     // proxyId is a base64nopad encoded X25519 public key
     const [copyIcon, setCopyIcon] = React.useState(
-        <Icon name="copy" size={24} color={palette.white} />,
+        <Icon name="copy" size={24} color={palette.black} />,
     );
 
     function showCopySuccess() {
-        setCopyIcon(<Icon name="check" size={24} color={palette.white} />);
+        setCopyIcon(<Icon name="check" size={24} color={palette.black} />);
         setTimeout(() => {
-            setCopyIcon(<Icon name="copy" size={24} color={palette.white} />);
+            setCopyIcon(<Icon name="copy" size={24} color={palette.black} />);
         }, 2500);
     }
 
@@ -31,21 +31,26 @@ export function ProxyID({
     }
 
     return (
-        <Pressable onPress={copyProxyIdToClipboard}>
-            <View style={[ss.row, ss.alignCenter, ss.rounded5, ss.halfPadded]}>
-                <Text style={[ss.whiteText, ss.bodyFont]}>
-                    {proxyId.substring(0, 4)}...
-                </Text>
-                <View
-                    style={{
-                        width: 40,
-                        height: 40,
-                    }}
-                >
-                    <Jdenticon value={proxyId} size={40} />
-                </View>
-                {copyable && copyIcon}
+        <View style={[ss.row, ss.alignCenter, ss.rounded5]}>
+            <Text style={[ss.whiteText, ss.bodyFont]}>
+                {proxyId.substring(0, 4)}...
+            </Text>
+            <View
+                style={{
+                    width: 40,
+                    height: 40,
+                }}
+            >
+                <Jdenticon value={proxyId} size={40} />
             </View>
-        </Pressable>
+            {copyable && (
+                <Pressable
+                    onPress={copyProxyIdToClipboard}
+                    style={[ss.rounded5, ss.whiteBg, ss.halfPadded]}
+                >
+                    {copyIcon}
+                </Pressable>
+            )}
+        </View>
     );
 }
