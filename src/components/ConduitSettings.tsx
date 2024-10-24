@@ -45,6 +45,7 @@ import {
     INPROXY_MAX_MBPS_PER_PEER_MAX,
     PARTICLE_VIDEO_DELAY_MS,
 } from "@/src/constants";
+import { useNotificationsPermissions } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import {
@@ -63,6 +64,7 @@ export function ConduitSettings() {
     const { inproxyParameters, selectInproxyParameters, logErrorToDiagnostic } =
         useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
+    const { data: notificationsPermission } = useNotificationsPermissions();
 
     const [modalOpen, setModalOpen] = React.useState(false);
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
@@ -265,6 +267,7 @@ export function ConduitSettings() {
                                     ss.alignCenter,
                                     ss.height120,
                                     ss.column,
+                                    ss.padded,
                                 ]}
                             >
                                 <View
@@ -276,24 +279,14 @@ export function ConduitSettings() {
                                     ]}
                                 >
                                     <Text style={[ss.bodyFont, ss.whiteText]}>
-                                        {t("YOUR_CONDUIT_I18N.string")}
+                                        {t("YOUR_CONDUIT_ID_I18N.string")}
                                     </Text>
                                     {conduitKeyPair.data ? (
-                                        <View style={[ss.row, ss.alignCenter]}>
-                                            <Text
-                                                style={[
-                                                    ss.bodyFont,
-                                                    ss.whiteText,
-                                                ]}
-                                            >
-                                                {t("ID_I18N.string")}:
-                                            </Text>
-                                            <ProxyID
-                                                proxyId={getProxyId(
-                                                    conduitKeyPair.data,
-                                                )}
-                                            />
-                                        </View>
+                                        <ProxyID
+                                            proxyId={getProxyId(
+                                                conduitKeyPair.data,
+                                            )}
+                                        />
                                     ) : (
                                         <ActivityIndicator
                                             size={"small"}
@@ -321,6 +314,19 @@ export function ConduitSettings() {
                                 </Text>
                                 <SendDiagnosticButton />
                             </View>
+                            {notificationsPermission &&
+                                notificationsPermission != "GRANTED" && (
+                                    <View
+                                        style={[
+                                            ...lineItemStyle,
+                                            ss.flex,
+                                            ss.alignCenter,
+                                            ss.justifySpaceBetween,
+                                        ]}
+                                    >
+                                        <NotificationsStatus />
+                                    </View>
+                                )}
                             <View
                                 style={[
                                     ...lineItemStyle,
@@ -329,17 +335,9 @@ export function ConduitSettings() {
                                     ss.justifySpaceBetween,
                                 ]}
                             >
-                                <NotificationsStatus />
-                            </View>
-                            <View
-                                style={[
-                                    ...lineItemStyle,
-                                    ss.flex,
-                                    ss.alignCenter,
-                                    ss.justifyCenter,
-                                ]}
-                            >
-                                <View style={[ss.flex]} />
+                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                    {t("LEARN_MORE_I18N.string")}
+                                </Text>
                                 <Pressable
                                     onPress={() => {
                                         setModalOpen(false);

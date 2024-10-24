@@ -119,8 +119,8 @@ android {
         applicationId 'ca.psiphon.conduit'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "1.0.0-RC.8"
+        versionCode 9
+        versionName "1.0.0-RC.9"
     }
     signingConfigs {
         config {

@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
+import { useNotificationsPermissions } from "@/src/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 function RequestPermissionsPrompt({
@@ -64,25 +64,11 @@ function PermissionsGranted() {
     );
 }
 
-const NOTIFICATIONS_PERMISSIONS_QUERY_KEY = "sync-notifications-permissions";
-
-export const useNotificationsPermissions = () =>
-    useQuery({
-        queryKey: [NOTIFICATIONS_PERMISSIONS_QUERY_KEY],
-        queryFn: async () => {
-            return await Notifications.getPermissionsAsync();
-        },
-        refetchInterval: 2000,
-    });
-
 export function NotificationsStatus() {
     const permissions = useNotificationsPermissions();
 
     if (permissions.data) {
-        if (
-            permissions.data.status !== "granted" &&
-            permissions.data.canAskAgain
-        ) {
+        if (permissions.data === "NOT_GRANTED_CAN_ASK") {
             return (
                 <RequestPermissionsPrompt
                     onPress={async () =>
@@ -90,10 +76,7 @@ export function NotificationsStatus() {
                     }
                 />
             );
-        } else if (
-            permissions.data.status !== "granted" &&
-            !permissions.data.canAskAgain
-        ) {
+        } else if (permissions.data === "NOT_GRANTED_CANT_ASK") {
             return (
                 <RequestPermissionsPrompt
                     onPress={async () => await Linking.openSettings()}

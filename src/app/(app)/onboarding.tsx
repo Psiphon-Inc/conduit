@@ -38,11 +38,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { drawBigFont } from "@/src/common/utils";
 import { LearnMoreLink } from "@/src/components/LearnMoreLink";
-import { useNotificationsPermissions } from "@/src/components/NotificationsStatus";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
 import { ASYNCSTORAGE_HAS_ONBOARDED_KEY } from "@/src/constants";
+import { useNotificationsPermissions } from "@/src/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 
 export default function OnboardingScreen() {
@@ -60,8 +60,7 @@ export default function OnboardingScreen() {
     React.useEffect(() => {
         if (
             notificationPermissions.data &&
-            !notificationPermissions.data.granted &&
-            notificationPermissions.data.canAskAgain
+            notificationPermissions.data === "NOT_GRANTED_CAN_ASK"
         ) {
             setShouldAskForNotifications(true);
             buttonTextChanged.value = true;
