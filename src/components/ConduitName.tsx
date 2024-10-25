@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Text, TextInput, View } from "react-native";
+import { Keyboard, Text, TextInput, View } from "react-native";
 
 import {
     QUERYKEY_CONDUIT_NAME,
@@ -45,7 +45,6 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
             console.error("Failed to mutate conduit name:", error);
         },
     });
-
     const [value, setValue] = React.useState(initialName);
     const [charsUsed, setCharsUsed] = React.useState(initialName.length);
     const [showCharsUsed, setShowCharsUsed] = React.useState(false);
@@ -62,6 +61,24 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
         }
     }
 
+    // Hook up a keyboard event listener so we can call onBlur on keyboard
+    // getting dismissed.
+    const textInputRef = React.useRef<TextInput>(null);
+    React.useEffect(() => {
+        const keyboardDidHideSubscription = Keyboard.addListener(
+            "keyboardDidHide",
+            () => {
+                if (textInputRef.current) {
+                    textInputRef.current.blur();
+                }
+            },
+        );
+
+        return () => {
+            keyboardDidHideSubscription.remove();
+        };
+    }, []);
+
     function onChangeText(text: string) {
         setValue(text);
         setCharsUsed(text.length);
@@ -70,6 +87,7 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
     return (
         <View style={[ss.fullHeight, ss.flex, ss.row, ss.alignCenter]}>
             <TextInput
+                ref={textInputRef}
                 style={[
                     ss.flex,
                     ss.whiteText,

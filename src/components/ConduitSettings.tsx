@@ -60,7 +60,7 @@ export function ConduitSettings() {
     const win = useWindowDimensions();
     const router = useRouter();
 
-    const conduitKeyPair = useConduitKeyPair();
+    const { data: conduitKeyPair } = useConduitKeyPair();
     const { inproxyParameters, selectInproxyParameters, logErrorToDiagnostic } =
         useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
@@ -281,11 +281,9 @@ export function ConduitSettings() {
                                     <Text style={[ss.bodyFont, ss.whiteText]}>
                                         {t("YOUR_CONDUIT_ID_I18N.string")}
                                     </Text>
-                                    {conduitKeyPair.data ? (
+                                    {conduitKeyPair ? (
                                         <ProxyID
-                                            proxyId={getProxyId(
-                                                conduitKeyPair.data,
-                                            )}
+                                            proxyId={getProxyId(conduitKeyPair)}
                                         />
                                     ) : (
                                         <ActivityIndicator
