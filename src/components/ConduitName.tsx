@@ -54,7 +54,7 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
         setShowCharsUsed(true);
     }
 
-    async function onBlur() {
+    async function onEndEditing() {
         setShowCharsUsed(false);
         if (value !== initialName) {
             await mutateConduitName.mutateAsync(value);
@@ -62,7 +62,8 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
     }
 
     // Hook up a keyboard event listener so we can call onBlur on keyboard
-    // getting dismissed.
+    // getting dismissed. This also triggers onEndEditing, which submits the
+    // updated value to the mutation.
     const textInputRef = React.useRef<TextInput>(null);
     React.useEffect(() => {
         const keyboardDidHideSubscription = Keyboard.addListener(
@@ -100,7 +101,7 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
                 placeholderTextColor={palette.midGrey}
                 onChangeText={onChangeText}
                 onFocus={onFocus}
-                onBlur={onBlur}
+                onEndEditing={onEndEditing}
                 value={value}
                 selectionColor={palette.blue}
                 maxLength={maxLength}
