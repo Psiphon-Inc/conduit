@@ -615,9 +615,12 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             try {
                 notifier.notify(client);
             } catch (RemoteException e) {
-                MyLog.e(TAG, "Failed to send update to client: " + e);
+                // Remove the client if it is dead and do not log the exception as it is expected
+                // to happen when a client goes away without unregistering.
                 if (e instanceof DeadObjectException) {
                     iterator.remove();
+                } else {
+                    MyLog.e(TAG, "Failed to notify client: " + e);
                 }
             }
         }
