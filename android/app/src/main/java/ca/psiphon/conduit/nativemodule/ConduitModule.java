@@ -141,7 +141,7 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     @ReactMethod
     public void sendFeedback(String inproxyId, Promise promise) {
         final String FEEDBACK_UPLOAD_WORK_NAME = "FeedbackUploadWork";
-        final String TAG = "FeedbackUpload"; // Add TAG constant
+        final String TAG = "FeedbackUpload"; // Use a different tag for feedback upload logging
 
         try {
             // Check the current state of the unique work named FEEDBACK_UPLOAD_WORK_NAME
@@ -155,10 +155,12 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
                     boolean hasPendingWork = false;
 
                     for (WorkInfo workInfo : workInfos) {
-                        // Log complete state of the work info
-                        MyLog.i(TAG, "WorkInfo: " + workInfo);
+                        // Check for any pending work in ENQUEUED or RUNNING states
                         if (workInfo.getState() == WorkInfo.State.ENQUEUED || workInfo.getState() == WorkInfo.State.RUNNING) {
+                            MyLog.i(TAG, "Found pending work with state: " + workInfo.getState());
                             hasPendingWork = true;
+                            // Stop checking if there is pending work
+                            break;
                         }
                     }
 
