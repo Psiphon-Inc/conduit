@@ -317,6 +317,8 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             // Restart the tunnel core
             MyLog.i(TAG, "Conduit parameters changed; restarting.");
             try {
+                // If we are restarting reset the proxy activity stats
+                proxyActivityStats = new ProxyActivityStats();
                 psiphonTunnel.restartPsiphon();
             } catch (PsiphonTunnel.Exception e) {
                 MyLog.e(TAG, "Failed to restart psiphon: " + e);
@@ -330,6 +332,10 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                         R.id.notification_id_error_psiphon_restart_failed
                 );
             }
+
+            // Also send the proxy activity stats to the clients immediately
+            // so that they can update their UIs with the reset stats
+            updateProxyActivityStats(proxyActivityStats);
         }
     }
 
