@@ -2,7 +2,7 @@
   "expo": {
     "name": "conduit",
     "slug": "conduit",
-    "version": "1.0.0-RC.6",
+    "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "conduit",
     "userInterfaceStyle": "automatic",
@@ -13,7 +13,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ca.psiphon.conduit"
+      "bundleIdentifier": "ca.psiphon.conduit",
+      "icon": "./assets/images/ios-icon.png"
     },
     "android": {
       "versionCode": 6,
