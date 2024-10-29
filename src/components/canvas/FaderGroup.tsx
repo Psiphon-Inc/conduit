@@ -17,7 +17,6 @@
  *
  */
 
-
 import { ColorMatrix, Group, Paint } from "@shopify/react-native-skia";
 import { SharedValue, useDerivedValue } from "react-native-reanimated";
 

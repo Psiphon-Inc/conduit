@@ -17,7 +17,6 @@
  *
  */
 
-
 import * as validators from "@/src/common/validators";
 
 describe("validators", () => {

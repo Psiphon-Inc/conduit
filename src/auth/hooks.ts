@@ -17,7 +17,6 @@
  *
  */
 
-
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 
 import { Ed25519KeyPair } from "@/src/common/cryptography";

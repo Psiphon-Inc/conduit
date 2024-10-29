@@ -17,7 +17,6 @@
  *
  */
 
-
 export function wrapError(value: unknown, message: string): Error {
     if (value instanceof Error) {
         return new Error(message, { cause: value });

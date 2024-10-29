@@ -17,7 +17,6 @@
  *
  */
 
-
 // must be rendered within a canvas
 import {
     Blur,

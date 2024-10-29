@@ -17,7 +17,6 @@
  *
  */
 
-
 import { edwardsToMontgomeryPub } from "@noble/curves/ed25519";
 import { base64nopad } from "@scure/base";
 import { z } from "zod";

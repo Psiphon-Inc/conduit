@@ -17,7 +17,6 @@
  *
  */
 
-
 import { Skia, SkPath } from "@shopify/react-native-skia";
 
 function normalize(value: number, max: number) {

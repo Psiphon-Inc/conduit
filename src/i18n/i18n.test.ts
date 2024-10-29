@@ -17,7 +17,6 @@
  *
  */
 
-
 import * as fs from "fs";
 import i18n from "i18next";
 import path from "path";

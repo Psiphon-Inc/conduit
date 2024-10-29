@@ -17,7 +17,6 @@
  *
  */
 
-
 import {
     BlendColor,
     Blur,

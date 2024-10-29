@@ -17,7 +17,6 @@
  *
  */
 
-
 import { NativeModules } from "react-native";
 
 import { InproxyParameters } from "@/src/inproxy/types";

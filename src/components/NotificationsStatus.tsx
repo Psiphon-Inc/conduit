@@ -17,7 +17,6 @@
  *
  */
 
-
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import React from "react";

@@ -17,7 +17,6 @@
  *
  */
 
-
 import * as utils from "@/src/common/utils";
 
 describe("utils", () => {

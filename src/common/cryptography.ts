@@ -17,7 +17,6 @@
  *
  */
 
-
 import { ed25519 } from "@noble/curves/ed25519";
 import { base64nopad } from "@scure/base";
 import { mnemonicToSeedSync } from "@scure/bip39";

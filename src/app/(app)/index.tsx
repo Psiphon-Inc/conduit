@@ -17,7 +17,6 @@
  *
  */
 
-
 import React from "react";
 import { useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";

@@ -17,7 +17,6 @@
  *
  */
 
-
 import {
     Canvas,
     Circle,

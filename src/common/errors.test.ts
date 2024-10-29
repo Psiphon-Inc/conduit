@@ -17,7 +17,6 @@
  *
  */
 
-
 import * as errors from "@/src/common/errors";
 
 describe("errors", () => {

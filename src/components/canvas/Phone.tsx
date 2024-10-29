@@ -17,7 +17,6 @@
  *
  */
 
-
 import { palette } from "@/src/styles";
 import {
     Fill,

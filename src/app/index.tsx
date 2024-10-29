@@ -17,7 +17,6 @@
  *
  */
 
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Canvas } from "@shopify/react-native-skia";
 import { useRouter } from "expo-router";

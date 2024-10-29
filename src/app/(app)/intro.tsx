@@ -17,7 +17,6 @@
  *
  */
 
-
 import {
     Blur,
     Canvas,

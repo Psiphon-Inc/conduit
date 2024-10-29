@@ -17,7 +17,6 @@
  *
  */
 
-
 import { ed25519 } from "@noble/curves/ed25519";
 import { sha256 } from "@noble/hashes/sha256";
 import * as bip39 from "@scure/bip39";

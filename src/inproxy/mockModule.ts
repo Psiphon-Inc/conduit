@@ -17,7 +17,6 @@
  *
  */
 
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeEventEmitter } from "react-native";
 

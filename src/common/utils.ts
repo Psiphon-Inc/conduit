@@ -17,7 +17,6 @@
  *
  */
 
-
 import { ScaledSize } from "react-native";
 
 import { wrapError } from "@/src/common/errors";

@@ -17,7 +17,6 @@
  *
  */
 
-
 import { Group } from "@shopify/react-native-skia";
 import { SharedValue } from "react-native-reanimated";
 
