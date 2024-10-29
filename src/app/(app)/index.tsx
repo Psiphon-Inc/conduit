@@ -28,6 +28,7 @@ import { ConduitStatus } from "@/src/components/ConduitStatus";
 import { GitHash } from "@/src/components/GitHash";
 import { LogoWordmark } from "@/src/components/LogoWordmark";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { KeepAwakeOnIOS } from "@/src/components/KeepAwake";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();
@@ -63,6 +64,8 @@ export default function HomeScreen() {
                 <ConduitSettings />
                 {/* GIT_HASH absolutely positioned bottom left */}
                 <GitHash />
+                {/* Keep the screen open on iOS */}
+                <KeepAwakeOnIOS />
             </SafeAreaView>
         </GestureHandlerRootView>
     );
