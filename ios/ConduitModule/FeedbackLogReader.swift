@@ -17,12 +17,6 @@
  *
  */
 
-//
-// Copyright (c) 2024, Psiphon Inc.
-// All rights reserved.
-//
-
-
 import Foundation
 
 struct ParseError: Error {

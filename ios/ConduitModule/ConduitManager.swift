@@ -17,11 +17,6 @@
  *
  */
 
-/*
- * Copyright (c) 2024, Psiphon Inc.
- * All rights reserved.
- */
-
 import Foundation
 import PsiphonTunnel
 import Collections
