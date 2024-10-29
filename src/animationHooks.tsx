@@ -1,4 +1,5 @@
-// NOTE: this whole file is copied from @shopify/react-native-skia, see TODO
+// NOTE: this file is a modified copy of a similar file from
+// @shopify/react-native-skia, see TODO
 
 import {
     DataSourceParam,
@@ -54,9 +55,9 @@ export const useAnimatedImageValue = (
 
         // Update the current frame
         animatedImage.decodeNextFrame();
-        // TODO: this whole file is copied from @shopify/react-native-skia because
-        // the following dispose call seems to be causing flickering in the animated
-        // image. Will try address upstream at some point, then delete this file.
+        // TODO: The following dispose call seems to be causing flickering in
+        // the animated image. Will try address upstream at some point, then
+        // delete this file.
         //if (currentFrame.value) {
         //  currentFrame.value.dispose();
         //}
