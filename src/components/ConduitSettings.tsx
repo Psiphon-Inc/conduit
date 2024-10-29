@@ -522,22 +522,13 @@ export function ConduitSettings() {
                     },
                 ]}
             ></View>
-            {/* this empty modal fades in the opacity overlay */}
-            <Modal
-                animationType="fade"
-                visible={modalOpen}
-                transparent={true}
-                onRequestClose={onSettingsClose}
-            >
-                <View style={[ss.underlay]} />
-            </Modal>
-            {/* this modal has the settings menu and slides up */}
             <Modal
                 animationType="slide"
                 visible={modalOpen}
                 transparent={true}
                 onRequestClose={onSettingsClose}
             >
+                <View style={[ss.underlay]} />
                 <View style={[ss.modalBottom90]}>
                     <Canvas style={[ss.flex]}>
                         <RoundedRect
