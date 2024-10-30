@@ -19,15 +19,113 @@
 
 import Foundation
 import PsiphonTunnel
-import OSLog
+import Puppy
 
 
-extension Logger {
-    private static var subsystem = Bundle.main.bundleIdentifier!
+// TODO: Add optional data field if decidely useful.
+struct AppLog: Codable {
+    let message: String
+    let level: String
+    @ISO1806MilliCodedDate var timestamp: Date
     
-    static let conduitModule = Logger(subsystem: subsystem, category: "ConduitModule")
+    enum CodingKeys : String, CodingKey {
+        case message = "message"
+        case level = "level"
+        case timestamp = "timestamp!!timestamp"
+    }
+}
+
+struct JSONLogFormatter: LogFormattable {
+    let category: String
+   
+    func formatMessage(_ level: LogLevel, message: String, tag: String, function: String,
+                      file: String, line: UInt, swiftLogInfo: [String: String],
+                       label: String, date: Date, threadID: UInt64) -> String {
+        
+        let log = AppLog(
+            message: "\(category): \(message)",
+            level: "\(level.description)",
+            timestamp: date
+        )
+        
+        var logString: String = ""
+        if let jsonData = try? JSONEncoder().encode(log) {
+            logString = String(data: jsonData, encoding: .utf8)!
+        }
+        
+        return logString
+    }
+}
+
+/// Manages an instance of Puppy which acts as both an OS logger and a JSON file-backed logger.
+struct AppLogger {
+    var puppy = Puppy()
     
-    static let feedbackUploadService = Logger(subsystem: subsystem, category: "FeedbackUploadService")
+    private static let subsystem = Bundle.main.bundleIdentifier!
+    
+    private static let baseFileURL = {
+        let dataRootDirectory = try! getApplicationSupportDirectory().filePath()
+        return URL(fileURLWithPath: "\(dataRootDirectory)\(AppLogger.subsystem).log.file/app.log").absoluteURL
+    }
+    
+    init(category: String) {
+
+        let rotationConfig = RotationConfig(
+            suffixExtension: .numbering,
+            maxFileSize: 100 * 1024,
+            maxArchivedFilesCount: 2
+        )
+
+        let logFormatter = JSONLogFormatter(category: category)
+        
+        let fileLogger = try! FileRotationLogger(
+            "\(AppLogger.subsystem).log.file", // DispatchQueue label
+            logLevel: .debug,
+            logFormat: logFormatter,
+            fileURL: AppLogger.baseFileURL(),
+            filePermission: "600",
+            rotationConfig: rotationConfig
+        )
+        self.puppy.add(fileLogger)
+        
+        let osLogger = OSLogger(
+            "\(AppLogger.subsystem).log.os", // DispatchQueue label
+            logLevel: .debug,
+            category: category
+        )
+        self.puppy.add(osLogger)
+    }
+    
+    // TODO: call from sendFeedback() and include in report.
+    static func readArchivedLogs(baseFileURL: URL) -> [AppLog] {
+
+        var archivedLogs = [AppLog]()
+        
+        for i in 1...2 {
+            let fileURL = baseFileURL.appendingPathExtension("\(i)")
+            
+            guard let content = try? String(contentsOf: fileURL) else {
+                continue
+            }
+            
+            let decodedLogs: [AppLog] = content
+                .components(separatedBy: .newlines)
+                .compactMap { line in
+                    guard let data = line.data(using: .utf8) else { return nil }
+                    return try? JSONDecoder().decode(AppLog.self, from: data)
+                }
+            
+            archivedLogs.append(contentsOf: decodedLogs)
+        }
+        
+        return archivedLogs
+    }
+}
+
+extension os.Logger {
+    static let conduitModule = AppLogger(category: "ConduitModule").puppy
+
+    static let feedbackUploadService = AppLogger(category: "FeedbackUploadService").puppy
 }
 
 /// A type that is used for cross-langauge interaction with JavaScript codebase.
@@ -188,7 +286,7 @@ final class ConduitModule: RCTEventEmitter {
     // synchronous execution to reuse the same thread.
     // Note that using `.sync` and targeting the same queue will result in a deadlock.
     let dispatchQueue: dispatch_queue_t
-
+    
     override init() {
         dispatchQueue = DispatchQueue(label: "ca.psiphon.conduit.module", qos: .default)
         super.init()
@@ -253,7 +351,7 @@ extension ConduitModule {
                 } catch {
                     sendEvent(.proxyError(.inProxyStartFailed))
                     Logger.conduitModule.error(
-                        "Proxy start failed: \(String(describing: error), privacy: .public)")
+                        "Proxy start failed: \(String(describing: error))")
                 }
             case .started:
                 await self.conduitManager.stopConduit()
@@ -333,14 +431,14 @@ extension ConduitModule {
             
             if parseErrors.count > 0 {
                 Logger.conduitModule.error(
-                    "Log parse errors: \(String(describing: parseErrors), privacy: .public)")
+                    "Log parse errors: \(String(describing: parseErrors))")
             }
             
             
             // Prepare Feedback Diagnostic Report
             
             let feedbackId = try generateFeedbackId()
-            Logger.conduitModule.info("Preparing feedback report with ID = \(feedbackId, privacy: .public)")
+            Logger.conduitModule.info("Preparing feedback report with ID = \(feedbackId)")
             
             let psiphonConfig = try defaultPsiphonConfig()
             
@@ -395,32 +493,32 @@ extension ConduitModule {
                 } catch {
                     reject("error", "Feedback upload failed", nil)
                     Logger.conduitModule.error(
-                        "Feedback upload failed: \(String(describing: error), privacy: .public)")
+                        "Feedback upload failed: \(String(describing: error))")
                 }
             }
             
         } catch {
             reject("error", "Feedback upload failed", nil)
             Logger.conduitModule.error(
-                "Feedback upload failed: \(String(describing: error), privacy: .public)")
+                "Feedback upload failed: \(String(describing: error))")
         }
     }
     
     @objc(logInfo:msg:withResolver:withRejecter:)
     func logInfo(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        Logger.conduitModule.info("\(tag): \(msg)")
         resolve(nil)
     }
     
     @objc(logWarn:msg:withResolver:withRejecter:)
     func logWarn(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        Logger.conduitModule.info("\(tag): \(msg)")
         resolve(nil)
     }
 
     @objc(logError:msg:withResolver:withRejecter:)
     func logError(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        Logger.conduitModule.info("\(tag): \(msg)")
         resolve(nil)
     }
 
@@ -480,7 +578,7 @@ extension ConduitModule: ConduitManager.Listener {
 extension ConduitModule: FeedbackUploadService.Listener {
     
     func onDiagnosticMessage(_ message: String, withTimestamp timestamp: String) {
-        Logger.feedbackUploadService.info("DiagnosticMessage: \(timestamp, privacy: .public) \(message, privacy: .public)")
+        Logger.feedbackUploadService.info("DiagnosticMessage: \(timestamp) \(message)")
     }
     
 }

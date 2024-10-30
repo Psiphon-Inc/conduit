@@ -17,16 +17,15 @@
  *
  */
 
+import Collections
 import Foundation
 import PsiphonTunnel
-import Collections
+import Puppy
 
-extension Logger {
-    private static var subsystem = Bundle.main.bundleIdentifier!
+extension os.Logger {
+    static let conduitMan = AppLogger(category: "ConduitManager").puppy
     
-    static let conduitMan = Logger(subsystem: subsystem, category: "ConduitManager")
-    
-    static let psiphonTunnel = Logger(subsystem: subsystem, category: "PsiphonTunnel")
+    static let psiphonTunnel = AppLogger(category: "PsiphonTunnel").puppy
 }
 
 struct ConduitParams: Equatable {
@@ -331,7 +330,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
             let data = try Data(contentsOf: ResourceFile.embeddedServerEntries.url)
             return String(data: data, encoding: .utf8)
         } catch {
-            Logger.conduitMan.fault("Failed to read embedded server entries")
+            Logger.conduitMan.critical("Failed to read embedded server entries")
             return nil
         }
     }
@@ -371,7 +370,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
             
             return config
         } catch {
-            Logger.conduitMan.error("getPsiphonConfig failed: \(error, privacy: .public)")
+            Logger.conduitMan.error("getPsiphonConfig failed: \(error)")
             return nil
         }
     }
@@ -401,7 +400,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
     }
 
     func onDiagnosticMessage(_ message: String, withTimestamp timestamp: String) {
-        Logger.psiphonTunnel.debug("\(message, privacy: .public)")
+        Logger.psiphonTunnel.debug("\(message)")
     }
     
 }

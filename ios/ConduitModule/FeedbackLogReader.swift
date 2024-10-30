@@ -72,7 +72,7 @@ func readDiagnosticLogFiles<T: Decodable>(
         
         // Ignore paths that don't exist.
         if !FileManager.default.fileExists(atPath: try path.filePath()) {
-            Logger.conduitModule.info("No diagnostic file at path: \(path, privacy: .private)")
+            Logger.conduitModule.info("No diagnostic file at path: \(path)")
             continue
         }
         
