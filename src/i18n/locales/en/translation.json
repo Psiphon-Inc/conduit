@@ -67,7 +67,7 @@
         "string": "Changing Conduit settings requires restarting your Conduit Station. Any connected users will be disconnected."
     },
     "CONFIRM_CHANGES_I18N": {
-        "string": "Confirm Changes?"
+        "string": "Confirm Changes and Restart Now?"
     },
     "NOTIFICATIONS_I18N": {
         "string": "Notifications"
