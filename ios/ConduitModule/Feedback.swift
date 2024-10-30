@@ -315,12 +315,6 @@ func validatePsiphonConfig(_ config: [String: Any?]) throws {
     guard config["EnableFeedbackUpload"] as? Bool == true else {
         throw Err("Expected EnableFeedbackUpload to be true.")
     }
-    guard config["feedbackConfig"] != nil else {
-        throw Err("Expected feedbackConfig to be present.")
-    }
-    guard config["FeedbackUploadURLs"] != nil else {
-        throw Err("Expected FeedbackUploadURLs to be present.")
-    }
     guard config["FeedbackEncryptionPublicKey"] != nil else {
         throw Err("Expected FeedbackEncryptionPublicKey to be present.")
     }

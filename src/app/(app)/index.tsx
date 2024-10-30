@@ -26,9 +26,9 @@ import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { ConduitStatus } from "@/src/components/ConduitStatus";
 import { GitHash } from "@/src/components/GitHash";
+import { KeepAwakeOnIOS } from "@/src/components/KeepAwake";
 import { LogoWordmark } from "@/src/components/LogoWordmark";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
-import { KeepAwakeOnIOS } from "@/src/components/KeepAwake";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();

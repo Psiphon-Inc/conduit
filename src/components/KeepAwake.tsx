@@ -21,11 +21,9 @@ import { useKeepAwake } from "expo-keep-awake";
 import { Platform } from "react-native";
 
 export function KeepAwakeOnIOS() {
-
     if (Platform.OS === "ios") {
         useKeepAwake();
     }
 
     return null;
 }
-
