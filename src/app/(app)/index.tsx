@@ -26,6 +26,7 @@ import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { ConduitStatus } from "@/src/components/ConduitStatus";
 import { GitHash } from "@/src/components/GitHash";
+import { KeepAwakeOnIOS } from "@/src/components/KeepAwake";
 import { LogoWordmark } from "@/src/components/LogoWordmark";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 
@@ -63,6 +64,8 @@ export default function HomeScreen() {
                 <ConduitSettings />
                 {/* GIT_HASH absolutely positioned bottom left */}
                 <GitHash />
+                {/* Keep the screen open on iOS */}
+                <KeepAwakeOnIOS />
             </SafeAreaView>
         </GestureHandlerRootView>
     );

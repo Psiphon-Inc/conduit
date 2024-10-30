@@ -87,7 +87,7 @@ export default function OnboardingScreen() {
     }, [notificationPermissions]);
 
     const usableWidth = win.width - (insets.left + insets.right);
-    const usableHeight = win.height;
+    const usableHeight = win.height - (insets.top + insets.bottom);
 
     const views = [
         {
