@@ -358,7 +358,7 @@ export function ConduitSettings() {
                                 <Pressable
                                     onPress={() => {
                                         setModalOpen(false);
-                                        router.push("/(app)/intro");
+                                        router.push("/(app)/onboarding");
                                     }}
                                 >
                                     <View
