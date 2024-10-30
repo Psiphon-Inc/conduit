@@ -315,9 +315,6 @@ func validatePsiphonConfig(_ config: [String: Any?]) throws {
     guard config["EnableFeedbackUpload"] as? Bool == true else {
         throw Err("Expected EnableFeedbackUpload to be true.")
     }
-    guard config["FeedbackEncryptionPublicKey"] != nil else {
-        throw Err("Expected FeedbackEncryptionPublicKey to be present.")
-    }
     guard config["DataRootDirectory"] != nil else {
         throw Err("Expected DataRootDirectory in Psiphon config.")
     }
