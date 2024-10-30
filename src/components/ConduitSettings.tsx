@@ -186,21 +186,20 @@ export function ConduitSettings() {
                         ss.greyBorderBottom,
                     ]}
                 >
-                    <View style={[ss.row]}>
-                        <Pressable
+                    <Pressable style={[ss.row]} onPress={onSettingsClose}>
+                        <View
                             style={[ss.rounded20, ss.alignFlexStart, ss.padded]}
-                            onPress={onSettingsClose}
                         >
                             <Icon
                                 name={"chevron-down"}
                                 color={palette.white}
                                 size={30}
                             />
-                        </Pressable>
+                        </View>
                         <Text style={[ss.whiteText, ss.extraLargeFont]}>
                             {t("SETTINGS_I18N.string")}
                         </Text>
-                    </View>
+                    </Pressable>
                     <View style={[ss.row, ss.flex, ss.justifyFlexEnd]}>
                         <Animated.View
                             style={[
