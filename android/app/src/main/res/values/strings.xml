@@ -5,8 +5,10 @@
     <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
     <string name="conduit_service_stop_label_text">Stop</string>
-    <!-- Notification text for the Conduit service when it is active -->
-    <string name="conduit_service_running_notification_text">Conduit is active</string>
+    <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing total bytes up, total bytes down, and the number of clients connecting and connected -->
+    <string name="conduit_service_running_notification_short_text">%1$s up / %2$s down \u00B7 %3$d  / %4$d</string>
+    <!-- Long notification text (notification expanded) for the Conduit service when it is active showing total bytes up, total bytes down, and the number of clients connecting and connected -->
+    <string name="conduit_service_running_notification_long_text">Data: %1$s up / %2$s down\nClients: %3$d connecting / %4$d connected</string>
     <!-- Notification text for the Conduit service when it is waiting for network connectivity -->
     <string name="conduit_service_no_internet_notification_text">Waiting for network connectivity</string>
     <!-- Notification channel description for the Conduit service -->
