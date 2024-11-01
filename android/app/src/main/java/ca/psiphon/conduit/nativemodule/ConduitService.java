@@ -502,17 +502,20 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             notificationTextShort = notificationTextLong = getString(R.string.conduit_service_no_internet_notification_text);
         } else {
             notificationIconId = R.drawable.ic_conduit_active;
+
+            long dataTransferred = proxyActivityStats.getTotalBytesUp() + proxyActivityStats.getTotalBytesDown();
+            int connectingClients = proxyActivityStats.getCurrentConnectingClients();
+            int connectedClients = proxyActivityStats.getCurrentConnectedClients();
+
             notificationTextShort = getString(R.string.conduit_service_running_notification_short_text,
-                    Utils.formatBytes(proxyActivityStats.getTotalBytesUp(), false),      // Total bytes up
-                    Utils.formatBytes(proxyActivityStats.getTotalBytesDown(), false),    // Total bytes down
-                    proxyActivityStats.getCurrentConnectingClients(),       // Connecting clients
-                    proxyActivityStats.getCurrentConnectedClients());       // Connected clients
+                    Utils.formatBytes(dataTransferred, false),    // Data transferred
+                    connectingClients,     // Connecting clients
+                    connectedClients);     // Connected clients
 
             notificationTextLong = getString(R.string.conduit_service_running_notification_long_text,
-                    Utils.formatBytes(proxyActivityStats.getTotalBytesUp(), false),      // Total bytes up
-                    Utils.formatBytes(proxyActivityStats.getTotalBytesDown(), false),    // Total bytes down
-                    proxyActivityStats.getCurrentConnectingClients(),       // Connecting clients
-                    proxyActivityStats.getCurrentConnectedClients());       // Connected clients
+                    Utils.formatBytes(dataTransferred, false),    // Data transferred
+                    connectingClients,     // Connecting clients
+                    connectedClients);     // Connected clients
         }
         return buildNotification(notificationIconId, notificationTextShort, notificationTextLong);
     }
