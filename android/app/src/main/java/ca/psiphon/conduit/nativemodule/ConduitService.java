@@ -139,11 +139,6 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     private ProxyState proxyState = ProxyState.serviceDefault();
 
     @Override
-    public String getAppName() {
-        return getString(R.string.app_name);
-    }
-
-    @Override
     public Context getContext() {
         return this;
     }
@@ -226,7 +221,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     public void onInproxyProxyActivity(int connectingClients, int connectedClients, long bytesUp, long bytesDown) {
         handler.post(() -> {
             proxyActivityStats.add(bytesUp, bytesDown, connectingClients, connectedClients);
-            updateProxyActivityStats(proxyActivityStats);
+            updateProxyActivityStats();
         });
     }
 
@@ -250,7 +245,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             proxyState = proxyState.toBuilder()
                     .setNetworkState(ProxyState.NetworkState.NO_INTERNET)
                     .build();
-            updateProxyState(proxyState);
+            updateProxyState();
         });
     }
 
@@ -261,7 +256,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             proxyState = proxyState.toBuilder()
                     .setNetworkState(ProxyState.NetworkState.HAS_INTERNET)
                     .build();
-            updateProxyState(proxyState);
+            updateProxyState();
         });
     }
 
@@ -354,7 +349,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
             // Also send the proxy activity stats to the clients immediately
             // so that they can update their UIs with the reset stats
-            updateProxyActivityStats(proxyActivityStats);
+            updateProxyActivityStats();
         }
     }
 
@@ -421,7 +416,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                 proxyState = proxyState.toBuilder()
                         .setStatus(ProxyState.Status.RUNNING)
                         .build();
-                updateProxyState(proxyState);
+                updateProxyState();
 
                 psiphonTunnel.startTunneling(Utils.getEmbeddedServers(this));
 
@@ -492,26 +487,40 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
 
         // Start the service in the foreground
-        startForeground(R.id.notification_id_proxy_state, notificationForState(proxyState));
+        startForeground(R.id.notification_id_proxy_state, notificationForState(proxyState, proxyActivityStats));
     }
 
-    private Notification notificationForState(ProxyState proxyState) {
+    private Notification notificationForState(ProxyState proxyState, ProxyActivityStats proxyActivityStats) {
         int notificationIconId;
-        CharSequence notificationText;
+        CharSequence notificationTextShort;
+        CharSequence notificationTextLong;
 
         // Handle the no internet state first
         ProxyState.NetworkState networkState = proxyState.networkState();
         if (networkState == ProxyState.NetworkState.NO_INTERNET) {
             notificationIconId = R.drawable.ic_conduit_no_internet;
-            notificationText = getString(R.string.conduit_service_no_internet_notification_text);
+            notificationTextShort = notificationTextLong = getString(R.string.conduit_service_no_internet_notification_text);
         } else {
             notificationIconId = R.drawable.ic_conduit_active;
-            notificationText = getString(R.string.conduit_service_running_notification_text);
+
+            long dataTransferred = proxyActivityStats.getTotalBytesUp() + proxyActivityStats.getTotalBytesDown();
+            int connectingClients = proxyActivityStats.getCurrentConnectingClients();
+            int connectedClients = proxyActivityStats.getCurrentConnectedClients();
+
+            notificationTextShort = getString(R.string.conduit_service_running_notification_short_text,
+                    Utils.formatBytes(dataTransferred, false),    // Data transferred
+                    connectingClients,     // Connecting clients
+                    connectedClients);     // Connected clients
+
+            notificationTextLong = getString(R.string.conduit_service_running_notification_long_text,
+                    Utils.formatBytes(dataTransferred, false),    // Data transferred
+                    connectingClients,     // Connecting clients
+                    connectedClients);     // Connected clients
         }
-        return buildNotification(notificationIconId, notificationText);
+        return buildNotification(notificationIconId, notificationTextShort, notificationTextLong);
     }
 
-    private Notification buildNotification(int notificationIconId, CharSequence notificationText) {
+    private Notification buildNotification(int notificationIconId, CharSequence notificationTextShort, CharSequence notificationTextLong) {
         Intent stopServiceIntent = new Intent(this, getClass());
         stopServiceIntent.setAction(INTENT_ACTION_STOP_SERVICE);
 
@@ -529,8 +538,8 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         return notificationBuilder
                 .setSmallIcon(notificationIconId)
                 .setContentTitle(getText(R.string.app_name))
-                .setContentText(notificationText)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationText))
+                .setContentText(notificationTextShort)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationTextLong))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(getPendingIntent(this, Intent.ACTION_VIEW))
                 .addAction(notificationAction)
@@ -651,19 +660,26 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
     }
 
-    public void updateProxyState(ProxyState state) {
-        notifyClients(client -> client.onProxyStateUpdated(state.toBundle()));
+    public void updateProxyState() {
+        notifyClients(client -> client.onProxyStateUpdated(proxyState.toBundle()));
 
         // Also update the service notification
-        Notification notification = notificationForState(state);
+        updateServiceNotification();
+    }
+
+    public void updateProxyActivityStats() {
+        notifyClients(client -> client.onProxyActivityStatsUpdated(proxyActivityStats.toBundle()));
+
+        // Also update the service notification
+        updateServiceNotification();
+    }
+
+    private void updateServiceNotification() {
+        Notification notification = notificationForState(proxyState, proxyActivityStats);
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
             notificationManager.notify(R.id.notification_id_proxy_state, notification);
         }
-    }
-
-    public void updateProxyActivityStats(ProxyActivityStats stats) {
-        notifyClients(client -> client.onProxyActivityStatsUpdated(stats.toBundle()));
     }
 
     // Functional interface to represent a client notification action
