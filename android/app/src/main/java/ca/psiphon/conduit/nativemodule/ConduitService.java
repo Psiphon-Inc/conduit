@@ -139,11 +139,6 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     private ProxyState proxyState = ProxyState.serviceDefault();
 
     @Override
-    public String getAppName() {
-        return getString(R.string.app_name);
-    }
-
-    @Override
     public Context getContext() {
         return this;
     }
