@@ -56,5 +56,13 @@
         android:authorities="${applicationId}.log"
         android:exported="false"
         android:process=":LoggingContentProvider" />
+    <!-- Receiver for handling app updates -->
+    <receiver android:name=".nativemodule.ConduitUpdateReceiver"
+        android:exported="false">
+      <intent-filter>
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+      </intent-filter>
+    </receiver>
+
   </application>
 </manifest>

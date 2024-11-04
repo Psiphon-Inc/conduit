@@ -66,6 +66,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     public static final String INTENT_ACTION_STOP_SERVICE = "ca.psiphon.conduit.nativemodule.StopService";
     public static final String INTENT_ACTION_TOGGLE_IN_PROXY = "ca.psiphon.conduit.nativemodule.ToggleInProxy";
+    public static final String INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS = "ca.psiphon.conduit.nativemodule.StartInProxyWithLastParams";
     public static final String INTENT_ACTION_PARAMS_CHANGED = "ca.psiphon.conduit.nativemodule.ParamsChanged";
     public static final String INTENT_ACTION_PSIPHON_START_FAILED = "ca.psiphon.conduit.nativemodule.PsiphonStartFailed";
     public static final String INTENT_ACTION_PSIPHON_RESTART_FAILED = "ca.psiphon.conduit.nativemodule.PsiphonRestartFailed";
@@ -270,7 +271,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     public void onCreate() {
         super.onCreate();
         MyLog.init(getApplicationContext());
-        conduitServiceParameters = new ConduitServiceParameters();
+        conduitServiceParameters = new ConduitServiceParameters(getApplicationContext());
     }
 
     @Override
@@ -281,6 +282,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             // Handle the stop action
             if (INTENT_ACTION_STOP_SERVICE.equals(action)) {
                 MyLog.i(TAG, "Received stop action from notification.");
+                Utils.setServiceRunningFlag(this, false);
                 stopForegroundService();
                 return START_NOT_STICKY;
             }
@@ -295,6 +297,8 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                     }
                     case RUNNING -> {
                         if (INTENT_ACTION_TOGGLE_IN_PROXY.equals(action)) {
+                            MyLog.i(TAG, "Toggling in-proxy mode; stopping service.");
+                            Utils.setServiceRunningFlag(this, false);
                             stopForegroundService();
                         } else if (INTENT_ACTION_PARAMS_CHANGED.equals(action)) {
                             handleParamsChanged(intent);
@@ -303,14 +307,21 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                     }
                     case STOPPED -> {
                         if (INTENT_ACTION_TOGGLE_IN_PROXY.equals(action)) {
-                            // Update stored parameters before starting the service
+                            MyLog.i(TAG, "Service is not running; starting the service with new parameters.");
                             Map<String, Object> params = extractParametersFromIntent(intent);
                             conduitServiceParameters.updateParametersFromMap(params);
-
+                            Utils.setServiceRunningFlag(this, true);
+                            startForegroundService();
+                            yield START_REDELIVER_INTENT;
+                        } else if (INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS.equals(action)) {
+                            MyLog.i(TAG, "Starting service with last known parameters.");
+                            Map<String, Object> lastParams = conduitServiceParameters.loadLastKnownParameters();
+                            conduitServiceParameters.updateParametersFromMap(lastParams);
+                            Utils.setServiceRunningFlag(this, true);
                             startForegroundService();
                             yield START_REDELIVER_INTENT;
                         } else if (INTENT_ACTION_PARAMS_CHANGED.equals(action)) {
-                            MyLog.i(TAG, "Service is not running; stopping the service and doing nothing.");
+                            MyLog.i(TAG, "Service is not running; ignoring parameters change.");
                             stopSelf();
                         }
                         yield START_NOT_STICKY;

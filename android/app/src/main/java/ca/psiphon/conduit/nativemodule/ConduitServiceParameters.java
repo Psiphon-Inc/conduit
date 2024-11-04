@@ -19,6 +19,10 @@
 
 package ca.psiphon.conduit.nativemodule;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import java.util.HashMap;
 import java.util.Map;
 
 public class ConduitServiceParameters {
@@ -26,49 +30,38 @@ public class ConduitServiceParameters {
     static final String LIMIT_UPSTREAM_BYTES_KEY = "limitUpstreamBytes";
     static final String LIMIT_DOWNSTREAM_BYTES_KEY = "limitDownstreamBytes";
     static final String INPROXY_PRIVATE_KEY_KEY = "inProxyPrivateKey";
+    private static final String PREFS_NAME = "ConduitServiceParamsPrefs";
 
-    private int maxClients;
-    private int limitUpstreamBytes;
-    private int limitDownstreamBytes;
-    private String proxyPrivateKey;
+    private final SharedPreferences preferences;
 
-    public ConduitServiceParameters() {
-        // Initialize parameters with invalid values
-        this.maxClients = -1;
-        this.limitUpstreamBytes = -1;
-        this.limitDownstreamBytes = -1;
-        this.proxyPrivateKey = null;
+    public ConduitServiceParameters(Context context) {
+        this.preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
     }
 
     public int getMaxClients() {
-        return maxClients;
+        return preferences.getInt(MAX_CLIENTS_KEY, -1);
     }
 
     public int getLimitUpstreamBytes() {
-        return limitUpstreamBytes;
+        return preferences.getInt(LIMIT_UPSTREAM_BYTES_KEY, -1);
     }
 
     public int getLimitDownstreamBytes() {
-        return limitDownstreamBytes;
+        return preferences.getInt(LIMIT_DOWNSTREAM_BYTES_KEY, -1);
     }
 
     public String getProxyPrivateKey() {
-        return proxyPrivateKey;
+        return preferences.getString(INPROXY_PRIVATE_KEY_KEY, null);
     }
 
-    public void storeParameters(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey) {
-        this.maxClients = maxClients;
-        this.limitUpstreamBytes = limitUpstreamBytes;
-        this.limitDownstreamBytes = limitDownstreamBytes;
-        this.proxyPrivateKey = privateKey;
-    }
-
-    public boolean updateParametersFromMap (Map<String, Object> params) {
+    public boolean updateParametersFromMap(Map<String, Object> params) {
         boolean paramsChanged = false;
+        SharedPreferences.Editor editor = preferences.edit();
+
         if (params.containsKey(MAX_CLIENTS_KEY)) {
             Integer maxClients = (Integer) params.get(MAX_CLIENTS_KEY);
             if (maxClients != null && maxClients != getMaxClients()) {
-                storeParameters(maxClients, getLimitUpstreamBytes(), getLimitDownstreamBytes(), getProxyPrivateKey());
+                editor.putInt(MAX_CLIENTS_KEY, maxClients);
                 paramsChanged = true;
             }
         }
@@ -76,7 +69,7 @@ public class ConduitServiceParameters {
         if (params.containsKey(LIMIT_UPSTREAM_BYTES_KEY)) {
             Integer limitUpstreamBytes = (Integer) params.get(LIMIT_UPSTREAM_BYTES_KEY);
             if (limitUpstreamBytes != null && limitUpstreamBytes != getLimitUpstreamBytes()) {
-                storeParameters(getMaxClients(), limitUpstreamBytes, getLimitDownstreamBytes(), getProxyPrivateKey());
+                editor.putInt(LIMIT_UPSTREAM_BYTES_KEY, limitUpstreamBytes);
                 paramsChanged = true;
             }
         }
@@ -84,7 +77,7 @@ public class ConduitServiceParameters {
         if (params.containsKey(LIMIT_DOWNSTREAM_BYTES_KEY)) {
             Integer limitDownstreamBytes = (Integer) params.get(LIMIT_DOWNSTREAM_BYTES_KEY);
             if (limitDownstreamBytes != null && limitDownstreamBytes != getLimitDownstreamBytes()) {
-                storeParameters(getMaxClients(), getLimitUpstreamBytes(), limitDownstreamBytes, getProxyPrivateKey());
+                editor.putInt(LIMIT_DOWNSTREAM_BYTES_KEY, limitDownstreamBytes);
                 paramsChanged = true;
             }
         }
@@ -92,9 +85,13 @@ public class ConduitServiceParameters {
         if (params.containsKey(INPROXY_PRIVATE_KEY_KEY)) {
             String privateKey = (String) params.get(INPROXY_PRIVATE_KEY_KEY);
             if (privateKey != null && !privateKey.equals(getProxyPrivateKey())) {
-                storeParameters(getMaxClients(), getLimitUpstreamBytes(), getLimitDownstreamBytes(), privateKey);
+                editor.putString(INPROXY_PRIVATE_KEY_KEY, privateKey);
                 paramsChanged = true;
             }
+        }
+
+        if (paramsChanged) {
+            editor.apply();
         }
 
         return paramsChanged;
@@ -107,4 +104,12 @@ public class ConduitServiceParameters {
                 getProxyPrivateKey() != null;
     }
 
+    public Map<String, Object> loadLastKnownParameters() {
+        Map<String, Object> params = new HashMap<>();
+        params.put(MAX_CLIENTS_KEY, getMaxClients());
+        params.put(LIMIT_UPSTREAM_BYTES_KEY, getLimitUpstreamBytes());
+        params.put(LIMIT_DOWNSTREAM_BYTES_KEY, getLimitDownstreamBytes());
+        params.put(INPROXY_PRIVATE_KEY_KEY, getProxyPrivateKey());
+        return params;
+    }
 }
