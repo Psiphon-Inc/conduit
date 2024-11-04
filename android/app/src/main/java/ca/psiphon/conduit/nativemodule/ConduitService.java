@@ -308,17 +308,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                     case STOPPED -> {
                         if (INTENT_ACTION_TOGGLE_IN_PROXY.equals(action)) {
                             MyLog.i(TAG, "Service is not running; starting the service with new parameters.");
-                            Map<String, Object> params = extractParametersFromIntent(intent);
-                            conduitServiceParameters.updateParametersFromMap(params);
-                            Utils.setServiceRunningFlag(this, true);
-                            startForegroundService();
+                            startServiceWithParameters(extractParametersFromIntent(intent));
                             yield START_REDELIVER_INTENT;
                         } else if (INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS.equals(action)) {
                             MyLog.i(TAG, "Starting service with last known parameters.");
-                            Map<String, Object> lastParams = conduitServiceParameters.loadLastKnownParameters();
-                            conduitServiceParameters.updateParametersFromMap(lastParams);
-                            Utils.setServiceRunningFlag(this, true);
-                            startForegroundService();
+                            startServiceWithParameters(conduitServiceParameters.loadLastKnownParameters());
                             yield START_REDELIVER_INTENT;
                         } else if (INTENT_ACTION_PARAMS_CHANGED.equals(action)) {
                             MyLog.i(TAG, "Service is not running; ignoring parameters change.");
@@ -333,6 +327,12 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         // If the intent is null or the action is not recognized, stop the service
         stopSelf();
         return START_NOT_STICKY;
+    }
+
+    private void startServiceWithParameters(Map<String, Object> params) {
+        conduitServiceParameters.updateParametersFromMap(params);
+        Utils.setServiceRunningFlag(this, true);
+        startForegroundService();
     }
 
     private void handleParamsChanged(Intent intent) {
