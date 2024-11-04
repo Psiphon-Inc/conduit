@@ -7,7 +7,7 @@
   <!-- Required for the Conduit service -->
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
   <!-- Declare use of custom permission for 'service starting' broadcast verification -->
   <uses-permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION" />
   <!-- Define custom permission for 'service starting' broadcast verification -->
@@ -42,13 +42,17 @@
     <!-- TunnelIntentsProxy activity-alias for handling intents from the Conduit service securely -->
     <activity-alias android:name=".TunnelIntentsProxy" android:targetActivity=".MainActivity"/>
     <!-- Conduit service -->
-    <!-- TODO: consider using foregroundServiceType="specialUse"? -->
     <service
         android:name=".nativemodule.ConduitService"
         android:exported="false"
-        android:foregroundServiceType= "dataSync"
+        android:foregroundServiceType="specialUse"
         android:label="@string/app_name"
-        android:process=":ConduitService" />
+        android:process=":ConduitService">
+      <property
+          android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+          android:value="P2P proxy for the Psiphon network" />
+    </service>
+
 
     <!-- Conduit logging content provider -->
     <provider

@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
@@ -40,6 +41,7 @@ import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -498,7 +500,13 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
 
         // Start the service in the foreground
-        startForeground(R.id.notification_id_proxy_state, notificationForState(proxyState, proxyActivityStats));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceCompat.startForeground(this, R.id.notification_id_proxy_state, notificationForState(proxyState, proxyActivityStats),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        } else {
+            ServiceCompat.startForeground(this, R.id.notification_id_proxy_state, notificationForState(proxyState, proxyActivityStats),
+                    0 /* ServiceInfo.FOREGROUND_SERVICE_TYPE_NONE */);
+        }
     }
 
     private Notification notificationForState(ProxyState proxyState, ProxyActivityStats proxyActivityStats) {
