@@ -22,38 +22,82 @@ import PsiphonTunnel
 import Puppy
 
 
-// TODO: Add optional data field if decidely useful.
+extension LogLevel {
+    var description: String {
+        switch self {
+        case .debug:
+            return "Debug"
+        case .info:
+            return "Info"
+        case .warning:
+            return "Warning"
+        case .error:
+            return "Error"
+        case .critical:
+            return "Critical"
+        case .trace:
+            return "Trace"
+        case .verbose:
+            return "Verbose"
+        case .notice:
+            return "Notice"
+        }
+    }
+}
+
 struct AppLog: Codable {
     let message: String
     let level: String
     @ISO1806MilliCodedDate var timestamp: Date
+    let data: String?
     
     enum CodingKeys : String, CodingKey {
         case message = "message"
         case level = "level"
         case timestamp = "timestamp!!timestamp"
+        case data = "data"
     }
 }
 
 struct JSONLogFormatter: LogFormattable {
     let category: String
+    let osLogger: OSLogger
+    let jsonEncoder: JSONEncoder = JSONEncoder()
    
     func formatMessage(_ level: LogLevel, message: String, tag: String, function: String,
-                      file: String, line: UInt, swiftLogInfo: [String: String],
+                       file: String, line: UInt, swiftLogInfo: [String: String],
                        label: String, date: Date, threadID: UInt64) -> String {
         
-        let log = AppLog(
-            message: "\(category): \(message)",
-            level: "\(level.description)",
-            timestamp: date
-        )
-        
-        var logString: String = ""
-        if let jsonData = try? JSONEncoder().encode(log) {
-            logString = String(data: jsonData, encoding: .utf8)!
+        var prefixedMsg: String
+        if tag != "" {
+            prefixedMsg = "\(tag): \(message)"
+        } else {
+            prefixedMsg = "\(category): \(message)"
         }
         
-        return logString
+        let log = AppLog(
+            message: prefixedMsg,
+            level: "\(level.description)",
+            timestamp: date,
+            data: swiftLogInfo["data"]
+        )
+        
+        do {
+            let jsonData = try self.jsonEncoder.encode(log)
+            guard let logString = String(data: jsonData, encoding: .utf8) else {
+                throw Err("Failed to convert JSON data to String")
+            }
+            return logString
+        } catch {
+            self.osLogger.log(.error, string: "LogFormatter: Failed to encode log")
+            return """
+            {
+                "message": "LogFormatter: Failed to encode log",
+                "level": "Error",
+                "timestamp": "\(ISO8601DateFormatter().string(from: date))"
+            }
+            """
+        }
     }
 }
 
@@ -61,8 +105,8 @@ struct JSONLogFormatter: LogFormattable {
 struct AppLogger {
     var puppy = Puppy()
     
-    private static let subsystem = Bundle.main.bundleIdentifier!
-    
+    private static let subsystem: String = Bundle.main.bundleIdentifier!
+    private static let maxArchivedCount: UInt8 = 2
     private static let baseFileURL = {
         let dataRootDirectory = try! getApplicationSupportDirectory().filePath()
         return URL(fileURLWithPath: "\(dataRootDirectory)\(AppLogger.subsystem).log.file/app.log").absoluteURL
@@ -70,39 +114,43 @@ struct AppLogger {
     
     init(category: String) {
 
+        let osLogger = OSLogger(
+            "\(AppLogger.subsystem).log.os", // DispatchQueue label
+            logLevel: .info,
+            category: category
+        )
+        self.puppy.add(osLogger)
+
+        let logFormatter = JSONLogFormatter(category: category, osLogger: osLogger)
+
         let rotationConfig = RotationConfig(
             suffixExtension: .numbering,
             maxFileSize: 100 * 1024,
-            maxArchivedFilesCount: 2
+            maxArchivedFilesCount: AppLogger.maxArchivedCount
         )
-
-        let logFormatter = JSONLogFormatter(category: category)
         
         let fileLogger = try! FileRotationLogger(
             "\(AppLogger.subsystem).log.file", // DispatchQueue label
-            logLevel: .debug,
+            logLevel: .info,
             logFormat: logFormatter,
             fileURL: AppLogger.baseFileURL(),
             filePermission: "600",
             rotationConfig: rotationConfig
         )
         self.puppy.add(fileLogger)
-        
-        let osLogger = OSLogger(
-            "\(AppLogger.subsystem).log.os", // DispatchQueue label
-            logLevel: .debug,
-            category: category
-        )
-        self.puppy.add(osLogger)
     }
     
     // TODO: call from sendFeedback() and include in report.
-    static func readArchivedLogs(baseFileURL: URL) -> [AppLog] {
+    static func readLogs() -> [AppLog] {
 
-        var archivedLogs = [AppLog]()
+        var appLogs = [AppLog]()
         
-        for i in 1...2 {
-            let fileURL = baseFileURL.appendingPathExtension("\(i)")
+        for i in 0...maxArchivedCount {
+            var fileURL = baseFileURL()
+
+            if i > 0 {
+                fileURL = fileURL.appendingPathExtension("\(i)")
+            }
             
             guard let content = try? String(contentsOf: fileURL) else {
                 continue
@@ -115,10 +163,9 @@ struct AppLogger {
                     return try? JSONDecoder().decode(AppLog.self, from: data)
                 }
             
-            archivedLogs.append(contentsOf: decodedLogs)
+            appLogs.append(contentsOf: decodedLogs)
         }
-        
-        return archivedLogs
+        return appLogs
     }
 }
 
@@ -506,19 +553,19 @@ extension ConduitModule {
     
     @objc(logInfo:msg:withResolver:withRejecter:)
     func logInfo(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag): \(msg)")
+        Logger.conduitModule.info(msg, tag: tag)
         resolve(nil)
     }
     
     @objc(logWarn:msg:withResolver:withRejecter:)
     func logWarn(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag): \(msg)")
+        Logger.conduitModule.warning(msg, tag: tag)
         resolve(nil)
     }
 
     @objc(logError:msg:withResolver:withRejecter:)
     func logError(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag): \(msg)")
+        Logger.conduitModule.error(msg, tag: tag)
         resolve(nil)
     }
 
