@@ -34,7 +34,7 @@ func parseJSONLines<T: Decodable>(
     
     let decoder = JSONDecoder()
     
-    for logLine in data.components(separatedBy: "\n") {
+    for logLine in data.components(separatedBy: .newlines) {
         
         guard !logLine.isEmpty else  {
             continue
@@ -71,7 +71,7 @@ func readLogFiles<T: Decodable, LogType>(
         
         // Ignore paths that don't exist.
         if !FileManager.default.fileExists(atPath: try path.filePath()) {
-            parseErrors.append(ParseError(message: "No diagnostic file at path: \(path)"))
+            parseErrors.append(ParseError(message: "No diagnostic file at path: [redacted]/\(path.lastPathComponent)"))
             continue
         }
         

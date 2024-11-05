@@ -20,12 +20,11 @@
 import Collections
 import Foundation
 import PsiphonTunnel
-import Puppy
+import Logging
 
-extension os.Logger {
-    static let conduitMan = AppLogger(category: "ConduitManager").puppy
-    
-    static let psiphonTunnel = AppLogger(category: "PsiphonTunnel").puppy
+extension Logging.Logger {
+    static let conduitMan = Logger(label: "ConduitManager")
+    static let psiphonTunnel = Logger(label: "PsiphonTunnel")
 }
 
 struct ConduitParams: Equatable {
@@ -370,7 +369,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
             
             return config
         } catch {
-            Logger.conduitMan.error("getPsiphonConfig failed: \(error)")
+            Logger.conduitMan.error("getPsiphonConfig failed", metadata: ["error": "\(error)"])
             return nil
         }
     }

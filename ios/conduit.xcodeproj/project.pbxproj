@@ -15,6 +15,7 @@
 		294484BD2CACF05C00451B61 /* Resources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294484BC2CACF05C00451B61 /* Resources.swift */; };
 		2974F3652CD95382000E8D3F /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 2974F3642CD95382000E8D3F /* Logging */; };
 		2974F3682CDAA7F6000E8D3F /* LogHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2974F3672CDAA7F6000E8D3F /* LogHandler.swift */; };
+		2974F36A2CDAC4CB000E8D3F /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2974F3692CDAC4CB000E8D3F /* AppLogger.swift */; };
 		29A9C9FD2CA5FFDD0054431A /* ConduitModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */; };
 		29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = 29A9C9FE2CA600220054431A /* ConduitModule.mm */; };
 		29A9CA032CA715720054431A /* PsiphonTunnel.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29A9CA012CA715410054431A /* PsiphonTunnel.xcframework */; };
@@ -59,6 +60,7 @@
 		293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackLogReader.swift; sourceTree = "<group>"; };
 		294484BC2CACF05C00451B61 /* Resources.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Resources.swift; sourceTree = "<group>"; tabWidth = 4; };
 		2974F3672CDAA7F6000E8D3F /* LogHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogHandler.swift; sourceTree = "<group>"; };
+		2974F3692CDAC4CB000E8D3F /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
 		29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = ConduitModule.swift; sourceTree = "<group>"; tabWidth = 4; };
 		29A9C9FE2CA600220054431A /* ConduitModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ConduitModule.mm; sourceTree = "<group>"; };
 		29A9CA002CA602340054431A /* ConduitModule-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ConduitModule-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -128,6 +130,7 @@
 			children = (
 				2974F3662CDAA7DE000E8D3F /* Feedback */,
 				29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */,
+				2974F3692CDAC4CB000E8D3F /* AppLogger.swift */,
 				29A9C9FE2CA600220054431A /* ConduitModule.mm */,
 				29A9CA002CA602340054431A /* ConduitModule-Bridging-Header.h */,
 				29A9CA062CA715DF0054431A /* ConduitManager.swift */,
@@ -409,6 +412,7 @@
 				29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */,
 				2974F3682CDAA7F6000E8D3F /* LogHandler.swift in Sources */,
 				293BD6822CB6FA3C006B04D3 /* Feedback.swift in Sources */,
+				2974F36A2CDAC4CB000E8D3F /* AppLogger.swift in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
@@ -437,6 +441,7 @@
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
+				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
 				INFOPLIST_FILE = conduit/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -452,6 +457,7 @@
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ca.psiphon.conduit;
 				PRODUCT_NAME = conduit;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OBJC_BRIDGING_HEADER = "conduit/conduit-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -469,6 +475,10 @@
 				CODE_SIGN_ENTITLEMENTS = conduit/conduit.entitlements;
 				CURRENT_PROJECT_VERSION = 11;
 				DEVELOPMENT_TEAM = Q6HLNEX92A;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"COCOAPODS=1",
+				);
 				INFOPLIST_FILE = conduit/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (

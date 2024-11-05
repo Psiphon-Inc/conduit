@@ -19,160 +19,11 @@
 
 import Foundation
 import PsiphonTunnel
-import Puppy
+import Logging
 
-
-extension LogLevel {
-    var description: String {
-        switch self {
-        case .debug:
-            return "Debug"
-        case .info:
-            return "Info"
-        case .warning:
-            return "Warning"
-        case .error:
-            return "Error"
-        case .critical:
-            return "Critical"
-        case .trace:
-            return "Trace"
-        case .verbose:
-            return "Verbose"
-        case .notice:
-            return "Notice"
-        }
-    }
-}
-
-struct AppLog: Codable {
-    let message: String
-    let level: String
-    @ISO1806MilliCodedDate var timestamp: Date
-    let data: String?
-    
-    enum CodingKeys : String, CodingKey {
-        case message = "message"
-        case level = "level"
-        case timestamp = "timestamp!!timestamp"
-        case data = "data"
-    }
-}
-
-struct JSONLogFormatter: LogFormattable {
-    let category: String
-    let osLogger: OSLogger
-    let jsonEncoder: JSONEncoder = JSONEncoder()
-   
-    func formatMessage(_ level: LogLevel, message: String, tag: String, function: String,
-                       file: String, line: UInt, swiftLogInfo: [String: String],
-                       label: String, date: Date, threadID: UInt64) -> String {
-        
-        var prefixedMsg: String
-        if tag != "" {
-            prefixedMsg = "\(tag): \(message)"
-        } else {
-            prefixedMsg = "\(category): \(message)"
-        }
-        
-        let log = AppLog(
-            message: prefixedMsg,
-            level: "\(level.description)",
-            timestamp: date,
-            data: swiftLogInfo["data"]
-        )
-        
-        do {
-            let jsonData = try self.jsonEncoder.encode(log)
-            guard let logString = String(data: jsonData, encoding: .utf8) else {
-                throw Err("Failed to convert JSON data to String")
-            }
-            return logString
-        } catch {
-            self.osLogger.log(.error, string: "LogFormatter: Failed to encode log")
-            return """
-            {
-                "message": "LogFormatter: Failed to encode log",
-                "level": "Error",
-                "timestamp": "\(ISO8601DateFormatter().string(from: date))"
-            }
-            """
-        }
-    }
-}
-
-/// Manages an instance of Puppy which acts as both an OS logger and a JSON file-backed logger.
-struct AppLogger {
-    var puppy = Puppy()
-    
-    private static let subsystem: String = Bundle.main.bundleIdentifier!
-    private static let maxArchivedCount: UInt8 = 2
-    private static let baseFileURL = {
-        let dataRootDirectory = try! getApplicationSupportDirectory().filePath()
-        return URL(fileURLWithPath: "\(dataRootDirectory)\(AppLogger.subsystem).log.file/app.log").absoluteURL
-    }
-    
-    init(category: String) {
-
-        let osLogger = OSLogger(
-            "\(AppLogger.subsystem).log.os", // DispatchQueue label
-            logLevel: .info,
-            category: category
-        )
-        self.puppy.add(osLogger)
-
-        let logFormatter = JSONLogFormatter(category: category, osLogger: osLogger)
-
-        let rotationConfig = RotationConfig(
-            suffixExtension: .numbering,
-            maxFileSize: 100 * 1024,
-            maxArchivedFilesCount: AppLogger.maxArchivedCount
-        )
-        
-        let fileLogger = try! FileRotationLogger(
-            "\(AppLogger.subsystem).log.file", // DispatchQueue label
-            logLevel: .info,
-            logFormat: logFormatter,
-            fileURL: AppLogger.baseFileURL(),
-            filePermission: "600",
-            rotationConfig: rotationConfig
-        )
-        self.puppy.add(fileLogger)
-    }
-    
-    // TODO: call from sendFeedback() and include in report.
-    static func readLogs() -> [AppLog] {
-
-        var appLogs = [AppLog]()
-        
-        for i in 0...maxArchivedCount {
-            var fileURL = baseFileURL()
-
-            if i > 0 {
-                fileURL = fileURL.appendingPathExtension("\(i)")
-            }
-            
-            guard let content = try? String(contentsOf: fileURL) else {
-                continue
-            }
-            
-            let decodedLogs: [AppLog] = content
-                .components(separatedBy: .newlines)
-                .compactMap { line in
-                    guard let data = line.data(using: .utf8) else { return nil }
-                    return try? JSONDecoder().decode(AppLog.self, from: data)
-                }
-            
-            appLogs.append(contentsOf: decodedLogs)
-        }
-        return appLogs
-    }
-}
-
-extension os.Logger {
-    static let conduitModule = AppLogger(category: "ConduitModule").puppy
-
-    static let feedbackUploadService = AppLogger(category: "FeedbackUploadService").puppy
+extension Logging.Logger {
+    static let conduitModule = Logger(label: "ConduitModule")
+    static let feedbackUploadService = Logger(label: "FeedbackUploadService")
 }
 
 /// A type that is used for cross-langauge interaction with JavaScript codebase.
@@ -335,6 +186,18 @@ final class ConduitModule: RCTEventEmitter {
     let dispatchQueue: dispatch_queue_t
     
     override init() {
+        
+        LoggingSystem.bootstrap { label in
+            MultiplexLogHandler([
+                OSLogger(subsystem: AppLogger.subsystem,
+                         label: label,
+                         logLevel: AppLogger.minLogLevel),
+                PsiphonLogHandler(label: label,
+                                  logLevel: AppLogger.minLogLevel,
+                                  puppy: AppLogger.initializePuppy()),
+            ])
+        }
+        
         dispatchQueue = DispatchQueue(label: "ca.psiphon.conduit.module", qos: .default)
         super.init()
         
@@ -368,7 +231,7 @@ final class ConduitModule: RCTEventEmitter {
     
     func sendEvent(_ event: ConduitEvent) {
         sendEvent(withName: ConduitEvent.eventName, body: event.asDictionary)
-        Logger.conduitModule.debug("ConduitEvent: \(String(describing: event))")
+        Logger.conduitModule.trace("ConduitEvent", metadata: ["event": "\(String(describing: event))"])
     }
     
 }
@@ -397,8 +260,7 @@ extension ConduitModule {
                     }
                 } catch {
                     sendEvent(.proxyError(.inProxyStartFailed))
-                    Logger.conduitModule.error(
-                        "Proxy start failed: \(String(describing: error))")
+                    Logger.conduitModule.error( "Proxy start failed", metadata: ["error": "\(error)"])
                 }
             case .started:
                 await self.conduitManager.stopConduit()
@@ -461,7 +323,6 @@ extension ConduitModule {
     ) {
         
         do {
-            // Read psiphon-tunnel-core notices.
             
             let dataRootDirectory = try getApplicationSupportDirectory()
             
@@ -475,20 +336,26 @@ extension ConduitModule {
                 withLogType: TunnelCoreLog.self,
                 paths: tunnelCoreNoticesPath,
                 transform: Log.create(from:))
-            
             if parseErrors.count > 0 {
-                Logger.conduitModule.error(
-                    "Log parse errors: \(String(describing: parseErrors))")
+                os_log(.error, "Log parse error: \(parseErrors)")
+            }
+            
+            let (appLogs, appLogParseErrors) = try AppLogger.readLogs()
+            if appLogParseErrors.count > 0 {
+                os_log(.error, "Log parse error: \(parseErrors)")
             }
             
             var allLogs = tunnelCoreLogs
-            // TODO: append all other logs
+            allLogs.append(contentsOf: appLogs)
+            allLogs.append(contentsOf: (parseErrors + appLogParseErrors).map {
+                Log(timestamp: Date(), level: .error, category: "LogParser", message: $0.message)
+            })
             allLogs.sort()
             
             // Prepare Feedback Diagnostic Report
             
             let feedbackId = try generateFeedbackId()
-            Logger.conduitModule.info("Preparing feedback report with ID = \(feedbackId)")
+            Logger.conduitModule.info("Preparing feedback report", metadata: ["feedback.id": "\(feedbackId)"])
             
             let psiphonConfig = try defaultPsiphonConfig()
             
@@ -539,41 +406,44 @@ extension ConduitModule {
                         uploadPath: "")
                     
                     resolve(nil)
-                    Logger.conduitModule.info("Finished uploading feedback diagnostic report.")
+                    Logger.conduitModule.info("Finished uploading feedback diagnostic report", metadata: ["feedback.id": "\(feedbackId)"])
                 } catch {
                     reject("error", "Feedback upload failed", nil)
-                    Logger.conduitModule.error(
-                        "Feedback upload failed: \(String(describing: error))")
+                    Logger.conduitModule.error("Feedback upload failed", metadata: [
+                        "feedback.id": "\(feedbackId)",
+                        "error": "\(error)"
+                    ])
                 }
             }
             
         } catch {
-            reject("error", "Feedback upload failed", nil)
-            Logger.conduitModule.error(
-                "Feedback upload failed: \(String(describing: error))")
+            reject("error", "Feedback preparation failed", nil)
+            Logger.conduitModule.error("Feedback preparation failed", metadata: ["error": "\(error)"])
         }
     }
     
     @objc(logInfo:msg:withResolver:withRejecter:)
     func logInfo(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info(msg, tag: tag)
+        let logger = Logger(label: tag)
+        logger.info("\(msg)")
         resolve(nil)
     }
     
     @objc(logWarn:msg:withResolver:withRejecter:)
     func logWarn(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.warning(msg, tag: tag)
+        let logger = Logger(label: tag)
+        logger.warning("\(msg)")
         resolve(nil)
     }
 
     @objc(logError:msg:withResolver:withRejecter:)
     func logError(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.error(msg, tag: tag)
+        let logger = Logger(label: tag)
+        logger.error("\(msg)")
         resolve(nil)
     }
 
 }
-
 
 extension ConduitModule: ConduitManager.Listener {
     
@@ -628,7 +498,7 @@ extension ConduitModule: ConduitManager.Listener {
 extension ConduitModule: FeedbackUploadService.Listener {
     
     func onDiagnosticMessage(_ message: String, withTimestamp timestamp: String) {
-        Logger.feedbackUploadService.info("DiagnosticMessage: \(timestamp) \(message)")
+        Logger.feedbackUploadService.info("DiagnosticMessage", metadata: ["timestamp": "\(timestamp)", "message": "\(message)"])
     }
     
 }
