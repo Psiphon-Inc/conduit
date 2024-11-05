@@ -31,6 +31,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,8 +43,11 @@ import java.util.Locale;
 import java.util.TreeSet;
 
 import ca.psiphon.conduit.R;
+import ca.psiphon.conduit.nativemodule.logging.MyLog;
 
 public class Utils {
+    private static final String TAG = Utils.class.getSimpleName();
+    public static final String SERVICE_RUNNING_FLAG_FILE = "service_running_flag_file";
 
     /**
      * Reads the contents of a raw resource file as a string.
@@ -205,4 +209,57 @@ public class Utils {
 
         return String.format(Locale.US, "%.1f %s", bytes / Math.pow(unit, exp), prefix);
     }
-}
+
+    /**
+     * Set the service running flag in a file.
+     * This method creates an empty file if the service is running and deletes it if not.
+     *
+     * @param context The context to access file storage.
+     * @param isRunning True if the service is running, false otherwise.
+     */
+    public static synchronized void setServiceRunningFlag(Context context, boolean isRunning) {
+        File file = new File(context.getFilesDir(), SERVICE_RUNNING_FLAG_FILE);
+
+        if (isRunning) {
+            try {
+                if (!file.exists()) {
+                    boolean created = file.createNewFile();
+                    if (!created) {
+                        throw new IOException("Failed to create service running flag file.");
+                    }
+                    MyLog.i(TAG, "Service running flag file created successfully.");
+                } else {
+                    MyLog.i(TAG, "Service running flag file already exists.");
+                }
+            } catch (IOException e) {
+                MyLog.e(TAG, "Failed to create service running flag file: " + e);
+            }
+        } else {
+            // Delete the file to indicate the service has stopped
+            if (file.exists()) {
+                if (file.delete()) {
+                    MyLog.i(TAG, "Service running flag file deleted successfully.");
+                } else {
+                    MyLog.e(TAG, "Failed to delete service running flag file.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Check if the service running flag file exists.
+     * This method is used to determine if the service was running.
+     *
+     * @param context The context to access file storage.
+     * @return True if the service running flag file exists, false otherwise.
+     */
+    public static synchronized boolean getServiceRunningFlag(Context context) {
+        File file = new File(context.getFilesDir(), SERVICE_RUNNING_FLAG_FILE);
+        boolean exists = file.exists();
+        if (exists) {
+            MyLog.i(TAG, "Service running flag file detected.");
+        } else {
+            MyLog.i(TAG, "Service running flag file not found.");
+        }
+        return exists;
+    }}

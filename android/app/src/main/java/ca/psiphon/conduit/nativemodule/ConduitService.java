@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
@@ -40,17 +41,18 @@ import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,6 +68,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     public static final String INTENT_ACTION_STOP_SERVICE = "ca.psiphon.conduit.nativemodule.StopService";
     public static final String INTENT_ACTION_TOGGLE_IN_PROXY = "ca.psiphon.conduit.nativemodule.ToggleInProxy";
+    public static final String INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS = "ca.psiphon.conduit.nativemodule.StartInProxyWithLastParams";
     public static final String INTENT_ACTION_PARAMS_CHANGED = "ca.psiphon.conduit.nativemodule.ParamsChanged";
     public static final String INTENT_ACTION_PSIPHON_START_FAILED = "ca.psiphon.conduit.nativemodule.PsiphonStartFailed";
     public static final String INTENT_ACTION_PSIPHON_RESTART_FAILED = "ca.psiphon.conduit.nativemodule.PsiphonRestartFailed";
@@ -84,8 +87,10 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     // Variable to track the current state of the service
     private final AtomicReference<ServiceState> currentState = new AtomicReference<>(ServiceState.STOPPED);
 
-    // List to hold the registered clients
-    private final List<IConduitClientCallback> clients = new ArrayList<>();
+    // List to hold the registered clients; CopyOnWriteArrayList is used to avoid ConcurrentModificationException
+    // when iterating over the list and removing elements, as it creates a new copy of the list on modification.
+    private final List<IConduitClientCallback> clients = new CopyOnWriteArrayList<>();
+
 
     // PsiphonTunnel instance
     private final PsiphonTunnel psiphonTunnel = PsiphonTunnel.newPsiphonTunnel(this);
@@ -270,7 +275,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     public void onCreate() {
         super.onCreate();
         MyLog.init(getApplicationContext());
-        conduitServiceParameters = new ConduitServiceParameters();
+        conduitServiceParameters = new ConduitServiceParameters(getApplicationContext());
     }
 
     @Override
@@ -281,6 +286,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             // Handle the stop action
             if (INTENT_ACTION_STOP_SERVICE.equals(action)) {
                 MyLog.i(TAG, "Received stop action from notification.");
+                Utils.setServiceRunningFlag(this, false);
                 stopForegroundService();
                 return START_NOT_STICKY;
             }
@@ -295,6 +301,8 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                     }
                     case RUNNING -> {
                         if (INTENT_ACTION_TOGGLE_IN_PROXY.equals(action)) {
+                            MyLog.i(TAG, "Service is running; stopping the service.");
+                            Utils.setServiceRunningFlag(this, false);
                             stopForegroundService();
                         } else if (INTENT_ACTION_PARAMS_CHANGED.equals(action)) {
                             handleParamsChanged(intent);
@@ -303,14 +311,15 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                     }
                     case STOPPED -> {
                         if (INTENT_ACTION_TOGGLE_IN_PROXY.equals(action)) {
-                            // Update stored parameters before starting the service
-                            Map<String, Object> params = extractParametersFromIntent(intent);
-                            conduitServiceParameters.updateParametersFromMap(params);
-
-                            startForegroundService();
+                            MyLog.i(TAG, "Service is not running; starting the service with new parameters.");
+                            startServiceWithParameters(extractParametersFromIntent(intent));
+                            yield START_REDELIVER_INTENT;
+                        } else if (INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS.equals(action)) {
+                            MyLog.i(TAG, "Service is not running; starting the service with last known parameters.");
+                            startServiceWithParameters(conduitServiceParameters.loadLastKnownParameters());
                             yield START_REDELIVER_INTENT;
                         } else if (INTENT_ACTION_PARAMS_CHANGED.equals(action)) {
-                            MyLog.i(TAG, "Service is not running; stopping the service and doing nothing.");
+                            MyLog.i(TAG, "Service is not running; ignoring parameters change.");
                             stopSelf();
                         }
                         yield START_NOT_STICKY;
@@ -322,6 +331,12 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         // If the intent is null or the action is not recognized, stop the service
         stopSelf();
         return START_NOT_STICKY;
+    }
+
+    private void startServiceWithParameters(Map<String, Object> params) {
+        conduitServiceParameters.updateParametersFromMap(params);
+        Utils.setServiceRunningFlag(this, true);
+        startForegroundService();
     }
 
     private void handleParamsChanged(Intent intent) {
@@ -487,7 +502,13 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
 
         // Start the service in the foreground
-        startForeground(R.id.notification_id_proxy_state, notificationForState(proxyState, proxyActivityStats));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceCompat.startForeground(this, R.id.notification_id_proxy_state, notificationForState(proxyState, proxyActivityStats),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        } else {
+            ServiceCompat.startForeground(this, R.id.notification_id_proxy_state, notificationForState(proxyState, proxyActivityStats),
+                    0 /* ServiceInfo.FOREGROUND_SERVICE_TYPE_NONE */);
+        }
     }
 
     private Notification notificationForState(ProxyState proxyState, ProxyActivityStats proxyActivityStats) {
@@ -509,13 +530,12 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
             notificationTextShort = getString(R.string.conduit_service_running_notification_short_text,
                     Utils.formatBytes(dataTransferred, false),    // Data transferred
-                    connectingClients,     // Connecting clients
-                    connectedClients);     // Connected clients
-
+                    connectedClients,     // Connected clients
+                    connectingClients);    // Connecting clients
             notificationTextLong = getString(R.string.conduit_service_running_notification_long_text,
                     Utils.formatBytes(dataTransferred, false),    // Data transferred
-                    connectingClients,     // Connecting clients
-                    connectedClients);     // Connected clients
+                    connectedClients,     // Connected clients
+                    connectingClients);    // Connecting clients
         }
         return buildNotification(notificationIconId, notificationTextShort, notificationTextLong);
     }

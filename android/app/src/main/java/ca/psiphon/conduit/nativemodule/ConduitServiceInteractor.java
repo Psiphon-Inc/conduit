@@ -117,7 +117,7 @@ public class ConduitServiceInteractor {
         proxyStateRelay.accept(ProxyState.unknown());
     }
 
-    public void toggleInProxy(Context context, int maxClients, int limitUpstreamBytesPerSecond,
+    public static void toggleInProxy(Context context, int maxClients, int limitUpstreamBytesPerSecond,
             int limitDownstreamBytesPerSecond, String privateKey) {
         Intent intent = new Intent(context, ConduitService.class);
         intent.setAction(ConduitService.INTENT_ACTION_TOGGLE_IN_PROXY);
@@ -133,7 +133,16 @@ public class ConduitServiceInteractor {
         sendStartCommandToService(context, intent);
     }
 
-    public void paramsChanged(Context context, Map<String, Object> params) {
+    public static void startInProxyWithLastKnownParams(Context context) {
+        Intent intent = new Intent(context, ConduitService.class);
+        intent.setAction(ConduitService.INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS);
+
+        // Send the intent to the service to start the in-proxy with the last stored parameters
+        // and let the service handle the logic in onStartCommand
+        sendStartCommandToService(context, intent);
+    }
+
+    public static void paramsChanged(Context context, Map<String, Object> params) {
         Intent intent = new Intent(context, ConduitService.class);
         intent.setAction(ConduitService.INTENT_ACTION_PARAMS_CHANGED);
 
@@ -166,7 +175,7 @@ public class ConduitServiceInteractor {
     }
 
     // Internal method to start the ConduitService with the provided intent
-    private void sendStartCommandToService(Context context, Intent intent) {
+    private static void sendStartCommandToService(Context context, Intent intent) {
         // Using startService instead of startForegroundService because the service might need to shut down
         // quickly without ever showing a foreground notification. Calling startForegroundService implies
         // that we must call startForeground() shortly after, but ConduitService handles different types of

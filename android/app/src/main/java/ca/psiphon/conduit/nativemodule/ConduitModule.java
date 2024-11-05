@@ -135,7 +135,7 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     public void toggleInProxy(int maxClients, int limitUpstreamBytesPerSecond, int limitDownstreamBytesPerSecond,
             String privateKey, Promise promise) {
         try {
-            conduitServiceInteractor.toggleInProxy(getReactApplicationContext(), maxClients,
+            ConduitServiceInteractor.toggleInProxy(getReactApplicationContext(), maxClients,
                     limitUpstreamBytesPerSecond, limitDownstreamBytesPerSecond, privateKey);
             promise.resolve(null);
 
@@ -149,7 +149,7 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     public void paramsChanged(ReadableMap params, Promise promise) {
         try {
             Map<String, Object> paramsMap = toMap(params);
-            conduitServiceInteractor.paramsChanged(getReactApplicationContext(), paramsMap);
+            ConduitServiceInteractor.paramsChanged(getReactApplicationContext(), paramsMap);
             promise.resolve(null);
         } catch (Exception e) {
             MyLog.e(TAG, "Failed to change conduit service params: " + e);

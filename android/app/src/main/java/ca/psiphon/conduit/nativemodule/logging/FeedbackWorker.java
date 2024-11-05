@@ -37,6 +37,15 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.TreeMap;
 
 import ca.psiphon.PsiphonTunnel;
 import ca.psiphon.conduit.R;
@@ -47,7 +56,7 @@ import io.reactivex.Single;
 
 public class FeedbackWorker extends RxWorker {
   private static final String TAG = FeedbackWorker.class.getSimpleName();
-  private static final int METADATA_VERSION = 1;
+  private static final int METADATA_VERSION = 2;
 
   private final String feedbackId;
   private final long feedbackTimestamp;
@@ -199,103 +208,80 @@ public class FeedbackWorker extends RxWorker {
     // Add Psiphon information to the top level json object
     feedbackJsonObject.put("PsiphonInfo", psiphonInfo);
 
-    // Read tunnel core logs
-    JSONArray tunnelCoreLogs = getTunnelCoreLogsJsonArray(context, feedbackId);
-    feedbackJsonObject.put("TunnelCoreLogs", tunnelCoreLogs);
-
-    // Read app logs
-    JSONArray appLogs = getAppLogsJsonArray(context, feedbackId);
-    feedbackJsonObject.put("AppLogs", appLogs);
+    // Add combined logs
+    JSONArray combinedLogs = getCombinedLogsJsonArray(context, feedbackId);
+    feedbackJsonObject.put("Logs", combinedLogs);
 
     return feedbackJsonObject.toString();
   }
 
-  private static JSONArray getTunnelCoreLogsJsonArray(Context context, String feedbackId) throws IOException {
+  private static JSONArray getCombinedLogsJsonArray(Context context, String feedbackId) throws IOException {
+    // TreeMap to hold JSONObjects with timestamps as keys, automatically sorted by timestamp
+    // Note we are using a List to handle duplicate timestamps
+    TreeMap<Date, List<JSONObject>> sortedLogMap = new TreeMap<>();
+
+    // Read and add tunnel core logs
     String tunnelCoreFeedbackFilePath = new File(LogFileUtils.feedBackLogsDir(context),
             LogFileUtils.LOG_TUNNEL_CORE_PREFIX + feedbackId + LogFileUtils.LOG_FEEDBACK_FILE_EXTENSION).getAbsolutePath();
+    readLogsIntoMap(new File(tunnelCoreFeedbackFilePath), sortedLogMap, true);
 
-    File file = new File(tunnelCoreFeedbackFilePath);
-    if (!file.exists()) {
-      return new JSONArray();
-    }
-
-    JSONArray jsonArray = new JSONArray();
-
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        try {
-          // Each line is a JSON object
-          JSONObject jsonObject = new JSONObject(line);
-          // Only map `timestamp` to `timestamp!!timestamp`
-          // The rest of the keys are left as is
-          // Note that the `timestamp` for tunnel core notices is already in RFC3339 format
-          jsonObject.put("timestamp!!timestamp", jsonObject.getString("timestamp"));
-          // remove `timestamp` key
-          jsonObject.remove("timestamp");
-          jsonArray.put(jsonObject);
-        } catch (JSONException e) {
-          MyLog.e(TAG, "Failed to parse app log line: " + line + ": " + e);
-        }
-      }
-    }
-
-    return jsonArray;
-  }
-
-  private static JSONArray getAppLogsJsonArray(Context context, String feedbackId) throws IOException {
+    // Read and add app logs
     String appFeedbackFilePath = new File(LogFileUtils.feedBackLogsDir(context),
             LogFileUtils.LOG_APP_PREFIX + feedbackId + LogFileUtils.LOG_FEEDBACK_FILE_EXTENSION).getAbsolutePath();
+    readLogsIntoMap(new File(appFeedbackFilePath), sortedLogMap, false);
 
-    File file = new File(appFeedbackFilePath);
-    if (!file.exists()) {
-      return new JSONArray();
+    // Convert the sorted map values to JSONArray
+    JSONArray sortedCombinedLogs = new JSONArray();
+    for (Map.Entry<Date, List<JSONObject>> entry : sortedLogMap.entrySet()) {
+      for (JSONObject logEntry : entry.getValue()) {
+        sortedCombinedLogs.put(logEntry);
+      }
     }
 
-    JSONArray jsonArray = new JSONArray();
+    return sortedCombinedLogs;
+  }
+
+  private static void readLogsIntoMap(File file, TreeMap<Date, List<JSONObject>> logMap, boolean isTunnelCoreLog) throws IOException {
+    if (!file.exists()) {
+      return;
+    }
 
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       String line;
       while ((line = reader.readLine()) != null) {
         try {
-          // Each line is a JSON object
-          JSONObject input = new JSONObject(line);
-          // Map the object to the expected format:
-          //
-        /*
-            {
-              <optional>"data": {
-                  <any applicable structured data>
-              },
-              "message": "<tag>: <message>",
-              "level": "<level>",
-              "timestamp!!timestamp": "<timestamp>",
-            }
-         */
+          // Parse each line as a JSON object
+          JSONObject inputJsonObject = new JSONObject(line);
 
-          JSONObject data = input.optJSONObject("data");
-          String tag = input.getString("tag");
-          String message = input.getString("message");
-          String level = input.getString("level");
-          // The `timestamp` for app logs is already in RFC3339 format
-          String timestamp = input.getString("timestamp");
+          JSONObject outputJsonObject = new JSONObject();
+          String timestampStr = inputJsonObject.getString("timestamp");
 
-          JSONObject output = new JSONObject();
-          // Optional data
-          if (data != null) {
-            output.put("data", data);
+          Date timestamp = LogUtils.parseRfc3339Timestamp(timestampStr);
+
+          if (isTunnelCoreLog) {
+            outputJsonObject.put("timestamp!!timestamp", timestampStr);
+            outputJsonObject.put("category", "tunnel-core");
+            outputJsonObject.put("data", inputJsonObject);
+          } else {
+            outputJsonObject.put("timestamp!!timestamp", timestampStr);
+            outputJsonObject.put("category", inputJsonObject.getString("tag"));
+            outputJsonObject.put("message", inputJsonObject.getString("message"));
+            outputJsonObject.put("level", inputJsonObject.getString("level"));
           }
-          output.put("message", tag + ": " + message);
-          output.put("level", level);
-          output.put("timestamp!!timestamp", timestamp);
 
-          jsonArray.put(output);
-        } catch (JSONException e) {
-          MyLog.e(TAG, "Failed to parse tunnel core log line: " + line + ": " + e);
+          // Handle duplicate timestamps by adding to a list
+          List<JSONObject> logList = logMap.get(timestamp);
+          if (logList == null) {
+            logList = new ArrayList<>();
+            logMap.put(timestamp, logList);
+          }
+          logList.add(outputJsonObject);
+
+        } catch (JSONException | ParseException e) {
+          MyLog.e(TAG, "Failed to parse log line: " + line + ": " + e);
         }
       }
     }
-    return jsonArray;
   }
 
   private Completable sendFeedback(Context context, String psiphonConfig, String feedbackData) {
