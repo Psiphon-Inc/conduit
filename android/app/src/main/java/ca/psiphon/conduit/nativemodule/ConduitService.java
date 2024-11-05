@@ -48,11 +48,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,8 +87,10 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     // Variable to track the current state of the service
     private final AtomicReference<ServiceState> currentState = new AtomicReference<>(ServiceState.STOPPED);
 
-    // List to hold the registered clients
-    private final List<IConduitClientCallback> clients = new ArrayList<>();
+    // List to hold the registered clients; CopyOnWriteArrayList is used to avoid ConcurrentModificationException
+    // when iterating over the list and removing elements, as it creates a new copy of the list on modification.
+    private final List<IConduitClientCallback> clients = new CopyOnWriteArrayList<>();
+
 
     // PsiphonTunnel instance
     private final PsiphonTunnel psiphonTunnel = PsiphonTunnel.newPsiphonTunnel(this);
