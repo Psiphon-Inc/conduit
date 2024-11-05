@@ -20,16 +20,17 @@
 package ca.psiphon.conduit.nativemodule.logging;
 
 import java.security.SecureRandom;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
 public class LogUtils {
-  static SimpleDateFormat rfc3339Formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ",
-    Locale.US);
+  static final SimpleDateFormat rfc3339Formatter;
 
   static {
+    rfc3339Formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
     rfc3339Formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
 
@@ -60,12 +61,21 @@ public class LogUtils {
       formattedDate = formattedDate.substring(0, formattedDate.length() - 5) + "Z";
     } else {
       // Insert a colon in the timezone offset for formats like +01:00, -05:00, etc.
-      formattedDate = formattedDate.substring(0,
-        formattedDate.length() - 2) + ":" + formattedDate.substring(formattedDate.length() - 2);
+      int offsetStart = formattedDate.length() - 5;
+      formattedDate = formattedDate.substring(0, offsetStart) + ":" + formattedDate.substring(offsetStart + 1);
     }
 
     return formattedDate;
   }
 
-
+  public static Date parseRfc3339Timestamp(String timestamp) throws ParseException {
+    // Create a SimpleDateFormat with a pattern compatible with API 23
+    // Replace "Z" with "+0000" for compatibility with the SimpleDateFormat pattern
+    if (timestamp.endsWith("Z")) {
+      timestamp = timestamp.substring(0, timestamp.length() - 1) + "+0000";
+    }
+    synchronized (rfc3339Formatter) {
+      return rfc3339Formatter.parse(timestamp);
+    }
+  }
 }
