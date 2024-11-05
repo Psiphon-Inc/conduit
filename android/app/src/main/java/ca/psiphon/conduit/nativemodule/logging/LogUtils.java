@@ -53,14 +53,29 @@ public class LogUtils {
     return hexString.toString();
   }
 
+  /**
+   * Formats a given timestamp in milliseconds to an RFC 3339-compliant string.
+   *
+   * Workarounds:
+   * - SimpleDateFormat in API 23 doesn't directly support the 'Z' UTC designator.
+   *   We replace "+0000" with "Z" manually for UTC timestamps.
+   * - RFC 3339 requires timezone offsets to include a colon (e.g., "+01:00" instead of "+0100").
+   *   If the offset is not UTC, we insert a colon before the last two digits of the offset.
+   *
+   * Example:
+   * Given timeMillis = 1731023755529 (equivalent to "2024-11-04T23:15:55.529Z" UTC):
+   * - SimpleDateFormat outputs "2024-11-04T23:15:55.529+0000"
+   * - This method converts "+0000" to "Z", yielding "2024-11-04T23:15:55.529Z"
+   * - For non-UTC offsets like "+0100", it becomes "2024-11-04T23:15:55.529+01:00"
+   */
   public static String getRfc3339Timestamp(long timeMillis) {
     String formattedDate = rfc3339Formatter.format(new Date(timeMillis));
 
-    // Adjust the timezone format from +0000 to Z to match RFC 3339 format
+    // Adjust the timezone format from "+0000" to "Z" to match RFC 3339 for UTC timestamps
     if (formattedDate.endsWith("+0000")) {
       formattedDate = formattedDate.substring(0, formattedDate.length() - 5) + "Z";
     } else {
-      // Insert a colon in the timezone offset for formats like +01:00, -05:00, etc.
+      // Insert a colon in the timezone offset for formats like "+0100" to make it "+01:00"
       int offsetStart = formattedDate.length() - 5;
       formattedDate = formattedDate.substring(0, offsetStart) + ":" + formattedDate.substring(offsetStart + 1);
     }
@@ -68,12 +83,30 @@ public class LogUtils {
     return formattedDate;
   }
 
+  /**
+   * Parses an RFC 3339-compliant timestamp string to a Date object.
+   *
+   * Workaround:
+   * - SimpleDateFormat on API 23 and below doesn't support the 'X' pattern (used for timezone offsets with a colon).
+   * - RFC 3339 UTC designator "Z" is also unsupported directly by SimpleDateFormat.
+   * - To handle "Z" for UTC, this method replaces "Z" with "+0000" so that the SimpleDateFormat
+   *   pattern "yyyy-MM-dd'T'HH:mm:ss.SSSZ" can interpret it as UTC.
+   *
+   * Example:
+   * - For a timestamp like "2024-11-04T23:15:55.529Z":
+   *   - This method replaces "Z" with "+0000", yielding "2024-11-04T23:15:55.529+0000"
+   *   - SimpleDateFormat then correctly interprets this as UTC and parses it accordingly.
+   * - For a timestamp like "2024-11-04T23:15:55.529+01:00":
+   *   - No modification is needed; however, SimpleDateFormat does not support the colon in "+01:00"
+   *   - This method will need to remove the colon in the offset if other time zones are a requirement.
+   */
   public static Date parseRfc3339Timestamp(String timestamp) throws ParseException {
-    // Create a SimpleDateFormat with a pattern compatible with API 23
-    // Replace "Z" with "+0000" for compatibility with the SimpleDateFormat pattern
+    // Replace "Z" with "+0000" for compatibility with the SimpleDateFormat pattern on API 23
     if (timestamp.endsWith("Z")) {
       timestamp = timestamp.substring(0, timestamp.length() - 1) + "+0000";
     }
+
+    // Synchronize access to rfc3339Formatter to ensure thread safety
     synchronized (rfc3339Formatter) {
       return rfc3339Formatter.parse(timestamp);
     }
