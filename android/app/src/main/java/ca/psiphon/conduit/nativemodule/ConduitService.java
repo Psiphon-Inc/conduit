@@ -279,92 +279,116 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            String action = intent.getAction();
+        if (intent == null || intent.getAction() == null) {
+            stopSelf();
+            return START_NOT_STICKY;
+        }
 
-            // Handle the stop action
-            if (INTENT_ACTION_STOP_SERVICE.equals(action)) {
-                MyLog.i(TAG, "Received stop action from notification.");
+        String action = intent.getAction();
+        return switch (action) {
+            case INTENT_ACTION_STOP_SERVICE -> handleStopAction();
+            case INTENT_ACTION_TOGGLE_IN_PROXY -> handleToggleAction();
+            case INTENT_ACTION_PARAMS_CHANGED -> handleParamsChangedAction(intent);
+            case INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS -> handleStartInProxyWithLastParamsAction();
+            default -> {
+                MyLog.w(TAG, "Unknown action received: " + action);
+                stopSelf();
+                yield START_NOT_STICKY;
+            }
+        };
+    }
+
+    private int handleStopAction() {
+        MyLog.i(TAG, "Received stop action from notification.");
+        ServiceState state = currentState.get();
+        if (state == ServiceState.STOPPING) {
+            MyLog.i(TAG, "Stop action ignored; service already stopping.");
+        } else if (state == ServiceState.RUNNING || state == ServiceState.STARTING) {
+            Utils.setServiceRunningFlag(this, false);
+            stopForegroundService();
+        } else {
+            MyLog.i(TAG, "Stop action ignored; service not running.");
+        }
+        return START_NOT_STICKY;
+    }
+
+    private int handleToggleAction() {
+        MyLog.i(TAG, "Received toggle action");
+        ServiceState state = currentState.get();
+        switch (state) {
+            case RUNNING -> {
+                MyLog.i(TAG, "Service is running; toggling off.");
                 Utils.setServiceRunningFlag(this, false);
                 stopForegroundService();
                 return START_NOT_STICKY;
             }
+            case STOPPED -> {
+                MyLog.i(TAG, "Service is not running; starting with new parameters.");
+                startServiceWithParameters(conduitServiceParameters.loadLastKnownParameters());
+                return START_REDELIVER_INTENT;
+            }
+            case STARTING, STOPPING -> {
+                MyLog.i(TAG, "Service is in an intermediate state; toggle action ignored.");
+                return START_NOT_STICKY;
+            }
+            default -> {
+                MyLog.w(TAG, "Unexpected service state: " + state);
+                return START_NOT_STICKY;
+            }
+        }
+    }
 
-            // Handle different actions based on the current state
-            synchronized (this) {
-                ServiceState state = currentState.get();
-                return switch (state) {
-                    case STARTING, STOPPING -> {
-                        MyLog.i(TAG, "Service is in an intermediate state (" + state + "); ignoring command: " + action);
-                        yield START_NOT_STICKY;
-                    }
-                    case RUNNING -> {
-                        if (INTENT_ACTION_TOGGLE_IN_PROXY.equals(action)) {
-                            MyLog.i(TAG, "Service is running; stopping the service.");
-                            Utils.setServiceRunningFlag(this, false);
-                            stopForegroundService();
-                        } else if (INTENT_ACTION_PARAMS_CHANGED.equals(action)) {
-                            handleParamsChanged(intent);
-                        }
-                        yield START_NOT_STICKY;
-                    }
-                    case STOPPED -> {
-                        if (INTENT_ACTION_TOGGLE_IN_PROXY.equals(action)) {
-                            MyLog.i(TAG, "Service is not running; starting the service with new parameters.");
-                            startServiceWithParameters(extractParametersFromIntent(intent));
-                            yield START_REDELIVER_INTENT;
-                        } else if (INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS.equals(action)) {
-                            MyLog.i(TAG, "Service is not running; starting the service with last known parameters.");
-                            startServiceWithParameters(conduitServiceParameters.loadLastKnownParameters());
-                            yield START_REDELIVER_INTENT;
-                        } else if (INTENT_ACTION_PARAMS_CHANGED.equals(action)) {
-                            MyLog.i(TAG, "Service is not running; ignoring parameters change.");
-                            stopSelf();
-                        }
-                        yield START_NOT_STICKY;
-                    }
-                };
+    private int handleParamsChangedAction(Intent intent) {
+        ServiceState state = currentState.get();
+        Map<String, Object> params = extractParametersFromIntent(intent);
+
+        // Update and persist parameters, storing whether changes occurred
+        boolean paramsUpdated = conduitServiceParameters.updateParametersFromMap(params);
+        MyLog.i(TAG, paramsUpdated ? "Parameters updated; changes persisted." : "Parameters update called, but no changes detected.");
+
+        // Restart if parameters were updated and the service is running
+        if (paramsUpdated && state == ServiceState.RUNNING) {
+            MyLog.i(TAG, "Service is running; restarting psiphonTunnel due to parameter changes.");
+            try {
+                // Reset proxy activity stats before restart
+                proxyActivityStats = new ProxyActivityStats();
+                psiphonTunnel.restartPsiphon();
+
+                // Update clients with reset proxy activity stats
+                updateProxyActivityStats();
+
+            } catch (PsiphonTunnel.Exception e) {
+                MyLog.e(TAG, "Failed to restart psiphon: " + e);
+
+                // Prepare and deliver failure notification
+                Bundle extras = new Bundle();
+                extras.putString("errorMessage", e.getMessage());
+                deliverIntent(getPendingIntent(getContext(), INTENT_ACTION_PSIPHON_RESTART_FAILED, extras),
+                        R.string.notification_conduit_failed_to_restart_text,
+                        R.id.notification_id_error_psiphon_restart_failed
+                );
             }
         }
 
-        // If the intent is null or the action is not recognized, stop the service
-        stopSelf();
         return START_NOT_STICKY;
+    }
+
+    private int handleStartInProxyWithLastParamsAction() {
+        ServiceState state = currentState.get();
+        if (state == ServiceState.STOPPED) {
+            MyLog.i(TAG, "Service is stopped; starting with last known parameters.");
+            startServiceWithParameters(conduitServiceParameters.loadLastKnownParameters());
+            return START_REDELIVER_INTENT;
+        } else {
+            MyLog.i(TAG, "Service is not stopped; ignoring start with last parameters action.");
+            return START_NOT_STICKY;
+        }
     }
 
     private void startServiceWithParameters(Map<String, Object> params) {
         conduitServiceParameters.updateParametersFromMap(params);
         Utils.setServiceRunningFlag(this, true);
         startForegroundService();
-    }
-
-    private void handleParamsChanged(Intent intent) {
-        Map<String, Object> params = extractParametersFromIntent(intent);
-
-        if (conduitServiceParameters.updateParametersFromMap(params)) {
-            // Restart the tunnel core
-            MyLog.i(TAG, "Conduit parameters changed; restarting.");
-            try {
-                // If we are restarting reset the proxy activity stats
-                proxyActivityStats = new ProxyActivityStats();
-                psiphonTunnel.restartPsiphon();
-            } catch (PsiphonTunnel.Exception e) {
-                MyLog.e(TAG, "Failed to restart psiphon: " + e);
-                String errorMessage = e.getMessage();
-
-                final Bundle extras = new Bundle();
-                extras.putString("errorMessage", errorMessage);
-
-                deliverIntent(getPendingIntent(getContext(), INTENT_ACTION_PSIPHON_RESTART_FAILED, extras),
-                        R.string.notification_conduit_failed_to_restart_text,
-                        R.id.notification_id_error_psiphon_restart_failed
-                );
-            }
-
-            // Also send the proxy activity stats to the clients immediately
-            // so that they can update their UIs with the reset stats
-            updateProxyActivityStats();
-        }
     }
 
     private Map<String, Object> extractParametersFromIntent(Intent intent) {
