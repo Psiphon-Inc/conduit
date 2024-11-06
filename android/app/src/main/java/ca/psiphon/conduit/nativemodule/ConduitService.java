@@ -662,6 +662,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
 
     // Unified method to send updates to all registered clients
+    // This method is synchronized to avoid concurrent modification of the clients list when called from multiple threads
     private synchronized void notifyClients(ClientNotifier notifier) {
         for (Iterator<IConduitClientCallback> iterator = clients.iterator(); iterator.hasNext(); ) {
             IConduitClientCallback client = iterator.next();
