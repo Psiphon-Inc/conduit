@@ -322,83 +322,79 @@ extension ConduitModule {
         reject: @escaping RCTPromiseRejectBlock
     ) {
         
-        do {
-            
-            let dataRootDirectory = try getApplicationSupportDirectory()
-            
-            let tunnelCoreNoticesPath: [URL] = [
-                // Return values are tagged _Nullable, but should never be nil.
-                noticesFilePath(dataRootDirectory: dataRootDirectory),
-                olderNoticesFilePath(dataRootDirectory: dataRootDirectory)
-            ]
-            
-            let (tunnelCoreLogs, parseErrors) = try readLogFiles(
-                withLogType: TunnelCoreLog.self,
-                paths: tunnelCoreNoticesPath,
-                transform: Log.create(from:))
-            if parseErrors.count > 0 {
-                os_log(.error, "Log parse error: \(parseErrors)")
-            }
-            
-            let (appLogs, appLogParseErrors) = try AppLogger.readLogs()
-            if appLogParseErrors.count > 0 {
-                os_log(.error, "Log parse error: \(parseErrors)")
-            }
-            
-            var allLogs = tunnelCoreLogs
-            allLogs.append(contentsOf: appLogs)
-            allLogs.append(contentsOf: (parseErrors + appLogParseErrors).map {
-                Log(timestamp: Date(), level: .error, category: "LogParser", message: $0.message)
-            })
-            allLogs.sort()
-            
-            // Prepare Feedback Diagnostic Report
-            
-            let feedbackId = try generateFeedbackId()
-            Logger.conduitModule.info("Preparing feedback report", metadata: ["feedback.id": "\(feedbackId)"])
-            
-            let psiphonConfig = try defaultPsiphonConfig()
-            
-            guard
-                let propagationChannelId = psiphonConfig["PropagationChannelId"] as? String,
-                let sponsorId = psiphonConfig["SponsorId"] as? String
-            else {
-                throw Err("psiphon config is missing PropagationChannelId or SponsorId")
-            }
-            
-            let psiphonInfo =  PsiphonInfo(
-                clientVersion: getClientVersion(),
-                propagationChannelId: propagationChannelId,
-                sponsorId: sponsorId,
-                inproxyId: inproxyId
-            )
-            
-            let report = FeedbackDiagnosticReportV2(
-                metadata: MetadataV2(
-                    id: feedbackId,
-                    appName: "conduit",
-                    platform: ClientPlatform.platformString
-                ),
-                systemInformation: SystemInformationV2(
-                    build: DeviceInfo.gatherDeviceInfo(device: .current),
-                    tunnelCoreBuildInfo: PsiphonTunnel.getBuildInfo(),
-                    isAppStoreBuild: true,
-                    isJailbroken: false,
-                    language: getLanguageMinimalIdentifier(),
-                    // TODO: get networkTypeName
-                    networkTypeName: "WIFI"),
-                psiphonInfo: psiphonInfo,
-                applicationInfo: ApplicationInfo(
-                    applicationId: getApplicagtionId(),
-                    clientVersion: getClientVersion()),
-                logs: allLogs
+        Task {
+            do {
+                let dataRootDirectory = try getApplicationSupportDirectory()
+                
+                let tunnelCoreNoticesPath: [URL] = [
+                    // Return values are tagged _Nullable, but should never be nil.
+                    noticesFilePath(dataRootDirectory: dataRootDirectory),
+                    olderNoticesFilePath(dataRootDirectory: dataRootDirectory)
+                ]
+                
+                let (tunnelCoreLogs, parseErrors) = try readLogFiles(
+                    withLogType: TunnelCoreLog.self,
+                    paths: tunnelCoreNoticesPath,
+                    transform: Log.create(from:))
+                if parseErrors.count > 0 {
+                    os_log(.error, "Log parse error: \(parseErrors)")
+                }
+                
+                let (appLogs, appLogParseErrors) = try AppLogger.readLogs()
+                if appLogParseErrors.count > 0 {
+                    os_log(.error, "Log parse error: \(parseErrors)")
+                }
+                
+                var allLogs = tunnelCoreLogs
+                allLogs.append(contentsOf: appLogs)
+                allLogs.append(contentsOf: (parseErrors + appLogParseErrors).map {
+                    Log(timestamp: Date(), level: .error, category: "LogParser", message: $0.message)
+                })
+                allLogs.sort()
+                
+                // Prepare Feedback Diagnostic Report
+                
+                let feedbackId = try generateFeedbackId()
+                Logger.conduitModule.info("Preparing feedback report", metadata: ["feedback.id": "\(feedbackId)"])
+                
+                let psiphonConfig = try defaultPsiphonConfig()
+                
+                guard
+                    let propagationChannelId = psiphonConfig["PropagationChannelId"] as? String,
+                    let sponsorId = psiphonConfig["SponsorId"] as? String
+                else {
+                    throw Err("psiphon config is missing PropagationChannelId or SponsorId")
+                }
+                
+                let psiphonInfo =  PsiphonInfo(
+                    clientVersion: getClientVersion(),
+                    propagationChannelId: propagationChannelId,
+                    sponsorId: sponsorId,
+                    inproxyId: inproxyId
                 )
-            
-            let json = String(data: try JSONEncoder().encode(report), encoding: .utf8)!
-            
-            // Upload diagnostic report.
-            
-            Task {
+                
+                let report = await FeedbackDiagnosticReportV2(
+                    metadata: MetadataV2(
+                        id: feedbackId,
+                        appName: "conduit",
+                        platform: ClientPlatform.platformString
+                    ),
+                    systemInformation: SystemInformationV2(
+                        build: DeviceInfo.gatherDeviceInfo(device: .current),
+                        tunnelCoreBuildInfo: PsiphonTunnel.getBuildInfo(),
+                        isAppStoreBuild: true,
+                        isJailbroken: false,
+                        language: getLanguageMinimalIdentifier(),
+                        networkTypeName: getCurrentNetworkType()),
+                    psiphonInfo: psiphonInfo,
+                    applicationInfo: ApplicationInfo(
+                        applicationId: getApplicagtionId(),
+                        clientVersion: getClientVersion()),
+                    logs: allLogs)
+                
+                let json = String(data: try JSONEncoder().encode(report), encoding: .utf8)!
+                
+                // Upload diagnostic report.
                 do {
                     try await FeedbackUploadService.live.startUpload(
                         data: json,
@@ -414,11 +410,11 @@ extension ConduitModule {
                         "error": "\(error)"
                     ])
                 }
+                
+            } catch {
+                reject("error", "Feedback preparation failed", nil)
+                Logger.conduitModule.error("Feedback preparation failed", metadata: ["error": "\(error)"])
             }
-            
-        } catch {
-            reject("error", "Feedback preparation failed", nil)
-            Logger.conduitModule.error("Feedback preparation failed", metadata: ["error": "\(error)"])
         }
     }
     
