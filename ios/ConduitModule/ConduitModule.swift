@@ -19,15 +19,11 @@
 
 import Foundation
 import PsiphonTunnel
-import OSLog
+import Logging
 
-
-extension Logger {
-    private static var subsystem = Bundle.main.bundleIdentifier!
-    
-    static let conduitModule = Logger(subsystem: subsystem, category: "ConduitModule")
-    
-    static let feedbackUploadService = Logger(subsystem: subsystem, category: "FeedbackUploadService")
+extension Logging.Logger {
+    static let conduitModule = Logger(label: "ConduitModule")
+    static let feedbackUploadService = Logger(label: "FeedbackUploadService")
 }
 
 /// A type that is used for cross-langauge interaction with JavaScript codebase.
@@ -188,8 +184,20 @@ final class ConduitModule: RCTEventEmitter {
     // synchronous execution to reuse the same thread.
     // Note that using `.sync` and targeting the same queue will result in a deadlock.
     let dispatchQueue: dispatch_queue_t
-
+    
     override init() {
+        
+        LoggingSystem.bootstrap { label in
+            MultiplexLogHandler([
+                OSLogger(subsystem: AppLogger.subsystem,
+                         label: label,
+                         logLevel: AppLogger.minLogLevel),
+                PsiphonLogHandler(label: label,
+                                  logLevel: AppLogger.minLogLevel,
+                                  puppy: AppLogger.initializePuppy()),
+            ])
+        }
+        
         dispatchQueue = DispatchQueue(label: "ca.psiphon.conduit.module", qos: .default)
         super.init()
         
@@ -223,7 +231,7 @@ final class ConduitModule: RCTEventEmitter {
     
     func sendEvent(_ event: ConduitEvent) {
         sendEvent(withName: ConduitEvent.eventName, body: event.asDictionary)
-        Logger.conduitModule.debug("ConduitEvent: \(String(describing: event))")
+        Logger.conduitModule.trace("ConduitEvent", metadata: ["event": "\(String(describing: event))"])
     }
     
 }
@@ -252,8 +260,7 @@ extension ConduitModule {
                     }
                 } catch {
                     sendEvent(.proxyError(.inProxyStartFailed))
-                    Logger.conduitModule.error(
-                        "Proxy start failed: \(String(describing: error), privacy: .public)")
+                    Logger.conduitModule.error( "Proxy start failed", metadata: ["error": "\(error)"])
                 }
             case .started:
                 await self.conduitManager.stopConduit()
@@ -316,7 +323,6 @@ extension ConduitModule {
     ) {
         
         do {
-            // Read psiphon-tunnel-core notices.
             
             let dataRootDirectory = try getApplicationSupportDirectory()
             
@@ -326,21 +332,30 @@ extension ConduitModule {
                 olderNoticesFilePath(dataRootDirectory: dataRootDirectory)
             ]
             
-            let (tunnelCoreEntries, parseErrors) = try readDiagnosticLogFiles(
-                TunnelCoreLog.self,
+            let (tunnelCoreLogs, parseErrors) = try readLogFiles(
+                withLogType: TunnelCoreLog.self,
                 paths: tunnelCoreNoticesPath,
-                transform: DiagnosticEntry.create(from:))
-            
+                transform: Log.create(from:))
             if parseErrors.count > 0 {
-                Logger.conduitModule.error(
-                    "Log parse errors: \(String(describing: parseErrors), privacy: .public)")
+                os_log(.error, "Log parse error: \(parseErrors)")
             }
             
+            let (appLogs, appLogParseErrors) = try AppLogger.readLogs()
+            if appLogParseErrors.count > 0 {
+                os_log(.error, "Log parse error: \(parseErrors)")
+            }
+            
+            var allLogs = tunnelCoreLogs
+            allLogs.append(contentsOf: appLogs)
+            allLogs.append(contentsOf: (parseErrors + appLogParseErrors).map {
+                Log(timestamp: Date(), level: .error, category: "LogParser", message: $0.message)
+            })
+            allLogs.sort()
             
             // Prepare Feedback Diagnostic Report
             
             let feedbackId = try generateFeedbackId()
-            Logger.conduitModule.info("Preparing feedback report with ID = \(feedbackId, privacy: .public)")
+            Logger.conduitModule.info("Preparing feedback report", metadata: ["feedback.id": "\(feedbackId)"])
             
             let psiphonConfig = try defaultPsiphonConfig()
             
@@ -358,26 +373,26 @@ extension ConduitModule {
                 inproxyId: inproxyId
             )
             
-            let report = FeedbackDiagnosticReport(
-                metadata: Metadata(
+            let report = FeedbackDiagnosticReportV2(
+                metadata: MetadataV2(
                     id: feedbackId,
                     appName: "conduit",
-                    platform: ClientPlatform.platformString,
-                    date: Date()
+                    platform: ClientPlatform.platformString
                 ),
-                feedback: nil,
-                diagnosticInfo: DiagnosticInfo(
-                    systemInformation: SystemInformation(
-                        build: DeviceInfo.gatherDeviceInfo(device: .current),
-                        tunnelCoreBuildInfo: PsiphonTunnel.getBuildInfo(),
-                        psiphonInfo: psiphonInfo,
-                        isAppStoreBuild: true,
-                        isJailbroken: false,
-                        language: getLanguageMinimalIdentifier(),
-                        // TODO: get networkTypeName
-                        networkTypeName: "WIFI"),
-                    diagnosticHistory: tunnelCoreEntries
-                ))
+                systemInformation: SystemInformationV2(
+                    build: DeviceInfo.gatherDeviceInfo(device: .current),
+                    tunnelCoreBuildInfo: PsiphonTunnel.getBuildInfo(),
+                    isAppStoreBuild: true,
+                    isJailbroken: false,
+                    language: getLanguageMinimalIdentifier(),
+                    // TODO: get networkTypeName
+                    networkTypeName: "WIFI"),
+                psiphonInfo: psiphonInfo,
+                applicationInfo: ApplicationInfo(
+                    applicationId: getApplicagtionId(),
+                    clientVersion: getClientVersion()),
+                logs: allLogs
+                )
             
             let json = String(data: try JSONEncoder().encode(report), encoding: .utf8)!
             
@@ -391,41 +406,44 @@ extension ConduitModule {
                         uploadPath: "")
                     
                     resolve(nil)
-                    Logger.conduitModule.info("Finished uploading feedback diagnostic report.")
+                    Logger.conduitModule.info("Finished uploading feedback diagnostic report", metadata: ["feedback.id": "\(feedbackId)"])
                 } catch {
                     reject("error", "Feedback upload failed", nil)
-                    Logger.conduitModule.error(
-                        "Feedback upload failed: \(String(describing: error), privacy: .public)")
+                    Logger.conduitModule.error("Feedback upload failed", metadata: [
+                        "feedback.id": "\(feedbackId)",
+                        "error": "\(error)"
+                    ])
                 }
             }
             
         } catch {
-            reject("error", "Feedback upload failed", nil)
-            Logger.conduitModule.error(
-                "Feedback upload failed: \(String(describing: error), privacy: .public)")
+            reject("error", "Feedback preparation failed", nil)
+            Logger.conduitModule.error("Feedback preparation failed", metadata: ["error": "\(error)"])
         }
     }
     
     @objc(logInfo:msg:withResolver:withRejecter:)
     func logInfo(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        let logger = Logger(label: tag)
+        logger.info("\(msg)")
         resolve(nil)
     }
     
     @objc(logWarn:msg:withResolver:withRejecter:)
     func logWarn(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        let logger = Logger(label: tag)
+        logger.warning("\(msg)")
         resolve(nil)
     }
 
     @objc(logError:msg:withResolver:withRejecter:)
     func logError(_ tag: String, msg: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
-        Logger.conduitModule.info("\(tag, privacy: .public): \(msg, privacy: .public)")
+        let logger = Logger(label: tag)
+        logger.error("\(msg)")
         resolve(nil)
     }
 
 }
-
 
 extension ConduitModule: ConduitManager.Listener {
     
@@ -480,7 +498,7 @@ extension ConduitModule: ConduitManager.Listener {
 extension ConduitModule: FeedbackUploadService.Listener {
     
     func onDiagnosticMessage(_ message: String, withTimestamp timestamp: String) {
-        Logger.feedbackUploadService.info("DiagnosticMessage: \(timestamp, privacy: .public) \(message, privacy: .public)")
+        Logger.feedbackUploadService.info("DiagnosticMessage", metadata: ["timestamp": "\(timestamp)", "message": "\(message)"])
     }
     
 }

@@ -34,7 +34,7 @@ func parseJSONLines<T: Decodable>(
     
     let decoder = JSONDecoder()
     
-    for logLine in data.components(separatedBy: "\n") {
+    for logLine in data.components(separatedBy: .newlines) {
         
         guard !logLine.isEmpty else  {
             continue
@@ -56,39 +56,32 @@ func parseJSONLines<T: Decodable>(
     return (entries, parseErrors)
 }
 
-/// Reads logs from `paths` of type `T` and converts to `DiagnosticEntry` using the `transform` function.
+/// Reads logs from `paths` of type `T` and converts to `LogType` using the `transform` function.
 /// Paths that do not exist are ignored.
-/// The returned `DiagnosticEntry` array is sorted by timestamp in ascending order.
-func readDiagnosticLogFiles<T: Decodable>(
-    _ type: T.Type,
+func readLogFiles<T: Decodable, LogType>(
+    withLogType type: T.Type,
     paths: [URL],
-    transform: (T) throws -> DiagnosticEntry
-) throws -> ([DiagnosticEntry], [ParseError]) {
+    transform: (T) throws -> LogType
+) throws -> ([LogType], [ParseError]) {
     
-    var diagnosticEntries = [DiagnosticEntry]()
+    var logs = [LogType]()
     var parseErrors = [ParseError]()
     
     for path in paths {
         
         // Ignore paths that don't exist.
         if !FileManager.default.fileExists(atPath: try path.filePath()) {
-            Logger.conduitModule.info("No diagnostic file at path: \(path, privacy: .private)")
+            parseErrors.append(ParseError(message: "No diagnostic file at path: [redacted]/\(path.lastPathComponent)"))
             continue
         }
         
         let data = try Data(contentsOf: path)
         let (entries, errs) = parseJSONLines(T.self, data: String(data: data, encoding: .utf8)!)
         
-        diagnosticEntries.append(contentsOf: try entries.map(transform))
+        logs.append(contentsOf: try entries.map(transform))
         parseErrors.append(contentsOf: errs)
-        
     }
     
-    // Sorts the entries by timestamp in ascending order.
-    diagnosticEntries.sort {
-        $0.timestamp < $1.timestamp
-    }
-    
-    return (diagnosticEntries, parseErrors)
+    return (logs, parseErrors)
     
 }
