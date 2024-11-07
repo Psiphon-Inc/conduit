@@ -19,40 +19,7 @@
 
 import Foundation
 
-// MARK: - Feedback types
-
-public struct Metadata : Codable {
-    
-    /// Feedback version type.
-    let version: Int = 1
-    
-    /// Feedback ID.
-    let id: String
-    
-    /// Client platform.
-    let platform: String
-    
-    /// App name.
-    let appName: String
-    
-    @ISO1806MilliCodedDate var date: Date
-    
-    init(id: String, appName: String, platform: String, date: Date) {
-        self.id = id
-        self.appName = appName
-        self.platform = platform
-        self.date = date
-    }
-    
-    enum CodingKeys : String, CodingKey {
-        case version = "version"
-        case id = "id"
-        case platform = "platform"
-        case appName = "appName"
-        case date = "date!!timestamp"
-    }
-    
-}
+// MARK: - Common types
 
 public struct PsiphonInfo : Codable {
     
@@ -66,68 +33,6 @@ public struct PsiphonInfo : Codable {
         case propagationChannelId = "PROPAGATION_CHANNEL_ID"
         case sponsorId = "SPONSOR_ID"
         case inproxyId = "INPROXY_ID"
-    }
-    
-}
-
-public struct SystemInformation : Codable {
-    
-    let build: DeviceInfo
-    let tunnelCoreBuildInfo: String
-    let psiphonInfo: PsiphonInfo
-    let isAppStoreBuild: Bool
-    let isJailbroken: Bool
-    
-    /// BCP-47 identifier in a minimalist form. Script and region may be omitted. For example, "zh-TW", "en"
-    let language: String
-    
-    let networkTypeName: String
-    
-    enum CodingKeys : String, CodingKey {
-        case build = "Build"
-        case tunnelCoreBuildInfo = "buildInfo"
-        case psiphonInfo = "PsiphonInfo"
-        case isAppStoreBuild = "isAppStoreBuild"
-        case isJailbroken = "isJailbroken"
-        case language = "language"
-        case networkTypeName = "networkTypeName"
-    }
-    
-}
-
-public struct DiagnosticEntry : Codable {
-    
-    let message: String
-    let data: GenericJSON
-    @ISO1806MilliCodedDate var timestamp: Date
-
-    enum CodingKeys : String, CodingKey {
-        case message = "msg"
-        case data = "data"
-        case timestamp = "timestamp!!timestamp"
-    }
-    
-    init(message: String, data: GenericJSON = .object([:]), timestamp: Date) {
-        self.message = message
-        self.data = data
-        self.timestamp = timestamp
-    }
-    
-}
-
-public struct DiagnosticInfo : Codable {
-    
-    let systemInformation: SystemInformation
-    let diagnosticHistory: [DiagnosticEntry]
-    
-    // TODO: This field is not used but is required to exist to maintain
-    // compatibility with the feedback server, preventing formatting errors.
-    private let statusHistory: [String] = []
-    
-    enum CodingKeys : String, CodingKey {
-        case systemInformation = "SystemInformation"
-        case statusHistory = "StatusHistory"
-        case diagnosticHistory = "DiagnosticHistory"
     }
     
 }
@@ -216,18 +121,7 @@ public struct DeviceInfo : Codable {
     }
 }
 
-public struct FeedbackDiagnosticReport : Codable {
-    
-    let metadata: Metadata
-    let feedback: Feedback?
-    let diagnosticInfo: DiagnosticInfo
-    
-    enum CodingKeys : String, CodingKey {
-        case metadata = "Metadata"
-        case feedback = "Feedback"
-        case diagnosticInfo = "DiagnosticInfo"
-    }
-}
+
 
 public enum ClientPlatform {
     
@@ -262,6 +156,277 @@ func generateFeedbackId() throws -> String {
     return feedbackID
 }
 
+
+// MARK: - Version 1
+
+
+public struct SystemInformationV1 : Codable {
+    
+    let build: DeviceInfo
+    let tunnelCoreBuildInfo: String
+    let psiphonInfo: PsiphonInfo
+    let isAppStoreBuild: Bool
+    let isJailbroken: Bool
+    
+    /// BCP-47 identifier in a minimalist form. Script and region may be omitted. For example, "zh-TW", "en"
+    let language: String
+    
+    let networkTypeName: String
+    
+    enum CodingKeys : String, CodingKey {
+        case build = "Build"
+        case tunnelCoreBuildInfo = "buildInfo"
+        case psiphonInfo = "PsiphonInfo"
+        case isAppStoreBuild = "isAppStoreBuild"
+        case isJailbroken = "isJailbroken"
+        case language = "language"
+        case networkTypeName = "networkTypeName"
+    }
+    
+}
+
+public struct DiagnosticEntry : Codable {
+    
+    let message: String
+    let data: GenericJSON
+    @ISO1806MilliCodedDate var timestamp: Date
+
+    enum CodingKeys : String, CodingKey {
+        case message = "msg"
+        case data = "data"
+        case timestamp = "timestamp!!timestamp"
+    }
+    
+    init(message: String, data: GenericJSON = .object([:]), timestamp: Date) {
+        self.message = message
+        self.data = data
+        self.timestamp = timestamp
+    }
+    
+    public static func < (lhs: DiagnosticEntry, rhs: DiagnosticEntry) -> Bool {
+        return lhs.timestamp < rhs.timestamp
+    }
+    
+}
+
+public extension DiagnosticEntry {
+    
+    static func create(from tunnelCoreLog: TunnelCoreLog) throws -> DiagnosticEntry {
+        DiagnosticEntry(
+            message: "",
+            data: try GenericJSON(
+                ["noticeType": tunnelCoreLog.noticeType,
+                 "data": tunnelCoreLog.data,
+                ]),
+            timestamp: tunnelCoreLog.timestamp
+        )
+    }
+    
+}
+
+public struct DiagnosticInfo : Codable {
+    
+    let systemInformation: SystemInformationV1
+    let diagnosticHistory: [DiagnosticEntry]
+    private let statusHistory: [String]
+    
+    enum CodingKeys : String, CodingKey {
+        case systemInformation = "SystemInformation"
+        case statusHistory = "StatusHistory"
+        case diagnosticHistory = "DiagnosticHistory"
+    }
+    
+}
+
+public struct MetadataV1 : Codable {
+    
+    /// Feedback version type.
+    let version: Int = 1
+    
+    /// Feedback ID.
+    let id: String
+    
+    /// Client platform.
+    let platform: String
+    
+    /// App name.
+    let appName: String
+    
+    @ISO1806MilliCodedDate var date: Date
+    
+    init(id: String, appName: String, platform: String, date: Date) {
+        self.id = id
+        self.appName = appName
+        self.platform = platform
+        self.date = date
+    }
+    
+    enum CodingKeys : String, CodingKey {
+        case version = "version"
+        case id = "id"
+        case platform = "platform"
+        case appName = "appName"
+        case date = "date!!timestamp"
+    }
+    
+}
+
+public struct FeedbackDiagnosticReportV1 : Codable {
+    
+    let metadata: MetadataV1
+    let feedback: Feedback?
+    let diagnosticInfo: DiagnosticInfo
+    
+    enum CodingKeys : String, CodingKey {
+        case metadata = "Metadata"
+        case feedback = "Feedback"
+        case diagnosticInfo = "DiagnosticInfo"
+    }
+}
+
+// MARK: - Version 2
+
+public struct ApplicationInfo : Codable {
+    
+    let applicationId: String
+    let clientVersion: String
+
+    enum CodingKeys : String, CodingKey {
+        case applicationId = "applicationId"
+        case clientVersion = "clientVersion"
+    }
+    
+}
+
+public struct SystemInformationV2 : Codable {
+    
+    let build: DeviceInfo
+    let tunnelCoreBuildInfo: String
+    let isAppStoreBuild: Bool
+    let isJailbroken: Bool
+    
+    /// BCP-47 identifier in a minimalist form. Script and region may be omitted. For example, "zh-TW", "en"
+    let language: String
+    
+    let networkTypeName: String
+    
+    enum CodingKeys : String, CodingKey {
+        case build = "Build"
+        case tunnelCoreBuildInfo = "buildInfo"
+        case isAppStoreBuild = "isAppStoreBuild"
+        case isJailbroken = "isJailbroken"
+        case language = "language"
+        case networkTypeName = "networkTypeName"
+    }
+    
+}
+
+public enum FeedbackLogLevel : String, Codable {
+    case trace = "Trace"
+    case debug = "Debug"
+    case info = "Info"
+    case notice = "Notice"
+    case warning = "Warning"
+    case error = "Error"
+    case critical = "Critical"
+}
+
+public struct Log : Comparable, Codable {
+    
+    @ISO1806MilliCodedDate var timestamp: Date
+    let level: FeedbackLogLevel?
+    let category: String
+    let message: String?
+    let data: GenericJSON?
+
+    enum CodingKeys : String, CodingKey {
+        case timestamp = "timestamp!!timestamp"
+        case level = "level"
+        case category = "category"
+        case message = "message"
+        case data = "data"
+    }
+    
+    init(timestamp: Date, level: FeedbackLogLevel?, category: String, message: String?, data: GenericJSON? = nil) {
+        self.timestamp = timestamp
+        self.level = level
+        self.category = category
+        self.message = message
+        self.data = data
+    }
+    
+    public static func < (lhs: Log, rhs: Log) -> Bool {
+        return lhs.timestamp < rhs.timestamp
+    }
+    
+}
+
+public extension Log {
+    
+    static func create(from tunnelCoreLog: TunnelCoreLog) throws -> Log {
+        Log(
+            timestamp: tunnelCoreLog.timestamp,
+            level: nil,
+            category: "tunnel-core",
+            message: nil,
+            data: try GenericJSON(
+                ["noticeType": tunnelCoreLog.noticeType,
+                 "data": tunnelCoreLog.data,
+                ])
+        )
+    }
+    
+}
+
+public struct MetadataV2 : Codable {
+    
+    /// Feedback version type.
+    let version: Int = 2
+    
+    /// Feedback ID.
+    let id: String
+    
+    /// Client platform.
+    let platform: String
+    
+    /// App name.
+    let appName: String
+    
+    
+    init(id: String, appName: String, platform: String) {
+        self.id = id
+        self.appName = appName
+        self.platform = platform
+    }
+    
+    enum CodingKeys : String, CodingKey {
+        case version = "version"
+        case id = "id"
+        case platform = "platform"
+        case appName = "appName"
+    }
+    
+}
+
+public struct FeedbackDiagnosticReportV2 : Codable {
+    
+    let metadata: MetadataV2
+    let systemInformation: SystemInformationV2
+    let psiphonInfo: PsiphonInfo
+    let applicationInfo: ApplicationInfo
+    let logs: [Log]
+    
+
+    enum CodingKeys : String, CodingKey {
+        case metadata = "Metadata"
+        case systemInformation = "SystemInformation"
+        case psiphonInfo = "PsiphonInfo"
+        case applicationInfo = "ApplicationInfo"
+        case logs = "Logs"
+    }
+    
+}
+
 // MARK: -
 
 // The section below is too platform dependent,
@@ -290,21 +455,6 @@ public struct TunnelCoreLog : Codable {
     let noticeType: String
     let data: GenericJSON
     @ISO1806MilliCodedDate var timestamp: Date
-}
-
-public extension DiagnosticEntry {
-    
-    static func create(from tunnelCoreLog: TunnelCoreLog) throws -> DiagnosticEntry {
-        DiagnosticEntry(
-            message: "",
-            data: try GenericJSON(
-                ["noticeType": tunnelCoreLog.noticeType,
-                 "data": tunnelCoreLog.data,
-                ]),
-            timestamp: tunnelCoreLog.timestamp
-        )
-    }
-    
 }
 
 #if canImport(PsiphonTunnel)
@@ -407,6 +557,32 @@ extension FeedbackUploadService : PsiphonTunnelLoggerDelegate, PsiphonTunnelFeed
     public nonisolated func sendFeedbackCompleted(_ err: (any Error)?) {
         Task {
             await self.feedbackUploadDidFinish(err: err)
+        }
+    }
+    
+}
+
+#endif
+
+#if canImport(Puppy)
+import Puppy
+
+extension FeedbackLogLevel {
+    
+    init(from puppyLogLevel: LogLevel) {
+        switch puppyLogLevel {
+        case .trace, .verbose, .debug:
+            self = .debug
+        case .info:
+            self = .info
+        case .notice:
+            self = .info
+        case .warning:
+            self = .warning
+        case .error:
+            self = .error
+        case .critical:
+            self = .critical
         }
     }
     

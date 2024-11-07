@@ -13,6 +13,8 @@
 		293BD6822CB6FA3C006B04D3 /* Feedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293BD6812CB6FA3C006B04D3 /* Feedback.swift */; };
 		293BD69A2CB84246006B04D3 /* FeedbackLogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */; };
 		294484BD2CACF05C00451B61 /* Resources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294484BC2CACF05C00451B61 /* Resources.swift */; };
+		2974F3652CD95382000E8D3F /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 2974F3642CD95382000E8D3F /* Logging */; };
+		2974F3682CDAA7F6000E8D3F /* LogHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2974F3672CDAA7F6000E8D3F /* LogHandler.swift */; };
 		29A9C9FD2CA5FFDD0054431A /* ConduitModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */; };
 		29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = 29A9C9FE2CA600220054431A /* ConduitModule.mm */; };
 		29A9CA032CA715720054431A /* PsiphonTunnel.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29A9CA012CA715410054431A /* PsiphonTunnel.xcframework */; };
@@ -56,6 +58,7 @@
 		293BD6812CB6FA3C006B04D3 /* Feedback.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Feedback.swift; sourceTree = "<group>"; tabWidth = 4; };
 		293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackLogReader.swift; sourceTree = "<group>"; };
 		294484BC2CACF05C00451B61 /* Resources.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Resources.swift; sourceTree = "<group>"; tabWidth = 4; };
+		2974F3672CDAA7F6000E8D3F /* LogHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogHandler.swift; sourceTree = "<group>"; };
 		29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = ConduitModule.swift; sourceTree = "<group>"; tabWidth = 4; };
 		29A9C9FE2CA600220054431A /* ConduitModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ConduitModule.mm; sourceTree = "<group>"; };
 		29A9CA002CA602340054431A /* ConduitModule-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ConduitModule-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -82,6 +85,7 @@
 				96905EF65AED1B983A6B3ABC /* libPods-conduit.a in Frameworks */,
 				29A9CA032CA715720054431A /* PsiphonTunnel.xcframework in Frameworks */,
 				6773BCF42CD2C7B800CF4ADE /* Puppy in Frameworks */,
+				2974F3652CD95382000E8D3F /* Logging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,16 +113,25 @@
 			name = conduit;
 			sourceTree = "<group>";
 		};
-		29A9C9FB2CA5FF1C0054431A /* ConduitModule */ = {
+		2974F3662CDAA7DE000E8D3F /* Feedback */ = {
 			isa = PBXGroup;
 			children = (
 				293BD6812CB6FA3C006B04D3 /* Feedback.swift */,
+				293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */,
+				2974F3672CDAA7F6000E8D3F /* LogHandler.swift */,
+			);
+			path = Feedback;
+			sourceTree = "<group>";
+		};
+		29A9C9FB2CA5FF1C0054431A /* ConduitModule */ = {
+			isa = PBXGroup;
+			children = (
+				2974F3662CDAA7DE000E8D3F /* Feedback */,
 				29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */,
 				29A9C9FE2CA600220054431A /* ConduitModule.mm */,
 				29A9CA002CA602340054431A /* ConduitModule-Bridging-Header.h */,
 				29A9CA062CA715DF0054431A /* ConduitManager.swift */,
 				294484BC2CACF05C00451B61 /* Resources.swift */,
-				293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */,
 			);
 			path = ConduitModule;
 			sourceTree = "<group>";
@@ -221,6 +234,7 @@
 			packageProductDependencies = (
 				67A1F0222CC027D600AE7C39 /* Collections */,
 				6773BCF32CD2C7B800CF4ADE /* Puppy */,
+				2974F3642CD95382000E8D3F /* Logging */,
 			);
 			productName = conduit;
 			productReference = 13B07F961A680F5B00A75B9A /* conduit.app */;
@@ -251,6 +265,7 @@
 			packageReferences = (
 				673EB98A2CC01E25003A3E39 /* XCRemoteSwiftPackageReference "swift-collections" */,
 				6773BCF22CD2C7B800CF4ADE /* XCRemoteSwiftPackageReference "Puppy" */,
+				2974F3632CD95382000E8D3F /* XCRemoteSwiftPackageReference "swift-log" */,
 			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
@@ -392,6 +407,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */,
+				2974F3682CDAA7F6000E8D3F /* LogHandler.swift in Sources */,
 				293BD6822CB6FA3C006B04D3 /* Feedback.swift in Sources */,
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
@@ -624,6 +640,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		2974F3632CD95382000E8D3F /* XCRemoteSwiftPackageReference "swift-log" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-log/";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.2;
+			};
+		};
 		673EB98A2CC01E25003A3E39 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-collections.git";
@@ -643,6 +667,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		2974F3642CD95382000E8D3F /* Logging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2974F3632CD95382000E8D3F /* XCRemoteSwiftPackageReference "swift-log" */;
+			productName = Logging;
+		};
 		6773BCF32CD2C7B800CF4ADE /* Puppy */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 6773BCF22CD2C7B800CF4ADE /* XCRemoteSwiftPackageReference "Puppy" */;

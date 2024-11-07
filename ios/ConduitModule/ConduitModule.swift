@@ -471,16 +471,19 @@ extension ConduitModule {
                 olderNoticesFilePath(dataRootDirectory: dataRootDirectory)
             ]
             
-            let (tunnelCoreEntries, parseErrors) = try readDiagnosticLogFiles(
-                TunnelCoreLog.self,
+            let (tunnelCoreLogs, parseErrors) = try readLogFiles(
+                withLogType: TunnelCoreLog.self,
                 paths: tunnelCoreNoticesPath,
-                transform: DiagnosticEntry.create(from:))
+                transform: Log.create(from:))
             
             if parseErrors.count > 0 {
                 Logger.conduitModule.error(
                     "Log parse errors: \(String(describing: parseErrors))")
             }
             
+            var allLogs = tunnelCoreLogs
+            // TODO: append all other logs
+            allLogs.sort()
             
             // Prepare Feedback Diagnostic Report
             
@@ -503,26 +506,26 @@ extension ConduitModule {
                 inproxyId: inproxyId
             )
             
-            let report = FeedbackDiagnosticReport(
-                metadata: Metadata(
+            let report = FeedbackDiagnosticReportV2(
+                metadata: MetadataV2(
                     id: feedbackId,
                     appName: "conduit",
-                    platform: ClientPlatform.platformString,
-                    date: Date()
+                    platform: ClientPlatform.platformString
                 ),
-                feedback: nil,
-                diagnosticInfo: DiagnosticInfo(
-                    systemInformation: SystemInformation(
-                        build: DeviceInfo.gatherDeviceInfo(device: .current),
-                        tunnelCoreBuildInfo: PsiphonTunnel.getBuildInfo(),
-                        psiphonInfo: psiphonInfo,
-                        isAppStoreBuild: true,
-                        isJailbroken: false,
-                        language: getLanguageMinimalIdentifier(),
-                        // TODO: get networkTypeName
-                        networkTypeName: "WIFI"),
-                    diagnosticHistory: tunnelCoreEntries
-                ))
+                systemInformation: SystemInformationV2(
+                    build: DeviceInfo.gatherDeviceInfo(device: .current),
+                    tunnelCoreBuildInfo: PsiphonTunnel.getBuildInfo(),
+                    isAppStoreBuild: true,
+                    isJailbroken: false,
+                    language: getLanguageMinimalIdentifier(),
+                    // TODO: get networkTypeName
+                    networkTypeName: "WIFI"),
+                psiphonInfo: psiphonInfo,
+                applicationInfo: ApplicationInfo(
+                    applicationId: getApplicagtionId(),
+                    clientVersion: getClientVersion()),
+                logs: allLogs
+                )
             
             let json = String(data: try JSONEncoder().encode(report), encoding: .utf8)!
             

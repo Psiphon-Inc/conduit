@@ -85,6 +85,11 @@ func getClientVersion() -> String {
     Bundle.main.infoDictionary!["CFBundleVersion"] as! String
 }
 
+/// Returns bundle identifier (`CFBundleIdentifier` defined in `Info.plist` file).
+func getApplicagtionId() -> String {
+    Bundle.main.bundleIdentifier!
+}
+
 extension URL {
     
     /// Returns valid file path if this URL points to a local file.
