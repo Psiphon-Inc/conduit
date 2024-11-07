@@ -41,11 +41,11 @@ export function niceBytes(
     bytes: number,
     errorHandler: (error: Error) => void,
 ): string {
-    let units = ["bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
+    let units = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB"];
     let unit = units.shift() as string;
     try {
-        while (units.length > 0 && bytes >= 1024) {
-            bytes /= 1024;
+        while (units.length > 0 && bytes >= 1000) {
+            bytes /= 1000;
             unit = units.shift() as string;
         }
     } catch (error) {
@@ -57,12 +57,12 @@ export function niceBytes(
 
 export function bytesToMB(bytes: number): number {
     "worklet";
-    return bytes / 1024 / 1024;
+    return bytes / 1000 / 1000;
 }
 
 export function MBToBytes(MB: number): number {
     "worklet";
-    return MB * 1024 * 1024;
+    return MB * 1000 * 1000;
 }
 
 let lastLogTime = new Date();
