@@ -13,35 +13,6 @@ pipeline {
     }
 
     stages {
-        stage('Android build APK') {
-            when {
-                branch 'main'; 
-            }
-
-            steps {
-
-                sh 'npm ci'
-
-                writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${env.GIT_COMMIT}';"
-
-                dir('android') {
-                    withSecrets() {
-                        writeFile file: 'app/src/main/res/raw/psiphon_config', text: env.PSIPHON_CONFIG
-                        writeFile file: 'app/src/main/res/raw/embedded_server_entries', text: env.EMBEDDED_SERVER_ENTRIES
-                        writeFile file: 'app/upload-keystore.jks', text: env.ANDROID_UPLOAD_KEYSTORE, encoding: "Base64"
-                        writeFile file: 'keystore.properties', text: env.ANDROID_UPLOAD_KEYSTORE_PROPERTIES
-                    }
-
-                    sh './gradlew clean assembleRelease'
-
-                    sh "mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/conduit-${env.GIT_COMMIT}.apk"
-                }
-
-                archiveArtifacts artifacts: 'android/app/build/outputs/apk/release/*.apk', fingerprint: true, onlyIfSuccessful: true
-
-            }
-        }
-
         stage('Android bundle AAB') {
             when {
                 tag "release-*";

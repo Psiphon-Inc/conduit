@@ -528,11 +528,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             int connectedClients = proxyActivityStats.getCurrentConnectedClients();
 
             notificationTextShort = getString(R.string.conduit_service_running_notification_short_text,
-                    Utils.formatBytes(dataTransferred, false),    // Data transferred
+                    Utils.formatBytes(dataTransferred, true),    // Data transferred
                     connectedClients,     // Connected clients
                     connectingClients);    // Connecting clients
             notificationTextLong = getString(R.string.conduit_service_running_notification_long_text,
-                    Utils.formatBytes(dataTransferred, false),    // Data transferred
+                    Utils.formatBytes(dataTransferred, true),    // Data transferred
                     connectedClients,     // Connected clients
                     connectingClients);    // Connecting clients
         }
