@@ -66,7 +66,7 @@ export function EditableNumberSlider({
     const value = useSharedValue(originalValue);
     const displayText = useDerivedValue(() => {
         const changed = value.value === originalValue ? " " : "*";
-        return `${value.value}` + changed;
+        return `${Math.round(value.value)}` + changed;
     });
 
     const canvasSize = useSharedValue({ width: 0, height: 0 });
