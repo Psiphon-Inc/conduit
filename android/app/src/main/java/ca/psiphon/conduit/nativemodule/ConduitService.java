@@ -554,11 +554,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             notificationTextShort = getString(R.string.conduit_service_running_notification_short_text,
                     connectedClients,     // Connected clients
                     connectingClients,    // Connecting clients
-                    Utils.formatBytes(dataTransferred, false));    // Data transferred
+                    Utils.formatBytes(dataTransferred, true));    // Data transferred, formatted in SI units
             notificationTextLong = getString(R.string.conduit_service_running_notification_long_text,
                     connectedClients,     // Connected clients
                     connectingClients,    // Connecting clients
-                    Utils.formatBytes(dataTransferred, false));    // Data transferred
+                    Utils.formatBytes(dataTransferred, true));    // Data transferred, formatted in SI units
         }
         return buildNotification(notificationIconId, notificationTextShort, notificationTextLong);
     }
