@@ -69,7 +69,8 @@ export function getZeroedInproxyActivityStats(): InproxyActivityStats {
     });
 }
 
-/** This is used to derive the conduit key pair from the mnemonic. The chosen
+/**
+ * This is used to derive the conduit key pair from the mnemonic. The chosen
  *  path is not that important, but each device should have it's own unique
  *  conduit key pair, so we use the device nonce as the last index. The root
  *  of the path is chosen to not conflict with any standard BIP44 paths.
@@ -89,15 +90,4 @@ export function formatConduitBip32Path(deviceNonce: number): string {
  */
 export function getProxyId(conduitKeyPair: Ed25519KeyPair): string {
     return base64nopad.encode(edwardsToMontgomeryPub(conduitKeyPair.publicKey));
-}
-
-/**
- *
- * Utility method for converting a base64nopad encoded Ed25519 public key to a
- * base64nopad X25519 public key.
- */
-export function ed25519StringToX25519String(ed25519String: string): string {
-    return base64nopad.encode(
-        edwardsToMontgomeryPub(base64nopad.decode(ed25519String)),
-    );
 }
