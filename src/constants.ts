@@ -35,7 +35,11 @@ export const PARTICLE_VIDEO_DELAY_MS = 2800;
 // Window height cutoff used to render smaller text in Skia Paragraphs
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;
 
+// Used to track storage migration success
+export const CURRENT_STORAGE_VERSION = 1;
+
 // AsyncStorage keys, centralized to prevent accidental collision
+export const ASYNCSTORAGE_STORAGE_VERSION_KEY = "storageVersion";
 export const ASYNCSTORAGE_HAS_ONBOARDED_KEY = "hasOnboarded";
 export const ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY = "MockInproxyRunning";
 export const ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY = "InproxyMaxClients";

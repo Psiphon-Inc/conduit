@@ -25,9 +25,14 @@ import { View, useWindowDimensions } from "react-native";
 import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { useAuthContext } from "@/src/auth/context";
+import { wrapError } from "@/src/common/errors";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { PsiphonConduitLoading } from "@/src/components/canvas/PsiphonConduitLoading";
-import { ASYNCSTORAGE_HAS_ONBOARDED_KEY } from "@/src/constants";
+import {
+    ASYNCSTORAGE_HAS_ONBOARDED_KEY,
+    CURRENT_STORAGE_VERSION,
+} from "@/src/constants";
+import { applyMigrations } from "@/src/migrations";
 import { sharedStyles as ss } from "@/src/styles";
 
 export default function Index() {
@@ -39,11 +44,27 @@ export default function Index() {
 
     const opacity = useSharedValue(0);
 
-    async function doSignIn() {
+    async function loadApp() {
+        // Apply any storage migrations
+        const appliedStorageVersion = await applyMigrations();
+        if (appliedStorageVersion instanceof Error) {
+            // This will crash the app.
+            throw wrapError(
+                appliedStorageVersion,
+                "Could not apply migrations",
+            );
+        }
+        if (appliedStorageVersion !== CURRENT_STORAGE_VERSION) {
+            // This will crash the app.
+            throw Error(
+                `Storage version ${appliedStorageVersion} did not match expected value ${CURRENT_STORAGE_VERSION}`,
+            );
+        }
+
+        // Prepare account material and route to main view
         const signInResult = await signIn();
         if (signInResult instanceof Error) {
-            // Throw the error so we know about it, signIn must succeed. This
-            // will crash the app.
+            // This will crash the app.
             throw signInResult;
         } else {
             const hasOnboarded = await AsyncStorage.getItem(
@@ -60,10 +81,10 @@ export default function Index() {
     }
 
     React.useEffect(() => {
-        // This is introducing an artificial delay of 1 second to have the nice
+        // This is introducing an artificial delay of 500ms to have the nice
         // fade in before signing in, since sign in is nearly instant.
-        opacity.value = withTiming(1, { duration: 1000 }, () =>
-            runOnJS(doSignIn)(),
+        opacity.value = withTiming(1, { duration: 500 }, () =>
+            runOnJS(loadApp)(),
         );
     }, []);
 
