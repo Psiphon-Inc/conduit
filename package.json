@@ -17,7 +17,8 @@
     "preset": "jest-expo",
     "moduleNameMapper": {
       "micro-key-producer/src/slip10": "micro-key-producer/slip10.js"
-    }
+    },
+    "setupFiles": ["./src/jestSetup.js"]
   },
   "prettier": {
     "tabWidth": 4,
