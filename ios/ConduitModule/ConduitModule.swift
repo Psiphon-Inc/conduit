@@ -254,13 +254,11 @@ extension ConduitModule {
                     privateKey: privateKey
                 )
                 do {
-                    let success = try await self.conduitManager.startConduit(params)
-                    if !success {
-                        sendEvent(.proxyError(.inProxyStartFailed))
-                    }
+                    try await self.conduitManager.startConduit(params)
                 } catch {
                     sendEvent(.proxyError(.inProxyStartFailed))
-                    Logger.conduitModule.error( "Proxy start failed", metadata: ["error": "\(error)"])
+                    reject("error", "Proxy start failed.", error)
+                    Logger.conduitModule.error("Proxy start failed.", metadata: ["error": "\(error)"])
                 }
             case .started:
                 await self.conduitManager.stopConduit()
@@ -284,32 +282,28 @@ extension ConduitModule {
                 reject("error", "Did not receive four valid key value pairs from params.", nil)
                 return
             }
-        
-        Task {   
+
+        Task {
             switch await self.conduitManager.conduitStatus {
             case .stopping, .stopped:
                 // no-op
                 resolve(nil)
                 
-            case .starting:
-                reject("error", "Cannot change parameters while Conduit is starting.", nil)
-                return
+            case .started, .starting:
                 
-            case .started:
                 let params = ConduitParams(
                     maxClients: maxClients,
                     limitUpstream: limitUpstream,
                     limitDownstream: limitDownstream,
                     privateKey: privateKey
-                ) 
+                )
                 do {
-                    let success = try await self.conduitManager.startConduit(params)
-                    if !success {
-                        sendEvent(.proxyError(.inProxyRestartFailed))
-                    }
+                    try await self.conduitManager.startConduit(params)
                     resolve(nil)
                 } catch {
                     sendEvent(.proxyError(.inProxyRestartFailed))
+                    reject("error", "Proxy restart failed.", error)
+                    Logger.conduitModule.error("Proxy restart failed.", metadata: ["error": "\(error)"])
                 }
             }
         }
