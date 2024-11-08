@@ -5,10 +5,10 @@
     <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
     <string name="conduit_service_stop_label_text">Stop</string>
-    <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing total bytes transferred, and the number of clients connected and connecting -->
-    <string name="conduit_service_running_notification_short_text">%1$s \u00B7 %2$d  / %3$d</string>
-    <!-- Long notification text (notification expanded) for the Conduit service when it is active showing total bytes transferred, and the number of clients connected and connecting -->
-    <string name="conduit_service_running_notification_long_text">Data: %1$s transferred\nClients: %2$d connected / %3$d connecting</string>
+    <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
+    <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
+    <!-- Long notification text (notification expanded) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
+    <string name="conduit_service_running_notification_long_text">Clients: %1$d connected / %2$d connecting\nData: %3$s transferred</string>
     <!-- Notification text for the Conduit service when it is waiting for network connectivity -->
     <string name="conduit_service_no_internet_notification_text">Waiting for network connectivity</string>
     <!-- Notification channel description for the Conduit service -->
@@ -19,4 +19,6 @@
     <string name="notification_conduit_failed_to_start_text">Conduit service failed to start. Tap the notification for more information</string>
     <!-- Notification text for when the Conduit service fails to restart -->
     <string name="notification_conduit_failed_to_restart_text">Conduit service failed to restart. Tap the notification for more information</string>
+    <!-- Notification text for Conduit starting notification -->
+    <string name="conduit_service_starting_notification_text">Conduit service is starting…</string>
 </resources>

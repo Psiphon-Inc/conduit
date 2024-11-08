@@ -188,6 +188,9 @@ public class ConduitServiceInteractor {
 
     public void onStart(Context context) {
         isStopped = false;
+        // Note that the service may be running even if the proxy task is in a stopped state.
+        // In this situation, we’ll bind to the service to retrieve the current proxy state,
+        // so it’s important to accurately track the proxy state within the service.
         if (isServiceRunning(context)) {
             bindService(context, new Intent(context, ConduitService.class));
         } else {

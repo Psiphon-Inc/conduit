@@ -46,10 +46,6 @@ public abstract class ProxyState implements Parcelable {
     @NonNull
     public abstract NetworkState networkState();
 
-    public static ProxyState serviceDefault() {
-        return new AutoValue_ProxyState(Status.RUNNING, NetworkState.HAS_INTERNET);
-    }
-
     public static ProxyState unknown() {
         return new AutoValue_ProxyState(Status.UNKNOWN, NetworkState.HAS_INTERNET);
     }
