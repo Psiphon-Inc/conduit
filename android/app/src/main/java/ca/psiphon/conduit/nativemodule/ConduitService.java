@@ -76,16 +76,18 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     private final String NOTIFICATION_CHANNEL_ID = "ConduitServiceChannel";
 
-    // Enum to represent the state of the service
-    private enum ServiceState {
+    // Enum to represent the state of the foreground service
+    // This tracks the lifecycle of the service in foreground, whether it is
+    // running a foreground task (e.g., in-proxy) or transitioning between states.
+    private enum ForegroundServiceState {
         STOPPED,
         STARTING,
         RUNNING,
         STOPPING
     }
 
-    // Variable to track the current state of the service
-    private final AtomicReference<ServiceState> serviceState = new AtomicReference<>(ServiceState.STOPPED);
+    // Variable to track the current state of the foreground service
+    private final AtomicReference<ForegroundServiceState> foregroundServiceState = new AtomicReference<>(ForegroundServiceState.STOPPED);
 
     // List to hold the registered clients
     private final List<IConduitClientCallback> clients = new ArrayList<>();
@@ -303,10 +305,10 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     private int handleStopAction() {
         MyLog.i(TAG, "Received stop action from notification.");
-        ServiceState state = serviceState.get();
-        if (state == ServiceState.STOPPING) {
+        ForegroundServiceState state = foregroundServiceState.get();
+        if (state == ForegroundServiceState.STOPPING) {
             MyLog.i(TAG, "Stop action ignored; service already stopping.");
-        } else if (state == ServiceState.RUNNING || state == ServiceState.STARTING) {
+        } else if (state == ForegroundServiceState.RUNNING || state == ForegroundServiceState.STARTING) {
             Utils.setServiceRunningFlag(this, false);
             stopForegroundService();
         } else {
@@ -317,7 +319,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     private int handleToggleAction() {
         MyLog.i(TAG, "Received toggle action");
-        ServiceState state = serviceState.get();
+        ForegroundServiceState state = foregroundServiceState.get();
         switch (state) {
             case RUNNING -> {
                 MyLog.i(TAG, "Service is running; toggling off.");
@@ -342,7 +344,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     }
 
     private int handleParamsChangedAction(Intent intent) {
-        ServiceState state = serviceState.get();
+        ForegroundServiceState state = foregroundServiceState.get();
         Map<String, Object> params = extractParametersFromIntent(intent);
 
         // Update and persist parameters, storing whether changes occurred
@@ -350,9 +352,9 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         MyLog.i(TAG, paramsUpdated ? "Parameters updated; changes persisted." : "Parameters update called, but no changes detected.");
 
         // If the service is in the STOPPED state, stop it to prevent it from running unnecessarily
-        if (state == ServiceState.STOPPED) {
+        if (state == ForegroundServiceState.STOPPED) {
             stopSelf();
-        } else if (paramsUpdated && state == ServiceState.RUNNING) {
+        } else if (paramsUpdated && state == ForegroundServiceState.RUNNING) {
             // Restart if parameters were updated and the service is running
             MyLog.i(TAG, "Service is running; restarting psiphonTunnel due to parameter changes.");
             try {
@@ -380,8 +382,8 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     }
 
     private int handleStartInProxyWithLastParamsAction() {
-        ServiceState state = serviceState.get();
-        if (state == ServiceState.STOPPED) {
+        ForegroundServiceState state = foregroundServiceState.get();
+        if (state == ForegroundServiceState.STOPPED) {
             MyLog.i(TAG, "Service is stopped; starting with last known parameters.");
             startServiceWithParameters(conduitServiceParameters.loadLastKnownParameters());
             return START_REDELIVER_INTENT;
@@ -426,7 +428,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     }
 
     private synchronized void startForegroundService() {
-        if (!serviceState.compareAndSet(ServiceState.STOPPED, ServiceState.STARTING)) {
+        if (!foregroundServiceState.compareAndSet(ForegroundServiceState.STOPPED, ForegroundServiceState.STARTING)) {
             MyLog.i(TAG, "Service is not stopped; cannot start.");
             return;
         }
@@ -525,16 +527,16 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                 proxyState = proxyState.toBuilder()
                         .setStatus(ProxyState.Status.STOPPED)
                         .build();
-                serviceState.set(ServiceState.STOPPED);
+                foregroundServiceState.set(ForegroundServiceState.STOPPED);
             }
         });
 
         // Update the service state to RUNNING after starting the task
-        serviceState.set(ServiceState.RUNNING);
+        foregroundServiceState.set(ForegroundServiceState.RUNNING);
     }
 
     private synchronized void stopForegroundService() {
-        if (!serviceState.compareAndSet(ServiceState.RUNNING, ServiceState.STOPPING)) {
+        if (!foregroundServiceState.compareAndSet(ForegroundServiceState.RUNNING, ForegroundServiceState.STOPPING)) {
             MyLog.i(TAG, "Service is not running; cannot stop.");
             return;
         }
