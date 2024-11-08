@@ -167,16 +167,21 @@ actor ConduitManager {
             internetReachable: self.psiphonTunnel!.isInternetReachable)
     }
     
-    func startConduit(_ params: ConduitParams) async throws -> Bool {
-        guard case .stopped = conduitStatus else {
-            return false
-        }
+    func startConduit(_ params: ConduitParams) async throws {
         
         if psiphonTunnel == nil {
             psiphonTunnelListener = PsiphonTunnelListener(listener: self)
             psiphonTunnel = PsiphonTunnelAsyncWrapper(
                 tunneledAppDelegate: self.psiphonTunnelListener!)
         }
+
+        if (conduitStatus == .starting || conduitStatus == .started) && 
+            psiphonTunnelListener!.isEqualConduitParams(params) {
+            Logger.conduitMan.warning("Restart conduit with duplicate parameters denied.")
+            return
+        }
+
+        await self.stopConduit()
         
         let dynamicConfigs = PsiphonTunnelListener.DynamicConfigs(
             conduitParams: params,
@@ -193,15 +198,18 @@ actor ConduitManager {
             listener.onInproxyProxyActivity(stats: activityStats!)
         } else {
             setConduitStatus(.stopped)
+            Logger.conduitMan.debug(
+                "Psiphon tunnel start was unsuccessful.",
+                metadata: ["conduitParams": "\(String(describing: params))"]
+            )
+            throw Err("Failed to start conduit through psiphon tunnel with given parameters.")
         }
-            
-        return success
     }
     
     func stopConduit() async {
         guard
             let psiphonTunnel,
-            case .started = conduitStatus else {
+            (conduitStatus == .started || conduitStatus == .starting) else {
             return
         }
         setConduitStatus(.stopping)
@@ -322,6 +330,10 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
     
     func setConfigs(_ configs: DynamicConfigs) {
         self.dynamicConfigs = configs
+    }
+    
+    func isEqualConduitParams(_ conduitParams: ConduitParams) -> Bool{
+        return (self.dynamicConfigs?.conduitParams == conduitParams)
     }
     
     func getEmbeddedServerEntries() -> String? {
