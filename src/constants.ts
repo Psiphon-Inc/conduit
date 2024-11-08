@@ -18,7 +18,7 @@
  */
 
 export const DEFAULT_INPROXY_MAX_CLIENTS = 2;
-export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 10 * 1024 * 1024; // 10 MB
+export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 10 * 1000 * 1000; // 10 MB
 
 // if these are maxed out, it means a potential of 8Gbps at full capacity
 export const INPROXY_MAX_CLIENTS_MAX = 25;
