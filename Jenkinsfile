@@ -105,7 +105,7 @@ pipeline {
 
                     sh 'xcodebuild -exportArchive -archivePath ./build/conduit.xcarchive -exportOptionsPlist exportAppStoreOptions.plist -exportPath ./build -allowProvisioningUpdates'
 
-                    sh "mv ./build/conduit.ipa ./build/conduit-${releaseName}.ipa"
+                    sh "mv ./build/Conduit.ipa ./build/Conduit-${releaseName}.ipa"
                 }
 
                 archiveArtifacts artifacts: 'ios/build/*.ipa', fingerprint: true, onlyIfSuccessful: true
