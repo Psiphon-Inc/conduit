@@ -522,33 +522,4 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
         }
         return eventData;
     }
-
-    private Map<String, Object> toMap(ReadableMap readableMap) {
-        Map<String, Object> map = new HashMap<>();
-        ReadableMapKeySetIterator iterator = readableMap.keySetIterator();
-        while (iterator.hasNextKey()) {
-            String key = iterator.nextKey();
-            switch (readableMap.getType(key)) {
-                case Boolean:
-                    map.put(key, readableMap.getBoolean(key));
-                    break;
-                case Number:
-                    // Check if the number is an integer or a double
-                    double value = readableMap.getDouble(key);
-                    if (value == Math.rint(value)) { // Check if the number is an integer
-                        map.put(key, (int) value);   // Cast to Integer if it's a whole number
-                    } else {
-                        map.put(key, value);         // Keep it as Double otherwise
-                    }
-                    break;
-                case String:
-                    map.put(key, readableMap.getString(key));
-                    break;
-                default:
-                    map.put(key, null);
-                    break;
-            }
-        }
-        return map;
-    }
 }
