@@ -162,6 +162,32 @@ extension ConduitEvent: ReactNativeEvent {
     
 }
 
+/// User provided in proxy configurations received through the React Native bridge.
+struct ConduitParams: Codable, Equatable {
+    let maxClients: Int
+    let limitUpstream: Int
+    let limitDownstream: Int
+    let privateKey: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case maxClients = "maxClients"
+        case limitUpstream = "limitUpstreamBytesPerSecond"
+        case limitDownstream = "limitDownstreamBytesPerSecond"
+        case privateKey = "privateKey"
+    }
+}
+
+extension ConduitParams {
+    static func fromDictionary(params: NSDictionary) -> ConduitParams? {
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: params, options: [])
+            let decoder = JSONDecoder()
+            return try decoder.decode(ConduitParams.self, from: jsonData)
+        } catch {
+            return nil
+        }
+    }
+}
 
 // MARK: - ConduitModule
 
@@ -239,22 +265,24 @@ final class ConduitModule: RCTEventEmitter {
 // Exported native methods
 extension ConduitModule {
     
-    @objc(toggleInProxy:limitUpstream:limitDownstream:privateKey:withResolver:withRejecter:)
+    @objc(toggleInProxy:withResolver:withRejecter:)
     func toggleInProxy(
-        _ maxClients: Int, limitUpstream: Int, limitDownstream: Int, privateKey: String?,
+        _ params: NSDictionary,
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) {
+
+        guard let conduitParams = ConduitParams.fromDictionary(params: params) else {
+            Logger.conduitModule.warning("NSDictionary to ConduitParams conversion failed.")
+            reject("error", "params NSDictionary could not be loaded into ConduitParams.", nil)
+            return
+        }
+        Logger.conduitModule.trace("ConduitParams", metadata: ["params": "\(String(describing: conduitParams))"])
+        
         Task {
             switch await self.conduitManager.conduitStatus {
             case .stopped:
-                let params = ConduitParams(
-                    maxClients: maxClients,
-                    limitUpstream: limitUpstream,
-                    limitDownstream: limitDownstream,
-                    privateKey: privateKey
-                )
                 do {
-                    try await self.conduitManager.startConduit(params)
+                    try await self.conduitManager.startConduit(conduitParams)
                 } catch {
                     sendEvent(.proxyError(.inProxyStartFailed))
                     reject("error", "Proxy start failed.", error)
@@ -275,14 +303,14 @@ extension ConduitModule {
         _ params: NSDictionary,
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) {
-        guard let maxClients = params["maxClients"] as? Int,
-            let limitUpstream = params["limitUpstreamBytesPerSecond"] as? Int,
-            let limitDownstream = params["limitDownstreamBytesPerSecond"] as? Int,
-            let privateKey = params["inProxyPrivateKey"] as? String? else {
-                reject("error", "Did not receive four valid key value pairs from params.", nil)
-                return
-            }
-
+        
+        guard let conduitParams = ConduitParams.fromDictionary(params: params) else {
+            Logger.conduitModule.warning("NSDictionary to ConduitParams conversion failed.")
+            reject("error", "params NSDictionary could not be loaded into ConduitParams.", nil)
+            return
+        }
+        Logger.conduitModule.trace("ConduitParams", metadata: ["params": "\(String(describing: conduitParams))"])
+        
         Task {
             switch await self.conduitManager.conduitStatus {
             case .stopping, .stopped:
@@ -291,14 +319,8 @@ extension ConduitModule {
                 
             case .started, .starting:
                 
-                let params = ConduitParams(
-                    maxClients: maxClients,
-                    limitUpstream: limitUpstream,
-                    limitDownstream: limitDownstream,
-                    privateKey: privateKey
-                )
                 do {
-                    try await self.conduitManager.startConduit(params)
+                    try await self.conduitManager.startConduit(conduitParams)
                     resolve(nil)
                 } catch {
                     sendEvent(.proxyError(.inProxyRestartFailed))
