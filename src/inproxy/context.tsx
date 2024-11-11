@@ -257,12 +257,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // ConduitModule.toggleInProxy
     async function toggleInproxy(): Promise<void> {
         try {
-            await ConduitModule.toggleInProxy(
-                inproxyParameters.maxClients,
-                inproxyParameters.limitUpstreamBytesPerSecond,
-                inproxyParameters.limitDownstreamBytesPerSecond,
-                inproxyParameters.privateKey,
-            );
+            await ConduitModule.toggleInProxy(inproxyParameters);
             timedLog(`ConduitModule.toggleInProxy(...) invoked`);
         } catch (error) {
             logErrorToDiagnostic(

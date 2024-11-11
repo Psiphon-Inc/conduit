@@ -22,14 +22,7 @@ import { NativeModules } from "react-native";
 import { InproxyParameters } from "@/src/inproxy/types";
 
 export interface ConduitModuleAPI {
-    toggleInProxy: (
-        maxClients: number,
-        limitUpstreamBytesPerSecond: number,
-        limitDownstreamBytesPerSecond: number,
-        privateKey: string,
-    ) => Promise<void>;
-    // Technically the Android implementation can accept a subset of the
-    // InproxyParameters, but we will always be sending them all.
+    toggleInProxy: (params: InproxyParameters) => Promise<void>;
     paramsChanged: (params: InproxyParameters) => Promise<void>;
     addListener: (eventName: string) => void;
     removeListeners: (count: number) => void;
