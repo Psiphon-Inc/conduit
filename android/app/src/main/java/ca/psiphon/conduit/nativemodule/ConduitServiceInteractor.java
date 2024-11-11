@@ -36,7 +36,6 @@ import com.jakewharton.rxrelay2.BehaviorRelay;
 import com.jakewharton.rxrelay2.Relay;
 
 import java.util.List;
-import java.util.Map;
 
 import ca.psiphon.conduit.nativemodule.logging.MyLog;
 import ca.psiphon.conduit.nativemodule.stats.ProxyActivityStats;
@@ -117,16 +116,11 @@ public class ConduitServiceInteractor {
         proxyStateRelay.accept(ProxyState.unknown());
     }
 
-    public static void toggleInProxy(Context context, int maxClients, int limitUpstreamBytesPerSecond,
-            int limitDownstreamBytesPerSecond, String privateKey) {
+    public static void toggleInProxy(Context context, ConduitServiceParameters conduitServiceParameters) {
         Intent intent = new Intent(context, ConduitService.class);
         intent.setAction(ConduitService.INTENT_ACTION_TOGGLE_IN_PROXY);
-
-        // Add parameters to the intent using the keys from ConduitServiceParameters
-        intent.putExtra(MAX_CLIENTS, maxClients);
-        intent.putExtra(LIMIT_UPSTREAM_BYTES, limitUpstreamBytesPerSecond);
-        intent.putExtra(LIMIT_DOWNSTREAM_BYTES, limitDownstreamBytesPerSecond);
-        intent.putExtra(INPROXY_PRIVATE_KEY, privateKey);
+        // Add parameters to the intent
+        conduitServiceParameters.putIntoIntent(intent);
 
         // Send the intent to the service to toggle the proxy
         // and let the service handle the logic in onStartCommand
@@ -142,32 +136,11 @@ public class ConduitServiceInteractor {
         sendStartCommandToService(context, intent);
     }
 
-    public static void paramsChanged(Context context, Map<String, Object> params) {
+    public static void paramsChanged(Context context, ConduitServiceParameters conduitServiceParameters) {
         Intent intent = new Intent(context, ConduitService.class);
         intent.setAction(ConduitService.INTENT_ACTION_PARAMS_CHANGED);
-
-        // Add known parameters to the intent
-        if (params.containsKey(MAX_CLIENTS)) {
-            Integer maxClients = (Integer) params.get(MAX_CLIENTS);
-            if (maxClients != null) {
-                intent.putExtra(MAX_CLIENTS, maxClients);
-            }
-        }
-        if (params.containsKey(LIMIT_UPSTREAM_BYTES)) {
-            Integer limitUpstreamBytes = (Integer) params.get(LIMIT_UPSTREAM_BYTES);
-            if (limitUpstreamBytes != null) {
-                intent.putExtra(LIMIT_UPSTREAM_BYTES, limitUpstreamBytes);
-            }
-        }
-        if (params.containsKey(LIMIT_DOWNSTREAM_BYTES)) {
-            Integer limitDownstreamBytes = (Integer) params.get(LIMIT_DOWNSTREAM_BYTES);
-            if (limitDownstreamBytes != null) {
-                intent.putExtra(LIMIT_DOWNSTREAM_BYTES, limitDownstreamBytes);
-            }
-        }
-        if (params.containsKey(INPROXY_PRIVATE_KEY)) {
-            intent.putExtra(INPROXY_PRIVATE_KEY, (String) params.get(INPROXY_PRIVATE_KEY));
-        }
+        // Add parameters to the intent
+        conduitServiceParameters.putIntoIntent(intent);
 
         // Send the intent to the service to update the parameters
         // and let the service handle the logic in onStartCommand

@@ -132,13 +132,14 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
-    public void toggleInProxy(int maxClients, int limitUpstreamBytesPerSecond, int limitDownstreamBytesPerSecond,
-            String privateKey, Promise promise) {
+    public void toggleInProxy(ReadableMap params, Promise promise) {
         try {
-            ConduitServiceInteractor.toggleInProxy(getReactApplicationContext(), maxClients,
-                    limitUpstreamBytesPerSecond, limitDownstreamBytesPerSecond, privateKey);
+            ConduitServiceParameters conduitServiceParameters = ConduitServiceParameters.parse(params);
+            if (conduitServiceParameters == null) {
+                throw new IllegalArgumentException("Invalid parameters");
+            }
+            ConduitServiceInteractor.toggleInProxy(getReactApplicationContext(), conduitServiceParameters);
             promise.resolve(null);
-
         } catch (Exception e) {
             MyLog.e(TAG, "Failed to toggle conduit service: " + e);
             promise.reject("TOGGLE_SERVICE_ERROR", "Failed to toggle conduit service", e);
@@ -148,8 +149,11 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     @ReactMethod
     public void paramsChanged(ReadableMap params, Promise promise) {
         try {
-            Map<String, Object> paramsMap = toMap(params);
-            ConduitServiceInteractor.paramsChanged(getReactApplicationContext(), paramsMap);
+            ConduitServiceParameters conduitServiceParameters = ConduitServiceParameters.parse(params);
+            if (conduitServiceParameters == null) {
+                throw new IllegalArgumentException("Invalid parameters");
+            }
+            ConduitServiceInteractor.paramsChanged(getReactApplicationContext(), conduitServiceParameters);
             promise.resolve(null);
         } catch (Exception e) {
             MyLog.e(TAG, "Failed to change conduit service params: " + e);
