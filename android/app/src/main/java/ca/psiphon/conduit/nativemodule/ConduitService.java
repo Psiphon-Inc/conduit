@@ -70,7 +70,6 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     public static final String INTENT_ACTION_PARAMS_CHANGED = "ca.psiphon.conduit.nativemodule.ParamsChanged";
     public static final String INTENT_ACTION_PSIPHON_START_FAILED = "ca.psiphon.conduit.nativemodule.PsiphonStartFailed";
     public static final String INTENT_ACTION_PSIPHON_RESTART_FAILED = "ca.psiphon.conduit.nativemodule.PsiphonRestartFailed";
-    public static final String INTENT_ACTION_INVALID_PARAMS = "ca.psiphon.conduit.nativemodule.InvalidParams";
     public static final String INTENT_ACTION_INPROXY_MUST_UPGRADE = "ca.psiphon.conduit.nativemodule.InProxyMustUpgrade";
 
     private final String NOTIFICATION_CHANNEL_ID = "ConduitServiceChannel";
