@@ -163,29 +163,26 @@ extension ConduitEvent: ReactNativeEvent {
 }
 
 /// User provided in proxy configurations received through the React Native bridge.
-struct ConduitParams: Codable, Equatable {
+struct ConduitParams: Equatable {
     let maxClients: Int
     let limitUpstream: Int
     let limitDownstream: Int
     let privateKey: String?
     
-    private enum CodingKeys: String, CodingKey {
-        case maxClients = "maxClients"
-        case limitUpstream = "limitUpstreamBytesPerSecond"
-        case limitDownstream = "limitDownstreamBytesPerSecond"
-        case privateKey = "privateKey"
-    }
-}
-
-extension ConduitParams {
-    static func fromDictionary(params: NSDictionary) -> ConduitParams? {
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: params, options: [])
-            let decoder = JSONDecoder()
-            return try decoder.decode(ConduitParams.self, from: jsonData)
-        } catch {
+    init?(params: NSDictionary) {
+        guard
+            let maxClients = params["maxClients"] as? Int,
+            let limitUpstream = params["limitUpstreamBytesPerSecond"] as? Int,
+            let limitDownstream = params["limitDownstreamBytesPerSecond"] as? Int,
+            let privateKey = params["privateKey"] as? String?
+        else {
             return nil
         }
+        
+        self.maxClients = maxClients
+        self.limitUpstream = limitUpstream
+        self.limitDownstream = limitDownstream
+        self.privateKey = privateKey
     }
 }
 
@@ -271,12 +268,11 @@ extension ConduitModule {
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) {
 
-        guard let conduitParams = ConduitParams.fromDictionary(params: params) else {
+        guard let conduitParams = ConduitParams(params: params) else {
             Logger.conduitModule.warning("NSDictionary to ConduitParams conversion failed.")
             reject("error", "params NSDictionary could not be loaded into ConduitParams.", nil)
             return
         }
-        Logger.conduitModule.trace("ConduitParams", metadata: ["params": "\(String(describing: conduitParams))"])
         
         Task {
             switch await self.conduitManager.conduitStatus {
@@ -304,12 +300,11 @@ extension ConduitModule {
         resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
     ) {
         
-        guard let conduitParams = ConduitParams.fromDictionary(params: params) else {
+        guard let conduitParams = ConduitParams(params: params) else {
             Logger.conduitModule.warning("NSDictionary to ConduitParams conversion failed.")
             reject("error", "params NSDictionary could not be loaded into ConduitParams.", nil)
             return
         }
-        Logger.conduitModule.trace("ConduitParams", metadata: ["params": "\(String(describing: conduitParams))"])
         
         Task {
             switch await self.conduitManager.conduitStatus {
