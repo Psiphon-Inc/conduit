@@ -20,96 +20,203 @@
 package ca.psiphon.conduit.nativemodule;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.facebook.react.bridge.ReadableMap;
 
-public class ConduitServiceParameters {
-    static final String MAX_CLIENTS_KEY = "maxClients";
-    static final String LIMIT_UPSTREAM_BYTES_KEY = "limitUpstreamBytes";
-    static final String LIMIT_DOWNSTREAM_BYTES_KEY = "limitDownstreamBytes";
-    static final String INPROXY_PRIVATE_KEY_KEY = "inProxyPrivateKey";
-    private static final String PREFS_NAME = "ConduitServiceParamsPrefs";
+import ca.psiphon.conduit.nativemodule.logging.MyLog;
 
-    private final SharedPreferences preferences;
+public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey) {
+    public static String TAG = ConduitServiceParameters.class.getSimpleName();
 
-    public ConduitServiceParameters(Context context) {
-        this.preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    // Keys and preferences file name
+    public static final String PREFS_NAME = "ConduitServiceParamsPrefs";
+    public static final String MAX_CLIENTS_KEY = "maxClients";
+    public static final String LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY = "limitUpstreamBytesPerSecond";
+    public static final String LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY = "limitDownstreamBytesPerSecond";
+    public static final String PRIVATE_KEY_KEY = "privateKey";
+    public static final String SCHEMA_VERSION_KEY = "schemaVersion";
+
+    // Current storage schema version
+    private static final int CURRENT_SCHEMA_VERSION = 1;
+
+    // Parse method for ReadableMap
+    public static ConduitServiceParameters parse(ReadableMap map) {
+        // Check if all keys are present
+        if (!map.hasKey(MAX_CLIENTS_KEY) ||
+                !map.hasKey(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY) ||
+                !map.hasKey(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY) ||
+                !map.hasKey(PRIVATE_KEY_KEY)) {
+            return null;
+        }
+
+        int maxClients = map.getInt(MAX_CLIENTS_KEY);
+        int limitUpstreamBytes = map.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY);
+        int limitDownstreamBytes = map.getInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY);
+        String proxyPrivateKey = map.getString(PRIVATE_KEY_KEY);
+
+        // Validate parsed values
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
+            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        }
+
+        return null;
     }
 
-    public int getMaxClients() {
-        return preferences.getInt(MAX_CLIENTS_KEY, -1);
+    // Parse method for Intent
+    public static ConduitServiceParameters parse(Intent intent) {
+        // Check if all keys are present
+        if (!intent.hasExtra(MAX_CLIENTS_KEY) ||
+                !intent.hasExtra(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY) ||
+                !intent.hasExtra(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY) ||
+                !intent.hasExtra(PRIVATE_KEY_KEY)) {
+            return null;
+        }
+
+        int maxClients = intent.getIntExtra(MAX_CLIENTS_KEY, -1);
+        int limitUpstreamBytes = intent.getIntExtra(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1);
+        int limitDownstreamBytes = intent.getIntExtra(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1);
+        String proxyPrivateKey = intent.getStringExtra(PRIVATE_KEY_KEY);
+
+        // Validate parsed values
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
+            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        }
+
+        return null;
     }
 
-    public int getLimitUpstreamBytes() {
-        return preferences.getInt(LIMIT_UPSTREAM_BYTES_KEY, -1);
-    }
-
-    public int getLimitDownstreamBytes() {
-        return preferences.getInt(LIMIT_DOWNSTREAM_BYTES_KEY, -1);
-    }
-
-    public String getProxyPrivateKey() {
-        return preferences.getString(INPROXY_PRIVATE_KEY_KEY, null);
-    }
-
-    public boolean updateParametersFromMap(Map<String, Object> params) {
-        boolean paramsChanged = false;
+    // Store the object in SharedPreferences and return true if any values changed
+    public boolean store(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
 
-        if (params.containsKey(MAX_CLIENTS_KEY)) {
-            Integer maxClients = (Integer) params.get(MAX_CLIENTS_KEY);
-            if (maxClients != null && maxClients != getMaxClients()) {
-                editor.putInt(MAX_CLIENTS_KEY, maxClients);
-                paramsChanged = true;
-            }
+        boolean changed = false;
+
+        if (preferences.getInt(MAX_CLIENTS_KEY, -1) != maxClients) {
+            editor.putInt(MAX_CLIENTS_KEY, maxClients);
+            changed = true;
         }
 
-        if (params.containsKey(LIMIT_UPSTREAM_BYTES_KEY)) {
-            Integer limitUpstreamBytes = (Integer) params.get(LIMIT_UPSTREAM_BYTES_KEY);
-            if (limitUpstreamBytes != null && limitUpstreamBytes != getLimitUpstreamBytes()) {
-                editor.putInt(LIMIT_UPSTREAM_BYTES_KEY, limitUpstreamBytes);
-                paramsChanged = true;
-            }
+        if (preferences.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1) != limitUpstreamBytes) {
+            editor.putInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, limitUpstreamBytes);
+            changed = true;
         }
 
-        if (params.containsKey(LIMIT_DOWNSTREAM_BYTES_KEY)) {
-            Integer limitDownstreamBytes = (Integer) params.get(LIMIT_DOWNSTREAM_BYTES_KEY);
-            if (limitDownstreamBytes != null && limitDownstreamBytes != getLimitDownstreamBytes()) {
-                editor.putInt(LIMIT_DOWNSTREAM_BYTES_KEY, limitDownstreamBytes);
-                paramsChanged = true;
-            }
+        if (preferences.getInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1) != limitDownstreamBytes) {
+            editor.putInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, limitDownstreamBytes);
+            changed = true;
         }
 
-        if (params.containsKey(INPROXY_PRIVATE_KEY_KEY)) {
-            String privateKey = (String) params.get(INPROXY_PRIVATE_KEY_KEY);
-            if (privateKey != null && !privateKey.equals(getProxyPrivateKey())) {
-                editor.putString(INPROXY_PRIVATE_KEY_KEY, privateKey);
-                paramsChanged = true;
-            }
+        // Guard against NPE
+        String storedPrivateKey = preferences.getString(PRIVATE_KEY_KEY, null);
+        if (storedPrivateKey == null || !storedPrivateKey.equals(privateKey)) {
+            editor.putString(PRIVATE_KEY_KEY, privateKey);
+            changed = true;
         }
 
-        if (paramsChanged) {
+        if (changed) {
             editor.apply();
         }
 
-        return paramsChanged;
+        return changed;
     }
 
-    public boolean validateParameters() {
-        return getMaxClients() != -1 ||
-                getLimitUpstreamBytes() != -1 ||
-                getLimitDownstreamBytes() != -1 ||
-                getProxyPrivateKey() != null;
+    // Helper to load parameters from preferences
+    public static ConduitServiceParameters load(Context context) {
+        migrate(context); // Ensure preferences are up-to-date
+
+        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
+        int maxClients = preferences.getInt(MAX_CLIENTS_KEY, -1);
+        int limitUpstreamBytes = preferences.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1);
+        int limitDownstreamBytes = preferences.getInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1);
+        String proxyPrivateKey = preferences.getString(PRIVATE_KEY_KEY, null);
+
+        // Validate the loaded parameters
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
+            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        }
+
+        return null;
     }
 
-    public Map<String, Object> loadLastKnownParameters() {
-        Map<String, Object> params = new HashMap<>();
-        params.put(MAX_CLIENTS_KEY, getMaxClients());
-        params.put(LIMIT_UPSTREAM_BYTES_KEY, getLimitUpstreamBytes());
-        params.put(LIMIT_DOWNSTREAM_BYTES_KEY, getLimitDownstreamBytes());
-        params.put(INPROXY_PRIVATE_KEY_KEY, getProxyPrivateKey());
-        return params;
+    // Helper to put parameters into an intent
+    public void putIntoIntent(Intent intent) {
+        intent.putExtra(MAX_CLIENTS_KEY, maxClients);
+        intent.putExtra(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, limitUpstreamBytes);
+        intent.putExtra(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, limitDownstreamBytes);
+        intent.putExtra(PRIVATE_KEY_KEY, privateKey);
+    }
+
+    // Helper to validate parameters
+    private static boolean validate(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey) {
+        // validate that:
+        // - maxClients is greater than 0
+        // - limitUpstreamBytes and limitDownstreamBytes are greater than or equal to 0, with 0 being a valid value
+        // - privateKey is not null or empty, empty is still theoretically valid for the tunnel core but not for the conduit
+        return maxClients > 0 && limitUpstreamBytes >= 0 && limitDownstreamBytes >= 0 && privateKey != null && !privateKey.isEmpty();
+    }
+
+    // Helper to migrate preferences to the current schema
+    private static void migrate(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        int storedSchemaVersion = preferences.getInt(SCHEMA_VERSION_KEY, 0);
+
+        while (storedSchemaVersion < CURRENT_SCHEMA_VERSION) {
+            switch (storedSchemaVersion) {
+                case 0:
+                    MyLog.i(TAG, "Migrating schema from version 0 to 1");
+
+                    if (!preferences.contains(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY) && preferences.contains("limitUpstreamBytes")) {
+                        editor.putInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, preferences.getInt("limitUpstreamBytes", -1));
+                        editor.remove("limitUpstreamBytes");
+                        MyLog.i(TAG, "Migrated limitUpstreamBytes.");
+                    }
+
+                    if (!preferences.contains(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY) && preferences.contains("limitDownstreamBytes")) {
+                        editor.putInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, preferences.getInt("limitDownstreamBytes", -1));
+                        editor.remove("limitDownstreamBytes");
+                        MyLog.i(TAG, "Migrated limitDownstreamBytes.");
+                    }
+
+                    if (!preferences.contains(PRIVATE_KEY_KEY) && preferences.contains("inProxyPrivateKey")) {
+                        editor.putString(PRIVATE_KEY_KEY, preferences.getString("inProxyPrivateKey", null));
+                        editor.remove("inProxyPrivateKey");
+                        MyLog.i(TAG, "Migrated inProxyPrivateKey.");
+                    }
+
+                    // Apply migrations
+                    editor.apply();
+
+
+                    // Update schema version
+                    SharedPreferences.Editor schemaEditor = preferences.edit();
+                    schemaEditor.putInt(SCHEMA_VERSION_KEY, 1);
+                    schemaEditor.apply();
+                    MyLog.i(TAG, "Schema version updated to 1.");
+                    storedSchemaVersion = 1;
+                    break;
+
+                    // To apply future migrations, add a new case like the following:
+                    /*
+                    case 1:
+                        MyLog.i(TAG, "Migrating schema from version 1 to 2");
+                        // Add migration logic here
+                        // Update schema version
+                        SharedPreferences.Editor schemaEditor = preferences.edit();
+                        schemaEditor.putInt(SCHEMA_VERSION_KEY, 2);
+                        schemaEditor.apply();
+                        MyLog.i(TAG, "Schema version updated to 2.");
+                        storedSchemaVersion = 2;
+                        break;
+                     */
+
+                default:
+                    throw new IllegalStateException("Unknown schema version: " + storedSchemaVersion);
+            }
+        }
     }
 }

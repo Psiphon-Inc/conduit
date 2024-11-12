@@ -30,6 +30,7 @@ import {
     keyPairToBase64nopad,
 } from "@/src/common/cryptography";
 import { wrapError } from "@/src/common/errors";
+import { timedLog } from "@/src/common/utils";
 import {
     SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
     SECURESTORE_DEVICE_NONCE_KEY,
@@ -61,6 +62,7 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
             SECURESTORE_MNEMONIC_KEY,
         );
         if (!storedMnemonic) {
+            timedLog("Generating new root mnemonic");
             const newMnemonic = bip39.generateMnemonic(englishWordlist);
             await SecureStore.setItemAsync(
                 SECURESTORE_MNEMONIC_KEY,
@@ -77,6 +79,7 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
             SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
         );
         if (!storedAccountKeyPairBase64nopad) {
+            timedLog("Deriving account key from root mnemonic");
             const derived = deriveEd25519KeyPair(mnemonic);
             if (derived instanceof Error) {
                 throw derived;
@@ -106,6 +109,7 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
             SECURESTORE_DEVICE_NONCE_KEY,
         );
         if (!storedDeviceNonce) {
+            timedLog("Picking new random device nonce");
             const newDeviceNonce = Math.floor(Math.random() * 0x80000000);
             await SecureStore.setItemAsync(
                 SECURESTORE_DEVICE_NONCE_KEY,
@@ -122,6 +126,7 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
             SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
         );
         if (!storedConduitKeyPairBase64nopad) {
+            timedLog("Deriving new conduit key pair from root mnemonic");
             const derived = deriveEd25519KeyPair(
                 mnemonic,
                 formatConduitBip32Path(deviceNonce),

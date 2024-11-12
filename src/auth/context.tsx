@@ -22,6 +22,7 @@ import * as SecureStore from "expo-secure-store";
 import React from "react";
 
 import { createOrLoadAccount } from "@/src/auth/account";
+import { timedLog } from "@/src/common/utils";
 import {
     QUERYKEY_ACCOUNT_KEYPAIR,
     QUERYKEY_INPROXY_KEYPAIR,
@@ -64,6 +65,7 @@ export function AuthProvider(props: React.PropsWithChildren) {
         }
 
         // expose the account keys to the rest of the app through useQuery
+        timedLog("Setting keys in queryData");
         queryClient.setQueryData(
             [QUERYKEY_ACCOUNT_KEYPAIR],
             account.accountKey,

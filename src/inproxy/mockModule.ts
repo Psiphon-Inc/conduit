@@ -23,7 +23,7 @@ import { NativeEventEmitter } from "react-native";
 import { timedLog } from "@/src/common/utils";
 import { ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY } from "@/src/constants";
 import { ConduitModuleAPI } from "@/src/inproxy/module";
-import { InproxyActivityStats } from "@/src/inproxy/types";
+import { InproxyActivityStats, InproxyParameters } from "@/src/inproxy/types";
 import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -202,12 +202,13 @@ class ConduitModuleMock {
         console.error(`MOCK: ConduitModuleMock.logError TAG=${tag} msg=${msg}`);
     }
 
-    public async toggleInProxy(
-        maxClients: number,
-        limitUpstreamBytesPerSecond: number,
-        limitDownstreamBytesPerSecond: number,
-        _: string,
-    ) {
+    public async toggleInProxy(params: InproxyParameters) {
+        const {
+            maxClients,
+            limitUpstreamBytesPerSecond,
+            limitDownstreamBytesPerSecond,
+            privateKey: _,
+        } = params;
         timedLog(
             `MOCK: ConduitModule.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
@@ -227,30 +228,20 @@ class ConduitModuleMock {
         }
     }
 
-    public async paramsChanged(params: { [key: string]: any }) {
+    public async paramsChanged(params: InproxyParameters) {
         const {
             maxClients,
             limitUpstreamBytesPerSecond,
             limitDownstreamBytesPerSecond,
-            privateKey,
+            privateKey: _,
         } = params;
         timedLog(
             `MOCK: ConduitModule.paramsChanged(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.emitState();
         if (this.running) {
-            await this.toggleInProxy(
-                maxClients,
-                limitUpstreamBytesPerSecond,
-                limitDownstreamBytesPerSecond,
-                privateKey,
-            );
-            await this.toggleInProxy(
-                maxClients,
-                limitUpstreamBytesPerSecond,
-                limitDownstreamBytesPerSecond,
-                privateKey,
-            );
+            await this.toggleInProxy(params);
+            await this.toggleInProxy(params);
         }
     }
 }

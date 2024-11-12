@@ -22,10 +22,7 @@
 
 @interface RCT_EXTERN_MODULE(ConduitModule, RCTEventEmitter)
 
-RCT_EXTERN_METHOD(toggleInProxy:(NSInteger)maxClients
-                  limitUpstream:(NSInteger)limitUpstream
-                  limitDownstream:(NSInteger)limitDownstream
-                  privateKey:(NSString *_Nullable)privateKey
+RCT_EXTERN_METHOD(toggleInProxy:(NSDictionary *)params
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject)
 

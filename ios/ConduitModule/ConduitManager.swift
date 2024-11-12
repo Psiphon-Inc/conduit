@@ -27,13 +27,6 @@ extension Logging.Logger {
     static let psiphonTunnel = Logger(label: "PsiphonTunnel")
 }
 
-struct ConduitParams: Equatable {
-    let maxClients: Int
-    let limitUpstream: Int
-    let limitDownstream: Int
-    let privateKey: String?
-}
-
 struct ActivitySeries: Equatable {
     let msBucketPeriod: UInt64
     let numBuckets: Int

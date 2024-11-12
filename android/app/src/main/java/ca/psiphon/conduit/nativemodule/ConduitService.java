@@ -49,10 +49,8 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -98,9 +96,6 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     // ExecutorService for running the Psiphon in-proxy task
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-    // Service parameters passed to the Psiphon tunnel via the config
-    private ConduitServiceParameters conduitServiceParameters;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -152,9 +147,13 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     @Override
     public String getPsiphonConfig() {
-        // Validate passed Conduit parameters
-        if (!conduitServiceParameters.validateParameters()) {
-            throw new IllegalStateException("Service parameters are not initialized.");
+         // Load conduit parameters from shared preferences
+        ConduitServiceParameters conduitServiceParameters = ConduitServiceParameters.load(getApplicationContext());
+
+        if (conduitServiceParameters == null) {
+            // Log the error and crash the app
+            MyLog.e(TAG, "Failed to load conduit parameters from shared preferences");
+            throw new IllegalStateException("Failed to load conduit parameters from shared preferences");
         }
 
         // Read the psiphon config from raw res file named psiphon_config
@@ -200,20 +199,14 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                     .put("RotatingSyncFrequency", 0));
 
             // Set inproxy parameters that we stored in shared preferences earlier
-            String storedProxyPrivateKey = conduitServiceParameters.getProxyPrivateKey();
-            // Set only if not null, otherwise an ephemeral key will be generated internally
-            if (storedProxyPrivateKey != null) {
-                psiphonConfig.put("InproxyProxySessionPrivateKey", storedProxyPrivateKey);
-            }
+            // We trust that the parameters are valid as they were validated when they were loaded in the beginning of this method
+            psiphonConfig.put("InproxyProxySessionPrivateKey", conduitServiceParameters.privateKey());
 
-            int storedMaxClients = conduitServiceParameters.getMaxClients();
-            psiphonConfig.put("InproxyMaxClients", storedMaxClients);
+            psiphonConfig.put("InproxyMaxClients", conduitServiceParameters.maxClients());
 
-            int storedLimitUpstream = conduitServiceParameters.getLimitUpstreamBytes();
-            psiphonConfig.put("InproxyLimitUpstreamBytesPerSecond", storedLimitUpstream);
+            psiphonConfig.put("InproxyLimitUpstreamBytesPerSecond", conduitServiceParameters.limitUpstreamBytes());
 
-            int storedLimitDownstream = conduitServiceParameters.getLimitDownstreamBytes();
-            psiphonConfig.put("InproxyLimitDownstreamBytesPerSecond", storedLimitDownstream);
+            psiphonConfig.put("InproxyLimitDownstreamBytesPerSecond", conduitServiceParameters.limitDownstreamBytes());
 
             // Convert back to json string
             return psiphonConfig.toString();
@@ -277,7 +270,6 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     public void onCreate() {
         super.onCreate();
         MyLog.init(getApplicationContext());
-        conduitServiceParameters = new ConduitServiceParameters(getApplicationContext());
     }
 
     @Override
@@ -291,7 +283,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         synchronized (this) {
             return switch (action) {
                 case INTENT_ACTION_STOP_SERVICE -> handleStopAction();
-                case INTENT_ACTION_TOGGLE_IN_PROXY -> handleToggleAction();
+                case INTENT_ACTION_TOGGLE_IN_PROXY -> handleToggleAction(intent);
                 case INTENT_ACTION_PARAMS_CHANGED -> handleParamsChangedAction(intent);
                 case INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS -> handleStartInProxyWithLastParamsAction();
                 default -> {
@@ -317,7 +309,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         return START_NOT_STICKY;
     }
 
-    private int handleToggleAction() {
+    private int handleToggleAction(Intent intent) {
         MyLog.i(TAG, "Received toggle action");
         ForegroundServiceState state = foregroundServiceState.get();
         switch (state) {
@@ -329,7 +321,20 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             }
             case STOPPED -> {
                 MyLog.i(TAG, "Service is not running; starting with new parameters.");
-                startServiceWithParameters(conduitServiceParameters.loadLastKnownParameters());
+
+                // Parse the parameters from the intent
+                ConduitServiceParameters conduitServiceParameters = ConduitServiceParameters.parse(intent);
+                if (conduitServiceParameters == null) {
+                    MyLog.e(TAG, "Attempted to start service with invalid parameters, crashing the app.");
+                    throw new IllegalStateException("Invalid parameters received");
+                }
+
+                // Store the parameters
+                conduitServiceParameters.store(getApplicationContext());
+
+                // Start the service
+                startForegroundService();
+
                 return START_REDELIVER_INTENT;
             }
             case STARTING, STOPPING -> {
@@ -345,10 +350,18 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     private int handleParamsChangedAction(Intent intent) {
         ForegroundServiceState state = foregroundServiceState.get();
-        Map<String, Object> params = extractParametersFromIntent(intent);
+
+        // Parse the parameters from the intent
+        ConduitServiceParameters conduitServiceParameters = ConduitServiceParameters.parse(intent);
+
+        // If the parameters are invalid, crash the app
+        if (conduitServiceParameters == null) {
+            MyLog.e(TAG, "Attempted to update parameters with invalid parameters, crashing the app.");
+            throw new IllegalStateException("Invalid parameters received");
+        }
 
         // Update and persist parameters, storing whether changes occurred
-        boolean paramsUpdated = conduitServiceParameters.updateParametersFromMap(params);
+        boolean paramsUpdated = conduitServiceParameters.store(getApplicationContext());
         MyLog.i(TAG, paramsUpdated ? "Parameters updated; changes persisted." : "Parameters update called, but no changes detected.");
 
         // If the service is in the STOPPED state, stop it to prevent it from running unnecessarily
@@ -368,6 +381,9 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             } catch (PsiphonTunnel.Exception e) {
                 MyLog.e(TAG, "Failed to restart psiphon: " + e);
 
+                // Stop foreground service if restart failed
+                stopForegroundService();
+
                 // Prepare and deliver failure notification
                 Bundle extras = new Bundle();
                 extras.putString("errorMessage", e.getMessage());
@@ -385,46 +401,18 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         ForegroundServiceState state = foregroundServiceState.get();
         if (state == ForegroundServiceState.STOPPED) {
             MyLog.i(TAG, "Service is stopped; starting with last known parameters.");
-            startServiceWithParameters(conduitServiceParameters.loadLastKnownParameters());
+            // Validate the last known parameters before starting the service
+            ConduitServiceParameters conduitServiceParameters = ConduitServiceParameters.load(getApplicationContext());
+            if (conduitServiceParameters == null) {
+                MyLog.e(TAG, "Failed to load conduit parameters from shared preferences; will not start service.");
+                return START_NOT_STICKY;
+            }
+            startForegroundService();
             return START_REDELIVER_INTENT;
         } else {
             MyLog.i(TAG, "Service is not stopped; ignoring start with last parameters action.");
             return START_NOT_STICKY;
         }
-    }
-
-    private void startServiceWithParameters(Map<String, Object> params) {
-        conduitServiceParameters.updateParametersFromMap(params);
-        Utils.setServiceRunningFlag(this, true);
-        startForegroundService();
-    }
-
-    private Map<String, Object> extractParametersFromIntent(Intent intent) {
-        // Create a map to hold the parameters from the intent
-        Map<String, Object> params = new HashMap<>();
-
-        // Extract parameters from the intent and put them in the map
-        if (intent.hasExtra(ConduitServiceInteractor.MAX_CLIENTS)) {
-            int maxClients = intent.getIntExtra(ConduitServiceInteractor.MAX_CLIENTS, 0);
-            params.put(ConduitServiceParameters.MAX_CLIENTS_KEY, maxClients);
-        }
-
-        if (intent.hasExtra(ConduitServiceInteractor.LIMIT_UPSTREAM_BYTES)) {
-            int limitUpstreamBytesPerSecond = intent.getIntExtra(ConduitServiceInteractor.LIMIT_UPSTREAM_BYTES, 0);
-            params.put(ConduitServiceParameters.LIMIT_UPSTREAM_BYTES_KEY, limitUpstreamBytesPerSecond);
-        }
-
-        if (intent.hasExtra(ConduitServiceInteractor.LIMIT_DOWNSTREAM_BYTES)) {
-            int limitDownstreamBytesPerSecond = intent.getIntExtra(ConduitServiceInteractor.LIMIT_DOWNSTREAM_BYTES, 0);
-            params.put(ConduitServiceParameters.LIMIT_DOWNSTREAM_BYTES_KEY, limitDownstreamBytesPerSecond);
-        }
-
-        if (intent.hasExtra(ConduitServiceInteractor.INPROXY_PRIVATE_KEY)) {
-            String proxyPrivateKey = intent.getStringExtra(ConduitServiceInteractor.INPROXY_PRIVATE_KEY);
-            params.put(ConduitServiceParameters.INPROXY_PRIVATE_KEY_KEY, proxyPrivateKey);
-        }
-
-        return params;
     }
 
     private synchronized void startForegroundService() {
@@ -434,6 +422,9 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
 
         MyLog.i(TAG, "Starting in-proxy.");
+
+        // Also persist the service running flag
+        Utils.setServiceRunningFlag(this, true);
 
         // Clear error notifications before starting the service
         cancelErrorNotifications();

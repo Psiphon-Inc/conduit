@@ -132,13 +132,14 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     }
 
     @ReactMethod
-    public void toggleInProxy(int maxClients, int limitUpstreamBytesPerSecond, int limitDownstreamBytesPerSecond,
-            String privateKey, Promise promise) {
+    public void toggleInProxy(ReadableMap params, Promise promise) {
         try {
-            ConduitServiceInteractor.toggleInProxy(getReactApplicationContext(), maxClients,
-                    limitUpstreamBytesPerSecond, limitDownstreamBytesPerSecond, privateKey);
+            ConduitServiceParameters conduitServiceParameters = ConduitServiceParameters.parse(params);
+            if (conduitServiceParameters == null) {
+                throw new IllegalArgumentException("Invalid parameters");
+            }
+            ConduitServiceInteractor.toggleInProxy(getReactApplicationContext(), conduitServiceParameters);
             promise.resolve(null);
-
         } catch (Exception e) {
             MyLog.e(TAG, "Failed to toggle conduit service: " + e);
             promise.reject("TOGGLE_SERVICE_ERROR", "Failed to toggle conduit service", e);
@@ -148,8 +149,11 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
     @ReactMethod
     public void paramsChanged(ReadableMap params, Promise promise) {
         try {
-            Map<String, Object> paramsMap = toMap(params);
-            ConduitServiceInteractor.paramsChanged(getReactApplicationContext(), paramsMap);
+            ConduitServiceParameters conduitServiceParameters = ConduitServiceParameters.parse(params);
+            if (conduitServiceParameters == null) {
+                throw new IllegalArgumentException("Invalid parameters");
+            }
+            ConduitServiceInteractor.paramsChanged(getReactApplicationContext(), conduitServiceParameters);
             promise.resolve(null);
         } catch (Exception e) {
             MyLog.e(TAG, "Failed to change conduit service params: " + e);
@@ -517,34 +521,5 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
             eventData.putNull("data");
         }
         return eventData;
-    }
-
-    private Map<String, Object> toMap(ReadableMap readableMap) {
-        Map<String, Object> map = new HashMap<>();
-        ReadableMapKeySetIterator iterator = readableMap.keySetIterator();
-        while (iterator.hasNextKey()) {
-            String key = iterator.nextKey();
-            switch (readableMap.getType(key)) {
-                case Boolean:
-                    map.put(key, readableMap.getBoolean(key));
-                    break;
-                case Number:
-                    // Check if the number is an integer or a double
-                    double value = readableMap.getDouble(key);
-                    if (value == Math.rint(value)) { // Check if the number is an integer
-                        map.put(key, (int) value);   // Cast to Integer if it's a whole number
-                    } else {
-                        map.put(key, value);         // Keep it as Double otherwise
-                    }
-                    break;
-                case String:
-                    map.put(key, readableMap.getString(key));
-                    break;
-                default:
-                    map.put(key, null);
-                    break;
-            }
-        }
-        return map;
     }
 }
