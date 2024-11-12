@@ -199,20 +199,14 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                     .put("RotatingSyncFrequency", 0));
 
             // Set inproxy parameters that we stored in shared preferences earlier
-            String storedProxyPrivateKey = conduitServiceParameters.privateKey();
-            // Set only if not null, otherwise an ephemeral key will be generated internally
-            if (storedProxyPrivateKey != null) {
-                psiphonConfig.put("InproxyProxySessionPrivateKey", storedProxyPrivateKey);
-            }
+            // We trust that the parameters are valid as they were validated when they were loaded in the beginning of this method
+            psiphonConfig.put("InproxyProxySessionPrivateKey", conduitServiceParameters.privateKey());
 
-            int storedMaxClients = conduitServiceParameters.maxClients();
-            psiphonConfig.put("InproxyMaxClients", storedMaxClients);
+            psiphonConfig.put("InproxyMaxClients", conduitServiceParameters.maxClients());
 
-            int storedLimitUpstream = conduitServiceParameters.limitUpstreamBytes();
-            psiphonConfig.put("InproxyLimitUpstreamBytesPerSecond", storedLimitUpstream);
+            psiphonConfig.put("InproxyLimitUpstreamBytesPerSecond", conduitServiceParameters.limitUpstreamBytes());
 
-            int storedLimitDownstream = conduitServiceParameters.limitDownstreamBytes();
-            psiphonConfig.put("InproxyLimitDownstreamBytesPerSecond", storedLimitDownstream);
+            psiphonConfig.put("InproxyLimitDownstreamBytesPerSecond", conduitServiceParameters.limitDownstreamBytes());
 
             // Convert back to json string
             return psiphonConfig.toString();
