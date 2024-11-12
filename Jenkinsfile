@@ -6,8 +6,10 @@ pipeline {
     }
 
     environment {
-        PSIPHON_CONFIG = 'op://Jenkins/Conduit Psiphon Config/android_psiphon_config'
-        EMBEDDED_SERVER_ENTRIES = 'op://Jenkins/Conduit Psiphon Config/android_embedded_server_entries'
+        IOS_PSIPHON_CONFIG = 'op://Jenkins/Conduit Psiphon Config/ios_psiphon_config'
+        IOS_EMBEDDED_SERVER_ENTRIES = 'op://Jenkins/Conduit Psiphon Config/ios_embedded_server_entries'
+        ANDROID_PSIPHON_CONFIG = 'op://Jenkins/Conduit Psiphon Config/android_psiphon_config'
+        ANDROID_EMBEDDED_SERVER_ENTRIES = 'op://Jenkins/Conduit Psiphon Config/android_embedded_server_entries'
         ANDROID_UPLOAD_KEYSTORE = 'op://Jenkins/Conduit Upload Signing Key/upload-keystore.jks.base64'
         ANDROID_UPLOAD_KEYSTORE_PROPERTIES = 'op://Jenkins/Conduit Upload Signing Key/keystore.properties'
     }
@@ -15,16 +17,15 @@ pipeline {
     stages {
         stage('Android bundle AAB') {
             when {
-                tag "release-*";
+                tag "release-android-*";
             }
             
-
             steps {
 
                 sh 'npm ci'
                
                 script {
-                    releaseName = TAG_NAME.minus("release-")
+                    releaseName = TAG_NAME.minus("release-android-")
                 }
 
                 writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${releaseName}';"
@@ -32,8 +33,8 @@ pipeline {
                 dir('android') {
 
                     withSecrets() {
-                        writeFile file: 'app/src/main/res/raw/psiphon_config', text: env.PSIPHON_CONFIG
-                        writeFile file: 'app/src/main/res/raw/embedded_server_entries', text: env.EMBEDDED_SERVER_ENTRIES
+                        writeFile file: 'app/src/main/res/raw/psiphon_config', text: env.ANDROID_PSIPHON_CONFIG
+                        writeFile file: 'app/src/main/res/raw/embedded_server_entries', text: env.ANDROID_EMBEDDED_SERVER_ENTRIES
                         writeFile file: 'app/upload-keystore.jks', text: env.ANDROID_UPLOAD_KEYSTORE, encoding: "Base64"
                         writeFile file: 'keystore.properties', text: env.ANDROID_UPLOAD_KEYSTORE_PROPERTIES
                     }
@@ -47,6 +48,43 @@ pipeline {
 
             }
         }
+        
+        stage('iOS IPA') {
+            when {
+                tag "release-ios-*";
+            }
+
+            steps {
+
+                sh 'npm ci'
+
+                script {
+                    releaseName = TAG_NAME.minus("release-ios-")
+                }
+
+                writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${releaseName}';"
+
+                dir('ios') {
+
+                    withSecrets() {
+                        writeFile file: 'ios_psiphon_config', text: env.IOS_PSIPHON_CONFIG
+                        writeFile file: 'ios_embedded_server_entries', text: env.IOS_EMBEDDED_SERVER_ENTRIES
+                    }
+
+                    sh 'pod install --repo-update'
+
+                    sh 'xcodebuild archive -workspace ./conduit.xcworkspace -scheme conduit -configuration Release -sdk iphoneos -archivePath ./build/conduit.xcarchive -allowProvisioningUpdates'
+
+                    sh 'xcodebuild -exportArchive -archivePath ./build/conduit.xcarchive -exportOptionsPlist exportAppStoreOptions.plist -exportPath ./build -allowProvisioningUpdates'
+
+                    sh "mv ./build/conduit.ipa ./build/conduit-${releaseName}.ipa"
+                }
+
+                archiveArtifacts artifacts: 'ios/build/*.ipa', fingerprint: true, onlyIfSuccessful: true
+
+            }
+        }
+
     }
 
     post {
