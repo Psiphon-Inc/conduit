@@ -308,11 +308,11 @@ extension ConduitModule {
         
         Task {
             switch await self.conduitManager.conduitStatus {
-            case .stopping, .stopped:
+            case .stopping, .stopped, .starting:
                 // no-op
                 resolve(nil)
                 
-            case .started, .starting:
+            case .started:
                 
                 do {
                     try await self.conduitManager.startConduit(conduitParams)
