@@ -215,7 +215,10 @@ actor ConduitManager {
         }
         
         guard let psiphonTunnel else {
-            Logger.conduitMan.debug("Conduit started and missing initialized PsiphonTunnelAsyncWrapper.")
+            Logger.conduitMan.debug(
+                "Missing initialized PsiphonTunnelAsyncWrapper.",
+                metadata: ["conduitStatus": "started"]
+            )
             return
         }
          
