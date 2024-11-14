@@ -161,6 +161,11 @@ actor ConduitManager {
     }
     
     func startConduit(_ params: ConduitParams) async throws {
+
+        if conduitStatus == .starting {
+            Logger.conduitMan.warning("Concurrent start requests are not permitted.")
+            return
+        }
         
         if psiphonTunnel == nil {
             psiphonTunnelListener = PsiphonTunnelListener(listener: self)
@@ -168,21 +173,22 @@ actor ConduitManager {
                 tunneledAppDelegate: self.psiphonTunnelListener!)
         }
 
-        if (conduitStatus == .starting || conduitStatus == .started) && 
-            psiphonTunnelListener!.isEqualConduitParams(params) {
+        if conduitStatus == .started && psiphonTunnelListener!.isEqualConduitParams(params) {
             Logger.conduitMan.warning("Restart conduit with duplicate parameters denied.")
             return
         }
-
-        await self.stopConduit()
+        
+        setConduitStatus(.starting)
+        
+        // Maintain starting status to prevent race conditions.
+        await psiphonTunnel!.stop()
+        activityStats = .none
         
         let dynamicConfigs = PsiphonTunnelListener.DynamicConfigs(
             conduitParams: params,
             clientVersion: getClientVersion()
         )
         psiphonTunnelListener!.setConfigs(dynamicConfigs)
-        
-        setConduitStatus(.starting)
         
         let success = await psiphonTunnel!.start(forced: false)
         if success {
@@ -200,11 +206,22 @@ actor ConduitManager {
     }
     
     func stopConduit() async {
-        guard
-            let psiphonTunnel,
-            (conduitStatus == .started || conduitStatus == .starting) else {
+
+        guard case .started = conduitStatus else {
+            if .starting == conduitStatus {
+                Logger.conduitMan.warning("Cannot stop conduit during starting process.")
+            }
             return
         }
+        
+        guard let psiphonTunnel else {
+            Logger.conduitMan.debug(
+                "Missing initialized PsiphonTunnelAsyncWrapper.",
+                metadata: ["conduitStatus": "started"]
+            )
+            return
+        }
+         
         setConduitStatus(.stopping)
         await psiphonTunnel.stop()
         setConduitStatus(.stopped)
