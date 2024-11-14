@@ -4,6 +4,13 @@
 <dict>
     <key>method</key>
     <string>app-store-connect</string>
+    <key>teamID</key>
+    <string>Q6HLNEX92A</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>ca.psiphon.conduit</key>
+        <string>Conduit App Store Connect Distribution Profile</string>
+    </dict>
     <key>destination</key>
     <string>export</string>
     <key>manageAppVersionAndBuildNumber</key>
