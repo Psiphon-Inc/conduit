@@ -105,7 +105,13 @@ pipeline {
 
                     sh 'xcodebuild -exportArchive -archivePath ./build/conduit.xcarchive -exportOptionsPlist exportAppStoreOptions.plist -exportPath ./build -allowProvisioningUpdates'
 
+                    // Verify the generated IPA with credential "iTunes Connect user"
+                    withCredentials([usernamePassword(credentialsId: '3b64f68c-9ab2-4986-ae1a-91ebd4b96fc4', usernameVariable: 'ITUNES_CONNECT_USERNAME', passwordVariable: 'ITUNES_CONNECT_PASSWORD')]) {
+                        sh 'xcrun altool --validate-app -t ios -f "./build/Conduit.ipa" -u "${ITUNES_CONNECT_USERNAME}" -p "${ITUNES_CONNECT_PASSWORD}"'
+                    }
+
                     sh "mv ./build/Conduit.ipa ./build/Conduit-${releaseName}.ipa"
+
                 }
 
                 archiveArtifacts artifacts: 'ios/build/*.ipa', fingerprint: true, onlyIfSuccessful: true
