@@ -19,6 +19,7 @@
 
 package ca.psiphon.conduit.nativemodule;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -630,7 +631,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     }
 
     private void deliverIntent(PendingIntent pendingIntent, int messageId, int notificationId) {
-        if (Build.VERSION.SDK_INT < 29 || pingClients()) {
+        // For pre-29 devices, we rely on the behavior that sending an intent will bring the activity
+        // to the foreground even if it's currently backgrounded. For API 29+, we use isAppInForeground
+        // to determine if there's an active foreground activity before deciding to send the intent or
+        // show a notification instead.
+        if (Build.VERSION.SDK_INT < 29 || isAppInForeground(getApplicationContext())) {
             try {
                 pendingIntent.send(getContext(), 0, null);
             } catch (PendingIntent.CanceledException e) {
@@ -641,16 +646,14 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
     }
 
-    private boolean pingClients() {
-        for (IConduitClientCallback client : clients) {
-            try {
-                client.ping();
-                return true; // Successfully pinged a client
-            } catch (RemoteException e) {
-                MyLog.e(TAG, "Failed to ping client: " + e);
-            }
+    private boolean isAppInForeground(Context context) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> taskInfo = activityManager.getRunningTasks(1);
+        if (taskInfo != null && !taskInfo.isEmpty()) {
+            ComponentName topActivity = taskInfo.get(0).topActivity;
+            return topActivity != null && topActivity.getPackageName().equals(context.getPackageName());
         }
-        return false; // No clients successfully pinged
+        return false;
     }
 
     private void showErrorNotification(PendingIntent pendingIntent, int messageId, int notificationId) {
