@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+    <key>teamID</key>
+    <string>Q6HLNEX92A</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>ca.psiphon.conduit</key>
+        <string>Conduit App Store Connect Distribution Profile</string>
+    </dict>
+    <key>destination</key>
+    <string>export</string>
+    <key>manageAppVersionAndBuildNumber</key>
+    <true/>
+    <key>signingStyle</key>
+    <string>automatic</string>
+    <key>testFlightInternalTestingOnly</key>
+    <false/>
+    <key>uploadSymbols</key>
+    <true/>
+    <key>compileBitcode</key>
+    <false/>
+    <key>uploadBitcode</key>
+    <false/>
+</dict>
+</plist>
+
