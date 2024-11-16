@@ -19,17 +19,47 @@ import ca.psiphon.conduit.nativemodule.logging.MyLog;
 import ca.psiphon.conduit.state.IConduitStateCallback;
 import ca.psiphon.conduit.state.IConduitStateService;
 import io.reactivex.Flowable;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 public class ConduitStateService extends Service {
 
     private static final String TAG = ConduitStateService.class.getSimpleName();
 
-    // Map of apps that are allowed to access the service with their signatures
-    private static final Map<String, String> trustedPackages = Map.of(
-            // TODO: verify Psiphon Pro production signature
-            "com.psiphon3.subscription", "76:DB:EF:15:F6:77:26:D4:51:A1:23:59:B8:57:9C:0D:7A:9F:63:5D:52:6A:A3:74:24:DF:13:16:32:F1:78:10"
-    );
+    // Trusted packages and their signature hashes
+    private static final class TrustedPackages {
+        private static final Map<String, String> PACKAGES = Map.of(
+                // Psiphon Pro
+                "com.psiphon3.subscription",
+                "76:DB:EF:15:F6:77:26:D4:51:A1:23:59:B8:57:9C:0D:7A:9F:63:5D:52:6A:A3:74:24:DF:13:16:32:F1:78:10"
+                // Add more trusted packages as needed:
+                // "com.another.package", "the:signature:hash:here",
+                // "com.third.package", "another:signature:hash:here"
+        );
+
+        static boolean contains(String packageName) {
+            return PACKAGES.containsKey(packageName);
+        }
+
+        static String getSignature(String packageName) {
+            return PACKAGES.get(packageName);
+        }
+    }
+
+    private record StateUpdate(int appVersion, ProxyState proxyState) {
+        String toJson() {
+            JSONObject json = new JSONObject();
+            try {
+                json.put("appVersion", appVersion);
+                json.put("proxyState", proxyState.toJson());
+            } catch (JSONException e) {
+                Log.e(TAG, "Failed to create JSON object: " + e.getMessage());
+            }
+            return json.toString();
+        }
+    }
+
+    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     // Map to hold registered clients and their subscriptions
     private final Map<IConduitStateCallback, Disposable> clientSubscriptions = new ConcurrentHashMap<>();
@@ -40,9 +70,6 @@ public class ConduitStateService extends Service {
     private ConduitServiceInteractor conduitServiceInteractor;
 
     private Flowable<String> runningState;
-
-    // State updates subscription disposable
-    private Disposable persistentRunningStateSubscription;
 
     // AIDL binder implementation
     private final IConduitStateService.Stub binder = new IConduitStateService.Stub() {
@@ -76,15 +103,15 @@ public class ConduitStateService extends Service {
                     throwable -> Log.e(TAG, "Error in runningState flow for client: " + throwable.getMessage())
             );
 
-            // Add the client and their subscription to the map
             clientSubscriptions.put(client, subscription);
+            compositeDisposable.add(subscription);
 
             Log.i(TAG, "Client registered.");
         }
 
         @Override
         public void unregisterClient(IConduitStateCallback client) {
-            if (client == null || !clientSubscriptions.containsKey(client)) {
+            if (client == null) {
                 return;
             }
 
@@ -92,15 +119,13 @@ public class ConduitStateService extends Service {
             Disposable subscription = clientSubscriptions.remove(client);
             if (subscription != null && !subscription.isDisposed()) {
                 subscription.dispose();
+                Log.i(TAG, "Client unregistered.");
             }
-
-            Log.i(TAG, "Client unregistered.");
         }
     };
 
     @Override
     public void onCreate() {
-        super.onCreate();
         MyLog.init(getApplicationContext());
 
         appSignatureVerifier = new AppSignatureVerifier(getApplicationContext());
@@ -108,28 +133,28 @@ public class ConduitStateService extends Service {
         conduitServiceInteractor = new ConduitServiceInteractor(getApplicationContext());
         conduitServiceInteractor.onStart(getApplicationContext());
 
-        runningState = Flowable.combineLatest(
-                        Flowable.just(getAppVersionCode()), // App version
-                        conduitServiceInteractor.proxyStateFlowable().startWith(ProxyState.unknown()), // Proxy state
-                        (version, state) -> {
-                            JSONObject json = new JSONObject();
-                            try {
-                                json.put("appVersion", version); // versionCode as an int
-                                json.put("proxyState", state.toJson()); // ProxyState as a JSON object
-                            } catch (JSONException e) {
-                                Log.e(TAG, "Failed to create JSON object: " + e.getMessage());
-                            }
-                            return json.toString();
-                        }
-                )
-                .distinctUntilChanged() // Only emit if the state has changed
-                .replay(1) // Cache the last emitted item
-                .refCount(); // Stop emitting items when all subscribers have unsubscribed
-
-        // Start a persistent subscription to get latest running state as soon as possible
-        startPersistentRunningStateSubscription();
+        initializeRunningState();
 
         Log.i(TAG, "ConduitStateService created and runningState initialized.");
+    }
+
+    private void initializeRunningState() {
+        runningState = Flowable.combineLatest(
+                        Flowable.just(getAppVersionCode()),
+                        conduitServiceInteractor.proxyStateFlowable().startWith(ProxyState.unknown()),
+                        StateUpdate::new
+                )
+                .map(StateUpdate::toJson)
+                .distinctUntilChanged()
+                .replay(1)
+                .refCount();
+
+        // Keep one subscription always active
+        compositeDisposable.add(runningState.subscribe(
+                state -> {
+                }, // No-op for state updates
+                throwable -> Log.e(TAG, "Error in persistent runningState subscription: " + throwable.getMessage())
+        ));
     }
 
     @Override
@@ -139,41 +164,9 @@ public class ConduitStateService extends Service {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
-        stopPersistentRunningStateSubscription();
-        unsubscribeAllClients();
+        compositeDisposable.dispose();
         conduitServiceInteractor.onStop(getApplicationContext());
         conduitServiceInteractor.onDestroy(getApplicationContext());
-    }
-
-    private void startPersistentRunningStateSubscription() {
-        if (persistentRunningStateSubscription == null || persistentRunningStateSubscription.isDisposed()) {
-            persistentRunningStateSubscription = runningState
-                    .subscribe(
-                            update -> {
-                            }, // Do nothing on update, just keep the subscription alive
-                            throwable -> Log.e(TAG, "Error in persistent runningState subscription: " + throwable.getMessage())
-                    );
-            Log.i(TAG, "Persistent runningState subscription started.");
-        }
-    }
-
-    private void stopPersistentRunningStateSubscription() {
-        if (persistentRunningStateSubscription != null && !persistentRunningStateSubscription.isDisposed()) {
-            persistentRunningStateSubscription.dispose();
-            persistentRunningStateSubscription = null;
-            Log.i(TAG, "Persistent runningState subscription stopped.");
-        }
-    }
-
-    private void unsubscribeAllClients() {
-        for (Map.Entry<IConduitStateCallback, Disposable> entry : clientSubscriptions.entrySet()) {
-            Disposable subscription = entry.getValue();
-            if (subscription != null && !subscription.isDisposed()) {
-                subscription.dispose();
-            }
-        }
-        clientSubscriptions.clear();
     }
 
     private int getAppVersionCode() {
@@ -211,14 +204,13 @@ public class ConduitStateService extends Service {
     // Check if the package is trusted
     private boolean isTrustedPackage(String packageName) {
         // Ensure the package is in the trusted list
-        if (!trustedPackages.containsKey(packageName)) {
+        if (!TrustedPackages.contains(packageName)) {
             Log.e(TAG, "Package not found in the trusted list.");
             return false;
         }
 
         // Get the expected signature hash for the package
-        // No null check needed as the trustedPackages map is initialized with Map.of
-        String expectedSignature = trustedPackages.get(packageName);
+        String expectedSignature = TrustedPackages.getSignature(packageName);
 
         // Verify the signature of the package
         if (appSignatureVerifier.isSignatureValid(packageName, expectedSignature)) {
