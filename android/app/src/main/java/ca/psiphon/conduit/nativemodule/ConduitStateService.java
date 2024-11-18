@@ -27,15 +27,34 @@ public class ConduitStateService extends Service {
     private static final String TAG = ConduitStateService.class.getSimpleName();
 
     private record StateUpdate(int appVersion, ProxyState proxyState) {
+        // Current schema version for the state update JSON structure
+        private static final int CURRENT_SCHEMA = 1;
+
         String toJson() {
-            JSONObject json = new JSONObject();
+            // Wraps state data with schema version to support future changes
+            // to the JSON structure without breaking clients.
+            // JSON structure:
+            // {
+            //  "schema": 1, // Current schema version
+            //  "data": {
+            //    "appVersion": 123, // App version code
+            //    "running": true/false, // Proxy running status, omitted for UNKNOWN state
+            //  }
+            JSONObject data = new JSONObject();
+            JSONObject wrapper = new JSONObject();
             try {
-                json.put("appVersion", appVersion);
-                json.put("proxyState", proxyState.toJson());
+                data.put("appVersion", appVersion);
+                // For UNKNOWN proxy state, omit running status since it represents an uninitialized state
+                if (!proxyState.isUnknown()) {
+                    data.put("running", proxyState.isRunning());
+                }
+                // Only schema version at top level,
+                wrapper.put("schema", CURRENT_SCHEMA);
+                wrapper.put("data", data);
             } catch (JSONException e) {
                 Log.e(TAG, "Failed to create JSON object: " + e.getMessage());
             }
-            return json.toString();
+            return wrapper.toString();
         }
     }
 
