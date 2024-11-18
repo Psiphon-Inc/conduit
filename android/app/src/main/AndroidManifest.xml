@@ -58,8 +58,7 @@
     <provider
         android:name=".nativemodule.logging.LoggingContentProvider"
         android:authorities="${applicationId}.log"
-        android:exported="false"
-        android:process=":LoggingContentProvider" />
+        android:exported="false"/>
     <!-- Receiver for handling app updates -->
     <receiver android:name=".nativemodule.ConduitUpdateReceiver"
         android:exported="false">
