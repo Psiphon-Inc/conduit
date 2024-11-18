@@ -26,26 +26,6 @@ public class ConduitStateService extends Service {
 
     private static final String TAG = ConduitStateService.class.getSimpleName();
 
-    // Trusted packages and their signature hashes
-    private static final class TrustedPackages {
-        private static final Map<String, String> PACKAGES = Map.of(
-                // Psiphon Pro
-                "com.psiphon3.subscription",
-                "76:DB:EF:15:F6:77:26:D4:51:A1:23:59:B8:57:9C:0D:7A:9F:63:5D:52:6A:A3:74:24:DF:13:16:32:F1:78:10"
-                // Add more trusted packages as needed:
-                // "com.another.package", "the:signature:hash:here",
-                // "com.third.package", "another:signature:hash:here"
-        );
-
-        static boolean contains(String packageName) {
-            return PACKAGES.containsKey(packageName);
-        }
-
-        static String getSignature(String packageName) {
-            return PACKAGES.get(packageName);
-        }
-    }
-
     private record StateUpdate(int appVersion, ProxyState proxyState) {
         String toJson() {
             JSONObject json = new JSONObject();
@@ -63,8 +43,6 @@ public class ConduitStateService extends Service {
 
     // Map to hold registered clients and their subscriptions
     private final Map<IConduitStateCallback, Disposable> clientSubscriptions = new ConcurrentHashMap<>();
-
-    private AppSignatureVerifier appSignatureVerifier;
 
     // Interactor for getting state from the ConduitService
     private ConduitServiceInteractor conduitServiceInteractor;
@@ -128,8 +106,6 @@ public class ConduitStateService extends Service {
     public void onCreate() {
         MyLog.init(getApplicationContext());
 
-        appSignatureVerifier = new AppSignatureVerifier(getApplicationContext());
-
         conduitServiceInteractor = new ConduitServiceInteractor(getApplicationContext());
         conduitServiceInteractor.onStart(getApplicationContext());
 
@@ -192,32 +168,12 @@ public class ConduitStateService extends Service {
 
         // It is possible to have multiple packages associated with the same UID, iterate through all
         for (String packageName : packages) {
-            if (isTrustedPackage(packageName)) {
+            if (PackageHelper.verifyTrustedPackage(getPackageManager(), packageName)) {
                 return true;
             }
         }
         // Reject the UID if none of the packages are trusted
         Log.w(TAG, "None of the associated packages were trusted, rejecting UID.");
-        return false;
-    }
-
-    // Check if the package is trusted
-    private boolean isTrustedPackage(String packageName) {
-        // Ensure the package is in the trusted list
-        if (!TrustedPackages.contains(packageName)) {
-            Log.e(TAG, "Package not found in the trusted list.");
-            return false;
-        }
-
-        // Get the expected signature hash for the package
-        String expectedSignature = TrustedPackages.getSignature(packageName);
-
-        // Verify the signature of the package
-        if (appSignatureVerifier.isSignatureValid(packageName, expectedSignature)) {
-            Log.i(TAG, "Trusted package validated: " + packageName);
-            return true;
-        }
-        Log.e(TAG, "Invalid signature for trusted package: " + packageName);
         return false;
     }
 }
