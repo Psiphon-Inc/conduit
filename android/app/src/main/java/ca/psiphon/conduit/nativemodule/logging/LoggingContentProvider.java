@@ -63,10 +63,16 @@ public class LoggingContentProvider extends ContentProvider {
     public boolean onCreate() {
         String authority = getContext().getPackageName() + AUTHORITY_SUFFIX;
         uriMatcher.addURI(authority, PATH_INSERT_LOGS, MATCH_INSERT);
-
-        initializeLogger();
-
         return true;
+    }
+
+    private Logger getLogger() {
+        synchronized (loggerLock) {
+            if (logger == null) {
+                initializeLogger();
+            }
+            return logger;
+        }
     }
 
     private void initializeLogger() {
@@ -134,11 +140,12 @@ public class LoggingContentProvider extends ContentProvider {
             );
         }
 
+        Logger currentLogger = getLogger();
         synchronized (loggerLock) {
             LogRecord record = new LogRecord(intToLevel(level), message);
             record.setLoggerName(tag);
             record.setMillis(timestamp);
-            logger.log(record);
+            currentLogger.log(record);
             return uri;
         }
     }
