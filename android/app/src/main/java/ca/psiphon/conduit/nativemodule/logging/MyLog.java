@@ -41,6 +41,7 @@ public class MyLog {
     private static WeakReference<Context> contextRef;
     private static final AtomicBoolean isInitialized = new AtomicBoolean(false);
     private static volatile Uri CONTENT_URI;
+    private static final Object initLock = new Object();
 
     // Initialize with application context
     public static void init(Context context) {
@@ -50,7 +51,7 @@ public class MyLog {
         }
         // Only initialize if we have a valid context
         if (context != null) {
-            synchronized (MyLog.class) {
+            synchronized (initLock) {
                 // Double check the initialization state
                 if (!isInitialized.get() || contextRef == null || contextRef.get() == null) {
                     contextRef = new WeakReference<>(context.getApplicationContext());
@@ -78,19 +79,26 @@ public class MyLog {
             return;
         }
 
-        // Capture the context and insert uri early and check for initialization
-        final Context context = contextRef != null ? contextRef.get() : null;
-        final Uri uri = CONTENT_URI;
+        // Capture the context and insert uri and check for initialization
+        final Context context;
+        final Uri uri;
 
-        if (context == null || !isInitialized.get() || uri == null) {
-            throw new IllegalStateException(
-                    String.format(Locale.US,
-                            "MyLog not properly initialized. Context: %s, Initialized: %b, URI: %s",
-                            context == null ? "null" : "valid",
-                            isInitialized.get(),
-                            uri == null ? "null" : uri.toString()
-                    )
-            );
+        // Synchronize on initLock to prevent race conditions between init and log calls
+        synchronized (initLock) {
+            context = (contextRef != null) ? contextRef.get() : null;
+            uri = CONTENT_URI;
+
+            // Check if we are properly initialized
+            if (!isInitialized.get() || context == null || uri == null) {
+                throw new IllegalStateException(
+                        String.format(Locale.US,
+                                "MyLog not properly initialized. Context: %s, Initialized: %b, URI: %s",
+                                context == null ? "null" : "valid",
+                                isInitialized.get(),
+                                uri == null ? "null" : uri.toString()
+                        )
+                );
+            }
         }
 
         final ContentValues values = new ContentValues();
