@@ -89,7 +89,7 @@ public class MyLog {
             uri = CONTENT_URI;
 
             // Check if we are properly initialized
-            if (!isInitialized.get() || context == null) {
+            if (!isInitialized.get() || context == null || uri == null) {
                 throw new IllegalStateException(
                         String.format(Locale.US,
                                 "MyLog not properly initialized. Context: %s, Initialized: %b, URI: %s",
