@@ -67,48 +67,49 @@ public class LoggingContentProvider extends ContentProvider {
     }
 
     private Logger getLogger() {
-        synchronized (loggerLock) {
-            if (logger == null) {
-                initializeLogger();
+        Logger result = logger;
+        if (result == null) {
+            synchronized (loggerLock) {
+                result = logger;
+                if (result == null) {
+                    initializeLogger();
+                    result = logger;
+                }
             }
-            return logger;
         }
+        return result;
     }
 
     private void initializeLogger() {
-        synchronized (loggerLock) {
-            if (logger != null) {
-                // Clean up existing logger first
-                for (var handler : logger.getHandlers()) {
-                    try {
-                        handler.close();
-                        logger.removeHandler(handler);
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error cleaning up handler", e);
-                    }
-                }
-            }
+        logger = Logger.getLogger(LoggingContentProvider.class.getName());
+        logger.setLevel(Level.ALL);
+        logger.setUseParentHandlers(false);
 
-            logger = Logger.getLogger(LoggingContentProvider.class.getName());
-            logger.setLevel(Level.ALL);
-            logger.setUseParentHandlers(false);
-
+        // Clean up any existing handlers
+        for (var handler : logger.getHandlers()) {
             try {
-                File dataDir = ConduitModule.dataRootDirectory(getContext());
-                // Set up the FileHandler
-                FileHandler fileHandler = new FileHandler(
-                        new File(dataDir, LOG_FILE_NAME).getAbsolutePath(),
-                        LOG_FILE_SIZE,
-                        LOG_FILE_COUNT,
-                        true
-                );
-                fileHandler.setFormatter(new JsonFormatter());
-                fileHandler.setLevel(Level.ALL);
-                logger.addHandler(fileHandler);
-            } catch (IOException e) {
-                Log.e(TAG, "Failed to initialize logger", e);
-                throw new IllegalStateException("Logger initialization failed", e);
+                handler.close();
+                logger.removeHandler(handler);
+            } catch (Exception e) {
+                Log.e(TAG, "Error cleaning up handler", e);
             }
+        }
+
+        try {
+            File dataDir = ConduitModule.dataRootDirectory(getContext());
+            // Set up the FileHandler
+            FileHandler fileHandler = new FileHandler(
+                    new File(dataDir, LOG_FILE_NAME).getAbsolutePath(),
+                    LOG_FILE_SIZE,
+                    LOG_FILE_COUNT,
+                    true
+            );
+            fileHandler.setFormatter(new JsonFormatter());
+            fileHandler.setLevel(Level.ALL);
+            logger.addHandler(fileHandler);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to initialize logger", e);
+            throw new IllegalStateException("Logger initialization failed", e);
         }
     }
 
