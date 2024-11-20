@@ -74,6 +74,9 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     private final String NOTIFICATION_CHANNEL_ID = "ConduitServiceChannel";
 
+    // Lock to synchronize access to the clients list
+    private final Object clientsLock = new Object();
+
     // Enum to represent the state of the foreground service
     // This tracks the lifecycle of the service in foreground, whether it is
     // running a foreground task (e.g., in-proxy) or transitioning between states.
@@ -102,34 +105,39 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     // AIDL binder implementation
     private final IConduitService.Stub binder = new IConduitService.Stub() {
         @Override
-        public synchronized void registerClient(IConduitClientCallback client) {
-            if (client != null && !clients.contains(client)) {
-                clients.add(client);
+        public void registerClient(IConduitClientCallback client) {
+            synchronized (clientsLock) {
+                if (client != null && !clients.contains(client)) {
+                    clients.add(client);
 
-                // Also update the client immediately with the current state and stats
-                // Send state
-                try {
-                    client.onProxyStateUpdated(proxyState.toBundle());
-                } catch (RemoteException e) {
-                    MyLog.e(TAG, "Failed to send proxy state update to client: " + e);
-                }
+                    // Also update the client immediately with the current state and stats
+                    // Send state
+                    try {
+                        client.onProxyStateUpdated(proxyState.toBundle());
+                    } catch (RemoteException e) {
+                        MyLog.e(TAG, "Failed to send proxy state update to client: " + e);
+                    }
 
-                // Send stats
-                try {
-                    client.onProxyActivityStatsUpdated(proxyActivityStats.toBundle());
-                } catch (RemoteException e) {
-                    MyLog.e(TAG, "Failed to send proxy activity stats update to client: " + e);
+                    // Send stats
+                    try {
+                        client.onProxyActivityStatsUpdated(proxyActivityStats.toBundle());
+                    } catch (RemoteException e) {
+                        MyLog.e(TAG, "Failed to send proxy activity stats update to client: " + e);
+                    }
                 }
             }
         }
 
         @Override
-        public synchronized void unregisterClient(IConduitClientCallback client) {
-            if (client != null) {
-                clients.remove(client);
+        public void unregisterClient(IConduitClientCallback client) {
+            synchronized (clientsLock) {
+                if (client != null) {
+                    clients.remove(client);
+                }
             }
         }
     };
+
     // Proxy activity stats object
     private ProxyActivityStats proxyActivityStats = new ProxyActivityStats();
 
@@ -693,22 +701,25 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     // Unified method to send updates to all registered clients
     // This method is synchronized to avoid concurrent modification of the clients list when called from multiple threads
-    private synchronized void notifyClients(ClientNotifier notifier) {
-        for (Iterator<IConduitClientCallback> iterator = clients.iterator(); iterator.hasNext(); ) {
-            IConduitClientCallback client = iterator.next();
-            try {
-                notifier.notify(client);
-            } catch (RemoteException e) {
-                // Remove the client if it is dead and do not log the exception as it is expected
-                // to happen when a client goes away without unregistering.
-                if (e instanceof DeadObjectException) {
-                    iterator.remove();
-                } else {
-                    MyLog.e(TAG, "Failed to notify client: " + e);
+    private void notifyClients(ClientNotifier notifier) {
+        synchronized (clientsLock) {
+            for (Iterator<IConduitClientCallback> iterator = clients.iterator(); iterator.hasNext(); ) {
+                IConduitClientCallback client = iterator.next();
+                try {
+                    notifier.notify(client);
+                } catch (RemoteException e) {
+                    // Remove the client if it is dead and do not log the exception as it is expected
+                    // to happen when a client goes away without unregistering.
+                    if (e instanceof DeadObjectException) {
+                        iterator.remove();
+                    } else {
+                        MyLog.e(TAG, "Failed to notify client: " + e);
+                    }
                 }
             }
         }
     }
+
     public void updateProxyState() {
         notifyClients(client -> client.onProxyStateUpdated(proxyState.toBundle()));
 
