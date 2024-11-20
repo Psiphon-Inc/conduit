@@ -102,7 +102,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     // AIDL binder implementation
     private final IConduitService.Stub binder = new IConduitService.Stub() {
         @Override
-        public void registerClient(IConduitClientCallback client) {
+        public synchronized void registerClient(IConduitClientCallback client) {
             if (client != null && !clients.contains(client)) {
                 clients.add(client);
 
@@ -124,7 +124,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
 
         @Override
-        public void unregisterClient(IConduitClientCallback client) {
+        public synchronized void unregisterClient(IConduitClientCallback client) {
             if (client != null) {
                 clients.remove(client);
             }
