@@ -1,0 +1,1 @@
+adb shell monkey -v -s 1534494405270 --throttle 50 --pct-touch 45 --pct-motion 45 --pct-trackball 0 --pct-nav 0 --pct-majornav 0 --pct-syskeys 0 --pct-appswitch 10 --pct-anyevent 0 -p ca.psiphon.conduit 6000

@@ -39,7 +39,7 @@ import {
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
 } from "@/src/constants";
 
-import { ConduitModule } from "@/src/inproxy/module";
+import { ConduitModule } from "@/src/inproxy/mockModule";
 import {
     InproxyActivityStats,
     InproxyActivityStatsSchema,
