@@ -80,7 +80,7 @@ public class ConduitStateService extends Service {
             // Check if the client is trusted
             int uid = Binder.getCallingUid();
             if (!isTrustedUid(uid)) {
-                return;
+                throw new SecurityException("Client is not authorized to register with this service.");
             }
 
             // Subscribe the client to runningState
