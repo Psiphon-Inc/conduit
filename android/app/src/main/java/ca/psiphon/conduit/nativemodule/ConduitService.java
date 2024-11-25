@@ -44,14 +44,19 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -271,14 +276,60 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     @Override
     public void onApplicationParameters(@NonNull Object o) {
-        // TODO: implement when we have a use case
         MyLog.i(TAG, "Received application parameters: " + o);
+        if (!(o instanceof JSONObject params)) {
+            MyLog.e(TAG, "Invalid parameter type. Expected JSONObject, got: " + o.getClass().getName());
+            return;
+        }
+
+        // Extract the trusted apps and their signatures from the parameters and store them
+        processTrustedApps(params);
+    }
+
+    private void processTrustedApps(JSONObject params) {
+        // Parse the trusted apps configuration from the parameters json object
+        // The expected format is:
+        // {
+        //     "ConduitTrustedApps": {
+        //         "com.example.app1": ["signature1", "signature2"],
+        //         "com.example.app2": ["signature3", "signature4", "signature5"]
+        //     }
+        try {
+            JSONObject trustedApps = params.optJSONObject("ConduitTrustedApps");
+            if (trustedApps == null) {
+                MyLog.d(TAG, "No trusted apps configuration found");
+                return;
+            }
+
+            Map<String, Set<String>> trustedSignatures = new HashMap<>();
+            Iterator<String> packageNames = trustedApps.keys();
+
+            while (packageNames.hasNext()) {
+                String packageName = packageNames.next();
+                JSONArray signatures = trustedApps.getJSONArray(packageName);
+                Set<String> signatureSet = new HashSet<>(signatures.length());
+
+                for (int i = 0; i < signatures.length(); i++) {
+                    signatureSet.add(signatures.getString(i));
+                }
+                trustedSignatures.put(packageName, signatureSet);
+            }
+
+            // Save the trusted signatures to storage and load them right away
+            PackageHelper.saveTrustedSignatures(getApplicationContext(), trustedSignatures);
+            PackageHelper.loadTrustedSignatures(trustedSignatures);
+        } catch (JSONException e) {
+            MyLog.e(TAG, "Failed to parse trusted apps signatures: " + e);
+        }
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
         MyLog.init(getApplicationContext());
+
+        // Load existing trusted signatures from storage
+        PackageHelper.loadTrustedSignatures(PackageHelper.getTrustedSignatures(getApplicationContext()));
     }
 
     @Override

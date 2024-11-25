@@ -1,5 +1,6 @@
 package ca.psiphon.conduit.nativemodule;
 
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
@@ -7,11 +8,21 @@ import android.content.pm.Signature;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,6 +31,7 @@ import ca.psiphon.conduit.nativemodule.logging.MyLog;
 public class PackageHelper {
 
     private static final String TAG = PackageHelper.class.getSimpleName();
+    private static final String SIGNATURES_JSON_FILE = "trusted_signatures.json";
 
     // Map of trusted packages with their corresponding sets of SHA-256 signature hashes
     private static final Map<String, Set<String>> TRUSTED_PACKAGES = new HashMap<String, Set<String>>() {{
@@ -31,35 +43,7 @@ public class PackageHelper {
         )));
     }};
 
-    // Debug mode configuration
-    private static boolean DEBUG_MODE = false;
-    private static final Map<String, Set<String>> DEBUG_TRUSTED_PACKAGES = new HashMap<>();
-
-    // Enable or disable debug mode to allow additional debug signatures at runtime
-    // Note: This should be disabled in production builds
-    public static void enableDebugMode(boolean enable) {
-        DEBUG_MODE = enable;
-        if (!enable) {
-            DEBUG_TRUSTED_PACKAGES.clear();
-        }
-        MyLog.i(TAG, "Debug mode " + (enable ? "enabled" : "disabled"));
-    }
-
-    // Add a trusted package with its signature for debug purposes at runtime
-    // Note: This should be used only in debug mode with enableDebugMode(true)
-    public static void addDebugTrustedSignature(String packageName, String signature) {
-        if (!DEBUG_MODE) {
-            MyLog.w(TAG, "Attempted to add debug signature while not in debug mode");
-            return;
-        }
-        Set<String> signatures = DEBUG_TRUSTED_PACKAGES.get(packageName);
-        if (signatures == null) {
-            signatures = new HashSet<>();
-            DEBUG_TRUSTED_PACKAGES.put(packageName, signatures);
-        }
-        signatures.add(signature);
-        MyLog.i(TAG, "Added debug signature for package " + packageName);
-    }
+    private static final Map<String, Set<String>> RUNTIME_TRUSTED_PACKAGES = new HashMap<>();
 
     // Get the expected signature for a package
     @NonNull
@@ -69,11 +53,9 @@ public class PackageHelper {
         if (trustedSigs != null) {
             signatures.addAll(trustedSigs);
         }
-        if (DEBUG_MODE) {
-            Set<String> debugSigs = DEBUG_TRUSTED_PACKAGES.get(packageName);
-            if (debugSigs != null) {
-                signatures.addAll(debugSigs);
-            }
+        Set<String> runtimeSigs = RUNTIME_TRUSTED_PACKAGES.get(packageName);
+        if (runtimeSigs != null) {
+            signatures.addAll(runtimeSigs);
         }
         return signatures;
     }
@@ -96,9 +78,6 @@ public class PackageHelper {
 
             String actualSignature = getPackageSignature(packageInfo);
             if (actualSignature != null && expectedSignatures.contains(actualSignature)) {
-                if (DEBUG_MODE && DEBUG_TRUSTED_PACKAGES.containsKey(packageName)) {
-                    MyLog.w(TAG, "Package " + packageName + " verified using debug signature");
-                }
                 return true;
             } else {
                 MyLog.w(TAG, "Verification failed for package " + packageName + ", signature mismatch");
@@ -144,5 +123,65 @@ public class PackageHelper {
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
+    }
+
+    // Save the map of package signatures to a file
+    // Avoid calling this method from different processes simultaneously to ensure single-writer safety
+    public static synchronized void saveTrustedSignatures(Context context, Map<String, Set<String>> signatures) {
+        File tempFile = new File(context.getFilesDir(), "trusted_signatures_temp.json");
+        File finalFile = new File(context.getFilesDir(), SIGNATURES_JSON_FILE);
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            // Convert the map to JSON object where values are JSON arrays
+            JSONObject jsonObject = new JSONObject();
+            for (Map.Entry<String, Set<String>> entry : signatures.entrySet()) {
+                jsonObject.put(entry.getKey(), new JSONArray(entry.getValue()));
+            }
+            writer.write(jsonObject.toString());
+            // Rename temp file to final file atomically
+            if (!tempFile.renameTo(finalFile)) {
+                throw new IOException("Failed to rename temp file to final file.");
+            }
+        } catch (IOException | JSONException e) {
+            MyLog.e(TAG, "Failed to save trusted signatures: " + e);
+        }
+    }
+
+    // Read the map of package signatures from a file, can be called from any process
+    public static Map<String, Set<String>> getTrustedSignatures(Context context) {
+        File file = new File(context.getFilesDir(), SIGNATURES_JSON_FILE);
+        Map<String, Set<String>> signatures = new HashMap<>();
+
+        if (file.exists()) {
+            try (FileReader reader = new FileReader(file);
+                 BufferedReader bufferedReader = new BufferedReader(reader)) {
+                StringBuilder builder = new StringBuilder();
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    builder.append(line);
+                }
+
+                // Convert the JSON string back to a map
+                JSONObject jsonObject = new JSONObject(builder.toString());
+                Iterator<String> keys = jsonObject.keys();
+                while (keys.hasNext()) {
+                    String packageName = keys.next();
+                    JSONArray signatureArray = jsonObject.getJSONArray(packageName);
+                    Set<String> signatureSet = new HashSet<>();
+                    for (int i = 0; i < signatureArray.length(); i++) {
+                        signatureSet.add(signatureArray.getString(i));
+                    }
+                    signatures.put(packageName, signatureSet);
+                }
+            } catch (IOException | JSONException e) {
+                MyLog.e(TAG, "Failed to read trusted signatures: " + e);
+            }
+        }
+        return signatures;
+    }
+
+    public static void loadTrustedSignatures(Map<String, Set<String>> signatures) {
+        RUNTIME_TRUSTED_PACKAGES.clear();
+        RUNTIME_TRUSTED_PACKAGES.putAll(signatures);
+        MyLog.i(TAG, "Loaded runtime signatures for " + signatures.size() + " packages");
     }
 }
