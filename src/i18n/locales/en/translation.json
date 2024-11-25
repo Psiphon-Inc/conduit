@@ -3,29 +3,13 @@
         "string": "Loading...",
         "developer_comment": "Text displayed when the app is loading content."
     },
-    "TURN_ON_I18N": {
-        "string": "Turn On",
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "Tap to Turn On",
         "developer_comment": "Text displayed on a button to turn on a feature."
-    },
-    "CONDUIT_OFF_I18N": {
-        "string": "Conduit is OFF",
-        "developer_comment": "Indicates to the user that Conduit is off. The name 'Conduit' is the app name and should not be translated."
     },
     "YOUR_CONDUIT_ID_I18N": {
         "string": "Your Conduit ID",
         "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
-    },
-    "ANNOUNCING_I18N": {
-        "string": "Announcing...",
-        "developer_comment": "Text displayed while the Conduit Station is announcing it's presence to the network"
-    },
-    "SERVING_N_PEERS_I18N": {
-        "string": "Serving {{ num }} Peers",
-        "developer_comment": "Indicates the number of peers currently connected to the user's Conduit Station"
-    },
-    "SHUTTING_DOWN_I18N": {
-        "string": "Shutting Down...",
-        "developer_comment": "Text displayed while the Conduit Station is shutting down"
     },
     "TOTAL_BYTES_TRANSFERRED_I18N": {
         "string": "{{ niceBytes }} transferred"
@@ -36,20 +20,11 @@
     "CONNECTING_PEERS_I18N": {
         "string": "{{ peers }} connecting"
     },
-    "DONE_I18N": {
-        "string": "Done"
-    },
     "CANCEL_I18N": {
         "string": "Cancel"
     },
     "CONFIRM_I18N": {
         "string": "Confirm"
-    },
-    "SAVE_I18N": {
-        "string": "Save"
-    },
-    "EDIT_SETTINGS_I18N": {
-        "string": "Edit Settings"
     },
     "MAX_PEERS_I18N": {
         "string": "Max Peers"
@@ -77,9 +52,6 @@
     },
     "ENABLED_I18N": {
         "string": "Enabled"
-    },
-    "PROXY_STATUS_I18N": {
-        "string": "Conduit Station is {{ status }}"
     },
     "CONDUIT_STATION_I18N": {
         "string": "Conduit Station"

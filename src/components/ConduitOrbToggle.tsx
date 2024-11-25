@@ -115,7 +115,7 @@ export function ConduitOrbToggle({
     });
     // The "Turn On" text also uses interpolation to appear to fade in by going
     // from transparent to it's final color.
-    const orbText = t("TURN_ON_I18N.string");
+    const orbText = t("TAP_TO_TURN_ON_I18N.string");
     const orbTextColors = [palette.transparent, palette.midGrey];
     const orbTextColorIndex = useSharedValue(0);
     const orbTextColor = useDerivedValue(() => {
