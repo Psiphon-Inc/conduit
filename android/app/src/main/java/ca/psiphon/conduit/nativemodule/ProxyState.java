@@ -26,6 +26,11 @@ import androidx.annotation.NonNull;
 
 import com.google.auto.value.AutoValue;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+
+
 @AutoValue
 public abstract class ProxyState implements Parcelable {
 
@@ -75,6 +80,13 @@ public abstract class ProxyState implements Parcelable {
     public static ProxyState fromBundle(Bundle bundle) {
         bundle.setClassLoader(AutoValue_ProxyState.class.getClassLoader());
         return bundle.getParcelable("proxy_state");
+    }
+
+    public String toJson() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("status", status().name());
+        json.put("networkState", networkState().name());
+        return json.toString();
     }
 
     public abstract Builder toBuilder();
