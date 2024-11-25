@@ -19,6 +19,7 @@
 
 package ca.psiphon.conduit.nativemodule;
 
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
@@ -262,4 +263,5 @@ public class Utils {
             MyLog.i(TAG, "Service running flag file not found.");
         }
         return exists;
-    }}
+    }
+}
