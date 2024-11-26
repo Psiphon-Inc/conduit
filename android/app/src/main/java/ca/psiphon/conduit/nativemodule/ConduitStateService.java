@@ -71,6 +71,9 @@ public class ConduitStateService extends Service {
     // and is used to update all registered clients
     private Flowable<String> runningState;
 
+    // Holds current state update to send to newly registered clients
+    private StateUpdate currentUpdate = null;
+
     // AIDL binder implementation
     private final IConduitStateService.Stub binder = new IConduitStateService.Stub() {
         @Override
@@ -89,19 +92,13 @@ public class ConduitStateService extends Service {
                 IBinder clientBinder = client.asBinder();
                 if (!clients.containsKey(clientBinder)) {
                     clients.put(clientBinder, client);
-                    // Also update the client with the current state
-                    compositeDisposable.add(
-                            runningState
-                                    .firstOrError()
-                                    .subscribe(state -> {
-                                                try {
-                                                    client.onStateUpdate(state);
-                                                } catch (RemoteException e) {
-                                                    MyLog.e(TAG, "Failed to update client during registration: " + e.getMessage());
-                                                }
-                                            },
-                                            throwable -> MyLog.e(TAG, "Error in runningState subscription: " + throwable.getMessage()))
-                    );
+                    if (currentUpdate != null) {
+                        try {
+                            client.onStateUpdate(currentUpdate.toJson());
+                        } catch (RemoteException e) {
+                            MyLog.e(TAG, "Failed to notify client: " + clientBinder + ", " + e.getMessage());
+                        }
+                    }
                     MyLog.i(TAG, "Client registered: " + clientBinder);
                 }
             }
@@ -140,7 +137,11 @@ public class ConduitStateService extends Service {
                         conduitServiceInteractor.proxyStateFlowable().startWith(ProxyState.unknown()),
                         StateUpdate::new
                 )
-                .map(StateUpdate::toJson)
+                .map(stateUpdate -> {
+                    // Record the current state update to send to newly registered clients
+                    currentUpdate = stateUpdate;
+                    return stateUpdate.toJson();
+                })
                 .distinctUntilChanged();
 
         // Single subscription to the runningState Flowable to update all registered clients
@@ -153,11 +154,12 @@ public class ConduitStateService extends Service {
                             try {
                                 client.onStateUpdate(state);
                             } catch (RemoteException e) {
-                                // Remove the client if it is no longer reachable
-                                clients.remove(clientBinder);
-                                // Log if the client is unreachable due to a NOT DeadObjectException
-                                if (!(e instanceof DeadObjectException)) {
-                                    MyLog.e(TAG, "Failed to update client: " + clientBinder + ", " + e.getMessage());
+                                // Remove the client if it is dead and do not log the exception as it is expected
+                                // to happen when a client goes away without unregistering.
+                                if (e instanceof DeadObjectException) {
+                                    clients.remove(clientBinder);
+                                } else {
+                                    MyLog.e(TAG, "Failed to notify client: " + clientBinder + ", " + e.getMessage());
                                 }
                             }
                         }

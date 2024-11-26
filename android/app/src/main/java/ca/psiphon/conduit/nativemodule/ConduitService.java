@@ -50,7 +50,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -142,7 +141,8 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         public void unregisterClient(IConduitClientCallback client) {
             synchronized (clientsLock) {
                 if (client != null) {
-                    clients.remove(client);
+                    IBinder clientBinder = client.asBinder();
+                    clients.remove(clientBinder);
                 }
             }
         }
@@ -301,7 +301,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         try {
             JSONObject trustedApps = params.optJSONObject("AndroidTrustedApps");
             if (trustedApps == null) {
-                MyLog.d(TAG, "No trusted apps configuration found");
+                MyLog.i(TAG, "No trusted apps configuration found");
                 return;
             }
 
@@ -757,17 +757,18 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     // This method is synchronized to avoid concurrent modification of the clients map when called from multiple threads
     private void notifyClients(ClientNotifier notifier) {
         synchronized (clientsLock) {
-            for (Iterator<Map.Entry<IBinder, IConduitClientCallback>> iterator = clients.entrySet().iterator(); iterator.hasNext(); ) {
-                IConduitClientCallback client = iterator.next().getValue();
+            for (Map.Entry<IBinder, IConduitClientCallback> entry : clients.entrySet()) {
+                IConduitClientCallback client = entry.getValue();
+                IBinder clientBinder = entry.getKey();
                 try {
                     notifier.notify(client);
                 } catch (RemoteException e) {
                     // Remove the client if it is dead and do not log the exception as it is expected
                     // to happen when a client goes away without unregistering.
                     if (e instanceof DeadObjectException) {
-                        iterator.remove();
+                        clients.remove(clientBinder);
                     } else {
-                        MyLog.e(TAG, "Failed to notify client: " + e);
+                        MyLog.e(TAG, "Failed to notify client: " + clientBinder + ", " + e.getMessage());
                     }
                 }
             }
