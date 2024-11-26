@@ -20,11 +20,13 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import ca.psiphon.conduit.nativemodule.logging.MyLog;
 
@@ -33,17 +35,20 @@ public class PackageHelper {
     private static final String TAG = PackageHelper.class.getSimpleName();
     private static final String SIGNATURES_JSON_FILE = "trusted_signatures.json";
 
-    // Map of trusted packages with their corresponding sets of SHA-256 signature hashes
-    private static final Map<String, Set<String>> TRUSTED_PACKAGES = new HashMap<String, Set<String>>() {{
+    // Unmodifiable map of trusted packages with their corresponding sets of SHA-256 signature hashes
+    private static final Map<String, Set<String>> TRUSTED_PACKAGES;
+    static {
         // Psiphon Pro package and its signatures
-        put("com.psiphon3.subscription", new HashSet<>(Arrays.asList(
+        Map<String, Set<String>> map = new HashMap<>();
+        map.put("com.psiphon3.subscription", Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
                 "76:DB:EF:15:F6:77:26:D4:51:A1:23:59:B8:57:9C:0D:7A:9F:63:5D:52:6A:A3:74:24:DF:13:16:32:F1:78:10"
                 // Add additional valid signatures for the package as needed:
                 // "THE:OTHER:SIGNATURE:HASH:HERE"
-        )));
-    }};
+        ))));
+        TRUSTED_PACKAGES = Collections.unmodifiableMap(map);
+    }
 
-    private static final Map<String, Set<String>> RUNTIME_TRUSTED_PACKAGES = new HashMap<>();
+    private static final ConcurrentHashMap<String, Set<String>> RUNTIME_TRUSTED_PACKAGES = new ConcurrentHashMap<>();
 
     // Get the expected signature for a package
     @NonNull
@@ -57,7 +62,7 @@ public class PackageHelper {
         if (runtimeSigs != null) {
             signatures.addAll(runtimeSigs);
         }
-        return signatures;
+        return Collections.unmodifiableSet(signatures);
     }
 
     // Verify if a package is trusted
@@ -180,9 +185,15 @@ public class PackageHelper {
     }
 
     // Load runtime trusted signatures configuration
+    // Make sure the map is immutable and the sets are unmodifiable
     public static void configureRuntimeTrustedSignatures(Map<String, Set<String>> signatures) {
         RUNTIME_TRUSTED_PACKAGES.clear();
-        RUNTIME_TRUSTED_PACKAGES.putAll(signatures);
+        for (Map.Entry<String, Set<String>> entry : signatures.entrySet()) {
+            RUNTIME_TRUSTED_PACKAGES.put(
+                    entry.getKey(),
+                    Collections.unmodifiableSet(new HashSet<>(entry.getValue()))
+            );
+        }
         MyLog.i(TAG, "Loaded runtime signatures for " + signatures.size() + " packages");
     }
 }
