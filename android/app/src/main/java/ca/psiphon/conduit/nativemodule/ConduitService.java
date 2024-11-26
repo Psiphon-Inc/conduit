@@ -290,12 +290,12 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         // Parse the trusted apps configuration from the parameters json object
         // The expected format is:
         // {
-        //     "ConduitTrustedApps": {
+        //     "AndroidTrustedApps": {
         //         "com.example.app1": ["signature1", "signature2"],
         //         "com.example.app2": ["signature3", "signature4", "signature5"]
         //     }
         try {
-            JSONObject trustedApps = params.optJSONObject("ConduitTrustedApps");
+            JSONObject trustedApps = params.optJSONObject("AndroidTrustedApps");
             if (trustedApps == null) {
                 MyLog.d(TAG, "No trusted apps configuration found");
                 return;
