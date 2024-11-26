@@ -80,9 +80,4 @@ public class AppSignatureVerifier {
             return null;
         }
     }
-
-    public boolean isSignatureValid(String packageName, String expectedHash) {
-        String actualHash = getSignatureHash(packageName);
-        return expectedHash != null && expectedHash.equals(actualHash);
-    }
 }
