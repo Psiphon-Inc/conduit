@@ -7,7 +7,6 @@ import android.os.Binder;
 import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,7 +19,6 @@ import ca.psiphon.conduit.state.IConduitStateCallback;
 import ca.psiphon.conduit.state.IConduitStateService;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
 
 public class ConduitStateService extends Service {
 
@@ -52,7 +50,7 @@ public class ConduitStateService extends Service {
                 wrapper.put("schema", CURRENT_SCHEMA);
                 wrapper.put("data", data);
             } catch (JSONException e) {
-                Log.e(TAG, "Failed to create JSON object: " + e.getMessage());
+                MyLog.e(TAG, "Failed to create JSON object: " + e.getMessage());
             }
             return wrapper.toString();
         }
@@ -61,49 +59,52 @@ public class ConduitStateService extends Service {
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     // Map to hold registered clients and their subscriptions
-    private final Map<IConduitStateCallback, Disposable> clientSubscriptions = new ConcurrentHashMap<>();
+    private final Map<IBinder, IConduitStateCallback> clients = new ConcurrentHashMap<>();
+    // Lock for clients map access
+    private final Object clientsLock = new Object();
 
     // Interactor for getting state from the ConduitService
     private ConduitServiceInteractor conduitServiceInteractor;
 
+    // Flowable for the running state of the service in JSON format
+    // This Flowable is updated whenever the service state changes
+    // and is used to update all registered clients
     private Flowable<String> runningState;
 
     // AIDL binder implementation
     private final IConduitStateService.Stub binder = new IConduitStateService.Stub() {
         @Override
         public void registerClient(IConduitStateCallback client) {
-            // Ignore null clients or already registered clients
-            if (client == null || clientSubscriptions.containsKey(client)) {
+            if (client == null) {
                 return;
             }
 
-            // Check if the client is trusted
+            // Check if the client is trusted (do this outside the lock since it doesn't need synchronization)
             int uid = Binder.getCallingUid();
             if (!isTrustedUid(uid)) {
                 throw new SecurityException("Client is not authorized to register with this service.");
             }
 
-            // Subscribe the client to runningState
-            Disposable subscription = runningState.subscribe(
-                    state -> {
-                        try {
-                            client.onStateUpdate(state);
-                        } catch (RemoteException e) {
-                            // Unregister on error
-                            unregisterClient(client);
-                            if (!(e instanceof DeadObjectException)) {
-                                // Log error if it's not a DeadObjectException
-                                Log.e(TAG, "Failed to send state update to client: " + e.getMessage());
-                            }
-                        }
-                    },
-                    throwable -> Log.e(TAG, "Error in runningState flow for client: " + throwable.getMessage())
-            );
-
-            clientSubscriptions.put(client, subscription);
-            compositeDisposable.add(subscription);
-
-            Log.i(TAG, "Client registered.");
+            synchronized (clientsLock) {
+                IBinder clientBinder = client.asBinder();
+                if (!clients.containsKey(clientBinder)) {
+                    clients.put(clientBinder, client);
+                    // Also update the client with the current state
+                    compositeDisposable.add(
+                            runningState
+                                    .firstOrError()
+                                    .subscribe(state -> {
+                                                try {
+                                                    client.onStateUpdate(state);
+                                                } catch (RemoteException e) {
+                                                    MyLog.e(TAG, "Failed to update client during registration: " + e.getMessage());
+                                                }
+                                            },
+                                            throwable -> MyLog.e(TAG, "Error in runningState subscription: " + throwable.getMessage()))
+                    );
+                    MyLog.i(TAG, "Client registered: " + clientBinder);
+                }
+            }
         }
 
         @Override
@@ -112,11 +113,10 @@ public class ConduitStateService extends Service {
                 return;
             }
 
-            // Dispose of the client's subscription
-            Disposable subscription = clientSubscriptions.remove(client);
-            if (subscription != null && !subscription.isDisposed()) {
-                subscription.dispose();
-                Log.i(TAG, "Client unregistered.");
+            synchronized (clientsLock) {
+                IBinder clientBinder = client.asBinder();
+                clients.remove(clientBinder);
+                MyLog.i(TAG, "Client unregistered: " + clientBinder);
             }
         }
     };
@@ -132,8 +132,6 @@ public class ConduitStateService extends Service {
         conduitServiceInteractor.onStart(getApplicationContext());
 
         initializeRunningState();
-
-        Log.i(TAG, "ConduitStateService created and runningState initialized.");
     }
 
     private void initializeRunningState() {
@@ -143,15 +141,29 @@ public class ConduitStateService extends Service {
                         StateUpdate::new
                 )
                 .map(StateUpdate::toJson)
-                .distinctUntilChanged()
-                .replay(1)
-                .refCount();
+                .distinctUntilChanged();
 
-        // Keep one subscription always active
+        // Single subscription to the runningState Flowable to update all registered clients
         compositeDisposable.add(runningState.subscribe(
                 state -> {
-                }, // No-op for state updates
-                throwable -> Log.e(TAG, "Error in persistent runningState subscription: " + throwable.getMessage())
+                    synchronized (clientsLock) {
+                        for (Map.Entry<IBinder, IConduitStateCallback> entry : clients.entrySet()) {
+                            IBinder clientBinder = entry.getKey();
+                            IConduitStateCallback client = entry.getValue();
+                            try {
+                                client.onStateUpdate(state);
+                            } catch (RemoteException e) {
+                                // Remove the client if it is no longer reachable
+                                clients.remove(clientBinder);
+                                // Log if the client is unreachable due to a NOT DeadObjectException
+                                if (!(e instanceof DeadObjectException)) {
+                                    MyLog.e(TAG, "Failed to update client: " + clientBinder + ", " + e.getMessage());
+                                }
+                            }
+                        }
+                    }
+                },
+                throwable -> MyLog.e(TAG, "Error in runningState flow: " + throwable.getMessage())
         ));
     }
 
@@ -163,6 +175,9 @@ public class ConduitStateService extends Service {
     @Override
     public void onDestroy() {
         compositeDisposable.dispose();
+        synchronized (clientsLock) {
+            clients.clear();
+        }
         conduitServiceInteractor.onStop(getApplicationContext());
         conduitServiceInteractor.onDestroy(getApplicationContext());
     }
@@ -173,7 +188,7 @@ public class ConduitStateService extends Service {
                     .getPackageInfo(getPackageName(), 0)
                     .versionCode;
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e(TAG, "Failed to fetch app version code: " + e.getMessage());
+            MyLog.e(TAG, "Failed to fetch app version code: " + e.getMessage());
             return -1;
         }
     }
@@ -184,7 +199,7 @@ public class ConduitStateService extends Service {
         String[] packages = getPackageManager().getPackagesForUid(uid);
 
         if (packages == null || packages.length == 0) {
-            Log.e(TAG, "Calling UID has no associated packages, rejecting.");
+            MyLog.e(TAG, "Calling UID has no associated packages, rejecting.");
             return false;
         }
 
@@ -195,7 +210,7 @@ public class ConduitStateService extends Service {
             }
         }
         // Reject the UID if none of the packages are trusted
-        Log.w(TAG, "None of the associated packages were trusted, rejecting UID.");
+        MyLog.w(TAG, "None of the associated packages were trusted, rejecting UID.");
         return false;
     }
 }
