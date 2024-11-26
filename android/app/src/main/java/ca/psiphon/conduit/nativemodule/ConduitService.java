@@ -57,6 +57,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -80,9 +81,6 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     private final String NOTIFICATION_CHANNEL_ID = "ConduitServiceChannel";
 
-    // Lock to synchronize access to the clients list
-    private final Object clientsLock = new Object();
-
     // Enum to represent the state of the foreground service
     // This tracks the lifecycle of the service in foreground, whether it is
     // running a foreground task (e.g., in-proxy) or transitioning between states.
@@ -96,9 +94,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     // Variable to track the current state of the foreground service
     private final AtomicReference<ForegroundServiceState> foregroundServiceState = new AtomicReference<>(ForegroundServiceState.STOPPED);
 
-    // List to hold the registered clients
-    private final List<IConduitClientCallback> clients = new ArrayList<>();
+    // Map to hold the registered clients
+    private final Map<IBinder, IConduitClientCallback> clients = new ConcurrentHashMap<>();
 
+    // Lock to synchronize access to the clients map
+    private final Object clientsLock = new Object();
 
     // PsiphonTunnel instance
     private final PsiphonTunnel psiphonTunnel = PsiphonTunnel.newPsiphonTunnel(this);
@@ -113,8 +113,12 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         @Override
         public void registerClient(IConduitClientCallback client) {
             synchronized (clientsLock) {
-                if (client != null && !clients.contains(client)) {
-                    clients.add(client);
+                if (client == null) {
+                    return;
+                }
+                IBinder clientBinder = client.asBinder();
+                if (!clients.containsKey(clientBinder)) {
+                    clients.put(clientBinder, client);
 
                     // Also update the client immediately with the current state and stats
                     // Send state
@@ -750,11 +754,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
 
     // Unified method to send updates to all registered clients
-    // This method is synchronized to avoid concurrent modification of the clients list when called from multiple threads
+    // This method is synchronized to avoid concurrent modification of the clients map when called from multiple threads
     private void notifyClients(ClientNotifier notifier) {
         synchronized (clientsLock) {
-            for (Iterator<IConduitClientCallback> iterator = clients.iterator(); iterator.hasNext(); ) {
-                IConduitClientCallback client = iterator.next();
+            for (Iterator<Map.Entry<IBinder, IConduitClientCallback>> iterator = clients.entrySet().iterator(); iterator.hasNext(); ) {
+                IConduitClientCallback client = iterator.next().getValue();
                 try {
                     notifier.notify(client);
                 } catch (RemoteException e) {
