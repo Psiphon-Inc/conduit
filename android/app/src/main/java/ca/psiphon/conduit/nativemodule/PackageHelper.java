@@ -38,12 +38,12 @@ public class PackageHelper {
     // Unmodifiable map of trusted packages with their corresponding sets of SHA-256 signature hashes
     private static final Map<String, Set<String>> TRUSTED_PACKAGES;
     static {
-        // Psiphon Pro package and its signatures
+        // Psiphon Pro package and its signatures as SHA-256 hashes using uppercase hex encoding, continuous (no separator)
         Map<String, Set<String>> map = new HashMap<>();
         map.put("com.psiphon3.subscription", Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
                 "76DBEF15F67726D451A12359B8579C0D7A9F635D526AA37424DF131632F17810"
                 // Add additional valid signatures for the package as needed:
-                // "THE:OTHER:SIGNATURE:HASH:HERE"
+                // "THEOTHERSIGNATUREHASHHERE"
         ))));
         TRUSTED_PACKAGES = Collections.unmodifiableMap(map);
     }
