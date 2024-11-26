@@ -127,7 +127,7 @@ public class PackageHelper {
 
     // Save the map of package signatures to a file
     // Avoid calling this method from different processes simultaneously to ensure single-writer safety
-    public static synchronized void saveTrustedSignatures(Context context, Map<String, Set<String>> signatures) {
+    public static synchronized void saveTrustedSignaturesToFile(Context context, Map<String, Set<String>> signatures) {
         File tempFile = new File(context.getFilesDir(), "trusted_signatures_temp.json");
         File finalFile = new File(context.getFilesDir(), SIGNATURES_JSON_FILE);
         try (FileWriter writer = new FileWriter(tempFile)) {
@@ -147,7 +147,7 @@ public class PackageHelper {
     }
 
     // Read the map of package signatures from a file, can be called from any process
-    public static Map<String, Set<String>> getTrustedSignatures(Context context) {
+    public static Map<String, Set<String>> readTrustedSignaturesFromFile(Context context) {
         File file = new File(context.getFilesDir(), SIGNATURES_JSON_FILE);
         Map<String, Set<String>> signatures = new HashMap<>();
 
@@ -179,7 +179,8 @@ public class PackageHelper {
         return signatures;
     }
 
-    public static void loadTrustedSignatures(Map<String, Set<String>> signatures) {
+    // Load runtime trusted signatures configuration
+    public static void configureRuntimeTrustedSignatures(Map<String, Set<String>> signatures) {
         RUNTIME_TRUSTED_PACKAGES.clear();
         RUNTIME_TRUSTED_PACKAGES.putAll(signatures);
         MyLog.i(TAG, "Loaded runtime signatures for " + signatures.size() + " packages");

@@ -315,9 +315,8 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
                 trustedSignatures.put(packageName, signatureSet);
             }
 
-            // Save the trusted signatures to storage and load them right away
-            PackageHelper.saveTrustedSignatures(getApplicationContext(), trustedSignatures);
-            PackageHelper.loadTrustedSignatures(trustedSignatures);
+            // Save the trusted signatures to file
+            PackageHelper.saveTrustedSignaturesToFile(getApplicationContext(), trustedSignatures);
         } catch (JSONException e) {
             MyLog.e(TAG, "Failed to parse trusted apps signatures: " + e);
         }
@@ -327,9 +326,6 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     public void onCreate() {
         super.onCreate();
         MyLog.init(getApplicationContext());
-
-        // Load existing trusted signatures from storage
-        PackageHelper.loadTrustedSignatures(PackageHelper.getTrustedSignatures(getApplicationContext()));
     }
 
     @Override

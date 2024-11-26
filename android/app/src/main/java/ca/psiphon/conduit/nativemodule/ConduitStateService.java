@@ -125,6 +125,9 @@ public class ConduitStateService extends Service {
     public void onCreate() {
         MyLog.init(getApplicationContext());
 
+        // Load runtime trusted signatures configuration from file
+        PackageHelper.configureRuntimeTrustedSignatures(PackageHelper.readTrustedSignaturesFromFile(getApplicationContext()));
+
         conduitServiceInteractor = new ConduitServiceInteractor(getApplicationContext());
         conduitServiceInteractor.onStart(getApplicationContext());
 
