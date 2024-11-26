@@ -24,6 +24,9 @@ import { timedLog } from "@/src/common/utils";
 import {
     ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
     ASYNCSTORAGE_STORAGE_VERSION_KEY,
+    ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+    DEFAULT_INPROXY_MAX_CLIENTS,
+    V1_DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
 
 // The app stores a number of values in AsyncStorage and SecureStore. From time
@@ -58,6 +61,16 @@ export async function applyMigrations(): Promise<Error | number> {
             return wrapError(error, "Unable to apply storage migration 0->1");
         }
         storageVersion = 1;
+    }
+
+    // apply version 1 -> 2 migrations
+    if (storageVersion == 1) {
+        try {
+            await version1To2();
+        } catch (error) {
+            return wrapError(error, "Unable to apply storage migration 1->2");
+        }
+        storageVersion = 2;
     }
 
     await AsyncStorage.setItem(
@@ -95,5 +108,19 @@ export async function version0To1(): Promise<void> {
             ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             storedInproxyLimitBytesPerSecond.toString(),
         );
+    }
+}
+
+export async function version1To2(): Promise<void> {
+    timedLog("Applying storage migrations 1->2");
+    let storedInproxyMaxClients = await AsyncStorage.getItem(
+        ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+    )
+    if (Number(storedInproxyMaxClients) == V1_DEFAULT_INPROXY_MAX_CLIENTS) {
+        timedLog(`Updating Max Clients from ${storedInproxyMaxClients} to ${DEFAULT_INPROXY_MAX_CLIENTS.toString()}`);
+        await AsyncStorage.setItem(
+            ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+            DEFAULT_INPROXY_MAX_CLIENTS.toString(),
+        )
     }
 }
