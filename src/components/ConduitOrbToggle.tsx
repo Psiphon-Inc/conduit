@@ -361,6 +361,7 @@ export function ConduitOrbToggle({
         }),
         Gesture.LongPress()
             .minDuration(1500)
+            .maxDistance(500)
             .onBegin(() => {
                 runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Soft);
                 orbRadius.value = withTiming(finalOrbRadius * 0.85, {
