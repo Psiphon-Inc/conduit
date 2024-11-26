@@ -41,7 +41,7 @@ public class PackageHelper {
         // Psiphon Pro package and its signatures
         Map<String, Set<String>> map = new HashMap<>();
         map.put("com.psiphon3.subscription", Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-                "76:DB:EF:15:F6:77:26:D4:51:A1:23:59:B8:57:9C:0D:7A:9F:63:5D:52:6A:A3:74:24:DF:13:16:32:F1:78:10"
+                "76DBEF15F67726D451A12359B8579C0D7A9F635D526AA37424DF131632F17810"
                 // Add additional valid signatures for the package as needed:
                 // "THE:OTHER:SIGNATURE:HASH:HERE"
         ))));
@@ -111,7 +111,6 @@ public class PackageHelper {
 
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < digest.length; i++) {
-                if (i > 0) sb.append(':');
                 sb.append(String.format("%02X", digest[i]));
             }
             return sb.toString();
