@@ -61,7 +61,7 @@ describe("migrations", () => {
         // Apply 1->2 migration, updates max clients
         await AsyncStorage.setItem(
             ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
-            V1_DEFAULT_INPROXY_MAX_CLIENTS.toString()
+            V1_DEFAULT_INPROXY_MAX_CLIENTS.toString(),
         );
         await version1To2();
         expect(AsyncStorage.setItem).toHaveBeenCalledWith(
@@ -71,10 +71,7 @@ describe("migrations", () => {
     });
     it("1->2 custom max clients", async () => {
         // Apply 1->2 migration, does not update max clients
-        await AsyncStorage.setItem(
-            ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
-            "3"
-        );
+        await AsyncStorage.setItem(ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY, "3");
         // clear our call to setItem
         (AsyncStorage.setItem as jest.Mock).mockClear();
 

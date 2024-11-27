@@ -23,8 +23,8 @@ import { wrapError } from "@/src/common/errors";
 import { timedLog } from "@/src/common/utils";
 import {
     ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
-    ASYNCSTORAGE_STORAGE_VERSION_KEY,
     ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+    ASYNCSTORAGE_STORAGE_VERSION_KEY,
     DEFAULT_INPROXY_MAX_CLIENTS,
     V1_DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
@@ -115,12 +115,14 @@ export async function version1To2(): Promise<void> {
     timedLog("Applying storage migrations 1->2");
     let storedInproxyMaxClients = await AsyncStorage.getItem(
         ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
-    )
+    );
     if (Number(storedInproxyMaxClients) == V1_DEFAULT_INPROXY_MAX_CLIENTS) {
-        timedLog(`Updating Max Clients from ${storedInproxyMaxClients} to ${DEFAULT_INPROXY_MAX_CLIENTS.toString()}`);
+        timedLog(
+            `Updating Max Clients from ${storedInproxyMaxClients} to ${DEFAULT_INPROXY_MAX_CLIENTS.toString()}`,
+        );
         await AsyncStorage.setItem(
             ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
             DEFAULT_INPROXY_MAX_CLIENTS.toString(),
-        )
+        );
     }
 }
