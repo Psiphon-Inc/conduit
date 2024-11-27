@@ -154,7 +154,7 @@ export default function OnboardingScreen() {
         return views[currentView.value].buttonText;
     });
 
-    // header takes up the first 15% of usableHeight
+    // header takes up the first 12% of usableHeight
     const headerTransform = [
         { translateY: usableHeight * 0.05 },
         { translateX: usableWidth * 0.02 },
@@ -162,25 +162,25 @@ export default function OnboardingScreen() {
     const headerSize = {
         width: usableWidth * 0.96,
     };
-    // image takes up the next 33% of usableHeight (48% total)
+    // image takes up the next 28% of usableHeight (40% total)
     const sceneTransform = [
-        { translateY: usableHeight * 0.15 },
+        { translateY: usableHeight * 0.12 },
         //{ translateX: usableWidth * 0.18 },
     ];
     const sceneSize = {
         width: usableWidth,
         height: usableHeight * 0.25,
     };
-    // body takes up the next 31% of usableHeight (79% total)
+    // body takes up the next 36% of usableHeight (76% total)
     const bodyTransform = [
-        { translateY: usableHeight * 0.48 },
+        { translateY: usableHeight * 0.4 },
         { translateX: usableWidth * 0.06 },
     ];
     const bodySize = {
         width: usableWidth * 0.88,
-        height: usableHeight * 0.31,
+        height: usableHeight * 0.36,
     };
-    // indicator dots take up the next 3% of usableHeight (82% total)
+    // indicator dots take up the next 3% of usableHeight (79% total)
     const dotWidth = 24;
     const dotsTransform = [
         { translateY: usableHeight * 0.79 },
