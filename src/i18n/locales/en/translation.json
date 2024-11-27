@@ -87,7 +87,7 @@
         "string": "Welcome to Conduit!"
     },
     "ONBOARDING_WELCOME_BODY_I18N": {
-        "string": "Turn your phone into an Internet Freedom badass.\n\nYou can help people around the world break through restrictive networks and access the global internet securely through the Psiphon Network."
+        "string": "Turn your device into an Internet Freedom beacon!\n\nYou can help people around the world break through restrictive networks and access the global internet securely through the Psiphon Network."
     },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "Next"
@@ -96,7 +96,7 @@
         "string": "What is Conduit?"
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
-        "string": "When you run a Conduit Station, your phone acts as a beacon of Internet Freedom.\n\nPeople in censored regions will bounce through your phone and into the Psiphon Network, creating a more open internet."
+        "string": "Conduit is an open-source application that enables people in censored regions worldwide to bounce off your device and into the Psiphon Network.\n\nThe more Conduit Stations there are, the stronger Psiphon is and the more open the internet becomes."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Next"
@@ -114,7 +114,7 @@
         "string": "Privacy Policy"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
-        "string": "Before we begin, some ground rules: We do not collect any personally identifiable information from users who run Conduit Stations.\n\nBy using Conduit, you accept the entire privacy policy, available below."
+        "string": "We do not collect personally identifiable information from Conduit users. All transmitted data is encrypted and cannot be accessed by you or Psiphon. Connected users are not able to access your device in any way.\n\nBy using Conduit, you accept our privacy policy, available below."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Accept"
