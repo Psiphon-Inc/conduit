@@ -17,7 +17,7 @@
  *
  */
 
-export const DEFAULT_INPROXY_MAX_CLIENTS = 2;
+export const DEFAULT_INPROXY_MAX_CLIENTS = 4;
 export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 10 * 1000 * 1000; // 10 MB
 
 // if these are maxed out, it means a potential of 8Gbps at full capacity
@@ -36,7 +36,7 @@ export const PARTICLE_VIDEO_DELAY_MS = 2800;
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;
 
 // Used to track storage migration success
-export const CURRENT_STORAGE_VERSION = 1;
+export const CURRENT_STORAGE_VERSION = 2;
 
 // AsyncStorage keys, centralized to prevent accidental collision
 export const ASYNCSTORAGE_STORAGE_VERSION_KEY = "storageVersion";
@@ -72,3 +72,6 @@ export const QUERYKEY_INPROXY_MUST_UPGRADE = "inproxyMustUpgrade";
 export const QUERYKEY_CONDUIT_NAME = "conduitName";
 export const QUERYKEY_NOTIFICATIONS_PERMISSIONS =
     "sync-notifications-permissions";
+
+// Historical constants, used in migrations
+export const V1_DEFAULT_INPROXY_MAX_CLIENTS = 2;

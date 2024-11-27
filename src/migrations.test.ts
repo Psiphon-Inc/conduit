@@ -21,10 +21,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
     ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
+    ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
     ASYNCSTORAGE_STORAGE_VERSION_KEY,
     CURRENT_STORAGE_VERSION,
+    DEFAULT_INPROXY_MAX_CLIENTS,
+    V1_DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
-import { applyMigrations, version0To1 } from "@/src/migrations";
+import { applyMigrations, version0To1, version1To2 } from "@/src/migrations";
 
 describe("migrations", () => {
     it("0->1", async () => {
@@ -53,6 +56,27 @@ describe("migrations", () => {
             ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             sibytes.toString(),
         );
+    });
+    it("1->2", async () => {
+        // Apply 1->2 migration, updates max clients
+        await AsyncStorage.setItem(
+            ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+            V1_DEFAULT_INPROXY_MAX_CLIENTS.toString(),
+        );
+        await version1To2();
+        expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+            ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+            DEFAULT_INPROXY_MAX_CLIENTS.toString(),
+        );
+    });
+    it("1->2 custom max clients", async () => {
+        // Apply 1->2 migration, does not update max clients
+        await AsyncStorage.setItem(ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY, "3");
+        // clear our call to setItem
+        (AsyncStorage.setItem as jest.Mock).mockClear();
+
+        await version1To2();
+        expect(AsyncStorage.setItem).toHaveBeenCalledTimes(0);
     });
     it("applyMigrations", async () => {
         // Verify that the storageVersion is set to n after applying migrations
