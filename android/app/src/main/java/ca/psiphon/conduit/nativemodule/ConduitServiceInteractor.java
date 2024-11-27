@@ -66,11 +66,6 @@ public class ConduitServiceInteractor {
             ProxyActivityStats proxyActivityStats = ProxyActivityStats.fromBundle(proxyActivityStatsBundle);
             proxyActivityStatsRelay.accept(proxyActivityStats);
         }
-
-        @Override
-        public void ping() {
-            // Just a ping to verify the client is alive, do nothing
-        }
     };
     private final BroadcastReceiver broadcastReceiver;
     private IConduitService conduitService;

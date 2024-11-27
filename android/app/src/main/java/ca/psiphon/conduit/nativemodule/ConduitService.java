@@ -19,6 +19,7 @@
 
 package ca.psiphon.conduit.nativemodule;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -43,14 +44,19 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -74,9 +80,6 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     private final String NOTIFICATION_CHANNEL_ID = "ConduitServiceChannel";
 
-    // Lock to synchronize access to the clients list
-    private final Object clientsLock = new Object();
-
     // Enum to represent the state of the foreground service
     // This tracks the lifecycle of the service in foreground, whether it is
     // running a foreground task (e.g., in-proxy) or transitioning between states.
@@ -90,9 +93,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     // Variable to track the current state of the foreground service
     private final AtomicReference<ForegroundServiceState> foregroundServiceState = new AtomicReference<>(ForegroundServiceState.STOPPED);
 
-    // List to hold the registered clients
-    private final List<IConduitClientCallback> clients = new ArrayList<>();
+    // Map to hold the registered clients
+    private final Map<IBinder, IConduitClientCallback> clients = new ConcurrentHashMap<>();
 
+    // Lock to synchronize access to the clients map
+    private final Object clientsLock = new Object();
 
     // PsiphonTunnel instance
     private final PsiphonTunnel psiphonTunnel = PsiphonTunnel.newPsiphonTunnel(this);
@@ -107,8 +112,12 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         @Override
         public void registerClient(IConduitClientCallback client) {
             synchronized (clientsLock) {
-                if (client != null && !clients.contains(client)) {
-                    clients.add(client);
+                if (client == null) {
+                    return;
+                }
+                IBinder clientBinder = client.asBinder();
+                if (!clients.containsKey(clientBinder)) {
+                    clients.put(clientBinder, client);
 
                     // Also update the client immediately with the current state and stats
                     // Send state
@@ -132,7 +141,8 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         public void unregisterClient(IConduitClientCallback client) {
             synchronized (clientsLock) {
                 if (client != null) {
-                    clients.remove(client);
+                    IBinder clientBinder = client.asBinder();
+                    clients.remove(clientBinder);
                 }
             }
         }
@@ -270,8 +280,50 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
     @Override
     public void onApplicationParameters(@NonNull Object o) {
-        // TODO: implement when we have a use case
         MyLog.i(TAG, "Received application parameters: " + o);
+        if (!(o instanceof JSONObject params)) {
+            MyLog.e(TAG, "Invalid parameter type. Expected JSONObject, got: " + o.getClass().getName());
+            return;
+        }
+
+        // Extract the trusted apps and their signatures from the parameters and store them
+        processTrustedApps(params);
+    }
+
+    private void processTrustedApps(JSONObject params) {
+        // Parse the trusted apps configuration from the parameters json object
+        // The expected format is:
+        // {
+        //     "AndroidTrustedApps": {
+        //         "com.example.app1": ["signature1", "signature2"],
+        //         "com.example.app2": ["signature3", "signature4", "signature5"]
+        //     }
+        try {
+            JSONObject trustedApps = params.optJSONObject("AndroidTrustedApps");
+            if (trustedApps == null) {
+                MyLog.i(TAG, "No trusted apps configuration found");
+                return;
+            }
+
+            Map<String, Set<String>> trustedSignatures = new HashMap<>();
+            Iterator<String> packageNames = trustedApps.keys();
+
+            while (packageNames.hasNext()) {
+                String packageName = packageNames.next();
+                JSONArray signatures = trustedApps.getJSONArray(packageName);
+                Set<String> signatureSet = new HashSet<>(signatures.length());
+
+                for (int i = 0; i < signatures.length(); i++) {
+                    signatureSet.add(signatures.getString(i));
+                }
+                trustedSignatures.put(packageName, signatureSet);
+            }
+
+            // Save the trusted signatures to file
+            PackageHelper.saveTrustedSignaturesToFile(getApplicationContext(), trustedSignatures);
+        } catch (JSONException e) {
+            MyLog.e(TAG, "Failed to parse trusted apps signatures: " + e);
+        }
     }
 
     @Override
@@ -630,7 +682,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
     }
 
     private void deliverIntent(PendingIntent pendingIntent, int messageId, int notificationId) {
-        if (Build.VERSION.SDK_INT < 29 || pingClients()) {
+        // For pre-29 devices, we rely on the behavior that sending an intent will bring the activity
+        // to the foreground even if it's currently backgrounded. For API 29+, we use isAppInForeground
+        // to determine if there's an active foreground activity before deciding to send the intent or
+        // show a notification instead.
+        if (Build.VERSION.SDK_INT < 29 || isAppInForeground(getApplicationContext())) {
             try {
                 pendingIntent.send(getContext(), 0, null);
             } catch (PendingIntent.CanceledException e) {
@@ -641,16 +697,14 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
     }
 
-    private boolean pingClients() {
-        for (IConduitClientCallback client : clients) {
-            try {
-                client.ping();
-                return true; // Successfully pinged a client
-            } catch (RemoteException e) {
-                MyLog.e(TAG, "Failed to ping client: " + e);
-            }
+    private boolean isAppInForeground(Context context) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> taskInfo = activityManager.getRunningTasks(1);
+        if (taskInfo != null && !taskInfo.isEmpty()) {
+            ComponentName topActivity = taskInfo.get(0).topActivity;
+            return topActivity != null && topActivity.getPackageName().equals(context.getPackageName());
         }
-        return false; // No clients successfully pinged
+        return false;
     }
 
     private void showErrorNotification(PendingIntent pendingIntent, int messageId, int notificationId) {
@@ -700,20 +754,21 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
 
     // Unified method to send updates to all registered clients
-    // This method is synchronized to avoid concurrent modification of the clients list when called from multiple threads
+    // This method is synchronized to avoid concurrent modification of the clients map when called from multiple threads
     private void notifyClients(ClientNotifier notifier) {
         synchronized (clientsLock) {
-            for (Iterator<IConduitClientCallback> iterator = clients.iterator(); iterator.hasNext(); ) {
-                IConduitClientCallback client = iterator.next();
+            for (Map.Entry<IBinder, IConduitClientCallback> entry : clients.entrySet()) {
+                IConduitClientCallback client = entry.getValue();
+                IBinder clientBinder = entry.getKey();
                 try {
                     notifier.notify(client);
                 } catch (RemoteException e) {
                     // Remove the client if it is dead and do not log the exception as it is expected
                     // to happen when a client goes away without unregistering.
                     if (e instanceof DeadObjectException) {
-                        iterator.remove();
+                        clients.remove(clientBinder);
                     } else {
-                        MyLog.e(TAG, "Failed to notify client: " + e);
+                        MyLog.e(TAG, "Failed to notify client: " + clientBinder + ", " + e.getMessage());
                     }
                 }
             }
