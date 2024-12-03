@@ -210,6 +210,14 @@ final class ConduitModule: RCTEventEmitter {
     
     override init() {
         
+        #if TEST
+        LoggingSystem.bootstrap { label -> LogHandler in
+            TestLogger(
+                label: label,
+                logLevel: AppLogger.minLogLevel
+            )
+        }
+        #else
         LoggingSystem.bootstrap { label in
             MultiplexLogHandler([
                 OSLogger(subsystem: AppLogger.subsystem,
@@ -220,6 +228,7 @@ final class ConduitModule: RCTEventEmitter {
                                   puppy: AppLogger.initializePuppy()),
             ])
         }
+        #endif
         
         dispatchQueue = DispatchQueue(label: "ca.psiphon.conduit.module", qos: .default)
         super.init()
