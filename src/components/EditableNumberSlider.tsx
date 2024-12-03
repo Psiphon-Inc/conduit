@@ -36,7 +36,13 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { AnimatedText } from "@/src/components/AnimatedText";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import {
+    lineItemRTLStyle,
+    lineItemStyle,
+    palette,
+    sharedStyles as ss,
+} from "@/src/styles";
+import { useTranslation } from "react-i18next";
 import {
     Gesture,
     GestureDetector,
@@ -63,6 +69,12 @@ export function EditableNumberSlider({
     onChange,
     scrollRef,
 }: EditableNumberSliderProps) {
+    const { i18n } = useTranslation();
+    const isRTL = i18n.dir() === "rtl" ? true : false;
+
+    if (isRTL) {
+        style = lineItemRTLStyle;
+    }
     const value = useSharedValue(originalValue);
     const displayText = useDerivedValue(() => {
         const changed = value.value === originalValue ? " " : "*";
@@ -152,9 +164,17 @@ export function EditableNumberSlider({
     return (
         <View style={[...style, ss.flex, ss.justifySpaceBetween]}>
             <Text style={[ss.bodyFont, ss.whiteText]}>{label}</Text>
-            <View style={[ss.row, ss.flex, { maxWidth: 180 }]}>
+            <View
+                style={[isRTL ? ss.rowRTL : ss.row, ss.flex, { maxWidth: 180 }]}
+            >
                 <View style={[ss.flex]}>
-                    <Canvas style={[ss.flex]} onSize={canvasSize}>
+                    <Canvas
+                        style={[
+                            ss.flex,
+                            isRTL ? { transform: "scaleX(-1)" } : {},
+                        ]}
+                        onSize={canvasSize}
+                    >
                         <RoundedRect
                             x={circleR}
                             y={trackY}
@@ -202,7 +222,9 @@ export function EditableNumberSlider({
                         />
                     </Canvas>
                     <GestureDetector gesture={sliderGesture}>
-                        <Animated.View style={overlayStyle} />
+                        <Animated.View
+                            style={[overlayStyle, { transform: "scaleX(-1)" }]}
+                        />
                     </GestureDetector>
                 </View>
                 <View style={[ss.row, ss.alignCenter]}>

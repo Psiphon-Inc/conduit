@@ -20,12 +20,11 @@
 import * as fs from "fs";
 import i18n from "i18next";
 import path from "path";
-import { findBestLanguageTag } from "react-native-localize";
 
 import i18nService from "@/src/i18n/i18n";
 
-jest.mock("react-native-localize", () => ({
-    findBestLanguageTag: jest.fn(() => ({ languageTag: "fr" })),
+jest.mock("i18next", () => ({
+    init: jest.fn(() => ({ languageTag: "fr" })),
 }));
 
 describe("i18n service", () => {
@@ -55,7 +54,7 @@ describe("i18n service", () => {
 
     test("does not initialize twice", () => {
         i18nService.initI18n();
-        expect(findBestLanguageTag).toHaveBeenCalledTimes(1);
+        expect(i18n.init).toHaveBeenCalledTimes(1);
     });
 
     describe("translation keys only occur once in en", () => {

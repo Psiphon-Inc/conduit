@@ -18,7 +18,9 @@
     "moduleNameMapper": {
       "micro-key-producer/src/slip10": "micro-key-producer/slip10.js"
     },
-    "setupFiles": ["./src/jestSetup.js"]
+    "setupFiles": [
+      "./src/jestSetup.js"
+    ]
   },
   "prettier": {
     "tabWidth": 4,
@@ -54,12 +56,12 @@
     "react-i18next": "^15.0.2",
     "react-native": "0.74.5",
     "react-native-gesture-handler": "~2.16.1",
-    "react-native-localize": "^3.2.1",
     "react-native-reanimated": "~3.10.1",
     "react-native-safe-area-context": "4.10.5",
     "react-native-screens": "3.31.1",
     "zod": "^3.23.8",
-    "expo-keep-awake": "~13.0.2"
+    "expo-keep-awake": "~13.0.2",
+    "expo-localization": "~15.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

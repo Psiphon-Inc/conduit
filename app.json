@@ -24,8 +24,12 @@
       },
       "package": "ca.psiphon.conduit"
     },
+    "extra": {
+      "supportsRTL": true
+    },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true
