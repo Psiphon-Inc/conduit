@@ -239,7 +239,7 @@ export default function OnboardingScreen() {
         };
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.white),
-            fontFamilies: ["Jura"],
+            fontFamilies: ["Rajdhani"],
             fontSize: fontSize,
             fontStyle: {
                 weight: 400,

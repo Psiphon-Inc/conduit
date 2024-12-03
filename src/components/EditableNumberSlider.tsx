@@ -149,9 +149,10 @@ export function EditableNumberSlider({
             prevCircleCxPct.value = circleCxPct.value;
         })
         .onUpdate((event) => {
+            const rtl = isRTL ? -1 : 1;
             const newCircleCxPct = clamp(
                 prevCircleCxPct.value +
-                    (event.translationX / usableWidth.value) * 100,
+                    ((rtl * event.translationX) / usableWidth.value) * 100,
                 0,
                 100,
             );
@@ -165,16 +166,15 @@ export function EditableNumberSlider({
         <View style={[...style, ss.flex, ss.justifySpaceBetween]}>
             <Text style={[ss.bodyFont, ss.whiteText]}>{label}</Text>
             <View
-                style={[isRTL ? ss.rowRTL : ss.row, ss.flex, { maxWidth: 180 }]}
+                style={[
+                    isRTL ? ss.rowRTL : ss.row,
+                    isRTL ? { transform: "scaleX(-1)" } : {},
+                    ss.flex,
+                    { maxWidth: 180 },
+                ]}
             >
                 <View style={[ss.flex]}>
-                    <Canvas
-                        style={[
-                            ss.flex,
-                            isRTL ? { transform: "scaleX(-1)" } : {},
-                        ]}
-                        onSize={canvasSize}
-                    >
+                    <Canvas style={[ss.flex]} onSize={canvasSize}>
                         <RoundedRect
                             x={circleR}
                             y={trackY}
@@ -222,9 +222,7 @@ export function EditableNumberSlider({
                         />
                     </Canvas>
                     <GestureDetector gesture={sliderGesture}>
-                        <Animated.View
-                            style={[overlayStyle, { transform: "scaleX(-1)" }]}
-                        />
+                        <Animated.View style={[overlayStyle]} />
                     </GestureDetector>
                 </View>
                 <View style={[ss.row, ss.alignCenter]}>
