@@ -2,13 +2,142 @@
     "LOADING_I18N": {
         "string": "‮˥oɐpıuƃ‬..."
     },
-    "TURN_ON_I18N": {
-        "string": "‮⊥nɹu‬ ‮ON‬"
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "‮⊥ɐd‬ ‮ʇo‬ ‮⊥nɹu‬ ‮Ou‬"
     },
-    "CONDUIT_OFF_I18N": {
-        "string": "‮Ↄoupnıʇ‬ ‮ıs‬ ‮Oɟɟ‬"
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "‮ʎonɹ‬ ‮Ↄoupnıʇ‬ ‮Ip‬"
     },
-    "YOUR_ID_I18N": {
-        "string": "‮ʎonɹ‬ ‮Ↄoupnıʇ‬ ‮Ip‬:"
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "{{ niceBytes }} ‮ʇɹɐusɟǝɹɹǝp‬"
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers }} ‮ɔouuǝɔʇǝp‬ ‮dǝǝɹs‬"
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} ‮ɔouuǝɔʇıuƃ‬"
+    },
+    "CANCEL_I18N": {
+        "string": "‮Ↄɐuɔǝʅ‬"
+    },
+    "CONFIRM_I18N": {
+        "string": "‮Ↄouɟıɹɯ‬"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "‮Wɐx‬ ‮Ԁǝǝɹs‬"
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "‮Wɐx‬ ‮WԐ‬/‮s‬ ‮Ԁǝɹ‬ ‮Ԁǝǝɹ‬"
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "‮ᴚǝbnıɹǝp‬ ‮Ԑɐupʍıpʇɥ‬"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "‮Sǝup‬ ‮pıɐƃuosʇıɔ‬"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "‮Ↄɥɐuƃıuƃ‬ ‮Ↄoupnıʇ‬ ‮sǝʇʇıuƃs‬ ‮ɹǝbnıɹǝs‬ ‮ɹǝsʇɐɹʇıuƃ‬ ‮ʎonɹ‬ ‮Ↄoupnıʇ‬ ‮Sʇɐʇıou‬. ‮∀uʎ‬ ‮ɔouuǝɔʇǝp‬ ‮nsǝɹs‬ ‮ʍıʅʅ‬ ‮qǝ‬ ‮pısɔouuǝɔʇǝp‬."
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "‮Ↄouɟıɹɯ‬ ‮Ↄɥɐuƃǝs‬ ‮ɐup‬ ‮ᴚǝsʇɐɹʇ‬ ‮Noʍ‬?"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "‮Noʇıɟıɔɐʇıous‬"
+    },
+    "ENABLE_I18N": {
+        "string": "‮Ǝuɐqʅǝ‬"
+    },
+    "ENABLED_I18N": {
+        "string": "‮Ǝuɐqʅǝp‬"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "‮Ↄoupnıʇ‬ ‮Sʇɐʇıou‬"
+    },
+    "RUNNING_I18N": {
+        "string": "‮ᴚ∩NNINפ‬"
+    },
+    "STOPPED_I18N": {
+        "string": "‮S⊥OԀԀƎp‬"
+    },
+    "UNKNOWN_I18N": {
+        "string": "‮∩NӼNOＭN‬"
+    },
+    "SETTINGS_I18N": {
+        "string": "‮Sǝʇʇıuƃs‬"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "‮Ԁɹıʌɐɔʎ‬ ‮Ԁoʅıɔʎ‬"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "‮Sǝuʇ‬, ‮ʇɥɐuʞs‬!"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "‮Hoʅp‬ ‮ʇo‬ ‮⊥nɹu‬ ‮Oɟɟ‬"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "‮ɔɥɐuƃǝs‬ ‮dǝupıuƃ‬"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "‮ɔʅosǝ‬ ‮ʇo‬ ‮ɐddʅʎ‬"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "‮Ｍǝʅɔoɯǝ‬ ‮ʇo‬ ‮Ↄoupnıʇ‬!"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "‮⊥nɹu‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ıuʇo‬ ‮ɐu‬ ‮Iuʇǝɹuǝʇ‬ ‮ɟɹǝǝpoɯ‬ ‮qǝɐɔou‬!\n\n‮ʎon‬ ‮ɔɐu‬ ‮ɥǝʅd‬ ‮dǝodʅǝ‬ ‮ɐɹonup‬ ‮ʇɥǝ‬ ‮ʍoɹʅp‬ ‮qɹǝɐʞ‬ ‮ʇɥɹonƃɥ‬ ‮ɹǝsʇɹıɔʇıʌǝ‬ ‮uǝʇʍoɹʞs‬ ‮ɐup‬ ‮ɐɔɔǝss‬ ‮ʇɥǝ‬ ‮ƃʅoqɐʅ‬ ‮ıuʇǝɹuǝʇ‬ ‮sǝɔnɹǝʅʎ‬ ‮ʇɥɹonƃɥ‬ ‮ʇɥǝ‬ ‮Ԁsıdɥou‬ ‮Nǝʇʍoɹʞ‬."
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "‮Nǝxʇ‬"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "‮Ｍɥɐʇ‬ ‮ıs‬ ‮Ↄoupnıʇ‬?"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "‮Ↄoupnıʇ‬ ‮ıs‬ ‮ɐu‬ ‮odǝu‬-‮sonɹɔǝ‬ ‮ɐddʅıɔɐʇıou‬ ‮ʇɥɐʇ‬ ‮ǝuɐqʅǝs‬ ‮dǝodʅǝ‬ ‮ıu‬ ‮ɔǝusoɹǝp‬ ‮ɹǝƃıous‬ ‮ʍoɹʅpʍıpǝ‬ ‮ʇo‬ ‮qonuɔǝ‬ ‮oɟɟ‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ɐup‬ ‮ıuʇo‬ ‮ʇɥǝ‬ ‮Ԁsıdɥou‬ ‮Nǝʇʍoɹʞ‬.\n\n‮⊥ɥǝ‬ ‮ɯoɹǝ‬ ‮Ↄoupnıʇ‬ ‮Sʇɐʇıous‬ ‮ʇɥǝɹǝ‬ ‮ɐɹǝ‬, ‮ʇɥǝ‬ ‮sʇɹouƃǝɹ‬ ‮Ԁsıdɥou‬ ‮ıs‬ ‮ɐup‬ ‮ʇɥǝ‬ ‮ɯoɹǝ‬ ‮odǝu‬ ‮ʇɥǝ‬ ‮ıuʇǝɹuǝʇ‬ ‮qǝɔoɯǝs‬."
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "‮Nǝxʇ‬"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "‮∀ʅʅoʍ‬ ‮Noʇıɟıɔɐʇıous‬"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "‮Ↄoupnıʇ‬ ‮ɹǝɔoɯɯǝups‬ ‮ʎon‬ ‮ǝuɐqʅǝ‬ ‮uoʇıɟıɔɐʇıous‬ ‮so‬ ‮ʍǝ‬ ‮ɔɐu‬ ‮dɹoʌıpǝ‬ ‮ɔɹıʇıɔɐʅ‬ ‮ndpɐʇǝs‬ ‮ɐqonʇ‬ ‮ʎonɹ‬ ‮Ↄoupnıʇ‬ ‮Sʇɐʇıou‬.\n\n‮ᴚǝɐpʎ‬ ‮ʇo‬ ‮qǝƃıu‬?"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "‮Ԑǝƃıu‬"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "‮Ԁɹıʌɐɔʎ‬ ‮Ԁoʅıɔʎ‬"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "‮Ｍǝ‬ ‮po‬ ‮uoʇ‬ ‮ɔoʅʅǝɔʇ‬ ‮dǝɹsouɐʅʅʎ‬ ‮ıpǝuʇıɟıɐqʅǝ‬ ‮ıuɟoɹɯɐʇıou‬ ‮ɟɹoɯ‬ ‮Ↄoupnıʇ‬ ‮nsǝɹs‬. ‮∀ʅʅ‬ ‮ʇɹɐusɯıʇʇǝp‬ ‮pɐʇɐ‬ ‮ıs‬ ‮ǝuɔɹʎdʇǝp‬ ‮ɐup‬ ‮ɔɐuuoʇ‬ ‮qǝ‬ ‮ɐɔɔǝssǝp‬ ‮qʎ‬ ‮ʎon‬ ‮oɹ‬ ‮Ԁsıdɥou‬. ‮Ↄouuǝɔʇǝp‬ ‮nsǝɹs‬ ‮ɐɹǝ‬ ‮uoʇ‬ ‮ɐqʅǝ‬ ‮ʇo‬ ‮ɐɔɔǝss‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ıu‬ ‮ɐuʎ‬ ‮ʍɐʎ‬.\n\n‮Ԑʎ‬ ‮nsıuƃ‬ ‮Ↄoupnıʇ‬, ‮ʎon‬ ‮ɐɔɔǝdʇ‬ ‮onɹ‬ ‮dɹıʌɐɔʎ‬ ‮doʅıɔʎ‬, ‮ɐʌɐıʅɐqʅǝ‬ ‮qǝʅoʍ‬."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "‮∀ɔɔǝdʇ‬"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "‮ᴚǝdʅɐʎ‬ ‮Iuʇɹo‬"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "‮Ԁʅǝɐsǝ‬ ‮ndƃɹɐpǝ‬ ‮ʇɥǝ‬ ‮ɐdd‬"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "‮Ｍɐıʇıuƃ‬ ‮ɟoɹ‬ ‮dǝǝɹs‬"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "‮˥ǝɐɹu‬ ‮Woɹǝ‬"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "‮Ↄoupnıʇ‬ ‮Nɐɯǝ‬"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "‮Nɐɯǝ‬ ‮ʎonɹ‬ ‮Ↄoupnıʇ‬"
+    },
+    "ID_I18N": {
+        "string": "‮Ip‬"
+    },
+    "ALIAS_I18N": {
+        "string": "‮∀ʅıɐs‬"
     }
 }

@@ -36,7 +36,13 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { AnimatedText } from "@/src/components/AnimatedText";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import {
+    lineItemRTLStyle,
+    lineItemStyle,
+    palette,
+    sharedStyles as ss,
+} from "@/src/styles";
+import { useTranslation } from "react-i18next";
 import {
     Gesture,
     GestureDetector,
@@ -63,6 +69,12 @@ export function EditableNumberSlider({
     onChange,
     scrollRef,
 }: EditableNumberSliderProps) {
+    const { i18n } = useTranslation();
+    const isRTL = i18n.dir() === "rtl" ? true : false;
+
+    if (isRTL) {
+        style = lineItemRTLStyle;
+    }
     const value = useSharedValue(originalValue);
     const displayText = useDerivedValue(() => {
         const changed = value.value === originalValue ? " " : "*";
@@ -137,9 +149,10 @@ export function EditableNumberSlider({
             prevCircleCxPct.value = circleCxPct.value;
         })
         .onUpdate((event) => {
+            const rtl = isRTL ? -1 : 1;
             const newCircleCxPct = clamp(
                 prevCircleCxPct.value +
-                    (event.translationX / usableWidth.value) * 100,
+                    ((rtl * event.translationX) / usableWidth.value) * 100,
                 0,
                 100,
             );
@@ -152,7 +165,14 @@ export function EditableNumberSlider({
     return (
         <View style={[...style, ss.flex, ss.justifySpaceBetween]}>
             <Text style={[ss.bodyFont, ss.whiteText]}>{label}</Text>
-            <View style={[ss.row, ss.flex, { maxWidth: 180 }]}>
+            <View
+                style={[
+                    isRTL ? ss.rowRTL : ss.row,
+                    isRTL ? { transform: "scaleX(-1)" } : {},
+                    ss.flex,
+                    { maxWidth: 180 },
+                ]}
+            >
                 <View style={[ss.flex]}>
                     <Canvas style={[ss.flex]} onSize={canvasSize}>
                         <RoundedRect
@@ -202,7 +222,7 @@ export function EditableNumberSlider({
                         />
                     </Canvas>
                     <GestureDetector gesture={sliderGesture}>
-                        <Animated.View style={overlayStyle} />
+                        <Animated.View style={[overlayStyle]} />
                     </GestureDetector>
                 </View>
                 <View style={[ss.row, ss.alignCenter]}>

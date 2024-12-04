@@ -17,9 +17,9 @@
  *
  */
 
+import { getLocales } from "expo-localization";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import { findBestLanguageTag } from "react-native-localize";
 
 import translationXB from "@/src/i18n/locales/ar-xb/translation.json";
 import translationXA from "@/src/i18n/locales/en-xa/translation.json";
@@ -38,6 +38,48 @@ const resources = {
     },
 };
 
+// return available language if found or empty string
+function findMatching(language: string): string {
+    const available = Object.keys(resources);
+    for (let i = 0; i < available.length; i++) {
+        if (available[i] === language) {
+            return available[i];
+        }
+    }
+    return "";
+}
+
+// loop through phone locales looking for matching languages
+function findBestLanguage(): { languageTag: string; languageCode: string } {
+    const locales = getLocales();
+
+    let languageTag: string;
+    let languageCode: string;
+    for (let i = 0; i < locales.length; i++) {
+        // loop through available looking for either a matching tag or code for `lng`
+        languageTag = findMatching(locales[i].languageTag);
+        if (locales[i].languageCode !== null) {
+            if (languageTag !== "") {
+                // if we have a language code and found a matching tag, search for a matching code for fallbackLng
+                languageCode = findMatching(locales[i].languageCode || "");
+                return { languageTag, languageCode };
+            } else {
+                // if we didn't find a tag, see if we can match the code
+                languageTag = findMatching(locales[i].languageCode || "");
+                // can't have a fallback for a base code, so we return empty for languageCode
+                return { languageTag, languageCode: "" };
+            }
+        } else {
+            // no code available, no match, return the tag we found or go to next phone locale
+            if (languageTag !== "") {
+                return { languageTag, languageCode: "" };
+            }
+        }
+    }
+    // if we find nothing, we explicitly return blank
+    return { languageTag: "", languageCode: "" };
+}
+
 class i18nService {
     initialized = false;
 
@@ -47,16 +89,13 @@ class i18nService {
         }
         this.initialized = true;
 
-        // Find best available language
-        const bestLanguageTag = findBestLanguageTag(
-            Object.keys(resources),
-        )?.languageTag;
+        const { languageTag, languageCode } = findBestLanguage();
 
         // The app has to be restarted to change the language
         i18n.use(initReactI18next).init({
             compatibilityJSON: "v3",
-            lng: bestLanguageTag,
-            fallbackLng: "en",
+            lng: languageTag || "en", // Default en
+            fallbackLng: languageCode || "en", // Default en
             resources: resources,
             interpolation: {
                 escapeValue: false,

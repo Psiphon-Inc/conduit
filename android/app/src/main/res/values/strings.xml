@@ -21,4 +21,6 @@
     <string name="notification_conduit_failed_to_restart_text">Conduit service failed to restart. Tap the notification for more information</string>
     <!-- Notification text for Conduit starting notification -->
     <string name="conduit_service_starting_notification_text">Conduit service is starting…</string>
+    <!-- Added by expo-localiztion -->
+    <string name="ExpoLocalization_supportsRTL" translatable="false">true</string>
 </resources>

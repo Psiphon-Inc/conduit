@@ -17,15 +17,15 @@
  *
  */
 
+import { getLocales } from "expo-localization";
 import * as fs from "fs";
 import i18n from "i18next";
 import path from "path";
-import { findBestLanguageTag } from "react-native-localize";
 
 import i18nService from "@/src/i18n/i18n";
 
-jest.mock("react-native-localize", () => ({
-    findBestLanguageTag: jest.fn(() => ({ languageTag: "fr" })),
+jest.mock("expo-localization", () => ({
+    getLocales: jest.fn(() => [{ languageTag: "en-XA", languageCode: "en" }]),
 }));
 
 describe("i18n service", () => {
@@ -37,8 +37,9 @@ describe("i18n service", () => {
         expect(i18nService.initialized).toBe(true);
     });
 
-    test("uses language provided by findBestLanguageTag", () => {
-        expect(i18n.language).toBe("fr");
+    test("uses language provided by findBestLanguage", () => {
+        expect(i18n.language).toBe("en-XA");
+        expect(i18n.options.fallbackLng).toStrictEqual(["en"]);
     });
 
     test("has en resources", () => {
@@ -55,7 +56,7 @@ describe("i18n service", () => {
 
     test("does not initialize twice", () => {
         i18nService.initI18n();
-        expect(findBestLanguageTag).toHaveBeenCalledTimes(1);
+        expect(getLocales).toHaveBeenCalledTimes(1);
     });
 
     describe("translation keys only occur once in en", () => {

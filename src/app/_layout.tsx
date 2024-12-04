@@ -40,6 +40,7 @@ export default function RootLayout() {
     const [loaded] = useFonts({
         JuraRegular: fonts.JuraRegular,
         JuraBold: fonts.JuraBold,
+        Rajdhani: fonts.Rajdhani,
     });
 
     useEffect(() => {
