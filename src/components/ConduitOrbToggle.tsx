@@ -131,7 +131,7 @@ export function ConduitOrbToggle({
     const negativeOrbRadius = useDerivedValue(() => -orbRadius.value);
     const finalOrbRadius = width / 4;
     // Use a transform to center the orb and the lights that flow through it
-    const orbCenterY = width / 2 + finalOrbRadius / 2;
+    const orbCenterY = height / 2;
     const orbCenteringTransform = [
         {
             translateY: orbCenterY,

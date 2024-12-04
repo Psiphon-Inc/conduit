@@ -20,7 +20,6 @@
 import React from "react";
 import { useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
@@ -32,15 +31,13 @@ import { SafeAreaView } from "@/src/components/SafeAreaView";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();
-    const insets = useSafeAreaInsets();
 
     // NOTE this assumes a portrait layout.
-    const totalUsableHeight = win.height - insets.top - insets.bottom;
-    const totalUsableWidth = win.width - insets.left - insets.right;
+    const totalUsableHeight = win.height;
+    const totalUsableWidth = win.width;
     const logoWordmarkHeight = totalUsableHeight * 0.1;
-    const conduitOrbToggleHeight = totalUsableHeight - logoWordmarkHeight;
-    const conduitStatusHeight =
-        totalUsableHeight - totalUsableWidth - logoWordmarkHeight;
+    const conduitOrbToggleHeight = totalUsableHeight * 0.6;
+    const conduitStatusHeight = totalUsableHeight * 0.3;
 
     return (
         <GestureHandlerRootView>
@@ -50,15 +47,15 @@ export default function HomeScreen() {
                     width={totalUsableWidth}
                     height={logoWordmarkHeight}
                 />
-                {/* Status is an absolutely positioned background */}
-                <ConduitStatus
-                    width={totalUsableWidth}
-                    height={conduitStatusHeight}
-                />
-                {/* Orb takes up the rest of the height not used by LogoWordmark */}
+                {/* Orb takes up the middle 60% of the vertical space */}
                 <ConduitOrbToggle
                     width={totalUsableWidth}
                     height={conduitOrbToggleHeight}
+                />
+                {/* Status taking up bottom 30% of the vertical space */}
+                <ConduitStatus
+                    width={totalUsableWidth}
+                    height={conduitStatusHeight}
                 />
                 {/* Settings icon is absolutely positioned bottom right */}
                 <ConduitSettings />
