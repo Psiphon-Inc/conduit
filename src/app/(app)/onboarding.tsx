@@ -261,6 +261,7 @@ export default function OnboardingScreen() {
         const paragraphStyle = {
             textAlign: TextAlign.Center,
         };
+
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.blueTint2),
             fontFamilies: ["Jura"],

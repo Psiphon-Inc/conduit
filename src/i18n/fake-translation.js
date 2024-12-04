@@ -1,8 +1,8 @@
 "use strict";
 
-import { promises as fs } from "fs";
+const fs = require("fs").promises;
 const path = require("path");
-const pseudo = require("./pseudo").PSEUDO;
+const pseudo = require("./pseudo");
 
 // englishLines will hold the contents of the English translation file. xaLines and
 // xbLines will hold the contents of the en-xa and ar-xb translation files, which are

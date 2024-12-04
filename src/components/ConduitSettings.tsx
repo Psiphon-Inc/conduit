@@ -72,10 +72,16 @@ import {
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import {
+    lineItemRTLStyle,
+    lineItemStyle,
+    palette,
+    sharedStyles as ss,
+} from "@/src/styles";
 
 export function ConduitSettings() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.dir() === "rtl" ? true : false;
     const win = useWindowDimensions();
     const router = useRouter();
 
@@ -176,12 +182,18 @@ export function ConduitSettings() {
     const scrollRef = React.useRef<ScrollView | null>(null);
 
     function Settings() {
+        let lineStyle;
+        if (isRTL) {
+            lineStyle = lineItemRTLStyle;
+        } else {
+            lineStyle = lineItemStyle;
+        }
         return (
             <View style={[ss.flex]}>
                 <View
                     style={[
                         ss.padded,
-                        ss.row,
+                        isRTL ? ss.rowRTL : ss.row,
                         ss.alignCenter,
                         ss.greyBorderBottom,
                     ]}
@@ -245,7 +257,7 @@ export function ConduitSettings() {
                                 originalValue={inproxyParameters.maxClients}
                                 min={1}
                                 max={INPROXY_MAX_CLIENTS_MAX}
-                                style={[...lineItemStyle, ss.alignCenter]}
+                                style={[...lineStyle, ss.alignCenter]}
                                 onChange={updateInproxyMaxClients}
                                 scrollRef={scrollRef}
                             />
@@ -256,13 +268,13 @@ export function ConduitSettings() {
                                 )}
                                 min={8}
                                 max={INPROXY_MAX_MBPS_PER_PEER_MAX}
-                                style={[...lineItemStyle, ss.alignCenter]}
+                                style={[...lineStyle, ss.alignCenter]}
                                 onChange={updateInproxyLimitBytesPerSecond}
                                 scrollRef={scrollRef}
                             />
                             <View
                                 style={[
-                                    ...lineItemStyle,
+                                    ...lineStyle,
                                     ss.flex,
                                     ss.alignCenter,
                                     ss.justifySpaceBetween,
@@ -280,17 +292,17 @@ export function ConduitSettings() {
                             </View>
                             <View
                                 style={[
-                                    ...lineItemStyle,
+                                    ss.greyBorderBottom,
                                     ss.flex,
                                     ss.alignCenter,
-                                    ss.height120,
+                                    { height: 140 },
                                     ss.column,
                                     ss.padded,
                                 ]}
                             >
                                 <View
                                     style={[
-                                        ss.row,
+                                        isRTL ? ss.rowRTL : ss.row,
                                         ss.fullWidth,
                                         ss.justifySpaceBetween,
                                         ss.alignCenter,
@@ -310,7 +322,13 @@ export function ConduitSettings() {
                                         />
                                     )}
                                 </View>
-                                <View style={[ss.flex, ss.row, ss.alignCenter]}>
+                                <View
+                                    style={[
+                                        isRTL ? ss.rowRTL : ss.row,
+                                        ss.flex,
+                                        ss.alignCenter,
+                                    ]}
+                                >
                                     <Text style={[ss.whiteText, ss.bodyFont]}>
                                         {t("ALIAS_I18N.string")}:
                                     </Text>
@@ -319,7 +337,7 @@ export function ConduitSettings() {
                             </View>
                             <View
                                 style={[
-                                    ...lineItemStyle,
+                                    ...lineStyle,
                                     ss.flex,
                                     ss.alignCenter,
                                     ss.justifySpaceBetween,
@@ -334,7 +352,7 @@ export function ConduitSettings() {
                                 notificationsPermission != "GRANTED" && (
                                     <View
                                         style={[
-                                            ...lineItemStyle,
+                                            ...lineStyle,
                                             ss.flex,
                                             ss.alignCenter,
                                             ss.justifySpaceBetween,
@@ -345,7 +363,7 @@ export function ConduitSettings() {
                                 )}
                             <View
                                 style={[
-                                    ...lineItemStyle,
+                                    ...lineStyle,
                                     ss.flex,
                                     ss.alignCenter,
                                     ss.justifySpaceBetween,

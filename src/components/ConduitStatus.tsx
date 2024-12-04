@@ -22,8 +22,11 @@ import {
     LinearGradient,
     Paragraph,
     Rect,
+    SkParagraphStyle,
+    SkTextStyle,
     Skia,
     TextAlign,
+    TextDirection,
     interpolateColors,
     useFonts,
     vec,
@@ -58,7 +61,8 @@ export function ConduitStatus({
     width: number;
     height: number;
 }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.dir() === "rtl" ? true : false;
     const win = useWindowDimensions();
 
     const { logErrorToDiagnostic } = useInproxyContext();
@@ -143,10 +147,13 @@ export function ConduitStatus({
         if (!fontMgr) {
             return null;
         }
-        const paragraphStyle = {
+        let paragraphStyle: SkParagraphStyle = {
             textAlign: TextAlign.Center,
         };
-        const mainTextStyle = {
+        if (isRTL) {
+            paragraphStyle.textDirection = TextDirection.RTL;
+        }
+        const mainTextStyle: SkTextStyle = {
             color: Skia.Color(palette.statusTextBlue),
             fontFamilies: ["Jura"],
             fontSize: fontSize,
@@ -155,7 +162,7 @@ export function ConduitStatus({
             },
             letterSpacing: 1, // 5% of 20
         };
-        const runningTextStyle = {
+        const runningTextStyle: SkTextStyle = {
             color: Skia.Color(palette.red),
             fontFamilies: ["Jura"],
             fontSize: fontSize,
@@ -164,8 +171,7 @@ export function ConduitStatus({
             },
             letterSpacing: 1, // 5% of 20
         };
-
-        const waitingTextStyle = {
+        const waitingTextStyle: SkTextStyle = {
             color: Skia.Color(palette.grey),
             fontFamilies: ["Jura"],
             fontSize: fontSize,

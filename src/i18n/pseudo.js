@@ -77,7 +77,7 @@ class Pseudo {
     }
 }
 
-export const PSEUDO = {
+module.exports = {
     xa: new Pseudo("xa", "Packaged Accented", ACCENTED_MAP, makeLonger),
     xb: new Pseudo("xb", "Packaged Mirrored", FLIPPED_MAP, makeRTL),
 };
