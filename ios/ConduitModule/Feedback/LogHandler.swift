@@ -235,20 +235,20 @@ public struct TestLog {
 private class TestLoggerStorage {
 
     private var logs = [TestLog]()
-    private let queue = DispatchQueue(label: "TestLoggerStorage", attributes: .concurrent)
+    private let queue = DispatchQueue(label: "TestLoggerStorage")
 
     var capturedLogs: [TestLog] {
         queue.sync { logs }
     }
     
     func capture(_ log: TestLog) {
-        queue.async(flags: .barrier) {
+        queue.sync {
             self.logs.append(log)
         }
     }
     
     func empty() {
-        queue.async(flags: .barrier) {
+        queue.sync {
             self.logs.removeAll()
         }
     }
