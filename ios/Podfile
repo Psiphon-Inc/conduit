@@ -49,6 +49,11 @@ target 'conduit' do
     :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
   )
 
+  target 'conduitTests' do
+    # Inherit all pods and configurations from the parent target.
+    inherit! :complete
+  end
+
   post_install do |installer|
     react_native_post_install(
       installer,
