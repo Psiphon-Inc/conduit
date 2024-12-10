@@ -43,11 +43,6 @@ import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 
 public class ConduitServiceInteractor {
-    public static final String MAX_CLIENTS = "maxClients";
-    public static final String LIMIT_UPSTREAM_BYTES = "limitUpstreamBytesPerSecond";
-    public static final String LIMIT_DOWNSTREAM_BYTES = "limitDownstreamBytesPerSecond";
-    public static final String INPROXY_PRIVATE_KEY = "inProxyPrivateKey";
-
     public static final String SERVICE_STARTING_BROADCAST_PERMISSION = "ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION";
     public static final String SERVICE_STARTING_BROADCAST_INTENT = "ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_INTENT";
     private static final String TAG = ConduitServiceInteractor.class.getSimpleName();

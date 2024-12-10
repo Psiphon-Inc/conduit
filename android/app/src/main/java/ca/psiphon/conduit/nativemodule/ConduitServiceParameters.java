@@ -27,7 +27,7 @@ import com.facebook.react.bridge.ReadableMap;
 
 import ca.psiphon.conduit.nativemodule.logging.MyLog;
 
-public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey) {
+public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey, boolean personalPairingEnabled, String compartmentId) {
     public static String TAG = ConduitServiceParameters.class.getSimpleName();
 
     // Keys and preferences file name
@@ -36,6 +36,9 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
     public static final String LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY = "limitUpstreamBytesPerSecond";
     public static final String LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY = "limitDownstreamBytesPerSecond";
     public static final String PRIVATE_KEY_KEY = "privateKey";
+    public static final String PERSONAL_PAIRING_ENABLED_KEY = "personalPairingEnabled";
+    public static final String COMPARTMENT_ID_KEY = "compartmentId";
+
     public static final String SCHEMA_VERSION_KEY = "schemaVersion";
 
     // Current storage schema version
@@ -47,7 +50,9 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         if (!map.hasKey(MAX_CLIENTS_KEY) ||
                 !map.hasKey(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY) ||
                 !map.hasKey(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY) ||
-                !map.hasKey(PRIVATE_KEY_KEY)) {
+                !map.hasKey(PRIVATE_KEY_KEY) ||
+                !map.hasKey(PERSONAL_PAIRING_ENABLED_KEY) ||
+                !map.hasKey(COMPARTMENT_ID_KEY)) {
             return null;
         }
 
@@ -55,10 +60,12 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         int limitUpstreamBytes = map.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY);
         int limitDownstreamBytes = map.getInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY);
         String proxyPrivateKey = map.getString(PRIVATE_KEY_KEY);
+        boolean personalPairingEnabled = map.getBoolean(PERSONAL_PAIRING_ENABLED_KEY);
+        String compartmentId = map.getString(COMPARTMENT_ID_KEY);
 
         // Validate parsed values
-        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
-            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey, compartmentId)) {
+            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey, personalPairingEnabled, compartmentId);
         }
 
         return null;
@@ -70,7 +77,9 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         if (!intent.hasExtra(MAX_CLIENTS_KEY) ||
                 !intent.hasExtra(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY) ||
                 !intent.hasExtra(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY) ||
-                !intent.hasExtra(PRIVATE_KEY_KEY)) {
+                !intent.hasExtra(PRIVATE_KEY_KEY) ||
+                !intent.hasExtra(PERSONAL_PAIRING_ENABLED_KEY) ||
+                !intent.hasExtra(COMPARTMENT_ID_KEY)) {
             return null;
         }
 
@@ -78,10 +87,12 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         int limitUpstreamBytes = intent.getIntExtra(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1);
         int limitDownstreamBytes = intent.getIntExtra(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1);
         String proxyPrivateKey = intent.getStringExtra(PRIVATE_KEY_KEY);
+        boolean personalPairingEnabled = intent.getBooleanExtra(PERSONAL_PAIRING_ENABLED_KEY, false);
+        String compartmentId = intent.getStringExtra(COMPARTMENT_ID_KEY);
 
         // Validate parsed values
-        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
-            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey, compartmentId)) {
+            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey, personalPairingEnabled, compartmentId);
         }
 
         return null;
@@ -109,6 +120,16 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
             changed = true;
         }
 
+        if (preferences.getBoolean(PERSONAL_PAIRING_ENABLED_KEY, false) != personalPairingEnabled) {
+            editor.putBoolean(PERSONAL_PAIRING_ENABLED_KEY, personalPairingEnabled);
+            changed = true;
+        }
+
+        if (preferences.getString(COMPARTMENT_ID_KEY, null) != compartmentId) {
+            editor.putString(COMPARTMENT_ID_KEY, compartmentId);
+            changed = true;
+        }
+
         // Guard against NPE
         String storedPrivateKey = preferences.getString(PRIVATE_KEY_KEY, null);
         if (storedPrivateKey == null || !storedPrivateKey.equals(privateKey)) {
@@ -133,10 +154,12 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         int limitUpstreamBytes = preferences.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1);
         int limitDownstreamBytes = preferences.getInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1);
         String proxyPrivateKey = preferences.getString(PRIVATE_KEY_KEY, null);
+        boolean personalPairingEnabled = preferences.getBoolean(PERSONAL_PAIRING_ENABLED_KEY, false);
+        String compartmentId = preferences.getString(COMPARTMENT_ID_KEY, null);
 
         // Validate the loaded parameters
-        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
-            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey, compartmentId)) {
+            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey, personalPairingEnabled, compartmentId);
         }
 
         return null;
@@ -148,15 +171,18 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         intent.putExtra(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, limitUpstreamBytes);
         intent.putExtra(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, limitDownstreamBytes);
         intent.putExtra(PRIVATE_KEY_KEY, privateKey);
+        intent.putExtra(PERSONAL_PAIRING_ENABLED_KEY, personalPairingEnabled);
+        intent.putExtra(COMPARTMENT_ID_KEY, compartmentId);
     }
 
     // Helper to validate parameters
-    private static boolean validate(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey) {
+    private static boolean validate(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey, String compartmentId) {
         // validate that:
         // - maxClients is greater than 0
         // - limitUpstreamBytes and limitDownstreamBytes are greater than or equal to 0, with 0 being a valid value
         // - privateKey is not null or empty, empty is still theoretically valid for the tunnel core but not for the conduit
-        return maxClients > 0 && limitUpstreamBytes >= 0 && limitDownstreamBytes >= 0 && privateKey != null && !privateKey.isEmpty();
+        // - compartmentId is not null or empty, empty is still theoretically valid, but we expect it to be set by the UI
+        return maxClients > 0 && limitUpstreamBytes >= 0 && limitDownstreamBytes >= 0 && privateKey != null && !privateKey.isEmpty() && compartmentId != null && !compartmentId.isEmpty();
     }
 
     // Helper to migrate preferences to the current schema
