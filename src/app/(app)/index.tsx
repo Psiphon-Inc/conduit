@@ -38,6 +38,7 @@ export default function HomeScreen() {
     const logoWordmarkHeight = totalUsableHeight * 0.1;
     const conduitOrbToggleHeight = totalUsableHeight * 0.6;
     const conduitStatusHeight = totalUsableHeight * 0.3;
+    const bottomActionsHeight = totalUsableWidth * 0.2; // Note this is a ratio of width
 
     return (
         <GestureHandlerRootView>
@@ -58,7 +59,7 @@ export default function HomeScreen() {
                     height={conduitStatusHeight}
                 />
                 {/* Settings icon is absolutely positioned bottom right */}
-                <ConduitSettings />
+                <ConduitSettings iconSize={bottomActionsHeight} />
                 {/* GIT_HASH absolutely positioned bottom left */}
                 <GitHash />
                 {/* Keep the screen open on iOS */}

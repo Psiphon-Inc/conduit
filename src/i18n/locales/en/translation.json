@@ -15,7 +15,7 @@
         "string": "{{ niceBytes }} transferred"
     },
     "CONNECTED_PEERS_I18N": {
-        "string": "{{ peers }} connected peers"
+        "string": "{{ peers }}/{{ max }} connected peers"
     },
     "CONNECTING_PEERS_I18N": {
         "string": "{{ peers }} connecting"
@@ -142,5 +142,23 @@
     },
     "ALIAS_I18N": {
         "string": "Alias"
+    },
+    "SHARE_I18N": {
+        "string": "Share"
+    },
+    "SHARE_PAIRING_DATA_MESSAGE_I18N": {
+        "string": "Connect to my Conduit station!"
+    },
+    "PERSONAL_PAIRING_I18N": {
+        "string": "Personal Pairing"
+    },
+    "SHARE_PAIRING_LINK_I18N": {
+        "string": "Share Pairing Link"
+    },
+    "ON_I18N": {
+        "string": "ON"
+    },
+    "OFF_I18N": {
+        "string": "OFF"
     }
 }

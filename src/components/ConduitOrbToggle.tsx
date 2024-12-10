@@ -67,6 +67,7 @@ import {
     useInproxyStatus,
 } from "@/src/inproxy/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
+import { ConduitShareAction } from "./ConduitShareAction";
 
 export function ConduitOrbToggle({
     width,
@@ -559,6 +560,7 @@ export function ConduitOrbToggle({
             >
                 {t("UPGRADE_REQUIRED_I18N.string")}
             </Animated.Text>
+            <ConduitShareAction height={height / 4} />
         </View>
     );
 }

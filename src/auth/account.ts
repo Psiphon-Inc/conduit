@@ -32,12 +32,18 @@ import {
 import { wrapError } from "@/src/common/errors";
 import { timedLog } from "@/src/common/utils";
 import {
+    Base64Unpadded32Bytes,
+    Base64Unpadded32BytesSchema,
+} from "@/src/common/validators";
+import {
     SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
     SECURESTORE_DEVICE_NONCE_KEY,
+    SECURESTORE_INPROXY_COMPARTMENT_ID,
     SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
     SECURESTORE_MNEMONIC_KEY,
 } from "@/src/constants";
 import { formatConduitBip32Path } from "@/src/inproxy/utils";
+import { base64nopad } from "@scure/base";
 
 // An "Account" is a collection of key material
 const AccountSchema = z.object({
@@ -45,6 +51,7 @@ const AccountSchema = z.object({
     accountKey: Ed25519KeyPairSchema,
     deviceNonce: z.number(),
     inproxyKey: Ed25519KeyPairSchema,
+    inproxyCompartmentId: Base64Unpadded32BytesSchema,
 });
 
 export type Account = z.infer<typeof AccountSchema>;
@@ -152,11 +159,29 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
             }
             inproxyKey = storedInproxyKeyPair;
         }
+
+        // Load Compartment ID
+        let inproxyCompartmentId: Base64Unpadded32Bytes;
+        const storedInproxyCompartmentId = await SecureStore.getItemAsync(
+            SECURESTORE_INPROXY_COMPARTMENT_ID,
+        );
+        if (!storedInproxyCompartmentId) {
+            timedLog("Generating a new random compartment Id");
+            const randomBytes = crypto.getRandomValues(new Uint8Array(32));
+            inproxyCompartmentId = base64nopad.encode(randomBytes);
+            await SecureStore.setItemAsync(
+                SECURESTORE_INPROXY_COMPARTMENT_ID,
+                inproxyCompartmentId,
+            );
+        } else {
+            inproxyCompartmentId = storedInproxyCompartmentId;
+        }
         return AccountSchema.parse({
             mnemonic: mnemonic,
             accountKey: accountKey,
             deviceNonce: deviceNonce,
             inproxyKey: inproxyKey,
+            inproxyCompartmentId: inproxyCompartmentId,
         });
     } catch (error) {
         return wrapError(error, "Error signing in");

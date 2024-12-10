@@ -26,14 +26,17 @@ export const Uint8Array32 = z
         message: "Uint8Array must have length 32",
     });
 
-export const Base64Unpadded32Bytes = z
+export const Base64Unpadded32BytesSchema = z
     .string()
     .refine((v) => base64nopad.decode(v).length === 32, {
         message: "string is not 32 bytes encoded as base64 (no padding)",
     });
 
-export const Base64Unpadded64Bytes = z
+export const Base64Unpadded64BytesSchema = z
     .string()
     .refine((v) => base64nopad.decode(v).length === 64, {
         message: "string is not 64 bytes encoded as base64 (no padding)",
     });
+
+export type Base64Unpadded32Bytes = z.infer<typeof Base64Unpadded32BytesSchema>;
+export type Base64Unpadded64Bytes = z.infer<typeof Base64Unpadded64BytesSchema>;
