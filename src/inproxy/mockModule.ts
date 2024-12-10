@@ -42,8 +42,8 @@ async function* generateMockData(
         data.dataByPeriod["1000ms"].bytesUp.shift();
         data.dataByPeriod["1000ms"].bytesDown.shift();
 
-        // 25% chance to drop a connected client
-        if (Math.random() > 0.75 && data.currentConnectedClients > 0) {
+        // 5% chance to drop a connected client
+        if (Math.random() > 0.95 && data.currentConnectedClients > 0) {
             data.currentConnectedClients--;
         }
 
@@ -207,10 +207,12 @@ class ConduitModuleMock {
             maxClients,
             limitUpstreamBytesPerSecond,
             limitDownstreamBytesPerSecond,
+            compartmentId,
+            personalPairingEnabled,
             privateKey: _,
         } = params;
         timedLog(
-            `MOCK: ConduitModule.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
+            `MOCK: ConduitModule.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, ${compartmentId}, ${personalPairingEnabled}, <redacted>)`,
         );
         this.running = !this.running;
         await AsyncStorage.setItem(
@@ -233,10 +235,12 @@ class ConduitModuleMock {
             maxClients,
             limitUpstreamBytesPerSecond,
             limitDownstreamBytesPerSecond,
+            compartmentId,
+            personalPairingEnabled,
             privateKey: _,
         } = params;
         timedLog(
-            `MOCK: ConduitModule.paramsChanged(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
+            `MOCK: ConduitModule.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, ${compartmentId}, ${personalPairingEnabled}, <redacted>)`,
         );
         this.emitState();
         if (this.running) {

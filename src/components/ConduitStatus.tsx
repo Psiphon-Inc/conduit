@@ -65,7 +65,7 @@ export function ConduitStatus({
     const isRTL = i18n.dir() === "rtl" ? true : false;
     const win = useWindowDimensions();
 
-    const { logErrorToDiagnostic } = useInproxyContext();
+    const { logErrorToDiagnostic, inproxyParameters } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
     const { data: connectedPeers } = useInproxyCurrentConnectedClients();
     const { data: connectingPeers } = useInproxyCurrentConnectingClients();
@@ -82,6 +82,7 @@ export function ConduitStatus({
     const proxyStatusText = t(`${inproxyStatus}_I18N.string`);
     const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
         peers: connectedPeers,
+        max: inproxyParameters.maxClients,
     });
     const connectingPeersText =
         " + " +

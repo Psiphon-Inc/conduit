@@ -19,7 +19,10 @@
 
 import { z } from "zod";
 
-import { Base64Unpadded64Bytes } from "@/src/common/validators";
+import {
+    Base64Unpadded32BytesSchema,
+    Base64Unpadded64BytesSchema,
+} from "@/src/common/validators";
 
 export const InproxyStatusEnumSchema = z.enum([
     "RUNNING",
@@ -70,10 +73,20 @@ export const InproxyEventSchema = z.object({
 
 // These are the user-configurable parameters for the inproxy.
 export const InproxyParametersSchema = z.object({
-    privateKey: Base64Unpadded64Bytes,
+    privateKey: Base64Unpadded64BytesSchema,
     maxClients: z.number().int().positive(),
     limitUpstreamBytesPerSecond: z.number().int().positive(),
     limitDownstreamBytesPerSecond: z.number().int().positive(),
+    personalPairingEnabled: z.boolean(),
+    compartmentId: Base64Unpadded32BytesSchema,
+});
+
+export const InproxyPairingDataSchema = z.object({
+    schema: z.literal("1"),
+    data: z.object({
+        inproxyCompartmentId: Base64Unpadded32BytesSchema,
+        conduitName: z.string().max(22),
+    }),
 });
 
 export type InproxyParameters = z.infer<typeof InproxyParametersSchema>;
@@ -85,6 +98,7 @@ export type InproxyActivityByPeriod = z.infer<
     typeof InproxyActivityDataByPeriodSchema
 >;
 export type InproxyEvent = z.infer<typeof InproxyEventSchema>;
+export type InproxyPairingData = z.infer<typeof InproxyPairingDataSchema>;
 
 export interface InproxyContextValue {
     inproxyParameters: InproxyParameters;

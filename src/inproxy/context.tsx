@@ -22,15 +22,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { NativeEventEmitter } from "react-native";
 
-import { useConduitKeyPair } from "@/src/auth/hooks";
+import { useInproxyCompartmentId, useInproxyKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
 import { unpackErrorMessage, wrapError } from "@/src/common/errors";
-import { timedLog } from "@/src/common/utils";
+import { parseBoolean, timedLog } from "@/src/common/utils";
 import {
     ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
     ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+    ASYNCSTORAGE_INPROXY_PAIRING_MODE_ENABLED_KEY,
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
+    DEFAULT_INPROXY_PAIRING_MODE_ENABLED,
     QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
     QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
@@ -76,7 +78,8 @@ export function useInproxyContext(): InproxyContextValue {
  * The InproxyProvider exposes the ConduitModule API.
  */
 export function InproxyProvider({ children }: { children: React.ReactNode }) {
-    const conduitKeyPair = useConduitKeyPair();
+    const inproxyKeyPair = useInproxyKeyPair();
+    const inproxyCompartmentId = useInproxyCompartmentId();
 
     // This provider handles tracking the user-selected Inproxy parameters, and
     // persisting them in AsyncStorage.
@@ -192,8 +195,8 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // the module/tunnel-core uses. The values stored in AsyncStorage will be
     // taken as the source of truth.
     async function loadInproxyParameters() {
-        if (!conduitKeyPair.data) {
-            // this shouldn't be possible as the key gets set before we render
+        if (!inproxyKeyPair.data || !inproxyCompartmentId.data) {
+            // shouldn't be possible as these values are set before we render
             return;
         }
         try {
@@ -206,9 +209,13 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             );
 
+            const storedInproxyPairingModeEnabled = await AsyncStorage.getItem(
+                ASYNCSTORAGE_INPROXY_PAIRING_MODE_ENABLED_KEY,
+            );
+
             // Prepare the stored/default parameters from the application layer
             const storedInproxyParameters = InproxyParametersSchema.parse({
-                privateKey: keyPairToBase64nopad(conduitKeyPair.data),
+                privateKey: keyPairToBase64nopad(inproxyKeyPair.data),
                 maxClients: storedInproxyMaxClients
                     ? parseInt(storedInproxyMaxClients)
                     : DEFAULT_INPROXY_MAX_CLIENTS,
@@ -218,7 +225,11 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 limitDownstreamBytesPerSecond: storedInproxyLimitBytesPerSecond
                     ? parseInt(storedInproxyLimitBytesPerSecond)
                     : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
-            });
+                personalPairingEnabled: storedInproxyPairingModeEnabled
+                    ? parseBoolean(storedInproxyPairingModeEnabled)
+                    : DEFAULT_INPROXY_PAIRING_MODE_ENABLED,
+                compartmentId: inproxyCompartmentId.data,
+            } as InproxyParameters);
 
             // This call updates the context's state value for the parameters.
             await selectInproxyParameters(storedInproxyParameters);
@@ -239,6 +250,10 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         await AsyncStorage.setItem(
             ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             params.limitUpstreamBytesPerSecond.toString(),
+        );
+        await AsyncStorage.setItem(
+            ASYNCSTORAGE_INPROXY_PAIRING_MODE_ENABLED_KEY,
+            params.personalPairingEnabled.toString(),
         );
         setInproxyParameters(params);
         try {
@@ -271,8 +286,8 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         // Log the public key before sending feedback to try to guarantee it'll
         // be in the feedback logs.
         let inproxyId: string;
-        if (conduitKeyPair.data) {
-            inproxyId = getProxyId(conduitKeyPair.data);
+        if (inproxyKeyPair.data) {
+            inproxyId = getProxyId(inproxyKeyPair.data);
         } else {
             // Shouldn't really be possible to get here
             inproxyId = "unknown";
@@ -300,7 +315,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
 
     React.useEffect(() => {
         loadInproxyParameters();
-    }, [conduitKeyPair.data]);
+    }, [inproxyKeyPair.data, inproxyCompartmentId.data]);
 
     const value = {
         toggleInproxy,

@@ -19,6 +19,7 @@
 
 export const DEFAULT_INPROXY_MAX_CLIENTS = 4;
 export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 10 * 1000 * 1000; // 10 MB
+export const DEFAULT_INPROXY_PAIRING_MODE_ENABLED = true;
 
 // if these are maxed out, it means a potential of 8Gbps at full capacity
 export const INPROXY_MAX_CLIENTS_MAX = 25;
@@ -27,6 +28,8 @@ export const INPROXY_MAX_MBPS_PER_PEER_MAX = 40;
 export const LEARN_MORE_URL = "https://conduit.psiphon.ca/en";
 export const PRIVACY_POLICY_URL =
     "https://conduit.psiphon.ca/en/conduit-privacy-policy";
+
+export const PAIRING_LINK_URL = "https://conduit.psiphon.ca/pair";
 
 // Hard code a common delay value for animations that fade in to wait until the
 // particle video is done playing.
@@ -45,6 +48,8 @@ export const ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY = "MockInproxyRunning";
 export const ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY = "InproxyMaxClients";
 export const ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY =
     "InproxyLimitBytesPerSecond";
+export const ASYNCSTORAGE_INPROXY_PAIRING_MODE_ENABLED_KEY =
+    "InproxyPairingModeEnabled";
 
 // SecureStore keys, centralized to prevent accidental collision
 export const SECURESTORE_MNEMONIC_KEY = "mnemonic";
@@ -54,6 +59,7 @@ export const SECURESTORE_DEVICE_NONCE_KEY = "deviceNonce";
 export const SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY =
     "inproxyKeyPairBase64nopad";
 export const SECURESTORE_CONDUIT_NAME_KEY = "conduitName";
+export const SECURESTORE_INPROXY_COMPARTMENT_ID = "inproxyCompartmentId";
 
 // useQuery query keys, centralized to prevent accidental collision
 // auth
@@ -72,6 +78,7 @@ export const QUERYKEY_INPROXY_MUST_UPGRADE = "inproxyMustUpgrade";
 export const QUERYKEY_CONDUIT_NAME = "conduitName";
 export const QUERYKEY_NOTIFICATIONS_PERMISSIONS =
     "sync-notifications-permissions";
+export const QUERYKEY_INPROXY_COMPARTMENT_ID = "inproxyCompartmentId";
 
 // Historical constants, used in migrations
 export const V1_DEFAULT_INPROXY_MAX_CLIENTS = 2;

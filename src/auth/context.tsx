@@ -25,6 +25,7 @@ import { createOrLoadAccount } from "@/src/auth/account";
 import { timedLog } from "@/src/common/utils";
 import {
     QUERYKEY_ACCOUNT_KEYPAIR,
+    QUERYKEY_INPROXY_COMPARTMENT_ID,
     QUERYKEY_INPROXY_KEYPAIR,
     SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
     SECURESTORE_DEVICE_NONCE_KEY,
@@ -73,6 +74,10 @@ export function AuthProvider(props: React.PropsWithChildren) {
         queryClient.setQueryData(
             [QUERYKEY_INPROXY_KEYPAIR],
             account.inproxyKey,
+        );
+        queryClient.setQueryData(
+            [QUERYKEY_INPROXY_COMPARTMENT_ID],
+            account.inproxyCompartmentId,
         );
     }
 

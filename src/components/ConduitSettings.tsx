@@ -48,7 +48,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
-import { useConduitKeyPair } from "@/src/auth/hooks";
+import { useInproxyKeyPair } from "@/src/auth/hooks";
 import { wrapError } from "@/src/common/errors";
 import { MBToBytes, bytesToMB } from "@/src/common/utils";
 import { AnimatedText } from "@/src/components/AnimatedText";
@@ -78,14 +78,15 @@ import {
     palette,
     sharedStyles as ss,
 } from "@/src/styles";
+import { PersonalPairingToggle } from "./PersonalPairingToggle";
 
-export function ConduitSettings() {
+export function ConduitSettings({ iconSize }: { iconSize: number }) {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.dir() === "rtl" ? true : false;
     const win = useWindowDimensions();
     const router = useRouter();
 
-    const { data: conduitKeyPair } = useConduitKeyPair();
+    const { data: inproxyKeyPair } = useInproxyKeyPair();
     const { inproxyParameters, selectInproxyParameters, logErrorToDiagnostic } =
         useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
@@ -102,14 +103,23 @@ export function ConduitSettings() {
     const displayTotalMBps = useDerivedValue(() => {
         return `${modifiedMaxPeers.value * modifiedMaxMBps.value} MB/s`;
     });
+    const modifiedPersonalPairingModeEnabled = useSharedValue(
+        inproxyParameters.personalPairingEnabled,
+    );
+    const personalPairingStatus = useSharedValue(
+        inproxyParameters.personalPairingEnabled
+            ? t("ON_I18N.string")
+            : t("OFF_I18N.string"),
+    );
     const applyChangesNoteOpacity = useSharedValue(0);
     const changesPending = useDerivedValue(() => {
         let settingsChanged = false;
-        if (modifiedMaxPeers.value !== inproxyParameters.maxClients) {
-            settingsChanged = true;
-        } else if (
+        if (
+            modifiedMaxPeers.value !== inproxyParameters.maxClients ||
             MBToBytes(modifiedMaxMBps.value) !==
-            inproxyParameters.limitUpstreamBytesPerSecond
+                inproxyParameters.limitUpstreamBytesPerSecond ||
+            modifiedPersonalPairingModeEnabled.value !=
+                inproxyParameters.personalPairingEnabled
         ) {
             settingsChanged = true;
         }
@@ -140,12 +150,24 @@ export function ConduitSettings() {
         modifiedMaxMBps.value = newValue;
     }
 
+    async function updateInproxyPersonalPairingModeEnabled() {
+        if (modifiedPersonalPairingModeEnabled.value) {
+            modifiedPersonalPairingModeEnabled.value = false;
+            personalPairingStatus.value = t("OFF_I18N.string");
+        } else {
+            modifiedPersonalPairingModeEnabled.value = true;
+            personalPairingStatus.value = t("ON_I18N.string");
+        }
+    }
+
     async function commitChanges() {
         const newInproxyParameters = InproxyParametersSchema.safeParse({
             maxClients: modifiedMaxPeers.value,
             limitUpstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             limitDownstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             privateKey: inproxyParameters.privateKey,
+            personalPairingEnabled: modifiedPersonalPairingModeEnabled.value,
+            compartmentId: inproxyParameters.compartmentId,
         } as InproxyParameters);
         if (newInproxyParameters.error) {
             logErrorToDiagnostic(
@@ -295,7 +317,7 @@ export function ConduitSettings() {
                                     ss.greyBorderBottom,
                                     ss.flex,
                                     ss.alignCenter,
-                                    { height: 140 },
+                                    { height: 210 },
                                     ss.column,
                                     ss.padded,
                                 ]}
@@ -311,9 +333,10 @@ export function ConduitSettings() {
                                     <Text style={[ss.bodyFont, ss.whiteText]}>
                                         {t("YOUR_CONDUIT_ID_I18N.string")}
                                     </Text>
-                                    {conduitKeyPair ? (
+                                    {inproxyKeyPair ? (
                                         <ProxyID
-                                            proxyId={getProxyId(conduitKeyPair)}
+                                            proxyId={getProxyId(inproxyKeyPair)}
+                                            copyable={false}
                                         />
                                     ) : (
                                         <ActivityIndicator
@@ -333,6 +356,33 @@ export function ConduitSettings() {
                                         {t("ALIAS_I18N.string")}:
                                     </Text>
                                     <ConduitName />
+                                </View>
+                                <View
+                                    style={[
+                                        isRTL ? ss.rowRTL : ss.row,
+                                        ss.flex,
+                                        ss.fullWidth,
+                                        ss.alignCenter,
+                                        ss.justifySpaceBetween,
+                                    ]}
+                                >
+                                    <Text style={[ss.whiteText, ss.bodyFont]}>
+                                        {t("PERSONAL_PAIRING_I18N.string")}
+                                    </Text>
+                                    <AnimatedText
+                                        text={personalPairingStatus}
+                                        color={palette.white}
+                                        fontSize={ss.boldFont.fontSize}
+                                        fontFamily={ss.boldFont.fontFamily}
+                                    />
+                                    <PersonalPairingToggle
+                                        originalValue={
+                                            modifiedPersonalPairingModeEnabled.value
+                                        }
+                                        onChange={
+                                            updateInproxyPersonalPairingModeEnabled
+                                        }
+                                    />
                                 </View>
                             </View>
                             <View
@@ -491,7 +541,7 @@ export function ConduitSettings() {
         );
     }
 
-    const settingsIconSize = win.width * 0.2;
+    const settingsIconSize = iconSize;
     const paint = React.useMemo(() => Skia.Paint(), []);
     paint.setColorFilter(
         Skia.ColorFilter.MakeBlend(Skia.Color(palette.blue), BlendMode.SrcIn),
@@ -527,18 +577,6 @@ export function ConduitSettings() {
                     />
                 </Pressable>
             </View>
-            <View
-                style={[
-                    ss.absolute,
-                    ss.doublePadded,
-                    {
-                        bottom: 0,
-                        right: settingsIconSize,
-                        width: settingsIconSize,
-                        height: settingsIconSize,
-                    },
-                ]}
-            ></View>
             <Modal
                 animationType="slide"
                 visible={modalOpen}
