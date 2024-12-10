@@ -166,6 +166,8 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
             limitUpstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             limitDownstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             privateKey: inproxyParameters.privateKey,
+            personalPairingEnabled: modifiedPersonalPairingModeEnabled.value,
+            compartmentId: inproxyParameters.compartmentId,
         } as InproxyParameters);
         if (newInproxyParameters.error) {
             logErrorToDiagnostic(

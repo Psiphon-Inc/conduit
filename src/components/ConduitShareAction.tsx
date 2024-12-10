@@ -20,8 +20,6 @@ export function ConduitShareAction({ height }: { height: number }) {
         opacity.value = withTiming(0, { duration: 1000 });
     }
 
-    const enabled = useSharedValue(true);
-
     return (
         <View
             style={[
@@ -41,7 +39,7 @@ export function ConduitShareAction({ height }: { height: number }) {
                     opacity: opacity,
                 }}
             >
-                <SharePairingLink enabled={enabled} />
+                <SharePairingLink />
             </Animated.View>
         </View>
     );
