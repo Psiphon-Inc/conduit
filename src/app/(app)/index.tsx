@@ -20,6 +20,7 @@
 import React from "react";
 import { useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
@@ -31,13 +32,18 @@ import { SafeAreaView } from "@/src/components/SafeAreaView";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();
+    const insets = useSafeAreaInsets();
 
     // NOTE this assumes a portrait layout.
-    const totalUsableHeight = win.height;
+    const totalUsableHeight = win.height - insets.top;
     const totalUsableWidth = win.width;
+
+    // TODO: refactor this layout, for some reason the win.height value is too
+    // large, so taking the entire 100% overflows. Arbitrarily leave 3% off for
+    // now, and pin ConduitStatus to the bottom with position: absolute.
     const logoWordmarkHeight = totalUsableHeight * 0.1;
-    const conduitOrbToggleHeight = totalUsableHeight * 0.6;
-    const conduitStatusHeight = totalUsableHeight * 0.3;
+    const conduitOrbToggleHeight = totalUsableHeight * 0.52;
+    const conduitStatusHeight = totalUsableHeight * 0.35;
 
     return (
         <GestureHandlerRootView>
@@ -47,12 +53,12 @@ export default function HomeScreen() {
                     width={totalUsableWidth}
                     height={logoWordmarkHeight}
                 />
-                {/* Orb takes up the middle 60% of the vertical space */}
+                {/* Orb takes up the middle 52% of the vertical space */}
                 <ConduitOrbToggle
                     width={totalUsableWidth}
                     height={conduitOrbToggleHeight}
                 />
-                {/* Status taking up bottom 30% of the vertical space */}
+                {/* Status taking up bottom 35% of the vertical space */}
                 <ConduitStatus
                     width={totalUsableWidth}
                     height={conduitStatusHeight}
