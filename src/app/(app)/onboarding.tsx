@@ -32,6 +32,7 @@ import {
     SkTextStyle,
     Skia,
     TextAlign,
+    TextDirection,
     useFonts,
     vec,
 } from "@shopify/react-native-skia";
@@ -72,7 +73,8 @@ import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 export default function OnboardingScreen() {
     const win = useWindowDimensions();
     const insets = useSafeAreaInsets();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.dir() === "rtl" ? true : false;
     const notificationPermissions = useNotificationsPermissions();
     const router = useRouter();
 
@@ -228,9 +230,12 @@ export default function OnboardingScreen() {
         if (!fontMgr) {
             return null;
         }
-        const paragraphStyle = {
+        const paragraphStyle: SkParagraphStyle = {
             textAlign: TextAlign.Center,
         };
+        if (isRTL) {
+            paragraphStyle.textDirection = TextDirection.RTL;
+        }
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.white),
             fontFamilies: ["Jura"],
@@ -252,8 +257,11 @@ export default function OnboardingScreen() {
             return null;
         }
         const paragraphStyle: SkParagraphStyle = {
-            textAlign: TextAlign.Left,
+            textAlign: isRTL ? TextAlign.Right : TextAlign.Left,
         };
+        if (isRTL) {
+            paragraphStyle.textDirection = TextDirection.RTL;
+        }
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.white),
             fontFamilies: ["Rajdhani"],
@@ -275,9 +283,12 @@ export default function OnboardingScreen() {
         if (!fontMgr) {
             return null;
         }
-        const paragraphStyle = {
+        const paragraphStyle: SkParagraphStyle = {
             textAlign: TextAlign.Center,
         };
+        if (isRTL) {
+            paragraphStyle.textDirection = TextDirection.RTL;
+        }
 
         const textStyle: SkTextStyle = {
             color: Skia.Color(palette.blueTint2),
