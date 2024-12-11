@@ -22,10 +22,10 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
 import translationXB from "@/src/i18n/locales/ar-xb/translation.json";
+import translationAR from "@/src/i18n/locales/ar/translation.json";
 import translationXA from "@/src/i18n/locales/en-xa/translation.json";
 import translationEN from "@/src/i18n/locales/en/translation.json";
 import translationFA from "@/src/i18n/locales/fa/translation.json";
-import translationAR from "@/src/i18n/locales/ar/translation.json";
 import translationTR from "@/src/i18n/locales/tr/translation.json";
 
 const resources = {

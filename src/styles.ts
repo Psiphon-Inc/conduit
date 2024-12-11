@@ -73,10 +73,6 @@ export const sharedStyles = StyleSheet.create({
         flexDirection: "row",
         gap: 10,
     },
-    rowRTL: {
-        flexDirection: "row-reverse",
-        gap: 10,
-    },
     nogap: {
         gap: 0,
     },
@@ -419,13 +415,6 @@ export const sharedStyles = StyleSheet.create({
 export const lineItemStyle = [
     sharedStyles.padded,
     sharedStyles.row,
-    sharedStyles.height60,
-    sharedStyles.greyBorderBottom,
-];
-
-export const lineItemRTLStyle = [
-    sharedStyles.padded,
-    sharedStyles.rowRTL,
     sharedStyles.height60,
     sharedStyles.greyBorderBottom,
 ];
