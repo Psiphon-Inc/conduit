@@ -39,7 +39,12 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { BackHandler, useWindowDimensions } from "react-native";
+import {
+    BackHandler,
+    LayoutChangeEvent,
+    View,
+    useWindowDimensions,
+} from "react-native";
 import {
     Gesture,
     GestureDetector,
@@ -86,8 +91,17 @@ export default function OnboardingScreen() {
         }
     }, [notificationPermissions]);
 
-    const usableWidth = win.width - (insets.left + insets.right);
-    const usableHeight = win.height - (insets.top + insets.bottom);
+    // Derive usable dimensions from an absolutely positioned View
+    // https://github.com/facebook/react-native/issues/47080
+    const [totalUsableWidth, setTotalUsableWidth] = React.useState(win.width);
+    const [totalUsableHeight, setTotalUsableHeight] = React.useState(
+        win.height,
+    );
+
+    function onScreenLayout(event: LayoutChangeEvent) {
+        setTotalUsableWidth(event.nativeEvent.layout.width);
+        setTotalUsableHeight(event.nativeEvent.layout.height - insets.top);
+    }
 
     const views = [
         {
@@ -156,47 +170,50 @@ export default function OnboardingScreen() {
 
     // header takes up the first 12% of usableHeight
     const headerTransform = [
-        { translateY: usableHeight * 0.05 },
-        { translateX: usableWidth * 0.02 },
+        { translateY: totalUsableHeight * 0.05 },
+        { translateX: totalUsableWidth * 0.02 },
     ];
     const headerSize = {
-        width: usableWidth * 0.96,
+        width: totalUsableWidth * 0.96,
     };
     // image takes up the next 28% of usableHeight (40% total)
     const sceneTransform = [
-        { translateY: usableHeight * 0.12 },
+        { translateY: totalUsableHeight * 0.12 },
         //{ translateX: usableWidth * 0.18 },
     ];
     const sceneSize = {
-        width: usableWidth,
-        height: usableHeight * 0.25,
+        width: totalUsableWidth,
+        height: totalUsableHeight * 0.25,
     };
     // body takes up the next 36% of usableHeight (76% total)
     const bodyTransform = [
-        { translateY: usableHeight * 0.4 },
-        { translateX: usableWidth * 0.06 },
+        { translateY: totalUsableHeight * 0.4 },
+        { translateX: totalUsableWidth * 0.06 },
     ];
     const bodySize = {
-        width: usableWidth * 0.88,
-        height: usableHeight * 0.36,
+        width: totalUsableWidth * 0.88,
+        height: totalUsableHeight * 0.36,
     };
     // indicator dots take up the next 3% of usableHeight (79% total)
     const dotWidth = 24;
     const dotsTransform = [
-        { translateY: usableHeight * 0.79 },
-        { translateX: usableWidth * 0.5 - (dotWidth * (views.length - 1)) / 2 },
+        { translateY: totalUsableHeight * 0.79 },
+        {
+            translateX:
+                totalUsableWidth * 0.5 - (dotWidth * (views.length - 1)) / 2,
+        },
     ];
     // button claims the next 8% of usableHeight (90% total)
     const buttonTransform = [
-        { translateY: usableHeight * 0.82 },
-        { translateX: usableWidth * 0.06 },
+        { translateY: totalUsableHeight * 0.82 },
+        { translateX: totalUsableWidth * 0.06 },
     ];
     const buttonSize = {
-        width: usableWidth * 0.88,
-        height: usableHeight * 0.08,
+        width: totalUsableWidth * 0.88,
+        height: totalUsableHeight * 0.08,
     };
     const buttonBorderRadius = 15;
-    const privacyPolicyHeight = usableHeight * 0.05;
+    const privacyPolicyHeight = totalUsableHeight * 0.05;
     // 10% of usable height is left for the Privacy Policy link to appear in
 
     const fontMgr = useFonts({
@@ -329,10 +346,10 @@ export default function OnboardingScreen() {
 
     const anywhereGesture = Gesture.Pan()
         .onEnd(async (event) => {
-            if (event.translationX < -usableWidth * 0.1) {
+            if (event.translationX < -totalUsableWidth * 0.1) {
                 // when user swipes over 10% to the right, move view forward
                 goToNext();
-            } else if (event.translationX > usableWidth * 0.1) {
+            } else if (event.translationX > totalUsableWidth * 0.1) {
                 // when user swipes over 10% to the left, move view backwards
                 if (currentView.value > 0) {
                     currentView.value -= 1;
@@ -345,7 +362,7 @@ export default function OnboardingScreen() {
     const everythingOpacityMatrix = useDerivedValue(() => {
         // prettier-ignore
         return [
-          //R, G, B, A, Bias
+            //R, G, B, A, Bias
             1, 0, 0, 0, 0,
             0, 1, 0, 0, 0,
             0, 0, 1, 0, 0,
@@ -357,7 +374,7 @@ export default function OnboardingScreen() {
     const contentOpacityMatrix = useDerivedValue(() => {
         // prettier-ignore
         return [
-          //R, G, B, A, Bias
+            //R, G, B, A, Bias
             1, 0, 0, 0, 0,
             0, 1, 0, 0, 0,
             0, 0, 1, 0, 0,
@@ -370,8 +387,9 @@ export default function OnboardingScreen() {
     }, []);
 
     return (
-        <SafeAreaView>
-            <GestureHandlerRootView>
+        <GestureHandlerRootView>
+            <View onLayout={onScreenLayout} style={[ss.absoluteFill]} />
+            <SafeAreaView>
                 <Canvas style={[ss.flex]}>
                     <Group
                         layer={
@@ -445,7 +463,7 @@ export default function OnboardingScreen() {
                                 <Paragraph
                                     paragraph={buttonP}
                                     x={0}
-                                    y={usableHeight * 0.02}
+                                    y={totalUsableHeight * 0.02}
                                     width={buttonSize.width}
                                 />
                             </Group>
@@ -460,8 +478,8 @@ export default function OnboardingScreen() {
                         aria-valuetext={bodyText}
                         style={{
                             position: "absolute",
-                            width: usableWidth,
-                            height: usableHeight,
+                            width: totalUsableWidth,
+                            height: totalUsableHeight,
                         }}
                     />
                 </GestureDetector>
@@ -479,24 +497,24 @@ export default function OnboardingScreen() {
                         }}
                     />
                 </GestureDetector>
-            </GestureHandlerRootView>
-            <Animated.View style={{ opacity: everythingOpacity }}>
-                <Animated.View style={learnMoreLinkStyle}>
-                    <LearnMoreLink
-                        textStyle={{ ...ss.boldFont, ...ss.whiteText }}
-                        containerHeight={privacyPolicyHeight}
-                    />
+                <Animated.View style={{ opacity: everythingOpacity }}>
+                    <Animated.View style={learnMoreLinkStyle}>
+                        <LearnMoreLink
+                            textStyle={{ ...ss.boldFont, ...ss.whiteText }}
+                            containerHeight={privacyPolicyHeight}
+                        />
+                    </Animated.View>
                 </Animated.View>
-            </Animated.View>
-            <Animated.View style={{ opacity: everythingOpacity }}>
-                <Animated.View style={privacyPolicyLinkStyle}>
-                    <PrivacyPolicyLink
-                        textStyle={{ ...ss.boldFont, ...ss.whiteText }}
-                        containerHeight={privacyPolicyHeight}
-                    />
+                <Animated.View style={{ opacity: everythingOpacity }}>
+                    <Animated.View style={privacyPolicyLinkStyle}>
+                        <PrivacyPolicyLink
+                            textStyle={{ ...ss.boldFont, ...ss.whiteText }}
+                            containerHeight={privacyPolicyHeight}
+                        />
+                    </Animated.View>
                 </Animated.View>
-            </Animated.View>
-        </SafeAreaView>
+            </SafeAreaView>
+        </GestureHandlerRootView>
     );
 }
 

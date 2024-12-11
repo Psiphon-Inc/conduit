@@ -18,7 +18,7 @@
  */
 
 import React from "react";
-import { useWindowDimensions } from "react-native";
+import { LayoutChangeEvent, useWindowDimensions, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,39 +29,44 @@ import { GitHash } from "@/src/components/GitHash";
 import { KeepAwakeOnIOS } from "@/src/components/KeepAwake";
 import { LogoWordmark } from "@/src/components/LogoWordmark";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { sharedStyles as ss } from "@/src/styles";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
-    // NOTE this assumes a portrait layout.
-    const totalUsableHeight = win.height - insets.top;
-    const totalUsableWidth = win.width;
+    // Derive usable dimensions from an absolutely positioned View
+    // https://github.com/facebook/react-native/issues/47080
+    const [totalUsableWidth, setTotalUsableWidth] = React.useState(win.width);
+    const [totalUsableHeight, setTotalUsableHeight] = React.useState(
+        win.height,
+    );
 
-    // TODO: refactor this layout, for some reason the win.height value is too
-    // large, so taking the entire 100% overflows. Arbitrarily leave 3% off for
-    // now, and pin ConduitStatus to the bottom with position: absolute.
-    const logoWordmarkHeight = totalUsableHeight * 0.1;
-    const conduitOrbToggleHeight = totalUsableHeight * 0.52;
-    const conduitStatusHeight = totalUsableHeight * 0.35;
+    function onScreenLayout(event: LayoutChangeEvent) {
+        setTotalUsableWidth(event.nativeEvent.layout.width);
+        setTotalUsableHeight(event.nativeEvent.layout.height - insets.top);
+    }
+
+    // NOTE this assumes a portrait layout.
 
     return (
         <GestureHandlerRootView>
+            <View onLayout={onScreenLayout} style={[ss.absoluteFill]} />
             <SafeAreaView>
                 {/* Header takes up 10% of vertical space */}
                 <LogoWordmark
                     width={totalUsableWidth}
-                    height={logoWordmarkHeight}
+                    height={totalUsableHeight * 0.1}
                 />
-                {/* Orb takes up the middle 52% of the vertical space */}
+                {/* Orb takes up the middle 55% of the vertical space */}
                 <ConduitOrbToggle
                     width={totalUsableWidth}
-                    height={conduitOrbToggleHeight}
+                    height={totalUsableHeight * 0.55}
                 />
                 {/* Status taking up bottom 35% of the vertical space */}
                 <ConduitStatus
                     width={totalUsableWidth}
-                    height={conduitStatusHeight}
+                    height={totalUsableHeight * 0.35}
                 />
                 {/* Settings icon is absolutely positioned bottom right */}
                 <ConduitSettings />

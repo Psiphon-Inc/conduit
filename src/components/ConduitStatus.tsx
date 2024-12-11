@@ -200,8 +200,6 @@ export function ConduitStatus({
         <View
             style={[
                 {
-                    position: "absolute",
-                    bottom: 0,
                     width: width,
                     height: height,
                 },
