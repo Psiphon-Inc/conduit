@@ -37,7 +37,8 @@ export default function HomeScreen() {
     // This layout is slightly imprecise due to a bug in Android/React Native
     // https://github.com/facebook/react-native/issues/47080
     // For now, ConduitStatus is absolutely positioned and pinned to bottom to
-    // compensate for the slightly inaccurate totalUsableHeight value.
+    // compensate for the slightly inaccurate totalUsableHeight value, and we
+    // leave 3% "blank" to hopefully avoid overlapping elements
     const totalUsableHeight = win.height - insets.top * 1.5;
     const totalUsableWidth = win.width;
 
@@ -51,10 +52,10 @@ export default function HomeScreen() {
                     width={totalUsableWidth}
                     height={totalUsableHeight * 0.1}
                 />
-                {/* Orb takes up the middle 55% of the vertical space */}
+                {/* Orb takes up the middle 52% of the vertical space */}
                 <ConduitOrbToggle
                     width={totalUsableWidth}
-                    height={totalUsableHeight * 0.55}
+                    height={totalUsableHeight * 0.52}
                 />
                 {/* Status taking up bottom 35% of the vertical space */}
                 <ConduitStatus
