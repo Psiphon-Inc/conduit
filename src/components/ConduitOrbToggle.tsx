@@ -128,7 +128,7 @@ export function ConduitOrbToggle({
 
     const fontMgr = useFonts({ Jura: [fonts.JuraRegular] });
     const fontSize = drawBigFont(win) ? 20 : 16;
-    const orbTextParagraph = useDerivedValue(() => {
+    const orbTextParagraph = React.useMemo(() => {
         if (!fontMgr) {
             return null;
         }
@@ -152,12 +152,13 @@ export function ConduitOrbToggle({
             .pushStyle(mainTextStyle)
             .addText(orbText)
             .build();
-    });
-    const orbTextXOffset = orbTextParagraph.value
-        ? -orbTextParagraph.value.getMaxWidth() / 2
+    }, [fontMgr]);
+
+    const orbTextXOffset = orbTextParagraph
+        ? -orbTextParagraph.getMaxWidth() / 2
         : 0;
-    const orbTextYOffset = orbTextParagraph.value
-        ? -orbTextParagraph.value.getHeight() / 2
+    const orbTextYOffset = orbTextParagraph
+        ? -orbTextParagraph.getHeight() / 2
         : 0;
 
     // The orb will pop into existence at the start, animating from radius 0 up
@@ -430,10 +431,10 @@ export function ConduitOrbToggle({
                 <Group>
                     {/* Intro particle swirl animation */}
                     <Image
-                        y={finalOrbRadius / 2}
+                        y={0}
                         image={particleSwirlGif}
                         width={width}
-                        height={width}
+                        height={height}
                         opacity={particleSwirlOpacity}
                     />
                 </Group>
