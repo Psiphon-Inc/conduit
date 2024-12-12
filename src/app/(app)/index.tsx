@@ -18,7 +18,7 @@
  */
 
 import React from "react";
-import { LayoutChangeEvent, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,39 +29,33 @@ import { GitHash } from "@/src/components/GitHash";
 import { KeepAwakeOnIOS } from "@/src/components/KeepAwake";
 import { LogoWordmark } from "@/src/components/LogoWordmark";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
-import { sharedStyles as ss } from "@/src/styles";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
-    // Derive usable dimensions from an absolutely positioned View
+    // This layout is slightly imprecise due to a bug in Android/React Native
     // https://github.com/facebook/react-native/issues/47080
-    const [totalUsableWidth, setTotalUsableWidth] = React.useState(win.width);
-    const [totalUsableHeight, setTotalUsableHeight] = React.useState(
-        win.height,
-    );
-
-    function onScreenLayout(event: LayoutChangeEvent) {
-        setTotalUsableWidth(event.nativeEvent.layout.width);
-        setTotalUsableHeight(event.nativeEvent.layout.height - insets.top);
-    }
+    // For now, ConduitStatus is absolutely positioned and pinned to bottom to
+    // compensate for the slightly inaccurate totalUsableHeight value, and we
+    // leave 3% "blank" to hopefully avoid overlapping elements
+    const totalUsableHeight = win.height - insets.top * 1.5;
+    const totalUsableWidth = win.width;
 
     // NOTE this assumes a portrait layout.
 
     return (
         <GestureHandlerRootView>
-            <View onLayout={onScreenLayout} style={[ss.absoluteFill]} />
             <SafeAreaView>
                 {/* Header takes up 10% of vertical space */}
                 <LogoWordmark
                     width={totalUsableWidth}
                     height={totalUsableHeight * 0.1}
                 />
-                {/* Orb takes up the middle 55% of the vertical space */}
+                {/* Orb takes up the middle 52% of the vertical space */}
                 <ConduitOrbToggle
                     width={totalUsableWidth}
-                    height={totalUsableHeight * 0.55}
+                    height={totalUsableHeight * 0.52}
                 />
                 {/* Status taking up bottom 35% of the vertical space */}
                 <ConduitStatus
