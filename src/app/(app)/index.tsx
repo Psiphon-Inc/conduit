@@ -20,6 +20,7 @@
 import React from "react";
 import { useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
@@ -31,35 +32,37 @@ import { SafeAreaView } from "@/src/components/SafeAreaView";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();
+    const insets = useSafeAreaInsets();
+
+    // This layout is slightly imprecise due to a bug in Android/React Native
+    // https://github.com/facebook/react-native/issues/47080
+    // For now, ConduitStatus is absolutely positioned and pinned to bottom to
+    // compensate for the slightly inaccurate totalUsableHeight value, and we
+    // leave 3% "blank" to hopefully avoid overlapping elements
+    const totalUsableHeight = win.height - insets.top * 1.5;
+    const totalUsableWidth = win.width;
 
     // NOTE this assumes a portrait layout.
-    const totalUsableHeight = win.height;
-    const totalUsableWidth = win.width;
-    const logoWordmarkHeight = totalUsableHeight * 0.1;
-    const conduitOrbToggleHeight = totalUsableHeight * 0.6;
-    const conduitStatusHeight = totalUsableHeight * 0.3;
-    const bottomActionsHeight = totalUsableWidth * 0.2; // Note this is a ratio of width
-
     return (
         <GestureHandlerRootView>
             <SafeAreaView>
                 {/* Header takes up 10% of vertical space */}
                 <LogoWordmark
                     width={totalUsableWidth}
-                    height={logoWordmarkHeight}
+                    height={totalUsableHeight * 0.1}
                 />
-                {/* Orb takes up the middle 60% of the vertical space */}
+                {/* Orb takes up the middle 52% of the vertical space */}
                 <ConduitOrbToggle
                     width={totalUsableWidth}
-                    height={conduitOrbToggleHeight}
+                    height={totalUsableHeight * 0.52}
                 />
-                {/* Status taking up bottom 30% of the vertical space */}
+                {/* Status taking up bottom 35% of the vertical space */}
                 <ConduitStatus
                     width={totalUsableWidth}
-                    height={conduitStatusHeight}
+                    height={totalUsableHeight * 0.35}
                 />
                 {/* Settings icon is absolutely positioned bottom right */}
-                <ConduitSettings iconSize={bottomActionsHeight} />
+                <ConduitSettings iconSize={totalUsableHeight * 0.1} />
                 {/* GIT_HASH absolutely positioned bottom left */}
                 <GitHash />
                 {/* Keep the screen open on iOS */}
