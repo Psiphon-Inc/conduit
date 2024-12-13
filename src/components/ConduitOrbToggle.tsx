@@ -25,23 +25,16 @@ import {
     Group,
     Image,
     Paint,
-    Paragraph,
     RadialGradient,
     Shadow,
-    SkParagraphStyle,
-    SkTextStyle,
-    Skia,
-    TextAlign,
-    TextDirection,
     interpolateColors,
-    useFonts,
     useImage,
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, useWindowDimensions } from "react-native";
+import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     Easing,
@@ -58,7 +51,7 @@ import Animated, {
 import { z } from "zod";
 
 import { useAnimatedImageValue } from "@/src/animationHooks";
-import { drawBigFont, timedLog } from "@/src/common/utils";
+import { timedLog } from "@/src/common/utils";
 import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
 import {
     INPROXY_MAX_CLIENTS_MAX,
@@ -70,8 +63,7 @@ import {
     useInproxyMustUpgrade,
     useInproxyStatus,
 } from "@/src/inproxy/hooks";
-import { fonts, palette, sharedStyles as ss } from "@/src/styles";
-import { FaderGroup } from "./canvas/FaderGroup";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitOrbToggle({
     width,
@@ -82,7 +74,6 @@ export function ConduitOrbToggle({
 }) {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.dir() === "rtl" ? true : false;
-    const win = useWindowDimensions();
 
     const { toggleInproxy } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
@@ -103,8 +94,6 @@ export function ConduitOrbToggle({
         return dotsOpacity.value - 0.2;
     }, [dotsOpacity]);
 
-    // In the center of the canvas is the orb, a button that toggles Inproxy.
-    // The orb will have an animated gradient depending on InproxyState, flowing
     // between the following colors
     const orbColors = [
         palette.black,
@@ -123,43 +112,7 @@ export function ConduitOrbToggle({
     });
     // The "Turn On" text also uses interpolation to appear to fade in by going
     // from transparent to it's final color.
-    const orbText = t("TAP_TO_TURN_ON_I18N.string");
-    const orbTextOpacity = useSharedValue(0);
-
-    const fontMgr = useFonts({ Jura: [fonts.JuraRegular] });
-    const fontSize = drawBigFont(win) ? 20 : 16;
-    const orbTextParagraph = React.useMemo(() => {
-        if (!fontMgr) {
-            return null;
-        }
-        let paragraphStyle: SkParagraphStyle = {
-            textAlign: TextAlign.Center,
-        };
-        if (isRTL) {
-            paragraphStyle.textDirection = TextDirection.RTL;
-        }
-
-        const mainTextStyle: SkTextStyle = {
-            fontFamilies: ["Jura"],
-            fontSize: fontSize,
-            fontStyle: {
-                weight: 300,
-            },
-            letterSpacing: 1, // 5% of 20
-        };
-
-        return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
-            .pushStyle(mainTextStyle)
-            .addText(orbText)
-            .build();
-    }, [fontMgr]);
-
-    const orbTextXOffset = orbTextParagraph
-        ? -orbTextParagraph.getMaxWidth() / 2
-        : 0;
-    const orbTextYOffset = orbTextParagraph
-        ? -orbTextParagraph.getHeight() / 2
-        : 0;
+    const tapToTurnOnInstructionOpacity = useSharedValue(0);
 
     // The orb will pop into existence at the start, animating from radius 0 up
     const orbRadius = useSharedValue(0);
@@ -198,7 +151,7 @@ export function ConduitOrbToggle({
             -1,
             true,
         );
-        orbTextOpacity.value = withTiming(0, { duration: 500 });
+        tapToTurnOnInstructionOpacity.value = withTiming(0, { duration: 500 });
         dotsOpacity.value = withTiming(1, { duration: 1000 });
     }
 
@@ -213,7 +166,7 @@ export function ConduitOrbToggle({
         timedLog("animateTurnOffProxy()");
         cancelAnimation(orbColorsIndex);
         orbColorsIndex.value = withTiming(0, { duration: 500 });
-        orbTextOpacity.value = withTiming(1, { duration: 500 });
+        tapToTurnOnInstructionOpacity.value = withTiming(1, { duration: 500 });
         dotsOpacity.value = withTiming(0.2, { duration: 1000 });
     }
 
@@ -233,7 +186,7 @@ export function ConduitOrbToggle({
             delay,
             withTiming(0.2, { duration: 1000 }),
         );
-        orbTextOpacity.value = withDelay(
+        tapToTurnOnInstructionOpacity.value = withDelay(
             delay,
             withTiming(1, { duration: 1000 }),
         );
@@ -348,7 +301,7 @@ export function ConduitOrbToggle({
     // Since turning off the proxy will disconnect any connected users, require
     // a long press to turn off. When the user clicks the orb and a toggle would
     // disconnect users, we will show instruction to long press to turn off.
-    const longPressInstructionOpacity = useSharedValue(0);
+    const holdToTurnOffInstructionOpacity = useSharedValue(0);
 
     // If the module reports that inproxy must upgrade, show instructions
     const upgradeRequiredInstructionOpacity = useSharedValue(0);
@@ -390,7 +343,7 @@ export function ConduitOrbToggle({
                 runOnJS(toggle)();
             } else {
                 animateOrbGiggle();
-                longPressInstructionOpacity.value = withSequence(
+                holdToTurnOffInstructionOpacity.value = withSequence(
                     withTiming(1, { duration: 1000 }),
                     withTiming(1, { duration: 3000 }),
                     withTiming(0, { duration: 1000 }),
@@ -410,7 +363,7 @@ export function ConduitOrbToggle({
             .onStart(() => {
                 runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Heavy);
                 runOnJS(toggle)();
-                longPressInstructionOpacity.value = withTiming(0, {
+                holdToTurnOffInstructionOpacity.value = withTiming(0, {
                     duration: 500,
                 });
             })
@@ -516,17 +469,6 @@ export function ConduitOrbToggle({
                                 },
                             )}
                         </Group>
-                        <Group>
-                            {/* Turn ON text displayed when Conduit is off */}
-                            <FaderGroup opacity={orbTextOpacity}>
-                                <Paragraph
-                                    paragraph={orbTextParagraph}
-                                    x={orbTextXOffset}
-                                    y={orbTextYOffset}
-                                    width={width}
-                                />
-                            </FaderGroup>
-                        </Group>
                     </Group>
                 </Group>
                 <Group>
@@ -562,6 +504,23 @@ export function ConduitOrbToggle({
                     ]}
                 />
             </GestureDetector>
+            <Animated.Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[
+                    ss.whiteText,
+                    ss.bodyFont,
+                    ss.absolute,
+                    {
+                        top: orbCenterY + finalOrbRadius + ss.padded.padding,
+                        width: "100%",
+                        textAlign: "center",
+                        opacity: tapToTurnOnInstructionOpacity,
+                    },
+                ]}
+            >
+                {t("TAP_TO_TURN_ON_I18N.string")}
+            </Animated.Text>
             {/* Long press instructions are shown when peers are connected */}
             <Animated.Text
                 adjustsFontSizeToFit
@@ -574,7 +533,7 @@ export function ConduitOrbToggle({
                         top: orbCenterY + finalOrbRadius + ss.padded.padding,
                         width: "100%",
                         textAlign: "center",
-                        opacity: longPressInstructionOpacity,
+                        opacity: holdToTurnOffInstructionOpacity,
                     },
                 ]}
             >
