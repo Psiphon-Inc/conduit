@@ -8,7 +8,7 @@
     <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
     <string name="conduit_service_running_notification_short_text">۱\n۲\n۳</string>
     <!-- Long notification text (notification expanded) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
-    <string name="conduit_service_running_notification_long_text">اتصال فعال \nدر حال اتصال \nانتقال داده شد</string>
+    <string name="conduit_service_running_notification_long_text">اتصال فعال %1$d\nدر حال اتصال %2$d\nانتقال داده شد %3$s</string>
     <!-- Notification text for the Conduit service when it is waiting for network connectivity -->
     <string name="conduit_service_no_internet_notification_text">منتظر اتصال به شبکه</string>
     <!-- Notification channel description for the Conduit service -->
