@@ -1,0 +1,146 @@
+{
+    "LOADING_I18N": {
+        "string": "جاري التحميل...",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "اضغط للتشغيل",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "اسم Conduit الخاص بك",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "  تم تحويل {{ niceBytes }}"
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers }} أشخاص متصلين حاليا"
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} أشخاص يتصلون"
+    },
+    "CANCEL_I18N": {
+        "string": "إلغاء"
+    },
+    "CONFIRM_I18N": {
+        "string": "تأكيد "
+    },
+    "MAX_PEERS_I18N": {
+        "string": "الحد الأقصى لعدد المستخدمين"
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "الحد الأقصى MB/s لكل مستخدم"
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": " النطاق الترددي المطلوب"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "إرسل تشخيص"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "إذا قمت بتغيير الإعدادات، فسيتم إعادة تشغيل محطة Conduit الخاصة بك تلقائيًا. في هذه الحالة، سيتم فصل جميع المستخدمين."
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "تأكيد التغييرات وإعادة التشغيل الآن؟"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "التنبيهات"
+    },
+    "ENABLE_I18N": {
+        "string": "تفعيل"
+    },
+    "ENABLED_I18N": {
+        "string": "‮مُفعّل"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "محطة Conduit"
+    },
+    "RUNNING_I18N": {
+        "string": "تعمل"
+    },
+    "STOPPED_I18N": {
+        "string": "لقد توقفت"
+    },
+    "UNKNOWN_I18N": {
+        "string": "غير معروفة"
+    },
+    "SETTINGS_I18N": {
+        "string": "الإعدادات"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "سياسة الخصوصية"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "تم إرسال التشخيص، شكرًا لك"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "اضغط باستمرار لإيقاف تشغيل Conduit"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "التغييرات في انتظار"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "أغلق  لحفظ التغيير"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "مرحباً بكم في Conduit!"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "حوّل جهازك إلى منارة لحرية الإنترنت!\n\nبإمكانك مساعدة الأشخاص حول العالم على اختراق الشبكات المقيدة والوصول إلى الإنترنت العالمي بشكل آمن من خلال شبكة سایفون."
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "التالي"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "ما هو Conduit؟"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "Conduit هو تطبيق مفتوح يسمح للأشخاص في المناطق الخاضعة للرقابة في جميع أنحاء العالم للتحول من جهازك إلى شبكة سایفون.\n\nكلما زاد عدد محطات Conduit، كلما كان برنامج سایفون أقوى وأصبح الإنترنت أكثر انفتاحًا."
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "التالي"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "السماح بالإشعارات"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "توصي Conduit بتمكين الإشعارات حتى نتمكن من تقديم تحديثات مهمة حول Conduit Station الخاصة بك.\n\nهل أنت مستعد للبدء؟"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "أبدأ"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "سياسة الخصوصية"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "لا نقوم بجمع معلومات تعريف شخصية من مستخدمي Conduit. يتم تشفير جميع البيانات المنقولة ولا يمكن لك أو لـسایفون الوصول إليها. لا يمكن للمستخدمين المتصلين الوصول إلى جهازك بأي شكل من الأشكال.\n\nعند استخدامك لـ Conduit، فإنك توافق على سياسة الخصوصية الخاصة بنا، المذكورة أدناه."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "قبول"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "قائمة التعريف"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "يرجى تحديث التطبيق"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "في انتظار المستخدمين"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "إعرف أكثر"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "اسم Conduit"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "قم بتسمية محطة Conduit الخاصة بك"
+    },
+    "ID_I18N": {
+        "string": "المُعرِّف"
+    },
+    "ALIAS_I18N": {
+        "string": "الاسم المستعار"
+    }
+}

@@ -22,22 +22,26 @@ import {
     Canvas,
     Circle,
     ColorMatrix,
-    ColorShader,
     Group,
     Image,
     Paint,
+    Paragraph,
     RadialGradient,
     Shadow,
-    Text,
+    SkParagraphStyle,
+    SkTextStyle,
+    Skia,
+    TextAlign,
+    TextDirection,
     interpolateColors,
-    useFont,
+    useFonts,
     useImage,
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     Easing,
@@ -54,7 +58,7 @@ import Animated, {
 import { z } from "zod";
 
 import { useAnimatedImageValue } from "@/src/animationHooks";
-import { timedLog } from "@/src/common/utils";
+import { drawBigFont, timedLog } from "@/src/common/utils";
 import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
 import {
     INPROXY_MAX_CLIENTS_MAX,
@@ -67,6 +71,7 @@ import {
     useInproxyStatus,
 } from "@/src/inproxy/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
+import { FaderGroup } from "./canvas/FaderGroup";
 
 export function ConduitOrbToggle({
     width,
@@ -75,7 +80,10 @@ export function ConduitOrbToggle({
     width: number;
     height: number;
 }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.dir() === "rtl" ? true : false;
+    const win = useWindowDimensions();
+
     const { toggleInproxy } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
     const { data: inproxyCurrentConnectedClients } =
@@ -116,15 +124,43 @@ export function ConduitOrbToggle({
     // The "Turn On" text also uses interpolation to appear to fade in by going
     // from transparent to it's final color.
     const orbText = t("TAP_TO_TURN_ON_I18N.string");
-    const orbTextColors = [palette.transparent, palette.midGrey];
-    const orbTextColorIndex = useSharedValue(0);
-    const orbTextColor = useDerivedValue(() => {
-        return interpolateColors(
-            orbTextColorIndex.value,
-            [0, 1],
-            orbTextColors,
-        );
-    });
+    const orbTextOpacity = useSharedValue(0);
+
+    const fontMgr = useFonts({ Jura: [fonts.JuraRegular] });
+    const fontSize = drawBigFont(win) ? 20 : 16;
+    const orbTextParagraph = React.useMemo(() => {
+        if (!fontMgr) {
+            return null;
+        }
+        let paragraphStyle: SkParagraphStyle = {
+            textAlign: TextAlign.Center,
+        };
+        if (isRTL) {
+            paragraphStyle.textDirection = TextDirection.RTL;
+        }
+
+        const mainTextStyle: SkTextStyle = {
+            fontFamilies: ["Jura"],
+            fontSize: fontSize,
+            fontStyle: {
+                weight: 300,
+            },
+            letterSpacing: 1, // 5% of 20
+        };
+
+        return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
+            .pushStyle(mainTextStyle)
+            .addText(orbText)
+            .build();
+    }, [fontMgr]);
+
+    const orbTextXOffset = orbTextParagraph
+        ? -orbTextParagraph.getMaxWidth() / 2
+        : 0;
+    const orbTextYOffset = orbTextParagraph
+        ? -orbTextParagraph.getHeight() / 2
+        : 0;
+
     // The orb will pop into existence at the start, animating from radius 0 up
     const orbRadius = useSharedValue(0);
     const orbDiameter = useDerivedValue(() => orbRadius.value * 2);
@@ -141,6 +177,17 @@ export function ConduitOrbToggle({
         },
     ];
 
+    // The overlay is rendered in a regular view, while the orb itself is within
+    // Skia, so we need to accomodate RTL in the regular view.
+    const orbOverlayTransform = [
+        {
+            translateY: orbCenterY,
+        },
+        {
+            translateX: isRTL ? (-1 * width) / 2 : width / 2,
+        },
+    ];
+
     function animateProxyAnnouncing() {
         timedLog("animateProxyAnnouncing()");
         orbColorsIndex.value = withRepeat(
@@ -151,7 +198,7 @@ export function ConduitOrbToggle({
             -1,
             true,
         );
-        orbTextColorIndex.value = withTiming(0, { duration: 500 });
+        orbTextOpacity.value = withTiming(0, { duration: 500 });
         dotsOpacity.value = withTiming(1, { duration: 1000 });
     }
 
@@ -166,7 +213,7 @@ export function ConduitOrbToggle({
         timedLog("animateTurnOffProxy()");
         cancelAnimation(orbColorsIndex);
         orbColorsIndex.value = withTiming(0, { duration: 500 });
-        orbTextColorIndex.value = withTiming(1, { duration: 500 });
+        orbTextOpacity.value = withTiming(1, { duration: 500 });
         dotsOpacity.value = withTiming(0.2, { duration: 1000 });
     }
 
@@ -186,14 +233,10 @@ export function ConduitOrbToggle({
             delay,
             withTiming(0.2, { duration: 1000 }),
         );
-        if (delay > 0) {
-            // if we're introing with a delay, it means the Inproxy is stopped,
-            // so we will fade in our button text.
-            orbTextColorIndex.value = withDelay(
-                delay,
-                withTiming(1, { duration: 1000 }),
-            );
-        }
+        orbTextOpacity.value = withDelay(
+            delay,
+            withTiming(1, { duration: 1000 }),
+        );
     }
 
     // We have 4 animation states that depend on the state of the Inproxy:
@@ -301,11 +344,6 @@ export function ConduitOrbToggle({
         );
     }, []);
 
-    // TODO: switch to the newer Paragraph model
-    const font = useFont(fonts.JuraRegular, 20);
-    const orbTextXOffset = font ? -font.measureText(orbText).width / 2 : 0;
-    const orbTextYOffset = font ? font.measureText(orbText).height / 2 : 0;
-
     // Orb Gesture
     // Since turning off the proxy will disconnect any connected users, require
     // a long press to turn off. When the user clicks the orb and a toggle would
@@ -393,10 +431,10 @@ export function ConduitOrbToggle({
                 <Group>
                     {/* Intro particle swirl animation */}
                     <Image
-                        y={finalOrbRadius / 2}
+                        y={0}
                         image={particleSwirlGif}
                         width={width}
-                        height={width}
+                        height={height}
                         opacity={particleSwirlOpacity}
                     />
                 </Group>
@@ -480,14 +518,14 @@ export function ConduitOrbToggle({
                         </Group>
                         <Group>
                             {/* Turn ON text displayed when Conduit is off */}
-                            <Text
-                                x={orbTextXOffset}
-                                y={orbTextYOffset}
-                                text={orbText}
-                                font={font}
-                            >
-                                <ColorShader color={orbTextColor} />
-                            </Text>
+                            <FaderGroup opacity={orbTextOpacity}>
+                                <Paragraph
+                                    paragraph={orbTextParagraph}
+                                    x={orbTextXOffset}
+                                    y={orbTextYOffset}
+                                    width={width}
+                                />
+                            </FaderGroup>
                         </Group>
                     </Group>
                 </Group>
@@ -519,7 +557,7 @@ export function ConduitOrbToggle({
                             width: orbDiameter,
                             height: orbDiameter,
                             borderRadius: orbRadius,
-                            transform: orbCenteringTransform,
+                            transform: orbOverlayTransform,
                         },
                     ]}
                 />
