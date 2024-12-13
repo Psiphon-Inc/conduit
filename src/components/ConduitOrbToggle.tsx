@@ -34,7 +34,7 @@ import {
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, useWindowDimensions } from "react-native";
+import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     Easing,
@@ -74,7 +74,6 @@ export function ConduitOrbToggle({
 }) {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.dir() === "rtl" ? true : false;
-    const win = useWindowDimensions();
 
     const { toggleInproxy } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
@@ -95,8 +94,6 @@ export function ConduitOrbToggle({
         return dotsOpacity.value - 0.2;
     }, [dotsOpacity]);
 
-    // In the center of the canvas is the orb, a button that toggles Inproxy.
-    // The orb will have an animated gradient depending on InproxyState, flowing
     // between the following colors
     const orbColors = [
         palette.black,
