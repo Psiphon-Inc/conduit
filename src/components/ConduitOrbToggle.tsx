@@ -160,6 +160,7 @@ export function ConduitOrbToggle({
         cancelAnimation(orbColorsIndex);
         orbColorsIndex.value = withTiming(4, { duration: 2000 });
         dotsOpacity.value = withTiming(1, { duration: 1000 });
+        tapToTurnOnInstructionOpacity.value = withTiming(0, { duration: 500 });
     }
 
     function animateTurnOffProxy() {
