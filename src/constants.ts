@@ -29,7 +29,7 @@ export const LEARN_MORE_URL = "https://conduit.psiphon.ca/en";
 export const PRIVACY_POLICY_URL =
     "https://conduit.psiphon.ca/en/conduit-privacy-policy";
 
-export const PAIRING_LINK_URL = "https://conduit.psiphon.ca/pair";
+export const PAIRING_LINK_URL = "https://hextempulant.net/pair";
 
 // Hard code a common delay value for animations that fade in to wait until the
 // particle video is done playing.

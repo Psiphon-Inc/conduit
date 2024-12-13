@@ -82,10 +82,10 @@ export const InproxyParametersSchema = z.object({
 });
 
 export const InproxyPairingDataSchema = z.object({
-    schema: z.literal("1"),
+    v: z.literal("1"),
     data: z.object({
-        inproxyCompartmentId: Base64Unpadded32BytesSchema,
-        conduitName: z.string().max(22),
+        id: Base64Unpadded32BytesSchema,
+        name: z.string().max(22),
     }),
 });
 

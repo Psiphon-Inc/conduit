@@ -558,7 +558,7 @@ export function ConduitOrbToggle({
             >
                 {t("UPGRADE_REQUIRED_I18N.string")}
             </Animated.Text>
-            <ConduitShareAction height={height / 4} />
+            <ConduitShareAction height={height / 8} />
         </View>
     );
 }

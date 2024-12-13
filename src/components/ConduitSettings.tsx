@@ -352,6 +352,14 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                                     <Text style={[ss.whiteText, ss.bodyFont]}>
                                         {t("PERSONAL_PAIRING_I18N.string")}
                                     </Text>
+                                    <Text style={[ss.greyText, ss.bodyFont]}>
+                                        (
+                                        {inproxyParameters.compartmentId.slice(
+                                            0,
+                                            5,
+                                        )}
+                                        ...)
+                                    </Text>
                                     <AnimatedText
                                         text={personalPairingStatus}
                                         color={palette.white}

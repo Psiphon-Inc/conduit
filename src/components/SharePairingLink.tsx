@@ -19,8 +19,13 @@
 
 import { base64url } from "@scure/base";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Platform, Share } from "react-native";
-import Animated from "react-native-reanimated";
+import {
+    ActivityIndicator,
+    Platform,
+    Pressable,
+    Share,
+    Text,
+} from "react-native";
 
 import { useInproxyCompartmentId } from "@/src/auth/hooks";
 import { wrapError } from "@/src/common/errors";
@@ -28,7 +33,10 @@ import { jsonObjectToUint8Array, timedLog } from "@/src/common/utils";
 import { PAIRING_LINK_URL } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
-import { InproxyPairingDataSchema } from "@/src/inproxy/types";
+import {
+    InproxyPairingData,
+    InproxyPairingDataSchema,
+} from "@/src/inproxy/types";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function SharePairingLink() {
@@ -47,12 +55,12 @@ export function SharePairingLink() {
             );
         }
         const inproxyPairingData = InproxyPairingDataSchema.safeParse({
-            schema: "1",
+            v: "1",
             data: {
-                inproxyCompartmentId: conduitCompartmentId.data,
-                conduitName: conduitName.data,
+                id: conduitCompartmentId.data,
+                name: conduitName.data,
             },
-        });
+        } as InproxyPairingData);
         if (!inproxyPairingData.success) {
             return wrapError(
                 inproxyPairingData.error,
@@ -113,20 +121,13 @@ export function SharePairingLink() {
     }
 
     return (
-        <Animated.View
-            style={[
-                ss.rounded10,
-                ss.padded,
-                ss.whiteBorder,
-                {
-                    backgroundColor: palette.blue,
-                },
-            ]}
+        <Pressable
+            style={[ss.rounded10, ss.padded, ss.whiteBg]}
             onTouchStart={onShare}
         >
-            <Animated.Text style={[ss.boldFont, ss.centeredText, ss.whiteText]}>
+            <Text style={[ss.boldFont, ss.centeredText, ss.blackText]}>
                 {t("SHARE_PAIRING_LINK_I18N.string")}
-            </Animated.Text>
-        </Animated.View>
+            </Text>
+        </Pressable>
     );
 }
