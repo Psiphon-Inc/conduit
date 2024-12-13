@@ -56,6 +56,7 @@ import { ConduitName } from "@/src/components/ConduitName";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
 import { Icon } from "@/src/components/Icon";
 import { NotificationsStatus } from "@/src/components/NotificationsStatus";
+import { PersonalPairingToggle } from "@/src/components/PersonalPairingToggle";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
@@ -72,17 +73,11 @@ import {
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
-import {
-    lineItemRTLStyle,
-    lineItemStyle,
-    palette,
-    sharedStyles as ss,
-} from "@/src/styles";
-import { PersonalPairingToggle } from "./PersonalPairingToggle";
+
+import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitSettings({ iconSize }: { iconSize: number }) {
-    const { t, i18n } = useTranslation();
-    const isRTL = i18n.dir() === "rtl" ? true : false;
+    const { t } = useTranslation();
     const win = useWindowDimensions();
     const router = useRouter();
 
@@ -204,18 +199,12 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
     const scrollRef = React.useRef<ScrollView | null>(null);
 
     function Settings() {
-        let lineStyle;
-        if (isRTL) {
-            lineStyle = lineItemRTLStyle;
-        } else {
-            lineStyle = lineItemStyle;
-        }
         return (
             <View style={[ss.flex]}>
                 <View
                     style={[
                         ss.padded,
-                        isRTL ? ss.rowRTL : ss.row,
+                        ss.row,
                         ss.alignCenter,
                         ss.greyBorderBottom,
                     ]}
@@ -279,7 +268,7 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                                 originalValue={inproxyParameters.maxClients}
                                 min={1}
                                 max={INPROXY_MAX_CLIENTS_MAX}
-                                style={[...lineStyle, ss.alignCenter]}
+                                style={[...lineItemStyle, ss.alignCenter]}
                                 onChange={updateInproxyMaxClients}
                                 scrollRef={scrollRef}
                             />
@@ -290,13 +279,13 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                                 )}
                                 min={8}
                                 max={INPROXY_MAX_MBPS_PER_PEER_MAX}
-                                style={[...lineStyle, ss.alignCenter]}
+                                style={[...lineItemStyle, ss.alignCenter]}
                                 onChange={updateInproxyLimitBytesPerSecond}
                                 scrollRef={scrollRef}
                             />
                             <View
                                 style={[
-                                    ...lineStyle,
+                                    ...lineItemStyle,
                                     ss.flex,
                                     ss.alignCenter,
                                     ss.justifySpaceBetween,
@@ -324,7 +313,7 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                             >
                                 <View
                                     style={[
-                                        isRTL ? ss.rowRTL : ss.row,
+                                        ss.row,
                                         ss.fullWidth,
                                         ss.justifySpaceBetween,
                                         ss.alignCenter,
@@ -345,13 +334,7 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                                         />
                                     )}
                                 </View>
-                                <View
-                                    style={[
-                                        isRTL ? ss.rowRTL : ss.row,
-                                        ss.flex,
-                                        ss.alignCenter,
-                                    ]}
-                                >
+                                <View style={[ss.row, ss.flex, ss.alignCenter]}>
                                     <Text style={[ss.whiteText, ss.bodyFont]}>
                                         {t("ALIAS_I18N.string")}:
                                     </Text>
@@ -359,7 +342,7 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                                 </View>
                                 <View
                                     style={[
-                                        isRTL ? ss.rowRTL : ss.row,
+                                        ss.row,
                                         ss.flex,
                                         ss.fullWidth,
                                         ss.alignCenter,
@@ -387,7 +370,7 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                             </View>
                             <View
                                 style={[
-                                    ...lineStyle,
+                                    ...lineItemStyle,
                                     ss.flex,
                                     ss.alignCenter,
                                     ss.justifySpaceBetween,
@@ -402,7 +385,7 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                                 notificationsPermission != "GRANTED" && (
                                     <View
                                         style={[
-                                            ...lineStyle,
+                                            ...lineItemStyle,
                                             ss.flex,
                                             ss.alignCenter,
                                             ss.justifySpaceBetween,
@@ -413,7 +396,7 @@ export function ConduitSettings({ iconSize }: { iconSize: number }) {
                                 )}
                             <View
                                 style={[
-                                    ...lineStyle,
+                                    ...lineItemStyle,
                                     ss.flex,
                                     ss.alignCenter,
                                     ss.justifySpaceBetween,

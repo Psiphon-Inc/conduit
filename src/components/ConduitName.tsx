@@ -47,7 +47,8 @@ export function ConduitName() {
 
 // The Conduit Name is purely cosmetic, it is optional and only stored locally
 export function EditableConduitName({ initialName }: { initialName: string }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.dir() === "rtl" ? true : false;
 
     const queryClient = useQueryClient();
 
@@ -126,6 +127,7 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
                 maxLength={maxLength}
                 autoCorrect={false}
                 autoComplete={"off"}
+                textAlign={isRTL ? "right" : "left"}
             />
             {showCharsUsed && (
                 <View style={[ss.absoluteBottomRight]}>

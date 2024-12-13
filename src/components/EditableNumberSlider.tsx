@@ -36,12 +36,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { AnimatedText } from "@/src/components/AnimatedText";
-import {
-    lineItemRTLStyle,
-    lineItemStyle,
-    palette,
-    sharedStyles as ss,
-} from "@/src/styles";
+import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 import { useTranslation } from "react-i18next";
 import {
     Gesture,
@@ -72,9 +67,6 @@ export function EditableNumberSlider({
     const { i18n } = useTranslation();
     const isRTL = i18n.dir() === "rtl" ? true : false;
 
-    if (isRTL) {
-        style = lineItemRTLStyle;
-    }
     const value = useSharedValue(originalValue);
     const displayText = useDerivedValue(() => {
         const changed = value.value === originalValue ? " " : "*";
@@ -122,23 +114,11 @@ export function EditableNumberSlider({
     });
 
     // Overlay for GestureDetector
-    const overlaySize = useDerivedValue(() => circleR.value * 5);
-    const overlayTransform = useDerivedValue(() => {
-        return [
-            {
-                translateX: circleCx.value - circleR.value * 2.5,
-            },
-            {
-                translateY: circleCy.value - circleR.value * 2,
-            },
-        ];
-    });
     const overlayStyle = useAnimatedStyle(() => ({
-        position: "absolute",
         flex: 1,
-        height: overlaySize.value,
-        width: overlaySize.value,
-        transform: overlayTransform.value,
+        position: "absolute",
+        width: "100%",
+        height: "100%",
     }));
 
     const sliderGesture = Gesture.Pan()
@@ -165,15 +145,10 @@ export function EditableNumberSlider({
     return (
         <View style={[...style, ss.flex, ss.justifySpaceBetween]}>
             <Text style={[ss.bodyFont, ss.whiteText]}>{label}</Text>
-            <View
-                style={[
-                    isRTL ? ss.rowRTL : ss.row,
-                    isRTL ? { transform: "scaleX(-1)" } : {},
-                    ss.flex,
-                    { maxWidth: 180 },
-                ]}
-            >
-                <View style={[ss.flex]}>
+            <View style={[ss.row, ss.flex, { maxWidth: 180 }]}>
+                <View
+                    style={[ss.flex, isRTL ? { transform: "scaleX(-1)" } : {}]}
+                >
                     <Canvas style={[ss.flex]} onSize={canvasSize}>
                         <RoundedRect
                             x={circleR}
