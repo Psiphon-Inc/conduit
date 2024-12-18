@@ -66,14 +66,5 @@
         <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
       </intent-filter>
     </receiver>
-    <!-- Service for reporting Conduit state to other apps -->
-    <service
-        android:name=".nativemodule.ConduitStateService"
-        android:exported="true">
-      <intent-filter>
-        <action android:name="ca.psiphon.conduit.ACTION_BIND_CONDUIT_STATE" />
-      </intent-filter>
-    </service>
-
   </application>
 </manifest>

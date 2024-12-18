@@ -28,6 +28,7 @@ import {
 import {
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
+    DEFAULT_INPROXY_PAIRING_MODE_ENABLED,
 } from "@/src/constants";
 import {
     InproxyActivityStats,
@@ -47,7 +48,9 @@ export function getDefaultInproxyParameters(): InproxyParameters {
         maxClients: DEFAULT_INPROXY_MAX_CLIENTS,
         limitUpstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
         limitDownstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
-    });
+        personalPairingEnabled: DEFAULT_INPROXY_PAIRING_MODE_ENABLED,
+        compartmentId: base64nopad.encode(new Uint8Array(32)),
+    } as InproxyParameters);
 }
 
 export function getZeroedInproxyActivityStats(): InproxyActivityStats {
@@ -66,7 +69,7 @@ export function getZeroedInproxyActivityStats(): InproxyActivityStats {
                 numBuckets: 288,
             },
         },
-    });
+    } as InproxyActivityStats);
 }
 
 /**

@@ -52,6 +52,7 @@ import { z } from "zod";
 
 import { useAnimatedImageValue } from "@/src/animationHooks";
 import { timedLog } from "@/src/common/utils";
+import { ConduitShareAction } from "@/src/components/ConduitShareAction";
 import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
 import {
     INPROXY_MAX_CLIENTS_MAX,
@@ -557,6 +558,7 @@ export function ConduitOrbToggle({
             >
                 {t("UPGRADE_REQUIRED_I18N.string")}
             </Animated.Text>
+            <ConduitShareAction height={height / 8} />
         </View>
     );
 }

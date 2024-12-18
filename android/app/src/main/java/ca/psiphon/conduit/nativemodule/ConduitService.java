@@ -226,6 +226,10 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
             psiphonConfig.put("InproxyLimitDownstreamBytesPerSecond", conduitServiceParameters.limitDownstreamBytes());
 
+            if (conduitServiceParameters.personalPairingEnabled()) {
+                psiphonConfig.put("InproxyProxyPersonalCompartmentID", conduitServiceParameters.compartmentId());
+            }
+
             // Convert back to json string
             return psiphonConfig.toString();
         } catch (JSONException | PackageManager.NameNotFoundException e) {

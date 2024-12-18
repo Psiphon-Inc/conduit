@@ -48,7 +48,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
-import { useConduitKeyPair } from "@/src/auth/hooks";
+import { useInproxyKeyPair } from "@/src/auth/hooks";
 import { wrapError } from "@/src/common/errors";
 import { MBToBytes, bytesToMB } from "@/src/common/utils";
 import { AnimatedText } from "@/src/components/AnimatedText";
@@ -56,6 +56,7 @@ import { ConduitName } from "@/src/components/ConduitName";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
 import { Icon } from "@/src/components/Icon";
 import { NotificationsStatus } from "@/src/components/NotificationsStatus";
+import { PersonalPairingToggle } from "@/src/components/PersonalPairingToggle";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
@@ -72,14 +73,15 @@ import {
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
+
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 
-export function ConduitSettings() {
+export function ConduitSettings({ iconSize }: { iconSize: number }) {
     const { t } = useTranslation();
     const win = useWindowDimensions();
     const router = useRouter();
 
-    const { data: conduitKeyPair } = useConduitKeyPair();
+    const { data: inproxyKeyPair } = useInproxyKeyPair();
     const { inproxyParameters, selectInproxyParameters, logErrorToDiagnostic } =
         useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
@@ -96,14 +98,23 @@ export function ConduitSettings() {
     const displayTotalMBps = useDerivedValue(() => {
         return `${modifiedMaxPeers.value * modifiedMaxMBps.value} MB/s`;
     });
+    const modifiedPersonalPairingModeEnabled = useSharedValue(
+        inproxyParameters.personalPairingEnabled,
+    );
+    const personalPairingStatus = useSharedValue(
+        inproxyParameters.personalPairingEnabled
+            ? t("ON_I18N.string")
+            : t("OFF_I18N.string"),
+    );
     const applyChangesNoteOpacity = useSharedValue(0);
     const changesPending = useDerivedValue(() => {
         let settingsChanged = false;
-        if (modifiedMaxPeers.value !== inproxyParameters.maxClients) {
-            settingsChanged = true;
-        } else if (
+        if (
+            modifiedMaxPeers.value !== inproxyParameters.maxClients ||
             MBToBytes(modifiedMaxMBps.value) !==
-            inproxyParameters.limitUpstreamBytesPerSecond
+                inproxyParameters.limitUpstreamBytesPerSecond ||
+            modifiedPersonalPairingModeEnabled.value !=
+                inproxyParameters.personalPairingEnabled
         ) {
             settingsChanged = true;
         }
@@ -134,12 +145,24 @@ export function ConduitSettings() {
         modifiedMaxMBps.value = newValue;
     }
 
+    async function updateInproxyPersonalPairingModeEnabled() {
+        if (modifiedPersonalPairingModeEnabled.value) {
+            modifiedPersonalPairingModeEnabled.value = false;
+            personalPairingStatus.value = t("OFF_I18N.string");
+        } else {
+            modifiedPersonalPairingModeEnabled.value = true;
+            personalPairingStatus.value = t("ON_I18N.string");
+        }
+    }
+
     async function commitChanges() {
         const newInproxyParameters = InproxyParametersSchema.safeParse({
             maxClients: modifiedMaxPeers.value,
             limitUpstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             limitDownstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             privateKey: inproxyParameters.privateKey,
+            personalPairingEnabled: modifiedPersonalPairingModeEnabled.value,
+            compartmentId: inproxyParameters.compartmentId,
         } as InproxyParameters);
         if (newInproxyParameters.error) {
             logErrorToDiagnostic(
@@ -283,7 +306,7 @@ export function ConduitSettings() {
                                     ss.greyBorderBottom,
                                     ss.flex,
                                     ss.alignCenter,
-                                    { height: 140 },
+                                    { height: 210 },
                                     ss.column,
                                     ss.padded,
                                 ]}
@@ -299,9 +322,10 @@ export function ConduitSettings() {
                                     <Text style={[ss.bodyFont, ss.whiteText]}>
                                         {t("YOUR_CONDUIT_ID_I18N.string")}
                                     </Text>
-                                    {conduitKeyPair ? (
+                                    {inproxyKeyPair ? (
                                         <ProxyID
-                                            proxyId={getProxyId(conduitKeyPair)}
+                                            proxyId={getProxyId(inproxyKeyPair)}
+                                            copyable={false}
                                         />
                                     ) : (
                                         <ActivityIndicator
@@ -315,6 +339,41 @@ export function ConduitSettings() {
                                         {t("ALIAS_I18N.string")}:
                                     </Text>
                                     <ConduitName />
+                                </View>
+                                <View
+                                    style={[
+                                        ss.row,
+                                        ss.flex,
+                                        ss.fullWidth,
+                                        ss.alignCenter,
+                                        ss.justifySpaceBetween,
+                                    ]}
+                                >
+                                    <Text style={[ss.whiteText, ss.bodyFont]}>
+                                        {t("PERSONAL_PAIRING_I18N.string")}
+                                    </Text>
+                                    <Text style={[ss.greyText, ss.bodyFont]}>
+                                        (
+                                        {inproxyParameters.compartmentId.slice(
+                                            0,
+                                            5,
+                                        )}
+                                        ...)
+                                    </Text>
+                                    <AnimatedText
+                                        text={personalPairingStatus}
+                                        color={palette.white}
+                                        fontSize={ss.boldFont.fontSize}
+                                        fontFamily={ss.boldFont.fontFamily}
+                                    />
+                                    <PersonalPairingToggle
+                                        originalValue={
+                                            modifiedPersonalPairingModeEnabled.value
+                                        }
+                                        onChange={
+                                            updateInproxyPersonalPairingModeEnabled
+                                        }
+                                    />
                                 </View>
                             </View>
                             <View
@@ -473,7 +532,7 @@ export function ConduitSettings() {
         );
     }
 
-    const settingsIconSize = win.width * 0.2;
+    const settingsIconSize = iconSize;
     const paint = React.useMemo(() => Skia.Paint(), []);
     paint.setColorFilter(
         Skia.ColorFilter.MakeBlend(Skia.Color(palette.blue), BlendMode.SrcIn),
@@ -509,18 +568,6 @@ export function ConduitSettings() {
                     />
                 </Pressable>
             </View>
-            <View
-                style={[
-                    ss.absolute,
-                    ss.doublePadded,
-                    {
-                        bottom: 0,
-                        right: settingsIconSize,
-                        width: settingsIconSize,
-                        height: settingsIconSize,
-                    },
-                ]}
-            ></View>
             <Modal
                 animationType="slide"
                 visible={modalOpen}

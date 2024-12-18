@@ -43,7 +43,6 @@ export default function HomeScreen() {
     const totalUsableWidth = win.width;
 
     // NOTE this assumes a portrait layout.
-
     return (
         <GestureHandlerRootView>
             <SafeAreaView>
@@ -63,7 +62,7 @@ export default function HomeScreen() {
                     height={totalUsableHeight * 0.35}
                 />
                 {/* Settings icon is absolutely positioned bottom right */}
-                <ConduitSettings />
+                <ConduitSettings iconSize={totalUsableHeight * 0.1} />
                 {/* GIT_HASH absolutely positioned bottom left */}
                 <GitHash />
                 {/* Keep the screen open on iOS */}

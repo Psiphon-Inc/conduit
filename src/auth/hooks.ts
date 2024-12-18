@@ -22,8 +22,10 @@ import { UseQueryResult, useQuery } from "@tanstack/react-query";
 import { Ed25519KeyPair } from "@/src/common/cryptography";
 import {
     QUERYKEY_ACCOUNT_KEYPAIR,
+    QUERYKEY_INPROXY_COMPARTMENT_ID,
     QUERYKEY_INPROXY_KEYPAIR,
 } from "@/src/constants";
+import { Base64Unpadded32Bytes } from "../common/validators";
 
 export const useAccountKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
     useQuery({
@@ -32,9 +34,17 @@ export const useAccountKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
         enabled: false,
     });
 
-export const useConduitKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
+export const useInproxyKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
     useQuery({
         queryKey: [QUERYKEY_INPROXY_KEYPAIR],
         queryFn: () => undefined,
         enabled: false,
     });
+
+export const useInproxyCompartmentId =
+    (): UseQueryResult<Base64Unpadded32Bytes> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_COMPARTMENT_ID],
+            queryFn: () => undefined,
+            enabled: false,
+        });

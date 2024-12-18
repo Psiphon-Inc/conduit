@@ -38,8 +38,8 @@ describe("account", () => {
     it("createOrLoadAccount fresh account", async () => {
         const account = await createOrLoadAccount();
         expect(account).not.toBeInstanceOf(Error);
-        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(4);
-        expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(4);
+        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(5);
+        expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(5);
 
         const rwKeysToCheck = [
             SECURESTORE_MNEMONIC_KEY,
@@ -67,8 +67,8 @@ describe("account", () => {
         const account = await createOrLoadAccount();
 
         expect(account).not.toBeInstanceOf(Error);
-        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(4);
-        expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(3);
+        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(5);
+        expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(4);
 
         expect(SecureStore.setItemAsync).not.toHaveBeenCalledWith(
             SECURESTORE_MNEMONIC_KEY,
@@ -98,7 +98,7 @@ describe("account", () => {
 
         const accountLoaded = await createOrLoadAccount();
         expect(accountLoaded).not.toBeInstanceOf(Error);
-        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(4);
+        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(5);
         expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(0);
 
         const rKeysToCheck = [

@@ -121,3 +121,11 @@ export function hexToHueDegrees(hex: string): number {
 
     return Math.round(360 * h);
 }
+
+export function parseBoolean(boolString: string): boolean {
+    if (boolString.toLowerCase() === "true") {
+        return true;
+    } else {
+        return false;
+    }
+}
