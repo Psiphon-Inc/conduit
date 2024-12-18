@@ -147,7 +147,7 @@
         "string": "Share"
     },
     "SHARE_PAIRING_DATA_MESSAGE_I18N": {
-        "string": "Connect to my Conduit station! Follow the link or paste it into Psiphon."
+        "string": "Pair with my Conduit station! Follow the pairing link or paste it into Psiphon."
     },
     "PERSONAL_PAIRING_I18N": {
         "string": "Personal Pairing"

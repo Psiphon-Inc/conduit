@@ -103,7 +103,6 @@ export function SharePairingLink() {
             const result = await Share.share({
                 message: message,
                 url: sharingLink,
-                title: t("SHARE_I18N.string"),
             });
             // Android also doesn't leave any information on this result object
             timedLog(
