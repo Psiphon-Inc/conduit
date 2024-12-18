@@ -26,7 +26,7 @@ public class ConduitStateService extends Service {
 
     private record StateUpdate(int appVersion, ProxyState proxyState) {
         // Current schema version for the state update JSON structure
-        private static final int CURRENT_SCHEMA = 0;
+        private static final int CURRENT_SCHEMA = 1;
 
         String toJson() {
             // Wraps state data with schema version to support future changes
