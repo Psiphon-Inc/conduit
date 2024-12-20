@@ -1,0 +1,146 @@
+{
+    "LOADING_I18N": {
+        "string": "Chargement...",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "Appuyez pour activer",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "Votre identifiant Conduit",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "{{ niceBytes }} transférés"
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers }} pairs connectés"
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} en cours de connexion"
+    },
+    "CANCEL_I18N": {
+        "string": "Annuler"
+    },
+    "CONFIRM_I18N": {
+        "string": "Confirmer"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "Pairs max"
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "MB/s max par pair"
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "Largeur de bande requise"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "Envoyer le diagnostic"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "La modification des paramètres de Conduit nécessite le redémarrage de votre Station Conduit. Les utilisateurs connectés seront déconnectés."
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "Confirmer les modifications et redémarrer maintenant ?"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "Notifications"
+    },
+    "ENABLE_I18N": {
+        "string": "Activer"
+    },
+    "ENABLED_I18N": {
+        "string": "Activé"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "Station Conduit"
+    },
+    "RUNNING_I18N": {
+        "string": "EXÉCUTION EN COURS"
+    },
+    "STOPPED_I18N": {
+        "string": "ARRÊTÉ"
+    },
+    "UNKNOWN_I18N": {
+        "string": "INCONNU"
+    },
+    "SETTINGS_I18N": {
+        "string": "Paramètres"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "Politique de confidentialité"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "Envoyé, merci !"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "Maintenir pour désactiver"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "changements en attente"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "fermer pour faire la demande"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "Bienvenue dans Conduit !"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "Transformez votre appareil en une balise de la liberté d'Internet !\n\nVous pouvez aider des personnes du monde entier à passer outre les réseaux restrictifs et à accéder à l'Internet mondial en toute sécurité grâce au réseau Psiphon."
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "Suivant"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "Qu'est-ce que Conduit ?"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "Conduit est une application open-source qui permet aux personnes vivant dans des régions censurées du monde entier de rebondir sur votre appareil et de rejoindre le réseau Psiphon.\n\nPlus il y a de Stations Conduit, plus Psiphon est puissant et plus l'Internet est ouvert."
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "Suivant"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "Autoriser les notifications"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "Conduit vous recommande d'activer les notifications pour nous permettre de vous fournir des mises à jour critiques concernant votre Station Conduit.\n\nPrêt à commencer ?"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "Commencer"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "Politique de confidentialité"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "Nous ne recueillons pas d'informations personnellement identifiables auprès des utilisateurs de Conduit. Toutes les données transmises sont chiffrées et ne sont accessibles ni à vous ni à Psiphon. Les utilisateurs connectés ne peuvent en aucun cas accéder à votre appareil.\n\nEn utilisant Conduit, vous acceptez notre Politique de confidentialité, disponible ci-dessous."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "Accepter"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "Relire l’intro"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "Veuillez mettre à niveau l'application"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "En attente de pairs"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "En savoir plus"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "Nom de votre Conduit"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "Nommer votre conduit"
+    },
+    "ID_I18N": {
+        "string": "Identifiant"
+    },
+    "ALIAS_I18N": {
+        "string": "Alias"
+    }
+}

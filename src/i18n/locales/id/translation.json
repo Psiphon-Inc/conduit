@@ -1,0 +1,146 @@
+{
+    "LOADING_I18N": {
+        "string": "Memuat...",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "Ketuk untuk Mengaktifkan",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "ID Conduit Anda",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "{{ niceBytes }} ditransfer"
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers }} rekan yang terhubung"
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} terhubung"
+    },
+    "CANCEL_I18N": {
+        "string": "Batalkan"
+    },
+    "CONFIRM_I18N": {
+        "string": "Konfirmasi"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "Maks Rekan"
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "Maks MB/dtk Per Rekan"
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "Bandwidth yang Diperlukan"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "Kirim Diagnostik"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "Mengubah setelan Conduit memerlukan memulai ulang Conduit Station Anda. Setiap pengguna yang terhubung akan terputus."
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "Konfirmasi Perubahan dan Mulai Ulang Sekarang?"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "Notifikasi"
+    },
+    "ENABLE_I18N": {
+        "string": "Aktifkan"
+    },
+    "ENABLED_I18N": {
+        "string": "Diaktifkan"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "Conduit Station"
+    },
+    "RUNNING_I18N": {
+        "string": "BERJALAN"
+    },
+    "STOPPED_I18N": {
+        "string": "BERHENTI"
+    },
+    "UNKNOWN_I18N": {
+        "string": "TIDAK DIKETAHUI"
+    },
+    "SETTINGS_I18N": {
+        "string": "Setelan"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "Kebijakan Privasi"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "Terkirim, terima kasih!"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "Tahan untuk Menonaktifkan"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "perubahan tertunda"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "tutup untuk menerapkan"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "Selamat datang di Conduit!"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "Ubah perangkat Anda menjadi suar Kebebasan Internet!\n\nAnda dapat membantu orang-orang di seluruh dunia menembus jaringan yang membatasi dan mengakses Internet global dengan aman melalui Jaringan Psiphon."
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "Berikutnya"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "Apa itu Conduit?"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "Conduit adalah aplikasi open source yang memungkinkan orang-orang di wilayah yang disensor di seluruh dunia untuk keluar dari perangkat dan masuk ke Jaringan Psiphon.\n\nSemakin banyak Conduit Station, semakin kuat Psiphon dan semakin terbuka akses Internetnya."
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "Berikutnya"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "Izinkan Notifikasi"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "Conduit menyarankan Anda mengaktifkan notifikasi sehingga kami dapat memberikan pembaruan penting tentang Conduit Station Anda.\n\nSiap untuk memulai?"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "Mulai"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "Kebijakan Privasi"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "Kami tidak mengumpulkan informasi identitas pribadi dari pengguna Conduit. Semua data yang dikirimkan dienkripsi dan tidak dapat diakses oleh Anda atau Psiphon. Pengguna yang terhubung tidak dapat mengakses perangkat Anda dengan cara apa pun.\n\nDengan menggunakan Conduit, Anda menyetujui kebijakan privasi kami, yang tersedia di bawah."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "Setuju"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "Putar ulang Intro"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "Mutakhirkan aplikasinya"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "Menunggu rekan"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "Pelajari Lebih Lanjut"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "Nama Conduit"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "Namai Conduit Anda"
+    },
+    "ID_I18N": {
+        "string": "ID"
+    },
+    "ALIAS_I18N": {
+        "string": "Alias"
+    }
+}
