@@ -8,7 +8,7 @@
         "developer_comment": "Text displayed on a button to turn on a feature."
     },
     "YOUR_CONDUIT_ID_I18N": {
-        "string": "اسم Conduit الخاص بك",
+        "string": "اسم المعرِّف الخاص بك في Conduit",
         "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
     },
     "TOTAL_BYTES_TRANSFERRED_I18N": {
@@ -18,7 +18,7 @@
         "string": "{{ peers }} أشخاص متصلين حاليا"
     },
     "CONNECTING_PEERS_I18N": {
-        "string": "{{ peers }} أشخاص يتصلون"
+        "string": "جاري اتصال {{ peers }} مستخدم"
     },
     "CANCEL_I18N": {
         "string": "إلغاء"
@@ -36,10 +36,10 @@
         "string": " النطاق الترددي المطلوب"
     },
     "SEND_DIAGNOSTIC_I18N": {
-        "string": "إرسل تشخيص"
+        "string": "إرسل التشخيص"
     },
     "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
-        "string": "إذا قمت بتغيير الإعدادات، فسيتم إعادة تشغيل محطة Conduit الخاصة بك تلقائيًا. في هذه الحالة، سيتم فصل جميع المستخدمين."
+        "string": "إذا قمت بتغيير الإعدادات، فسيتم إعادة تشغيل Conduit Station الخاصة بك تلقائيًا. في هذه الحالة، سيتم فصل جميع المستخدمين."
     },
     "CONFIRM_CHANGES_I18N": {
         "string": "تأكيد التغييرات وإعادة التشغيل الآن؟"
@@ -54,16 +54,16 @@
         "string": "‮مُفعّل"
     },
     "CONDUIT_STATION_I18N": {
-        "string": "محطة Conduit"
+        "string": "Conduit Station"
     },
     "RUNNING_I18N": {
-        "string": "تعمل"
+        "string": "جاري العمل"
     },
     "STOPPED_I18N": {
-        "string": "لقد توقفت"
+        "string": "متوقّف عن العمل"
     },
     "UNKNOWN_I18N": {
-        "string": "غير معروفة"
+        "string": "غير معروف"
     },
     "SETTINGS_I18N": {
         "string": "الإعدادات"
@@ -75,28 +75,28 @@
         "string": "تم إرسال التشخيص، شكرًا لك"
     },
     "HOLD_TO_TURN_OFF_I18N": {
-        "string": "اضغط باستمرار لإيقاف تشغيل Conduit"
+        "string": "اضغط مع الاستمرار لإيقاف التشغيل"
     },
     "CHANGES_PENDING_I18N": {
-        "string": "التغييرات في انتظار"
+        "string": "التغييرات قيد الانتظار"
     },
     "CLOSE_TO_APPLY_I18N": {
-        "string": "أغلق  لحفظ التغيير"
+        "string": "أغلق  لحفظ التغييرات"
     },
     "ONBOARDING_WELCOME_HEADER_I18N": {
         "string": "مرحباً بكم في Conduit!"
     },
     "ONBOARDING_WELCOME_BODY_I18N": {
-        "string": "حوّل جهازك إلى منارة لحرية الإنترنت!\n\nبإمكانك مساعدة الأشخاص حول العالم على اختراق الشبكات المقيدة والوصول إلى الإنترنت العالمي بشكل آمن من خلال شبكة سایفون."
+        "string": "حوّل جهازك إلى منارة لحرية الإنترنت!\n\nبإمكانك مساعدة الأشخاص حول العالم على اختراق الشبكات المقيّدة والوصول الآمن إلى الإنترنت العالمي من خلال شبكة Psiphon."
     },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "التالي"
     },
     "ONBOARDING_INFO_1_HEADER_I18N": {
-        "string": "ما هو Conduit؟"
+        "string": "ما هو تطبيق Conduit؟"
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
-        "string": "Conduit هو تطبيق مفتوح يسمح للأشخاص في المناطق الخاضعة للرقابة في جميع أنحاء العالم للتحول من جهازك إلى شبكة سایفون.\n\nكلما زاد عدد محطات Conduit، كلما كان برنامج سایفون أقوى وأصبح الإنترنت أكثر انفتاحًا."
+        "string": "Conduit هو تطبيق مفتوح يسمح للأشخاص في المناطق الخاضعة للرقابة في جميع أنحاء العالم استخدام جهازك كنقطة عبور إلى شبكة Psiphon.\n\nكلما زاد عدد Conduit Stations، كلما كان برنامج Psiphon أقوى وأصبح الوصول للإنترنت متاحًا أكثر دون قيود."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "التالي"
@@ -105,7 +105,7 @@
         "string": "السماح بالإشعارات"
     },
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
-        "string": "توصي Conduit بتمكين الإشعارات حتى نتمكن من تقديم تحديثات مهمة حول Conduit Station الخاصة بك.\n\nهل أنت مستعد للبدء؟"
+        "string": "توصي Conduit بتفعيل الإشعارات حتى نتمكن من تقديم تحديثات مهمة حول Conduit Station الخاصة بك.\n\nهل أنت مستعد للبدء؟"
     },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "أبدأ"
@@ -114,13 +114,13 @@
         "string": "سياسة الخصوصية"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
-        "string": "لا نقوم بجمع معلومات تعريف شخصية من مستخدمي Conduit. يتم تشفير جميع البيانات المنقولة ولا يمكن لك أو لـسایفون الوصول إليها. لا يمكن للمستخدمين المتصلين الوصول إلى جهازك بأي شكل من الأشكال.\n\nعند استخدامك لـ Conduit، فإنك توافق على سياسة الخصوصية الخاصة بنا، المذكورة أدناه."
+        "string": "لا نجمع معلومات تعريف شخصية من مستخدمي Conduit. يتم تشفير جميع البيانات المنقولة ولا يمكن لك أو لـ Psiphon الوصول إليها. لا يمكن للمستخدمين المتصلين الوصول إلى جهازك بأي شكل من الأشكال.\n\nعند استخدامك لـ Conduit، فإنك توافق على سياسة الخصوصية الخاصة بنا، المذكورة أدناه."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "قبول"
     },
     "REPLAY_INTRO_I18N": {
-        "string": "قائمة التعريف"
+        "string": "إعادة تشغيل المقدمة"
     },
     "UPGRADE_REQUIRED_I18N": {
         "string": "يرجى تحديث التطبيق"
