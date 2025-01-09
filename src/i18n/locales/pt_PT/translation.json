@@ -1,0 +1,146 @@
+{
+    "LOADING_I18N": {
+        "string": "A carregar ...",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "Toque para ativar ",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "A sua ID Conduit",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "{{ niceBytes }} transferido "
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers }} pares ligados"
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} a ligar"
+    },
+    "CANCEL_I18N": {
+        "string": "Cancelar"
+    },
+    "CONFIRM_I18N": {
+        "string": "Confirmar"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "Pares máx."
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "MB/s máx. por par"
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "Largura de banda necessária"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "Enviar diagnóstico"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "A alteração das configurações do Conduit requer a reiniciação da Conduit station. Todos os utilizadores ligados serão desligados."
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "Confirmar alterações e reiniciar agora?"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "Notificações"
+    },
+    "ENABLE_I18N": {
+        "string": "Ativar"
+    },
+    "ENABLED_I18N": {
+        "string": "Ativado"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "Conduit Station"
+    },
+    "RUNNING_I18N": {
+        "string": "EM FUNCIONAMENTO"
+    },
+    "STOPPED_I18N": {
+        "string": "PARADO"
+    },
+    "UNKNOWN_I18N": {
+        "string": "DESCONHECIDO"
+    },
+    "SETTINGS_I18N": {
+        "string": "Configurações"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "Política de Privacidade"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "Enviado, obrigado!"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "Manter premido para desligar"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "alterações pendentes"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "fechar para aplicar"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "Bem-vindo ao Conduit!"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "Transforme o seu dispositivo num farol de liberdade na Internet! Pode ajudar pessoas em todo o mundo a entrar em redes restritivas e a acederem à Internet global, de forma segura através da rede Psiphon. "
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "Seguinte"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "O que é o Conduit?"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "O Conduit é uma aplicação de código aberto que permite que pessoas em regiões censuradas em todo o mundo saltem do seu dispositivo para a Psiphon Network.\n\nQuanto mais Conduit stations existirem, mais forte é a Psiphon e mais aberta se torna a Internet."
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "Seguinte"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "Permitir notificações"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "O Conduit recomenda que ative as notificações para que possamos fornecer atualizações críticas sobre a sua estação Conduit. Pronto para começar? "
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "Começar"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "Política de Privacidade"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "Não recolhemos informações de identificação pessoal dos utilizadores do Conduit. Todos os dados transmitidos são encriptados e não podem ser acedidos nem por si nem pelo Psiphon. Os utilizadores ligagos não conseguem aceder ao seu dispositivo de forma alguma. Ao utilizar o Conduit, aceita a nossa política de privacidade, disponível abaixo. "
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "Aceitar"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "Repetir a introdução "
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "Atualizar a aplicação"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "A aguardar pares"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "Saber Mais"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "Nome do Conduit"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "Dê um nome ao seu Conduit"
+    },
+    "ID_I18N": {
+        "string": "ID"
+    },
+    "ALIAS_I18N": {
+        "string": "Pseudónimo"
+    }
+}

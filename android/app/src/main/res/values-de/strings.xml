@@ -4,23 +4,23 @@
     <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
     <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
-    <string name="conduit_service_stop_label_text">إيقاف</string>
+    <string name="conduit_service_stop_label_text">Stopp</string>
     <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
     <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
     <!-- Long notification text (notification expanded) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
-    <string name="conduit_service_running_notification_long_text">المستخدمين: %1$dمتصل / جاري الاتصال\nالبيانات: %3$s تم نقلها</string>
+    <string name="conduit_service_running_notification_long_text">Klienten: %1$d verbunden/ %2$dKontaktaufnahme \nDaten: %3$s übertragen</string>
     <!-- Notification text for the Conduit service when it is waiting for network connectivity -->
-    <string name="conduit_service_no_internet_notification_text">في انتظار اتصال الشبكة</string>
+    <string name="conduit_service_no_internet_notification_text">Warten auf Netzwerkverbindung</string>
     <!-- Notification channel description for the Conduit service -->
-    <string name="conduit_service_channel_description">إشعار بشأن خدمة Conduit</string>
+    <string name="conduit_service_channel_description">Benachrichtigung für den Conduit-Dienst</string>
     <!-- Notification text for when the Conduit app detects an that the app must be updated to continue working -->
-    <string name="notification_conduit_inproxy_must_upgrade_text">التحديث مطلوب: يرجى تنزيل أحدث إصدار من التطبيق لمواصلة استخدامه.</string>
+    <string name="notification_conduit_inproxy_must_upgrade_text">Update erforderlich: Bitte laden Sie die neueste Version der App herunter, um sie weiterhin verwenden zu können.</string>
     <!-- Notification text for when the Conduit service fails to start -->
-    <string name="notification_conduit_failed_to_start_text">فشلت خدمة Conduit في بدء التشغيل. انقر فوق الإشعار للحصول على مزيد من المعلومات</string>
+    <string name="notification_conduit_failed_to_start_text">Conduit-Dienst konnte nicht gestartet werden. Tippen Sie auf die Benachrichtigung, um weitere Informationen zu erhalten</string>
     <!-- Notification text for when the Conduit service fails to restart -->
-    <string name="notification_conduit_failed_to_restart_text">فشلت خدمة Conduit في إعادة التشغيل. انقر فوق الإشعار للحصول على مزيد من المعلومات</string>
+    <string name="notification_conduit_failed_to_restart_text">Conduit-Dienst konnte nicht neu gestartet werden. Tippen Sie auf die Benachrichtigung, um weitere Informationen zu erhalten</string>
     <!-- Notification text for Conduit starting notification -->
-    <string name="conduit_service_starting_notification_text">خدمة Conduit قيد التشغيل…</string>
+    <string name="conduit_service_starting_notification_text">Der Conduit-Dienst beginnt …</string>
     <!-- Added by expo-localiztion -->
     <string name="ExpoLocalization_supportsRTL" translatable="false">true</string>
 </resources>

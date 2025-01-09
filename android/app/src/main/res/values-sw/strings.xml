@@ -4,23 +4,23 @@
     <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
     <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
-    <string name="conduit_service_stop_label_text">إيقاف</string>
+    <string name="conduit_service_stop_label_text">Simama</string>
     <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
-    <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
+    <string name="conduit_service_running_notification_short_text">%1$d/%2$d\u00B7%3$s</string>
     <!-- Long notification text (notification expanded) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
-    <string name="conduit_service_running_notification_long_text">المستخدمين: %1$dمتصل / جاري الاتصال\nالبيانات: %3$s تم نقلها</string>
+    <string name="conduit_service_running_notification_long_text">Wateja: %1$d waliounganishwa / %2$d wanaounganishwa\nData: %3$s iliyohamishwa</string>
     <!-- Notification text for the Conduit service when it is waiting for network connectivity -->
-    <string name="conduit_service_no_internet_notification_text">في انتظار اتصال الشبكة</string>
+    <string name="conduit_service_no_internet_notification_text">Inasubiri upatikanaji wa mtandao</string>
     <!-- Notification channel description for the Conduit service -->
-    <string name="conduit_service_channel_description">إشعار بشأن خدمة Conduit</string>
+    <string name="conduit_service_channel_description">Taarifa ya huduma ya Conduit</string>
     <!-- Notification text for when the Conduit app detects an that the app must be updated to continue working -->
-    <string name="notification_conduit_inproxy_must_upgrade_text">التحديث مطلوب: يرجى تنزيل أحدث إصدار من التطبيق لمواصلة استخدامه.</string>
+    <string name="notification_conduit_inproxy_must_upgrade_text">Maboresho yanahitajika: Tafadhali pakua toleo jipya la programu ili kuendelea kuitumia.</string>
     <!-- Notification text for when the Conduit service fails to start -->
-    <string name="notification_conduit_failed_to_start_text">فشلت خدمة Conduit في بدء التشغيل. انقر فوق الإشعار للحصول على مزيد من المعلومات</string>
+    <string name="notification_conduit_failed_to_start_text">Huduma ya Conduit imeshindwa kuwaka. Gusa arifa kwa taarifa zaidi</string>
     <!-- Notification text for when the Conduit service fails to restart -->
-    <string name="notification_conduit_failed_to_restart_text">فشلت خدمة Conduit في إعادة التشغيل. انقر فوق الإشعار للحصول على مزيد من المعلومات</string>
+    <string name="notification_conduit_failed_to_restart_text">Huduma ya Conduit ilishindwa kuwaka upya. Gusa arifa kwa taarifa zaidi.</string>
     <!-- Notification text for Conduit starting notification -->
-    <string name="conduit_service_starting_notification_text">خدمة Conduit قيد التشغيل…</string>
+    <string name="conduit_service_starting_notification_text">Huduma ya Conduit inawaka...</string>
     <!-- Added by expo-localiztion -->
     <string name="ExpoLocalization_supportsRTL" translatable="false">true</string>
 </resources>

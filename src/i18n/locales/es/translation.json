@@ -1,0 +1,146 @@
+{
+    "LOADING_I18N": {
+        "string": "Cargando...",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "Pulsar para activar",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "Tu identificación de Conduit",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "{{ niceBytes }} transferidos"
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers }} compañeros conectados"
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} conectando"
+    },
+    "CANCEL_I18N": {
+        "string": "Cancelar"
+    },
+    "CONFIRM_I18N": {
+        "string": "Confirmar"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "Número máximo de compañeros"
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "Cantidad máxima de MB/s por compañero"
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "Ancho de banda necesario"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "Enviar diagnóstico"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "Cambiar la configuración de Conduit requiere reiniciar tu terminal Conduit. Cualquier usuario conectado será desconectado."
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "¿Confirmar los cambios y reiniciar ahora?"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "Notificaciones"
+    },
+    "ENABLE_I18N": {
+        "string": "Activar"
+    },
+    "ENABLED_I18N": {
+        "string": "Activado"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "Terminal Conduit"
+    },
+    "RUNNING_I18N": {
+        "string": "EN MARCHA"
+    },
+    "STOPPED_I18N": {
+        "string": "DETENIDO"
+    },
+    "UNKNOWN_I18N": {
+        "string": "DESCONOCIDO"
+    },
+    "SETTINGS_I18N": {
+        "string": "Configuración"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "Política de Privacidad"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "Enviado, ¡gracias!"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "Mantener pulsado para desactivar"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "cambios pendientes"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "cerrar para aplicar"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "¡Bienvenido a Conduit!"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "¡Convierte tu dispositivo en un faro de libertad en Internet!\n\nPuedes ayudar a la gente de todo el mundo a liberarse de las redes restrictivas y acceder al Internet global de forma segura a través de la red Psiphon."
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "Seguir"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "¿Qué es Conduit?"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "Conduit es una aplicación de código abierto que permite a las personas en regiones censuradas de todo el mundo a pivotar sobre tu dispositivo para llegar a la red Psiphon.\n\nMientras más terminales Conduit existan, más fuerte será Psiphon y más abierto será Internet."
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "Seguir"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "Permitir notificaciones"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "Conduit recomienda habilitar las notificaciones para poder proporcionar actualizaciones críticas sobre tu terminal Conduit.\n\n¿Listo para comenzar?"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "Comenzar"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "Política de Privacidad"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "No recopilamos información personal identificable de los usuarios de Conduit. Todos los datos transmitidos se encriptan y ni tú ni Psiphon puede acceder a ellos. Los usuarios conectados no pueden acceder a tu dispositivo de ninguna forma\n\nAl usar Conduit, aceptas nuestra política de privacidad, disponible a continuación."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "Aceptar"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "Repetir la introducción"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "Actualizar la aplicación"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "Esperando a compañeros"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "Más información"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "Nombre de Conduit"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "Asignar nombre a tu Conduit"
+    },
+    "ID_I18N": {
+        "string": "Identificación"
+    },
+    "ALIAS_I18N": {
+        "string": "Alias"
+    }
+}

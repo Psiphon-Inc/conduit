@@ -1,0 +1,146 @@
+{
+    "LOADING_I18N": {
+        "string": "लोड हो रहा है ...",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "चालू करने के लिए टैप करें",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "आपकी कान्डूइट ID",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "{{ niceBytes }} ट्रान्सफर किए गए "
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers}} जुड़े हुए साथी "
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} जुड़ रहे"
+    },
+    "CANCEL_I18N": {
+        "string": "रद्द करें"
+    },
+    "CONFIRM_I18N": {
+        "string": "पुष्टि करें"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "अधिकतम साथी"
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "अधिकतम MB/s प्रति साथी"
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "आवश्यक बैंडविड्थ"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "डायग्नोस्टिक भेजें"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "कान्डूइट सेटिंग्स बदलने के लिए आपके कान्डूइट स्टेशन को पुनरारंभ करना आवश्यक है। कोई भी कनेक्टिड उपयोगकर्ता डिस्कनेक्ट हो जाएंगे।"
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "परिवर्तनों की पुष्टि करें और अभी पुनरारंभ करें?"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "सूचनाएं"
+    },
+    "ENABLE_I18N": {
+        "string": "सक्षम करें"
+    },
+    "ENABLED_I18N": {
+        "string": "प्रयोग में है"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "कान्डूइट स्टेशन"
+    },
+    "RUNNING_I18N": {
+        "string": "क्रियाशील"
+    },
+    "STOPPED_I18N": {
+        "string": "रुोक दिया गया"
+    },
+    "UNKNOWN_I18N": {
+        "string": "अज्ञात"
+    },
+    "SETTINGS_I18N": {
+        "string": "सेटिंग्स"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "गोपनीयता नीति"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "भेज दिया, धन्यवाद"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "बंद करने के लिए दबाए रखें"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "परिवर्तन लंबित हैं"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "लागू करने के लिए बंद करें"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "कान्डूइट में आपका स्वागत है!"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "अपनी डिवाइस को इंटरनेट आज़ादी बीकन में बदलें!\n\nआप दुनिया भर के लोगों को प्रतिबंधात्मक नेटवर्कों से बाहर निकलने और Psiphon नेटवर्क के माध्यम से सुरक्षित रूप से वैश्विक इंटरनेट तक पहुंचने में मदद कर सकते हैं। \n "
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "अगला"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "कान्डूइट क्या है?"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "कान्डूइट एक ओपन-सोर्स एप्लिकेशन है जो दुनिया भर में सेंसर किए गए क्षेत्रों में लोगों को आपकी डिवाइस से और Psiphon नेटवर्क में बाउंस करने में सक्षम बनाती है।\n\nजितने अधिक कान्डूइट स्टेशन होंगे, Psiphon उतना ही मजबूत होगा और इंटरनेट उतना ही अधिक खुला हो जाएगा।"
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "अगला"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "सूचनाओं की अनुमति दें"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "कान्डूइट आपको सूचनाएं सक्षम करने की अनुशंसा करता है ताकि हम आपके कान्डूइट स्टेशन के बारे में महत्वपूर्ण अपडेट प्रदान कर सकें। \n\nशुरू करने के लिए तैयार हैं?"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "शुरू करें"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "गोपनीयता नीति"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "हम कान्डूइट उपयोगकर्ताओं से व्यक्तिगत रूप से पहचान योग्य जानकारी एकत्र नहीं करते हैं। सारा संचारित डेटा एन्क्रिप्टेड है और इसे आपके या Psiphon द्वारा एक्सेस नहीं किया जा सकता है। कनेक्टिड उपयोगकर्ता किसी भी तरीके से आपकी डिवाइस तक पहुंचने में सक्षम नहीं हैं। \n\nकान्डूइट का उपयोग करके, आप नीचे उपलब्ध हमारी गोपनीयता नीति को स्वीकार करते हैं।"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "स्वीकारें"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "परिचय को पुन: चलाएँ"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "कृपया ऐप को अपग्रेड करें"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "साथियों के लिए प्रतीक्षा की जा रही है"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "और अधिक जानें"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "कान्डूइट का नाम"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "अपने कान्डूइट को नाम दें"
+    },
+    "ID_I18N": {
+        "string": "ID"
+    },
+    "ALIAS_I18N": {
+        "string": "उर्फ"
+    }
+}
