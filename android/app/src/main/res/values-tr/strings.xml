@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Conduit</string>
+    <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+    <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+    <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
     <string name="conduit_service_stop_label_text">Durdur</string>
     <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
@@ -18,4 +21,6 @@
     <string name="notification_conduit_failed_to_restart_text">Conduit hizmeti yeniden başlatılamadı. Ayrıntılı bilgi almak için bildirime tıklayın.</string>
     <!-- Notification text for Conduit starting notification -->
     <string name="conduit_service_starting_notification_text">Conduit hizmeti başlatılıyor…</string>
-    </resources>
+    <!-- Added by expo-localiztion -->
+    <string name="ExpoLocalization_supportsRTL" translatable="false">true</string>
+</resources>

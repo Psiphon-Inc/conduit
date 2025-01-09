@@ -1,0 +1,146 @@
+{
+    "LOADING_I18N": {
+        "string": "لوڈ ہو رہا ہے",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "آن کرنے کے لیے ٹیپ کریں",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "آپ کے کنڈیوئٹ کی آئی ڈی",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "{{ niceBytes }} ٹرانسفرڈ ہوئے"
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{پیرز}} ہم رتبہ ساتھی کنیکٹڈ ہو گئے"
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{پیرز}} کنکٹڈ ہو رہے ہیں"
+    },
+    "CANCEL_I18N": {
+        "string": "منسوخ کریں"
+    },
+    "CONFIRM_I18N": {
+        "string": "تصدیق کریں"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "ہم رتبہ ساتھیوں کی زیادہ سے زیادہ تعداد"
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "فی ہم رتبہ ساتھی زیادہ سے زیادہ MB/s  "
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "مطلوبہ بینڈوِتھ"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "ڈائگنوسٹک بھیجیں"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "کنڈیوئٹ کی سیٹنگزکو تبدیل کرنے کے لیے آپ کے کنڈیوئٹ اسٹیشن کو ری اسٹارٹ کرنے کی ضرورت ہے۔ کسی بھی کنکٹڈ شدہ صارفین کا رابطہ منقطع ہو جائے گا۔"
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "تبدیلیوں کی تصدیق کرنا چاہتے ہیں اور ابھی دوبارہ شروع کرنا چاہتے ہیں؟"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "اطلاعات"
+    },
+    "ENABLE_I18N": {
+        "string": "فعال کریں"
+    },
+    "ENABLED_I18N": {
+        "string": "فعال شدہ "
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "کنڈیوئٹ اسٹیشن"
+    },
+    "RUNNING_I18N": {
+        "string": "رواں ہے"
+    },
+    "STOPPED_I18N": {
+        "string": "رک گیا ہے"
+    },
+    "UNKNOWN_I18N": {
+        "string": "انجان"
+    },
+    "SETTINGS_I18N": {
+        "string": "سیٹَنگز"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "رازداری کی پالیسی"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "بھیج دی گئی/دیا گیا ہے، شکریہ"
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "بند کرنے کے لیے دبائے رکھیں"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "تبدیلیاں زیر التواء"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "اطلاق کرنے کے لیے اس کو بند کریں"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "کنڈیوئٹ پر خوش آمدید!"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "اپنے ڈیوائس کو انٹرنیٹ فریڈم میں تبدیل کرنے کا چراغَ راہ بنائیں! \n\n آپ دنیا بھر کے لوگوں کو پابندی والے نیٹ ورکس پر قابو پا نے اور Psiphon نیٹ ورک کے ذریعے محفوظ طریقے سے عالمی انٹرنیٹ تک رسائی حاصل کرنے میں مدد کر سکتے ہیں۔."
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "اگلا"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "Conduit کیا ہے؟"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "Conduit ایک اوپن سورس ایپلیکیشن ہے جو دنیا بھر کے سنسر شدہ علاقوں میں لوگوں کو آپ کےڈیوائس کے ذریعے اچھالنے اور Psiphon نیٹ ورک میں جانے کے قابل بناتی ہے۔"
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "اگلا"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "اطلاعات کی اجازت دیں"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "Conduit تجویز کرتا ہے کہ آپ نوٹیفیکیشنس کو فعال کریں تاکہ ہم آپ کے Conduit اسٹیشن کے بارے میں اہم اپ ڈیٹس فراہم کر سکیں۔ \n\nآغاز کے لیے تیار ہیں؟"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "آغاز کریں"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "رازداری کی پالیسی"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "ہم Conduit صارفین سے ذاتی طور پر قابل شناخت معلومات جمع نہیں کرتے ہیں۔ تمام منتقل شدہ ڈیٹا انکرپٹڈ ہیں اور آپ یا Psiphon کے ذریعہ اس تک رسائی حاصل نہیں کی جاسکتی ہے۔ منسلک صارفین کسی بھی طرح سے آپ کی ڈیوائس تک رسائی حاصل کرنے کے قابل نہیں ہیں\n\nConduit کو استعمال کرکے، آپ ذیل میں دستیاب ہماری رازداری کی پالیسی کو قبول کرتے ہیں۔"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "قبول کریں"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "تعارف کو ری پلے کریں"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "براہ کرم ایپ کو اپ گریڈ کریں"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "پیرز کا انتظار ہو رہا ہے"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "مزید جانیں"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "Conduit کا نام"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "اپنے Conduit کا نام بتائیں"
+    },
+    "ID_I18N": {
+        "string": "آئی ڈی"
+    },
+    "ALIAS_I18N": {
+        "string": "اٹلس"
+    }
+}

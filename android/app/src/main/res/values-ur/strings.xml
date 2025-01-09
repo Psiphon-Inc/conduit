@@ -1,26 +1,26 @@
 <resources>
-    <string name="app_name">Conduit</string>
+    <string name="app_name">کنڈیوئٹ</string>
     <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
     <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
     <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
-    <string name="conduit_service_stop_label_text">Arrêter</string>
+    <string name="conduit_service_stop_label_text">روکنے</string>
     <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
     <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
     <!-- Long notification text (notification expanded) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
-    <string name="conduit_service_running_notification_long_text">Clients : %1$d connecté / %2$d en cours de connexion\nDonnées : %3$s transférées</string>
+    <string name="conduit_service_running_notification_long_text">  کلائنٹس: %1$d کنیکٹڈ ہو گئے ہیں/ %2$d کنیکڈ ہو رہے ہیں  ڈیٹا %3$s ٹرانسفر ہو گیا ہے</string>
     <!-- Notification text for the Conduit service when it is waiting for network connectivity -->
-    <string name="conduit_service_no_internet_notification_text">En attente de connectivité réseau</string>
+    <string name="conduit_service_no_internet_notification_text">نیٹ ورک کنیکٹیویٹی کا انتظار ہے</string>
     <!-- Notification channel description for the Conduit service -->
-    <string name="conduit_service_channel_description">Notification pour le service Conduit</string>
+    <string name="conduit_service_channel_description">Conduit سروس کے لیے نوٹیفکیشن</string>
     <!-- Notification text for when the Conduit app detects an that the app must be updated to continue working -->
-    <string name="notification_conduit_inproxy_must_upgrade_text">Mise à jour requise : Veuillez télécharger la dernière version de l\'application pour poursuivre l\'utilisation.</string>
+    <string name="notification_conduit_inproxy_must_upgrade_text">اپڈیٹ لازمی ہے: براہ کرم ایپ کا جدید ترین ورژن ڈاؤن لوڈ کریں تاکہ آپ اس کا استعمال جاری رکھ سکیں۔</string>
     <!-- Notification text for when the Conduit service fails to start -->
-    <string name="notification_conduit_failed_to_start_text">Échec de démarrage de Conduit. Appuyez sur la notification pour plus de précisions</string>
+    <string name="notification_conduit_failed_to_start_text">Conduit سروس شروع ہونے میں ناکام۔ مزید معلومات کے لیے نوٹیفکیشن کو ٹیپ کریں</string>
     <!-- Notification text for when the Conduit service fails to restart -->
-    <string name="notification_conduit_failed_to_restart_text">Le service Conduit n\'a pas réussi à redémarrer. Appuyez sur la notification pour plus de précisions</string>
+    <string name="notification_conduit_failed_to_restart_text">Conduit سروس شروع ہونے میں ناکام۔ مزید معلومات کے لیے نوٹیفکیشن کو ٹیپ کریں</string>
     <!-- Notification text for Conduit starting notification -->
-    <string name="conduit_service_starting_notification_text">Démarrage du service Conduit...</string>
+    <string name="conduit_service_starting_notification_text">Conduit سروس شروع ہو رہی ہے...</string>
     <!-- Added by expo-localiztion -->
     <string name="ExpoLocalization_supportsRTL" translatable="false">true</string>
 </resources>
