@@ -2,7 +2,7 @@
   "expo": {
     "name": "conduit",
     "slug": "conduit",
-    "version": "1.1.0",
+    "version": "1.5.0",
     "orientation": "portrait",
     "scheme": "conduit",
     "userInterfaceStyle": "automatic",
