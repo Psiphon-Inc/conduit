@@ -190,7 +190,8 @@ struct ConduitParams: Equatable {
 
 /// React Native module for managing the VPN.
 @objc(ConduitModule)
-final class ConduitModule: RCTEventEmitter {
+class ConduitModule: RCTEventEmitter {
+    // Test Note: Class has internal access level to allow for derived mocks.
     
     // Concurrency note:
     // Exported methods of this class (defined in ConduitModule.mm) are
@@ -210,19 +211,10 @@ final class ConduitModule: RCTEventEmitter {
     
     override init() {
         
-        LoggingSystem.bootstrap { label in
-            MultiplexLogHandler([
-                OSLogger(subsystem: AppLogger.subsystem,
-                         label: label,
-                         logLevel: AppLogger.minLogLevel),
-                PsiphonLogHandler(label: label,
-                                  logLevel: AppLogger.minLogLevel,
-                                  puppy: AppLogger.initializePuppy()),
-            ])
-        }
-        
         dispatchQueue = DispatchQueue(label: "ca.psiphon.conduit.module", qos: .default)
         super.init()
+        
+        setupLoggingSystem()
         
         conduitManager = ConduitManager(listener: self)
         Task {
@@ -250,6 +242,19 @@ final class ConduitModule: RCTEventEmitter {
     
     override func supportedEvents() -> [String]! {
         return [ConduitEvent.eventName]
+    }
+    
+    func setupLoggingSystem() {
+        LoggingSystem.bootstrap { label in
+            MultiplexLogHandler([
+                OSLogger(subsystem: AppLogger.subsystem,
+                         label: label,
+                         logLevel: AppLogger.minLogLevel),
+                PsiphonLogHandler(label: label,
+                                  logLevel: AppLogger.minLogLevel,
+                                  puppy: AppLogger.initializePuppy()),
+            ])
+        }
     }
     
     func sendEvent(_ event: ConduitEvent) {
