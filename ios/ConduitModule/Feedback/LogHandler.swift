@@ -223,3 +223,103 @@ extension Logging.Logger.Level {
 
 #endif // canImport(Logging) & canImport(Puppy)
 
+#if canImport(Logging)
+import Logging
+
+public struct TestLog {
+    public let level: Logging.Logger.Level
+    public let message: String
+    public let metadata: Logging.Logger.Metadata?
+}
+
+private class TestLoggerStorage {
+
+    private var logs = [TestLog]()
+    private let queue = DispatchQueue(label: "TestLoggerStorage")
+
+    var capturedLogs: [TestLog] {
+        queue.sync { logs }
+    }
+    
+    func capture(_ log: TestLog) {
+        queue.sync {
+            self.logs.append(log)
+        }
+    }
+    
+    func empty() {
+        queue.sync {
+            self.logs.removeAll()
+        }
+    }
+}
+
+public struct TestLogger: LogHandler {
+    public var metadata: Logging.Logger.Metadata
+    public var logLevel: Logging.Logger.Level
+    public let label: String
+    private let queue: DispatchQueue
+    private let storage = TestLoggerStorage()
+    
+    public init(label: String, logLevel: Logging.Logger.Level = .trace) {
+        self.metadata = [:]
+        self.label = label
+        self.queue = DispatchQueue(label: label)
+        self.logLevel = logLevel
+        TestLogger.addLogger(label: label, logger: self)
+    }
+    
+    public subscript(metadataKey key: String) -> Logging.Logger.Metadata.Value? {
+        get {
+            return metadata[key]
+        }
+        set(newValue) {
+            metadata[key] = newValue
+        }
+    }
+    
+    public func log(
+        level: Logging.Logger.Level,
+        message: Logging.Logger.Message,
+        metadata: Logging.Logger.Metadata?,
+        source: String, file: String, function: String, line: UInt)
+    {
+        let combinedMetadata = metadata ?? [:]
+        storage.capture(
+            TestLog(
+                level: level,
+                message: message.description,
+                metadata: combinedMetadata
+            )
+        )
+    }
+
+    public func getCapturedLogs() -> [TestLog] {
+        storage.capturedLogs
+    }
+    
+    // Provide a collection of active instances for test suite to access.
+    static private let loggerQueue = DispatchQueue(label: "TestLogger.queue")
+    static private var loggers: [String: TestLogger] = [:]
+    
+    static func getLoggers() -> [String: TestLogger] {
+        loggerQueue.sync {
+            return loggers
+        }
+    }
+    static func addLogger(label: String, logger: TestLogger) {
+        loggerQueue.sync {
+            loggers[label] = logger
+        }
+    }
+    
+    static func emptyLoggers() {
+        loggerQueue.sync {
+            for logger in loggers.values {
+                logger.storage.empty()
+            }
+        }
+    }
+}
+
+#endif // canImport(Logging)
