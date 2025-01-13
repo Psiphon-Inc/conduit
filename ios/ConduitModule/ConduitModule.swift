@@ -256,7 +256,7 @@ class ConduitModule: RCTEventEmitter {
             ])
         }
     }
-    
+
     func sendEvent(_ event: ConduitEvent) {
         sendEvent(withName: ConduitEvent.eventName, body: event.asDictionary)
         Logger.conduitModule.trace("ConduitEvent", metadata: ["event": "\(String(describing: event))"])
@@ -274,25 +274,30 @@ extension ConduitModule {
     ) {
 
         guard let conduitParams = ConduitParams(params: params) else {
-            Logger.conduitModule.warning("NSDictionary to ConduitParams conversion failed.")
+            Logger.conduitModule.warning("NSDictionary to ConduitParams conversion failed")
             reject("error", "params NSDictionary could not be loaded into ConduitParams.", nil)
             return
         }
         
         Task {
-            switch await self.conduitManager.conduitStatus {
+            let conduitStatus = await self.conduitManager.conduitStatus
+            switch conduitStatus {
+            
             case .stopped:
                 do {
                     try await self.conduitManager.startConduit(conduitParams)
                 } catch {
                     sendEvent(.proxyError(.inProxyStartFailed))
                     reject("error", "Proxy start failed.", error)
-                    Logger.conduitModule.error("Proxy start failed.", metadata: ["error": "\(error)"])
+                    Logger.conduitModule.error("Proxy start failed", metadata: ["error": "\(error)"])
+                    return
                 }
+            
             case .started:
                 await self.conduitManager.stopConduit()
+            
             case .starting, .stopping:
-                // no-op
+                Logger.conduitModule.info("No operation required", metadata: ["conduitStatus": "\(conduitStatus)"])
                 break
             }
             resolve(nil)
@@ -312,20 +317,21 @@ extension ConduitModule {
         }
         
         Task {
-            switch await self.conduitManager.conduitStatus {
+            let conduitStatus = await self.conduitManager.conduitStatus
+            switch conduitStatus {
+            
             case .stopping, .stopped, .starting:
-                // no-op
+                Logger.conduitModule.info("No operation required", metadata: ["conduitStatus": "\(conduitStatus)"])
                 resolve(nil)
                 
             case .started:
-                
                 do {
                     try await self.conduitManager.startConduit(conduitParams)
                     resolve(nil)
                 } catch {
                     sendEvent(.proxyError(.inProxyRestartFailed))
                     reject("error", "Proxy restart failed.", error)
-                    Logger.conduitModule.error("Proxy restart failed.", metadata: ["error": "\(error)"])
+                    Logger.conduitModule.error("Proxy restart failed", metadata: ["error": "\(error)"])
                 }
             }
         }
@@ -420,7 +426,7 @@ extension ConduitModule {
                     resolve(nil)
                     Logger.conduitModule.info("Finished uploading feedback diagnostic report", metadata: ["feedback.id": "\(feedbackId)"])
                 } catch {
-                    reject("error", "Feedback upload failed", nil)
+                    reject("error", "Feedback upload failed.", nil)
                     Logger.conduitModule.error("Feedback upload failed", metadata: [
                         "feedback.id": "\(feedbackId)",
                         "error": "\(error)"
@@ -428,7 +434,7 @@ extension ConduitModule {
                 }
                 
             } catch {
-                reject("error", "Feedback preparation failed", nil)
+                reject("error", "Feedback preparation failed.", nil)
                 Logger.conduitModule.error("Feedback preparation failed", metadata: ["error": "\(error)"])
             }
         }
