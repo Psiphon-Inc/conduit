@@ -772,8 +772,8 @@ func getGlobalModule() -> ConduitModuleMock {
              module.sendFeedback(inproxyId, resolve: pendingResolve, reject: pendingReject)
          }
         
-         #expect(pendingResolveVal == nil, "Unexpected resolve result from second toggle")
-         #expect(pendingRejectVal.code == nil, "Unexpected reject code from second toggle")
-         #expect(pendingRejectVal.message == nil, "Unexpected reject message from second toggle")
+         #expect(pendingResolveVal == nil, "Unexpected resolve result")
+         #expect(pendingRejectVal.code == nil, "Unexpected reject code")
+         #expect(pendingRejectVal.message == nil, "Unexpected reject message")
      }
 }
