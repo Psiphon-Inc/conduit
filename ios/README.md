@@ -19,4 +19,4 @@
 - Run `pod install`.
 - Do not run `npm run dev-server` as the bridge to this layer is simulated.
 - Open `conduit.xcworkspace` in Xcode.
-- Develop and build the app from Xcode on your target device.
+- Run tests from `Play` buttons in Test Navigator, or `conduitTests/conduitTests.swift` file.
