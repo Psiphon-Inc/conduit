@@ -13,3 +13,10 @@
 - Open `conduit.xcworkspace` in Xcode.
 - Develop and build the app from Xcode on your target device.
 
+### Unit testing instructions
+
+- Ensure versions of Xcode and Swift are compatible with [Swift Testing Framework](https://developer.apple.com/documentation/testing/).
+- Run `pod install`.
+- Do not run `npm run dev-server` as the bridge to this layer is simulated.
+- Open `conduit.xcworkspace` in Xcode.
+- Run tests from `Play` buttons in Test Navigator, or `conduitTests/conduitTests.swift` file.
