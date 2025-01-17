@@ -1,8 +1,5 @@
 <resources>
     <string name="app_name">Conduit</string>
-    <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
-    <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
-    <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
     <string name="conduit_service_stop_label_text">Parar</string>
     <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
@@ -21,6 +18,4 @@
     <string name="notification_conduit_failed_to_restart_text">Falha ao reiniciar o serviço Conduit. Toque na notificação para obter mais informações</string>
     <!-- Notification text for Conduit starting notification -->
     <string name="conduit_service_starting_notification_text">O serviço Conduit está sendo iniciado...</string>
-    <!-- Added by expo-localiztion -->
-    <string name="ExpoLocalization_supportsRTL" translatable="false">true</string>
-</resources>
+    </resources>
