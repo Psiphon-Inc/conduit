@@ -1,8 +1,5 @@
 <resources>
     <string name="app_name">Conduit</string>
-    <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
-    <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
-    <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
     <string name="conduit_service_stop_label_text">Hentikan</string>
     <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
@@ -20,7 +17,5 @@
     <!-- Notification text for when the Conduit service fails to restart -->
     <string name="notification_conduit_failed_to_restart_text">Layanan Conduit gagal dimulai ulang. Ketuk notifikasi untuk informasi lebih lanjut</string>
     <!-- Notification text for Conduit starting notification -->
-    <string name="conduit_service_starting_notification_text">Layanan Conduit dimulai…</string>
-    <!-- Added by expo-localiztion -->
-    <string name="ExpoLocalization_supportsRTL" translatable="false">true</string>
-</resources>
+    <string name="conduit_service_starting_notification_text">Layanan Conduit dimulaiâ€¦</string>
+    </resources>

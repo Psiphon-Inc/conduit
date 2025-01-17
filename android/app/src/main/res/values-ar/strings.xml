@@ -1,14 +1,11 @@
 <resources>
     <string name="app_name">Conduit</string>
-    <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
-    <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
-    <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
     <!-- Label for the stop action in the Conduit service notification -->
     <string name="conduit_service_stop_label_text">إيقاف</string>
     <!-- Short notification text (notification collapsed) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
     <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
     <!-- Long notification text (notification expanded) for the Conduit service when it is active showing the number of clients connected, connecting, and total bytes transferred -->
-    <string name="conduit_service_running_notification_long_text">المستخدمين: %1$dمتصل / جاري الاتصال\nالبيانات: %3$s تم نقلها</string>
+    <string name="conduit_service_running_notification_long_text">المستخدمين: %1$dمتصل / %2$d جاري الاتصال\nالبيانات: %3$s تم نقلها</string>
     <!-- Notification text for the Conduit service when it is waiting for network connectivity -->
     <string name="conduit_service_no_internet_notification_text">في انتظار اتصال الشبكة</string>
     <!-- Notification channel description for the Conduit service -->
@@ -21,6 +18,4 @@
     <string name="notification_conduit_failed_to_restart_text">فشلت خدمة Conduit في إعادة التشغيل. انقر فوق الإشعار للحصول على مزيد من المعلومات</string>
     <!-- Notification text for Conduit starting notification -->
     <string name="conduit_service_starting_notification_text">خدمة Conduit قيد التشغيل…</string>
-    <!-- Added by expo-localiztion -->
-    <string name="ExpoLocalization_supportsRTL" translatable="false">true</string>
     </resources>
