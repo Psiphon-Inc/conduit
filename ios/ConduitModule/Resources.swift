@@ -39,7 +39,9 @@ enum ResourceFile {
    
 }
 
-func getApplicationSupportDirectory() throws -> URL {
+var getApplicationSupportDirectory: () throws -> URL = {
+    // Test note: Global var instead of func to support mocked reassignment.
+    
     // Retrieve the Application Support directory URL for the current user
     return try FileManager.default.url(
         for: .applicationSupportDirectory,
@@ -58,7 +60,9 @@ func readPsiphonConfig() throws -> [String: Any?] {
 }
 
 /// Returns `psiphon_config` with `DataRootDirectory` set.
-func defaultPsiphonConfig() throws -> [String: Any?] {
+var defaultPsiphonConfig: () throws -> [String: Any?] = {
+    // Test note: Global var instead of func to support mocked reassignment.
+    
     var config = try readPsiphonConfig()
     config["DataRootDirectory"] = try getApplicationSupportDirectory().filePath()
     return config
