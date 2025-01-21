@@ -155,6 +155,18 @@ android {
     buildFeatures {
         aidl true
     }
+
+    lintOptions {
+        // Make translation issues fatal
+        fatal 'StringFormatInvalid', 'StringFormatMatches'
+    }
+}
+
+// Perform lint checks before any assemble task
+tasks.configureEach { task ->
+    if (task.name.contains("assemble")) {
+        task.dependsOn 'lint'
+    }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
