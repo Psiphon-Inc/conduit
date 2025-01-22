@@ -12,13 +12,13 @@
         "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
     },
     "TOTAL_BYTES_TRANSFERRED_I18N": {
-        "string": "منتقل شده {{ niceBytes }}"
+        "string": "{{ niceBytes }} منتقل شده"
     },
     "CONNECTED_PEERS_I18N": {
-        "string": "کاربران متصل {{ peers }}"
+        "string": "{{ peers }} کاربران متصل"
     },
     "CONNECTING_PEERS_I18N": {
-        "string": "در حال اتصال {{ peers }}"
+        "string": "{{ peers }} در حال اتصال"
     },
     "CANCEL_I18N": {
         "string": "لغو کنید"
