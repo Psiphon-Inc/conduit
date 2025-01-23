@@ -125,10 +125,13 @@ public class ConduitServiceInteractor {
     public static void startInProxyWithLastKnownParams(Context context) {
         Intent intent = new Intent(context, ConduitService.class);
         intent.setAction(ConduitService.INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS);
-
-        // Send the intent to the service to start the in-proxy with the last stored parameters
-        // and let the service handle the logic in onStartCommand
-        sendStartCommandToService(context, intent);
+        // Use startForegroundService instead of startService since:
+        // 1. When restarting after app upgrade from ConduitUpdateReceiver, we must use
+        //    startForegroundService to start from background, as Android allows this via
+        //    ACTION_MY_PACKAGE_REPLACED exemption.
+        // 2. The service will be foreground anyway - it's either already running as foreground
+        //    or will promote itself to foreground shortly after starting.
+        ContextCompat.startForegroundService(context, intent);
     }
 
     public static void paramsChanged(Context context, ConduitServiceParameters conduitServiceParameters) {
