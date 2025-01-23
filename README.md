@@ -8,3 +8,7 @@ For more information about Conduit, [visit the web site](https://conduit.psiphon
 
 This project uses [Git LFS](https://git-lfs.github.com/) to manage large files such as the tunnel core libraries. 
 
+## Translations
+
+For information about pulling and verifying translations, see [i18n/README.md](i18n/README.md).
+
