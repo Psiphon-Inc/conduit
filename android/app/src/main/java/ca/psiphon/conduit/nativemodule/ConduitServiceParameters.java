@@ -89,7 +89,7 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
 
     // Store the object in SharedPreferences and return true if any values changed
     public boolean store(Context context) {
-        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
         SharedPreferences.Editor editor = preferences.edit();
 
         boolean changed = false;
@@ -117,7 +117,7 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         }
 
         if (changed) {
-            editor.apply();
+            editor.commit();
         }
 
         return changed;
@@ -127,7 +127,7 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
     public static ConduitServiceParameters load(Context context) {
         migrate(context); // Ensure preferences are up-to-date
 
-        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
 
         int maxClients = preferences.getInt(MAX_CLIENTS_KEY, -1);
         int limitUpstreamBytes = preferences.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1);
