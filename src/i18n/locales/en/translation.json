@@ -142,5 +142,8 @@
     },
     "ALIAS_I18N": {
         "string": "Alias"
+    },
+    "SHOW_CLAIM_LINK_I18N": {
+        "string": "Show Claim Link"
     }
 }

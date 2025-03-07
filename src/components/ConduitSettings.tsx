@@ -283,7 +283,7 @@ export function ConduitSettings() {
                                     ss.greyBorderBottom,
                                     ss.flex,
                                     ss.alignCenter,
-                                    { height: 140 },
+                                    { height: 240 },
                                     ss.column,
                                     ss.padded,
                                 ]}
@@ -316,6 +316,31 @@ export function ConduitSettings() {
                                     </Text>
                                     <ConduitName />
                                 </View>
+                                <Pressable
+                                    onPress={() => {
+                                        setModalOpen(false);
+                                        router.push("/(app)/link");
+                                    }}
+                                    style={[ss.row, ss.flex, ss.alignCenter]}
+                                >
+                                    <View
+                                        style={[
+                                            ss.row,
+                                            ss.alignCenter,
+                                            ss.rounded5,
+                                            ss.halfPadded,
+                                            {
+                                                backgroundColor: palette.white,
+                                            },
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[ss.blackText, ss.bodyFont]}
+                                        >
+                                            {t("SHOW_CLAIM_LINK_I18N.string")}
+                                        </Text>
+                                    </View>
+                                </Pressable>
                             </View>
                             <View
                                 style={[
