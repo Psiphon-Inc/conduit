@@ -8,6 +8,8 @@ import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -116,6 +118,20 @@ public class ConduitStateService extends Service {
                 MyLog.i(TAG, "Client unregistered: " + clientBinder);
             }
         }
+
+        @Override
+        public String fetchConduitPrivateKey() {
+            // Check if the client is trusted
+            int uid = Binder.getCallingUid();
+            if (!isTrustedUid(uid)) {
+                throw new SecurityException("Client is not authorized to register with this service.");
+            }
+            String privateKey = getConduitPrivateKey();
+            if (privateKey.isEmpty()) {
+                throw new IllegalStateException("Conduit private key is not set.");
+            }
+            return privateKey;
+        }
     };
 
     @Override
@@ -193,6 +209,14 @@ public class ConduitStateService extends Service {
             MyLog.e(TAG, "Failed to fetch app version code: " + e.getMessage());
             return -1;
         }
+    }
+
+    @NonNull
+    private String getConduitPrivateKey() {
+        ConduitServiceParameters parameters = ConduitServiceParameters.load(getApplicationContext());
+        return parameters != null && parameters.privateKey() != null
+                ? parameters.privateKey()
+                : "";
     }
 
     // Check if the calling UID is trusted
