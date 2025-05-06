@@ -25,21 +25,24 @@ import android.content.Intent;
 
 import ca.psiphon.conduit.nativemodule.logging.MyLog;
 
-public class ConduitUpdateReceiver extends BroadcastReceiver {
-    String TAG = ConduitUpdateReceiver.class.getSimpleName();
+public class ConduitRestartReceiver extends BroadcastReceiver {
+    String TAG = ConduitRestartReceiver.class.getSimpleName();
 
     @Override
     public void onReceive(Context context, Intent intent) {
         MyLog.init(context);
-        if (Intent.ACTION_MY_PACKAGE_REPLACED.equals(intent.getAction())) {
-            MyLog.i(TAG, "Conduit package was updated.");
+        String action = intent.getAction();
+        if (Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) ||
+                Intent.ACTION_BOOT_COMPLETED.equals(action)
+        ) {
+            MyLog.i(TAG, "Received " + action + " intent, evaluating Conduit service restart.");
 
             if (Utils.getServiceRunningFlag(context)) {
-                MyLog.i(TAG, "Restarting Conduit service after update.");
+                MyLog.i(TAG, "Restarting Conduit service.");
                 try {
                     ConduitServiceInteractor.startInProxyWithLastKnownParams(context);
                 } catch (Exception e) {
-                    MyLog.e(TAG, "Failed to restart Conduit service after update: " + e.getMessage());
+                    MyLog.e(TAG, "Failed to restart Conduit service: " + e.getMessage());
                 }
             }
         }
