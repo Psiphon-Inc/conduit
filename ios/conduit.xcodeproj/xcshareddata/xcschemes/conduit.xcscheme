@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "Conduit.app"
+               BuildableName = "conduit.app"
                BlueprintName = "conduit"
                ReferencedContainer = "container:conduit.xcodeproj">
             </BuildableReference>
@@ -32,7 +32,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "00E356ED1AD99517003FC87E"
+               BlueprintIdentifier = "67B719682D35C574006BE288"
                BuildableName = "conduitTests.xctest"
                BlueprintName = "conduitTests"
                ReferencedContainer = "container:conduit.xcodeproj">
@@ -55,7 +55,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "Conduit.app"
+            BuildableName = "conduit.app"
             BlueprintName = "conduit"
             ReferencedContainer = "container:conduit.xcodeproj">
          </BuildableReference>
@@ -72,7 +72,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "Conduit.app"
+            BuildableName = "conduit.app"
             BlueprintName = "conduit"
             ReferencedContainer = "container:conduit.xcodeproj">
          </BuildableReference>
