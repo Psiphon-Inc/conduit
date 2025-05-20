@@ -26,11 +26,13 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
+import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
+    Image,
     Modal,
     Pressable,
     Text,
@@ -63,6 +65,7 @@ import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_MBPS_PER_PEER_MAX,
     PARTICLE_VIDEO_DELAY_MS,
+    RYVE_LEARN_MORE_URL,
 } from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
@@ -72,7 +75,12 @@ import {
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import {
+    iconButton,
+    lineItemStyle,
+    palette,
+    sharedStyles as ss,
+} from "@/src/styles";
 
 export function ConduitSettings() {
     const { t } = useTranslation();
@@ -283,7 +291,6 @@ export function ConduitSettings() {
                                     ss.greyBorderBottom,
                                     ss.flex,
                                     ss.alignCenter,
-                                    { height: 240 },
                                     ss.column,
                                     ss.padded,
                                 ]}
@@ -302,6 +309,7 @@ export function ConduitSettings() {
                                     {conduitKeyPair ? (
                                         <ProxyID
                                             proxyId={getProxyId(conduitKeyPair)}
+                                            copyable={false}
                                         />
                                     ) : (
                                         <ActivityIndicator
@@ -321,8 +329,43 @@ export function ConduitSettings() {
                                         setModalOpen(false);
                                         router.push("/(app)/link");
                                     }}
-                                    style={[ss.row, ss.flex, ss.alignCenter]}
+                                    style={[
+                                        ss.row,
+                                        ss.fullWidth,
+                                        ss.justifySpaceBetween,
+                                        ss.alignCenter,
+                                    ]}
                                 >
+                                    <View style={[ss.row, ss.alignCenter]}>
+                                        <Image
+                                            source={require("@/assets/images/ryve-wordmark.png")}
+                                            style={{
+                                                width: 60,
+                                                height: 20,
+                                                resizeMode: "contain",
+                                            }}
+                                        />
+                                        <Pressable
+                                            style={[
+                                                iconButton,
+                                                {
+                                                    backgroundColor:
+                                                        palette.white,
+                                                },
+                                            ]}
+                                            onPress={() =>
+                                                Linking.openURL(
+                                                    RYVE_LEARN_MORE_URL,
+                                                )
+                                            }
+                                        >
+                                            <Icon
+                                                name={"question"}
+                                                size={24}
+                                                color={palette.black}
+                                            />
+                                        </Pressable>
+                                    </View>
                                     <View
                                         style={[
                                             ss.row,
@@ -337,7 +380,7 @@ export function ConduitSettings() {
                                         <Text
                                             style={[ss.blackText, ss.bodyFont]}
                                         >
-                                            {t("SHOW_CLAIM_LINK_I18N.string")}
+                                            {t("SHOW_CLAIM_QR_I18N.string")}
                                         </Text>
                                     </View>
                                 </Pressable>

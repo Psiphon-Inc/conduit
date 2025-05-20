@@ -143,7 +143,13 @@
     "ALIAS_I18N": {
         "string": "Alias"
     },
-    "SHOW_CLAIM_LINK_I18N": {
-        "string": "Show Claim Link"
+    "SHOW_CLAIM_QR_I18N": {
+        "string": "Show Claim QR"
+    },
+    "CLOSE_I18N": {
+        "string": "Close"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Scan this QR code from your Ryve app to claim this Conduit"
     }
 }

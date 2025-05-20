@@ -24,9 +24,10 @@ export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 10 * 1000 * 1000; // 10 MB
 export const INPROXY_MAX_CLIENTS_MAX = 25;
 export const INPROXY_MAX_MBPS_PER_PEER_MAX = 40;
 
-export const LEARN_MORE_URL = "https://conduit.psiphon.ca/en";
+export const LEARN_MORE_URL = "https://conduit.psiphon.ca";
 export const PRIVACY_POLICY_URL =
-    "https://conduit.psiphon.ca/en/conduit-privacy-policy";
+    "https://conduit.psiphon.ca/conduit-privacy-policy";
+export const RYVE_LEARN_MORE_URL = "https://ryve.app";
 
 // Hard code a common delay value for animations that fade in to wait until the
 // particle video is done playing.

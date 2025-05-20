@@ -17,16 +17,16 @@
  *
  */
 
-import { View } from "react-native";
-import QRCode from "react-native-qrcode-skia";
-import { useSharedValue } from "react-native-reanimated";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import QRCode from "react-native-qrcode-svg";
 import { z } from "zod";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
-import { PsiphonConduitLoading } from "@/src/components/canvas/PsiphonConduitLoading";
 import { useConduitName } from "@/src/hooks";
-import { sharedStyles as ss } from "@/src/styles";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 export const conduitScanData = z.object({
     version: z.number(),
@@ -37,19 +37,22 @@ export const conduitScanData = z.object({
 });
 
 export default function LinkConduitScreen() {
+    const win = useWindowDimensions();
+    const router = useRouter();
+    const { t } = useTranslation();
+
     const conduitKeyPair = useConduitKeyPair();
     const conduitName = useConduitName();
 
-    const opacity = useSharedValue(1);
-
     if (!conduitKeyPair.data || !conduitName.data) {
-        return <PsiphonConduitLoading size={50} opacity={opacity} />;
+        return null;
     }
 
     const keydata = keyPairToBase64nopad(conduitKeyPair.data);
     if (keydata instanceof Error) {
-        return <PsiphonConduitLoading size={50} opacity={opacity} />;
+        return null;
     }
+
     const data = conduitScanData.parse({
         version: 1,
         data: {
@@ -58,10 +61,23 @@ export default function LinkConduitScreen() {
         },
     } as z.infer<typeof conduitScanData>);
 
+    function onClose() {
+        router.back();
+    }
+
     return (
         <View
-            style={[ss.absoluteFill, ss.flex, ss.justifyCenter, ss.alignCenter]}
+            style={[
+                ss.column,
+                ss.absoluteFill,
+                ss.flex,
+                ss.justifyCenter,
+                ss.alignCenter,
+            ]}
         >
+            <Text style={[ss.whiteText, ss.bodyFont]}>
+                {t("SCAN_THIS_FROM_RYVE_APP_I18N.string")}
+            </Text>
             <View
                 style={[
                     ss.justifyCenter,
@@ -71,13 +87,27 @@ export default function LinkConduitScreen() {
                 ]}
             >
                 <QRCode
+                    color={palette.black}
+                    size={win.width * 0.9}
                     value={JSON.stringify(data)}
-                    size={300}
-                    shapeOptions={{
-                        shape: "square",
-                    }}
                 />
             </View>
+            <Pressable
+                style={[
+                    ss.row,
+                    ss.alignCenter,
+                    ss.rounded5,
+                    ss.halfPadded,
+                    {
+                        backgroundColor: palette.white,
+                    },
+                ]}
+                onPress={onClose}
+            >
+                <Text style={[ss.blackText, ss.extraLargeFont]}>
+                    {t("CLOSE_I18N.string")}
+                </Text>
+            </Pressable>
         </View>
     );
 }
