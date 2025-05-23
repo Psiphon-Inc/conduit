@@ -37,6 +37,7 @@ import {
     QUERYKEY_INPROXY_MUST_UPGRADE,
     QUERYKEY_INPROXY_STATUS,
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
+    QUERYKEY_NETWORK_PERMISSION_DENIED,
 } from "@/src/constants";
 
 import { ConduitModule } from "@/src/inproxy/module";
@@ -159,8 +160,13 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     function handleProxyError(inproxyError: ProxyError): void {
         if (inproxyError.action === "inProxyMustUpgrade") {
             queryClient.setQueryData([QUERYKEY_INPROXY_MUST_UPGRADE], true);
+        } else if (inproxyError.action === "localNetworkPermissionDenied") {
+            queryClient.setQueryData(
+                [QUERYKEY_NETWORK_PERMISSION_DENIED],
+                true,
+            );
         } else {
-            // TODO: display other errors in UI?
+            // display other errors in UI?
         }
     }
 
@@ -261,7 +267,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             timedLog(`ConduitModule.toggleInProxy(...) invoked`);
         } catch (error) {
             logErrorToDiagnostic(
-                new Error("ConduitModule.toggleInProxy(...) failed"),
+                new Error("ConduitModule.toggleInProxy(...) failed", {
+                    cause: error,
+                }),
             );
         }
     }

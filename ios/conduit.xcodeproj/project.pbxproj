@@ -34,6 +34,7 @@
 		B6284DFC165F4DE784DD6821 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F8AD2E2FE04BEE88DB4018 /* noop-file.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		C50C68017D18BAF46E659CA7 /* libPods-conduitTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 65F6CF7FF595D640005ECCD1 /* libPods-conduitTests.a */; };
+		F5170B292DE0A1D9005AE465 /* LocalNetworkPrompter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5170B282DE0A1D9005AE465 /* LocalNetworkPrompter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,6 +95,7 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F248BE1BB247FFFA9CCABEE7 /* Pods-conduitTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-conduitTests.release.xcconfig"; path = "Target Support Files/Pods-conduitTests/Pods-conduitTests.release.xcconfig"; sourceTree = "<group>"; };
+		F5170B282DE0A1D9005AE465 /* LocalNetworkPrompter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LocalNetworkPrompter.swift; path = ConduitModule/LocalNetworkPrompter.swift; sourceTree = "<group>"; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-conduit/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -195,6 +197,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				F5170B282DE0A1D9005AE465 /* LocalNetworkPrompter.swift */,
 				13B07FAE1A68108700A75B9A /* conduit */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				67B7196A2D35C574006BE288 /* conduitTests */,
@@ -520,6 +523,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5170B292DE0A1D9005AE465 /* LocalNetworkPrompter.swift in Sources */,
 				29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */,
 				2974F3682CDAA7F6000E8D3F /* LogHandler.swift in Sources */,
 				293BD6822CB6FA3C006B04D3 /* Feedback.swift in Sources */,

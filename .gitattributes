@@ -1,3 +1,4 @@
 android/app/libs/*.* filter=lfs diff=lfs merge=lfs -text
 ios/*.xcframework/**/* filter=lfs diff=lfs merge=lfs -text
 ios/*.framework/**/* filter=lfs diff=lfs merge=lfs -text
+vendor/react-native-skia-2.1.0t.tgz filter=lfs diff=lfs merge=lfs -text

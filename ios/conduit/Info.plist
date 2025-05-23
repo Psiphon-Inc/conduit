@@ -76,5 +76,13 @@
     <string>Automatic</string>
     <key>UIViewControllerBasedStatusBarAppearance</key>
     <false/>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>
+      This app needs to bind ports to proxy traffic devices.
+    </string>
+    <key>NSBonjourServices</key>
+    <array>
+      <string>_conduit._udp.</string>
+    </array>
   </dict>
 </plist>

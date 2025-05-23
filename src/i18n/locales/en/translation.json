@@ -151,5 +151,8 @@
     },
     "SCAN_THIS_FROM_RYVE_APP_I18N": {
         "string": "Scan this QR code from your Ryve app to claim this Conduit"
+    },
+    "NETWORK_PERMISSION_REQUIRED_I18N": {
+        "string": "Network access permission is required by Conduit"
     }
 }

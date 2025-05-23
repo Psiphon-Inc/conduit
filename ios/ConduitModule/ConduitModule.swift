@@ -64,6 +64,7 @@ enum ReactProxyError: Error, Codable {
     case inProxyStartFailed
     case inProxyRestartFailed
     case inProxyMustUpgrade
+    case localNetworkPermissionDenied
 }
 
 extension ReactProxyError: ReactNativeEncodable {
@@ -72,6 +73,7 @@ extension ReactProxyError: ReactNativeEncodable {
         case .inProxyStartFailed: "inProxyStartFailed"
         case .inProxyRestartFailed: "inProxyRestartFailed"
         case .inProxyMustUpgrade: "inProxyMustUpgrade"
+        case .localNetworkPermissionDenied: "localNetworkPermissionDenied"
         }
         return [
             "action": action
@@ -280,6 +282,23 @@ extension ConduitModule {
         }
         
         Task {
+            let permissionGranted = await Task.detached { () -> Bool in
+                let ok = LocalNetworkPrompter.promptSync(
+                    timeout: 3000000,
+                    bonjourType: "_conduit._udp."
+                )
+                return ok
+            }.value
+
+            guard permissionGranted else {
+                // user denied or timed out
+                sendEvent(.proxyError(.localNetworkPermissionDenied))
+                reject("error",
+                       "Local Network permission denied or timed out.",
+                       nil)
+                return
+            }
+
             let conduitStatus = await self.conduitManager.conduitStatus
             switch conduitStatus {
             

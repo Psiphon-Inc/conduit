@@ -73,6 +73,7 @@ export const QUERYKEY_INPROXY_MUST_UPGRADE = "inproxyMustUpgrade";
 export const QUERYKEY_CONDUIT_NAME = "conduitName";
 export const QUERYKEY_NOTIFICATIONS_PERMISSIONS =
     "sync-notifications-permissions";
+export const QUERYKEY_NETWORK_PERMISSION_DENIED = "networkPermissionDenied";
 
 // Historical constants, used in migrations
 export const V1_DEFAULT_INPROXY_MAX_CLIENTS = 2;

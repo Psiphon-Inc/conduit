@@ -62,6 +62,7 @@ import {
     useInproxyCurrentConnectedClients,
     useInproxyMustUpgrade,
     useInproxyStatus,
+    useNetworkPermissionDenied,
 } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
@@ -80,6 +81,7 @@ export function ConduitOrbToggle({
     const { data: inproxyCurrentConnectedClients } =
         useInproxyCurrentConnectedClients();
     const { data: inproxyMustUpgrade } = useInproxyMustUpgrade();
+    const { data: networkPermissionDenied } = useNetworkPermissionDenied();
 
     // At the top of the canvas there is a grid of dots around the Psiphon logo,
     // representing the Psiphon Network the Inproxy is proxying traffic towards.
@@ -248,6 +250,8 @@ export function ConduitOrbToggle({
         }
     }, [inproxyStatus]);
 
+    const networkPermissionRequiredOpacity = useSharedValue(0);
+
     React.useEffect(() => {
         if (initialStateDetermined) {
             if (inproxyStatus === "RUNNING") {
@@ -274,6 +278,9 @@ export function ConduitOrbToggle({
             // implicit do nothing if status is UNKNOWN (although we will never
             // get here since initialStateDetermined will be false while proxy
             // status is UNKNOWN)
+        }
+        if (networkPermissionDenied) {
+            networkPermissionRequiredOpacity.value = withTiming(1);
         }
     }, [inproxyStatus, inproxyCurrentConnectedClients, initialStateDetermined]);
 
@@ -556,6 +563,23 @@ export function ConduitOrbToggle({
                 ]}
             >
                 {t("UPGRADE_REQUIRED_I18N.string")}
+            </Animated.Text>
+            <Animated.Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[
+                    ss.whiteText,
+                    ss.bodyFont,
+                    ss.absolute,
+                    {
+                        top: orbCenterY + finalOrbRadius + ss.padded.padding,
+                        width: "100%",
+                        textAlign: "center",
+                        opacity: networkPermissionRequiredOpacity,
+                    },
+                ]}
+            >
+                {t("NETWORK_PERMISSION_REQUIRED_I18N.string")}
             </Animated.Text>
         </View>
     );

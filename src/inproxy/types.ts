@@ -37,6 +37,7 @@ export const ProxyErrorSchema = z.object({
         "inProxyStartFailed",
         "inProxyRestartFailed",
         "inProxyMustUpgrade",
+        "localNetworkPermissionDenied",
     ]),
 });
 

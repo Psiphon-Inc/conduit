@@ -26,6 +26,7 @@ import {
     QUERYKEY_INPROXY_MUST_UPGRADE,
     QUERYKEY_INPROXY_STATUS,
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
+    QUERYKEY_NETWORK_PERMISSION_DENIED,
 } from "@/src/constants";
 import {
     InproxyActivityByPeriod,
@@ -85,6 +86,14 @@ export const useInproxyTotalBytesTransferred =
 export const useInproxyMustUpgrade = (): DefinedUseQueryResult<boolean> =>
     useQuery({
         queryKey: [QUERYKEY_INPROXY_MUST_UPGRADE],
+        queryFn: () => undefined,
+        initialData: false,
+        enabled: false,
+    });
+
+export const useNetworkPermissionDenied = (): DefinedUseQueryResult<boolean> =>
+    useQuery({
+        queryKey: [QUERYKEY_NETWORK_PERMISSION_DENIED],
         queryFn: () => undefined,
         initialData: false,
         enabled: false,

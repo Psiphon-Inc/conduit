@@ -34,7 +34,7 @@
     "@react-navigation/native": "^6.0.2",
     "@scure/base": "^1.1.8",
     "@scure/bip39": "^1.4.0",
-    "@shopify/react-native-skia": "file:react-native-skia-2.1.0t.tgz",
+    "@shopify/react-native-skia": "file:vendor/react-native-skia-2.1.0t.tgz",
     "@tanstack/react-query": "^5.56.2",
     "expo": "~51.0.28",
     "expo-clipboard": "^6.0.3",
