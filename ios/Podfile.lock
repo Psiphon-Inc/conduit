@@ -1012,7 +1012,7 @@ PODS:
     - React-debug
   - react-native-safe-area-context (4.10.5):
     - React-Core
-  - react-native-skia (1.5.10):
+  - react-native-skia (0.0.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1604,7 +1604,7 @@ SPEC CHECKSUMS:
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
   glog: fdfdfe5479092de0c4bdbebedd9056951f092c4f
   hermes-engine: 8c1577f3fdb849cbe7729c2e7b5abc4b845e88f8
-  RCT-Folly: 02617c592a293bd6d418e0a88ff4ee1f88329b47
+  RCT-Folly: 5dc73daec3476616d19e8a53f0156176f7b55461
   RCTDeprecation: 3afceddffa65aee666dafd6f0116f1d975db1584
   RCTRequired: ec1239bc9d8bf63e10fb92bd8b26171a9258e0c1
   RCTTypeSafety: f5ecbc86c5c5fa163c05acb7a1c5012e15b5f994
@@ -1629,7 +1629,7 @@ SPEC CHECKSUMS:
   React-logger: 780b9ee9cec7d44eabc4093de90107c379078cb6
   React-Mapbuffer: f544f00b98dbdd8cbae96dd2bdb8b47f719976e0
   react-native-safe-area-context: df9763c5de6fa38883028e243a0b60123acb8858
-  react-native-skia: f892224584f88bbcf162a3985f67f4acec362986
+  react-native-skia: 9892b66a8769d7e7e755cffbe33318c0711f4c08
   React-nativeconfig: ba9a2e54e2f0882cf7882698825052793ed4c851
   React-NativeModulesApple: 84aaad2b0e546d7b839837ca537f6e72804a4cad
   React-perflogger: ed4e0c65781521e0424f2e5e40b40cc7879d737e
@@ -1661,6 +1661,6 @@ SPEC CHECKSUMS:
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 950bbfd7e6f04790fdb51149ed51df41f329fcc8
 
-PODFILE CHECKSUM: 35c24cdff02a2c26b020a4339ff5b96782d3456f
+PODFILE CHECKSUM: a30b6dcbc81de206b71170321b11962aae057607
 
 COCOAPODS: 1.16.2
