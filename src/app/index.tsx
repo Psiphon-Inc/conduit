@@ -46,6 +46,7 @@ export default function Index() {
 
     async function loadApp() {
         // Apply any storage migrations
+
         const appliedStorageVersion = await applyMigrations();
         if (appliedStorageVersion instanceof Error) {
             // This will crash the app.

@@ -17,9 +17,9 @@
  *
  */
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
-import * as SecureStore from "expo-secure-store";
 import { z } from "zod";
 
 import {
@@ -58,7 +58,7 @@ export const useConduitName = (): UseQueryResult<string> =>
     useQuery({
         queryKey: [QUERYKEY_CONDUIT_NAME],
         queryFn: async () => {
-            const storedConduitName = await SecureStore.getItemAsync(
+            const storedConduitName = await AsyncStorage.getItem(
                 SECURESTORE_CONDUIT_NAME_KEY,
             );
             if (storedConduitName == null) {

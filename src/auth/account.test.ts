@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as bip39 from "@scure/bip39";
 import { wordlist as englishWordlist } from "@scure/bip39/wordlists/english";
-import * as SecureStore from "expo-secure-store";
 
 import { createOrLoadAccount } from "@/src/auth/account";
 import {
@@ -32,14 +32,14 @@ describe("account", () => {
     beforeEach(() => {
         jest.clearAllMocks();
         // @ts-expect-error - Mock method for testing, see jestSetup.js
-        SecureStore.__resetStore();
+        AsyncStorage.__resetStore();
     });
 
     it("createOrLoadAccount fresh account", async () => {
         const account = await createOrLoadAccount();
         expect(account).not.toBeInstanceOf(Error);
-        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(4);
-        expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(4);
+        expect(AsyncStorage.getItem).toHaveBeenCalledTimes(4);
+        expect(AsyncStorage.setItem).toHaveBeenCalledTimes(4);
 
         const rwKeysToCheck = [
             SECURESTORE_MNEMONIC_KEY,
@@ -49,8 +49,8 @@ describe("account", () => {
         ];
 
         for (const key of rwKeysToCheck) {
-            expect(SecureStore.getItemAsync).toHaveBeenCalledWith(key);
-            expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith(key);
+            expect(AsyncStorage.setItem).toHaveBeenCalledWith(
                 key,
                 expect.any(String),
             );
@@ -60,17 +60,17 @@ describe("account", () => {
     it("createOrLoadAccount existing acount from mnemonic", async () => {
         // Pre-load the mnemonic
         const mnemonic = bip39.generateMnemonic(englishWordlist);
-        await SecureStore.setItemAsync(SECURESTORE_MNEMONIC_KEY, mnemonic);
+        await AsyncStorage.setItem(SECURESTORE_MNEMONIC_KEY, mnemonic);
         jest.clearAllMocks(); // forget about the write we just did
 
         // Load the account, since we have mnemonic it should be re-used
         const account = await createOrLoadAccount();
 
         expect(account).not.toBeInstanceOf(Error);
-        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(4);
-        expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(3);
+        expect(AsyncStorage.getItem).toHaveBeenCalledTimes(4);
+        expect(AsyncStorage.setItem).toHaveBeenCalledTimes(3);
 
-        expect(SecureStore.setItemAsync).not.toHaveBeenCalledWith(
+        expect(AsyncStorage.setItem).not.toHaveBeenCalledWith(
             SECURESTORE_MNEMONIC_KEY,
             expect.any(String),
         );
@@ -82,8 +82,8 @@ describe("account", () => {
         ];
 
         for (const key of rwKeysToCheck) {
-            expect(SecureStore.getItemAsync).toHaveBeenCalledWith(key);
-            expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith(key);
+            expect(AsyncStorage.setItem).toHaveBeenCalledWith(
                 key,
                 expect.any(String),
             );
@@ -98,8 +98,8 @@ describe("account", () => {
 
         const accountLoaded = await createOrLoadAccount();
         expect(accountLoaded).not.toBeInstanceOf(Error);
-        expect(SecureStore.getItemAsync).toHaveBeenCalledTimes(4);
-        expect(SecureStore.setItemAsync).toHaveBeenCalledTimes(0);
+        expect(AsyncStorage.getItem).toHaveBeenCalledTimes(4);
+        expect(AsyncStorage.setItem).toHaveBeenCalledTimes(0);
 
         const rKeysToCheck = [
             SECURESTORE_MNEMONIC_KEY,
@@ -109,7 +109,7 @@ describe("account", () => {
         ];
 
         for (const key of rKeysToCheck) {
-            expect(SecureStore.getItemAsync).toHaveBeenCalledWith(key);
+            expect(AsyncStorage.getItem).toHaveBeenCalledWith(key);
         }
     });
 });

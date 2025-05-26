@@ -17,8 +17,8 @@
  *
  */
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as SecureStore from "expo-secure-store";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Keyboard, Text, TextInput, View } from "react-native";
@@ -54,7 +54,7 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
 
     const mutateConduitName = useMutation({
         mutationFn: async (name: string) => {
-            await SecureStore.setItemAsync(SECURESTORE_CONDUIT_NAME_KEY, name);
+            await AsyncStorage.setItem(SECURESTORE_CONDUIT_NAME_KEY, name);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({

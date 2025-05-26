@@ -17,9 +17,9 @@
  *
  */
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as bip39 from "@scure/bip39";
 import { wordlist as englishWordlist } from "@scure/bip39/wordlists/english";
-import * as SecureStore from "expo-secure-store";
 import { z } from "zod";
 
 import {
@@ -58,16 +58,13 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
     try {
         // Load mnemonic
         let mnemonic: string;
-        const storedMnemonic = await SecureStore.getItemAsync(
+        const storedMnemonic = await AsyncStorage.getItem(
             SECURESTORE_MNEMONIC_KEY,
         );
         if (!storedMnemonic) {
             timedLog("Generating new root mnemonic");
             const newMnemonic = bip39.generateMnemonic(englishWordlist);
-            await SecureStore.setItemAsync(
-                SECURESTORE_MNEMONIC_KEY,
-                newMnemonic,
-            );
+            await AsyncStorage.setItem(SECURESTORE_MNEMONIC_KEY, newMnemonic);
             mnemonic = newMnemonic;
         } else {
             mnemonic = storedMnemonic;
@@ -75,7 +72,7 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
 
         // Load account key
         let accountKey: Ed25519KeyPair;
-        const storedAccountKeyPairBase64nopad = await SecureStore.getItemAsync(
+        const storedAccountKeyPairBase64nopad = await AsyncStorage.getItem(
             SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
         );
         if (!storedAccountKeyPairBase64nopad) {
@@ -88,7 +85,7 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
             if (accountKeyPairBase64nopad instanceof Error) {
                 throw derived;
             }
-            await SecureStore.setItemAsync(
+            await AsyncStorage.setItem(
                 SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
                 accountKeyPairBase64nopad,
             );
@@ -105,13 +102,13 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
 
         // Load device nonce
         let deviceNonce: number;
-        const storedDeviceNonce = await SecureStore.getItemAsync(
+        const storedDeviceNonce = await AsyncStorage.getItem(
             SECURESTORE_DEVICE_NONCE_KEY,
         );
         if (!storedDeviceNonce) {
             timedLog("Picking new random device nonce");
             const newDeviceNonce = Math.floor(Math.random() * 0x80000000);
-            await SecureStore.setItemAsync(
+            await AsyncStorage.setItem(
                 SECURESTORE_DEVICE_NONCE_KEY,
                 newDeviceNonce.toString(),
             );
@@ -122,7 +119,7 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
 
         // Load inproxy key
         let inproxyKey: Ed25519KeyPair;
-        const storedConduitKeyPairBase64nopad = await SecureStore.getItemAsync(
+        const storedConduitKeyPairBase64nopad = await AsyncStorage.getItem(
             SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
         );
         if (!storedConduitKeyPairBase64nopad) {
@@ -138,7 +135,7 @@ export async function createOrLoadAccount(): Promise<Account | Error> {
             if (inproxyKeyPairBase64nopad instanceof Error) {
                 throw inproxyKeyPairBase64nopad;
             }
-            await SecureStore.setItemAsync(
+            await AsyncStorage.setItem(
                 SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
                 inproxyKeyPairBase64nopad,
             );

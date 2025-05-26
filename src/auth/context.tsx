@@ -17,8 +17,8 @@
  *
  */
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
-import * as SecureStore from "expo-secure-store";
 import React from "react";
 
 import { createOrLoadAccount } from "@/src/auth/account";
@@ -77,14 +77,10 @@ export function AuthProvider(props: React.PropsWithChildren) {
     }
 
     async function deleteAccount() {
-        await SecureStore.deleteItemAsync(SECURESTORE_MNEMONIC_KEY);
-        await SecureStore.deleteItemAsync(
-            SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY,
-        );
-        await SecureStore.deleteItemAsync(SECURESTORE_DEVICE_NONCE_KEY);
-        await SecureStore.deleteItemAsync(
-            SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY,
-        );
+        await AsyncStorage.removeItem(SECURESTORE_MNEMONIC_KEY);
+        await AsyncStorage.removeItem(SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY);
+        await AsyncStorage.removeItem(SECURESTORE_DEVICE_NONCE_KEY);
+        await AsyncStorage.removeItem(SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY);
         queryClient.setQueryData([QUERYKEY_ACCOUNT_KEYPAIR], null);
         queryClient.setQueryData([QUERYKEY_INPROXY_KEYPAIR], null);
     }
