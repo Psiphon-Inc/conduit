@@ -20,11 +20,11 @@
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View, useWindowDimensions } from "react-native";
-import QRCode from "react-native-qrcode-svg";
 import { z } from "zod";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
+import { QRCode } from "@/src/components/qr";
 import { useConduitName } from "@/src/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
@@ -44,13 +44,39 @@ export default function LinkConduitScreen() {
     const conduitKeyPair = useConduitKeyPair();
     const conduitName = useConduitName();
 
-    if (!conduitKeyPair.data || !conduitName.data) {
-        return null;
+    if (!conduitKeyPair.data) {
+        return (
+            <View
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                <Text style={[ss.bodyFont, ss.whiteText]}>
+                    Loading conduit data...
+                </Text>
+            </View>
+        );
     }
 
     const keydata = keyPairToBase64nopad(conduitKeyPair.data);
     if (keydata instanceof Error) {
-        return null;
+        return (
+            <View
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                <Text style={[ss.bodyFont, ss.whiteText]}>
+                    Error formatting keydata
+                </Text>
+            </View>
+        );
     }
 
     const data = conduitScanData.parse({
@@ -87,9 +113,10 @@ export default function LinkConduitScreen() {
                 ]}
             >
                 <QRCode
-                    color={palette.black}
+                    backgroundColor={palette.white}
+                    foregroundColor={palette.black}
                     size={win.width * 0.9}
-                    value={JSON.stringify(data)}
+                    data={JSON.stringify(data)}
                 />
             </View>
             <Pressable

@@ -107,6 +107,9 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "Conduit recommends you enable notifications so we can provide critical updates about your Conduit Station.\n\nReady to begin?"
     },
+    "ONBOARDING_PERMISSIONS_BODY_MAC_I18N": {
+        "string": "Conduit will require access to your network in order to operate. When prompted, select \"Allow\".\n\nReady to begin?"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "Begin"
     },
@@ -150,7 +153,7 @@
         "string": "Close"
     },
     "SCAN_THIS_FROM_RYVE_APP_I18N": {
-        "string": "Scan this QR code from your Ryve app to claim this Conduit"
+        "string": "Scan this QR code from your Ryve app to claim"
     },
     "NETWORK_PERMISSION_REQUIRED_I18N": {
         "string": "Network access permission is required by Conduit"

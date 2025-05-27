@@ -43,6 +43,7 @@ import { useTranslation } from "react-i18next";
 import {
     BackHandler,
     LayoutChangeEvent,
+    Platform,
     View,
     useWindowDimensions,
 } from "react-native";
@@ -130,11 +131,15 @@ export default function OnboardingScreen() {
         {
             // PERMISSIONS
             headerText: t("ONBOARDING_PERMISSIONS_HEADER_I18N.string"),
-            bodyText: t("ONBOARDING_PERMISSIONS_BODY_I18N.string"),
+            bodyText: !["ios", "macos"].includes(Platform.OS)
+                ? t("ONBOARDING_PERMISSIONS_BODY_I18N.string")
+                : t("ONBOARDING_PERMISSIONS_BODY_MAC_I18N.string"),
             buttonText: t("ONBOARDING_PERMISSIONS_BUTTON_I18N.string"),
             beforeNext: async () => {
-                if (shouldAskForNotifications) {
-                    await Notifications.requestPermissionsAsync();
+                if (!["ios", "macos"].includes(Platform.OS)) {
+                    if (shouldAskForNotifications) {
+                        await Notifications.requestPermissionsAsync();
+                    }
                 }
             },
         },
