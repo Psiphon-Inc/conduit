@@ -130,7 +130,9 @@ export default function OnboardingScreen() {
         },
         {
             // PERMISSIONS
-            headerText: t("ONBOARDING_PERMISSIONS_HEADER_I18N.string"),
+            headerText: !["ios", "macos"].includes(Platform.OS)
+                ? t("ONBOARDING_PERMISSIONS_HEADER_I18N.string")
+                : t("ONBOARDING_PERMISSIONS_HEADER_MAC_I18N.string"),
             bodyText: !["ios", "macos"].includes(Platform.OS)
                 ? t("ONBOARDING_PERMISSIONS_BODY_I18N.string")
                 : t("ONBOARDING_PERMISSIONS_BODY_MAC_I18N.string"),

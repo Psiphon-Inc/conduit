@@ -15,17 +15,15 @@
 
   BOOL result = [super application:application didFinishLaunchingWithOptions:launchOptions];
   
-  if ([[NSProcessInfo processInfo] isiOSAppOnMac] == TRUE) {
-    if (self.window.windowScene.sizeRestrictions == nil) {
-      @throw [NSException exceptionWithName:@"Invalid State"
-                                     reason:@"windowScence.sizeRestrictions is nil"
-                                   userInfo:nil];
-    }
-    UISceneSizeRestrictions *sizeRestrictions = self.window.windowScene.sizeRestrictions;
-    sizeRestrictions.allowsFullScreen = false;
-    sizeRestrictions.maximumSize = CGSizeMake(540, 900);
-    sizeRestrictions.minimumSize = CGSizeMake(540, 900);
+  if (self.window.windowScene.sizeRestrictions == nil) {
+    @throw [NSException exceptionWithName:@"Invalid State"
+                                   reason:@"windowScence.sizeRestrictions is nil"
+                                 userInfo:nil];
   }
+  UISceneSizeRestrictions *sizeRestrictions = self.window.windowScene.sizeRestrictions;
+  sizeRestrictions.allowsFullScreen = false;
+  sizeRestrictions.maximumSize = CGSizeMake(540, 900);
+  sizeRestrictions.minimumSize = CGSizeMake(540, 900);
   
   return result;
 }

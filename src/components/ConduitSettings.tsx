@@ -34,6 +34,7 @@ import {
     ActivityIndicator,
     Image,
     Modal,
+    Platform,
     Pressable,
     Text,
     View,
@@ -398,7 +399,8 @@ export function ConduitSettings() {
                                 </Text>
                                 <SendDiagnosticButton />
                             </View>
-                            {notificationsPermission &&
+                            {!["macos", "ios"].includes(Platform.OS) &&
+                                notificationsPermission &&
                                 notificationsPermission != "GRANTED" && (
                                     <View
                                         style={[

@@ -104,6 +104,9 @@
     "ONBOARDING_PERMISSIONS_HEADER_I18N": {
         "string": "Allow Notifications"
     },
+    "ONBOARDING_PERMISSIONS_HEADER_MAC_I18N": {
+        "string": "Allow Network Access"
+    },
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "Conduit recommends you enable notifications so we can provide critical updates about your Conduit Station.\n\nReady to begin?"
     },
