@@ -254,7 +254,7 @@ export function ConduitSettings() {
                                 originalValue={bytesToMB(
                                     inproxyParameters.limitUpstreamBytesPerSecond,
                                 )}
-                                min={8}
+                                min={1}
                                 max={INPROXY_MAX_MBPS_PER_PEER_MAX}
                                 style={[...lineItemStyle, ss.alignCenter]}
                                 onChange={updateInproxyLimitBytesPerSecond}
