@@ -72,7 +72,7 @@ export default function Index() {
             );
             opacity.value = withTiming(0, { duration: 400 }, () => {
                 if (hasOnboarded !== null) {
-                    runOnJS(router.replace)("/(app)/");
+                    runOnJS(router.replace)("/(app)");
                 } else {
                     runOnJS(router.replace)("/(app)/onboarding");
                 }

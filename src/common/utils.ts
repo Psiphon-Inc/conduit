@@ -94,7 +94,7 @@ export function hexToHueDegrees(hex: string): number {
     let r = parseInt(hex.substring(1, 3), 16);
     let g = parseInt(hex.substring(3, 5), 16);
     let b = parseInt(hex.substring(5, 8), 16);
-    (r /= 255), (g /= 255), (b /= 255);
+    ((r /= 255), (g /= 255), (b /= 255));
     let max = Math.max(r, g, b);
     let min = Math.min(r, g, b);
 

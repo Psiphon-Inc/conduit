@@ -38,7 +38,7 @@ import {
 } from "@shopify/react-native-skia";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import React from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     BackHandler,
@@ -79,11 +79,11 @@ export default function OnboardingScreen() {
     const router = useRouter();
 
     const [shouldAskForNotifications, setShouldAskForNotifications] =
-        React.useState(false);
+        useState(false);
 
     const buttonTextChanged = useSharedValue(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (
             notificationPermissions.data &&
             notificationPermissions.data === "NOT_GRANTED_CAN_ASK"
@@ -95,10 +95,8 @@ export default function OnboardingScreen() {
 
     // Derive usable dimensions from an absolutely positioned View
     // https://github.com/facebook/react-native/issues/47080
-    const [totalUsableWidth, setTotalUsableWidth] = React.useState(win.width);
-    const [totalUsableHeight, setTotalUsableHeight] = React.useState(
-        win.height,
-    );
+    const [totalUsableWidth, setTotalUsableWidth] = useState(win.width);
+    const [totalUsableHeight, setTotalUsableHeight] = useState(win.height);
 
     function onScreenLayout(event: LayoutChangeEvent) {
         setTotalUsableWidth(event.nativeEvent.layout.width);
@@ -307,7 +305,7 @@ export default function OnboardingScreen() {
     });
 
     // Take over "Back" Navigation from the system, we'll use gestures below
-    React.useEffect(() => {
+    useEffect(() => {
         const backListener = BackHandler.addEventListener(
             "hardwareBackPress",
             () => {
@@ -332,7 +330,7 @@ export default function OnboardingScreen() {
         if (router.canGoBack()) {
             router.back();
         } else {
-            router.replace("/(app)/");
+            router.replace("/(app)");
         }
     }
 
@@ -393,7 +391,7 @@ export default function OnboardingScreen() {
         ];
     });
 
-    React.useEffect(() => {
+    useEffect(() => {
         everythingOpacity.value = withTiming(1, { duration: 1000 });
     }, []);
 
@@ -486,7 +484,7 @@ export default function OnboardingScreen() {
                         accessible={true}
                         accessibilityLabel={"Onboarding Info, will update"}
                         accessibilityRole={"text"}
-                        aria-valuetext={bodyText}
+                        aria-valuetext={bodyText.value}
                         style={{
                             position: "absolute",
                             width: totalUsableWidth,
@@ -497,7 +495,7 @@ export default function OnboardingScreen() {
                 <GestureDetector gesture={buttonGesture}>
                     <Animated.View
                         accessible={true}
-                        accessibilityLabel={buttonText}
+                        accessibilityLabel={buttonText.value}
                         accessibilityRole={"button"}
                         style={{
                             position: "absolute",

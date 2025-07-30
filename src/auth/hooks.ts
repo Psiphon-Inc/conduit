@@ -28,13 +28,19 @@ import {
 export const useAccountKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
     useQuery({
         queryKey: [QUERYKEY_ACCOUNT_KEYPAIR],
-        queryFn: () => undefined,
+        queryFn: async () => {
+            return {} as Ed25519KeyPair;
+        },
+        initialData: {} as Ed25519KeyPair,
         enabled: false,
     });
 
 export const useConduitKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
     useQuery({
         queryKey: [QUERYKEY_INPROXY_KEYPAIR],
-        queryFn: () => undefined,
+        queryFn: async () => {
+            return {} as Ed25519KeyPair;
+        },
+        initialData: {} as Ed25519KeyPair,
         enabled: false,
     });
