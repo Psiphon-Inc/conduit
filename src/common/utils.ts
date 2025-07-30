@@ -121,3 +121,114 @@ export function hexToHueDegrees(hex: string): number {
 
     return Math.round(360 * h);
 }
+
+export function hueFunction(hueConfig: number[], originalHue: number) {
+    let hue;
+
+    // Check if 'hues' is an array-like object. This way we also ensure that
+    // the array is not empty, which would mean no hue restriction.
+    if (hueConfig && hueConfig.length > 0) {
+        // originalHue is in the range [0, 1]
+        // Multiply with 0.999 to change the range to [0, 1) and then truncate the index.
+        hue = hueConfig[0 | (0.999 * originalHue * hueConfig.length)];
+    }
+
+    return typeof hue == "number"
+        ? // A hue was specified. We need to convert the hue from
+          // degrees on any turn - e.g. 746° is a perfectly valid hue -
+          // to turns in the range [0, 1).
+          (((hue / 360) % 1) + 1) % 1
+        : // No hue configured => use original hue
+          originalHue;
+}
+
+export function decToHex(v: number): string {
+    v |= 0; // Ensure integer value
+    return v < 0
+        ? "00"
+        : v < 16
+          ? "0" + v.toString(16)
+          : v < 256
+            ? v.toString(16)
+            : "ff";
+}
+
+export function hueToRgb(m1: number, m2: number, h: number): string {
+    h = h < 0 ? h + 6 : h > 6 ? h - 6 : h;
+    return decToHex(
+        255 *
+            (h < 1
+                ? m1 + (m2 - m1) * h
+                : h < 3
+                  ? m2
+                  : h < 4
+                    ? m1 + (m2 - m1) * (4 - h)
+                    : m1),
+    );
+}
+
+export function hsl(
+    hue: number,
+    saturation: number,
+    lightness: number,
+): string {
+    let result;
+
+    if (saturation == 0) {
+        const partialHex = decToHex(lightness * 255);
+        result = partialHex + partialHex + partialHex;
+    } else {
+        const m2 =
+                lightness <= 0.5
+                    ? lightness * (saturation + 1)
+                    : lightness + saturation - lightness * saturation,
+            m1 = lightness * 2 - m2;
+        result =
+            hueToRgb(m1, m2, hue * 6 + 2) +
+            hueToRgb(m1, m2, hue * 6) +
+            hueToRgb(m1, m2, hue * 6 - 2);
+    }
+
+    return "#" + result;
+}
+
+export function correctedHsl(
+    hue: number,
+    saturation: number,
+    lightness: number,
+): string {
+    // The corrector specifies the perceived middle lightness for each hue
+    const correctors = [0.55, 0.5, 0.5, 0.46, 0.6, 0.55, 0.55],
+        corrector = correctors[(hue * 6 + 0.5) | 0];
+
+    // Adjust the input lightness relative to the corrector
+    lightness =
+        lightness < 0.5
+            ? lightness * corrector * 2
+            : corrector + (lightness - 0.5) * (1 - corrector) * 2;
+
+    return hsl(hue, saturation, lightness);
+}
+
+export function lightness(defaultRange: number[]) {
+    return function (value: number) {
+        value = defaultRange[0] + value * (defaultRange[1] - defaultRange[0]);
+        return value < 0 ? 0 : value > 1 ? 1 : value;
+    };
+}
+
+export function parseHex(
+    hash: string,
+    startPosition: number,
+    octets: number = 1,
+): number {
+    return parseInt(hash.substring(startPosition, startPosition + octets), 16);
+}
+
+export function uint8ArrayToHex(data: Uint8Array): string {
+    let hex = "";
+    for (let i = 0, l = data.length; i < l; i++) {
+        hex += data[i].toString(16).padStart(2, "0");
+    }
+    return hex;
+}
