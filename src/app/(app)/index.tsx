@@ -20,7 +20,6 @@
 import React from "react";
 import { useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
