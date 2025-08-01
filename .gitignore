@@ -33,4 +33,5 @@ ios_embedded_server_entries
 
 # VSCode
 .idea/
+.vscode/
 
