@@ -219,7 +219,6 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                     ? parseInt(storedInproxyLimitBytesPerSecond)
                     : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
             });
-            console.log(storedInproxyParameters);
 
             // This call updates the context's state value for the parameters.
             await selectInproxyParameters(storedInproxyParameters);

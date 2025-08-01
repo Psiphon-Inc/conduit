@@ -19,8 +19,8 @@ export function Identicon({ value, size }: { value: string; size: number }) {
         <Svg width={size} height={size}>
             <Defs>
                 <LinearGradient id="grad" x1="0%" y1="100%" x2="100%" y2="0%">
-                    <Stop offset="0" stopColor={palette.conduitRed} />
-                    <Stop offset="1" stopColor={palette.conduitBlue} />
+                    <Stop offset="0" stopColor={palette.red} />
+                    <Stop offset="1" stopColor={palette.blue} />
                 </LinearGradient>
             </Defs>
             <Circle

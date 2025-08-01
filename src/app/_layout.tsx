@@ -24,7 +24,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
-import "react-native-reanimated";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import i18nService from "@/src/i18n/i18n";
 
@@ -71,19 +71,21 @@ export default function RootLayout() {
     });
 
     return (
-        <ThemeProvider value={DarkTheme}>
-            <QueryClientProvider client={queryClient}>
-                <AuthProvider>
-                    <Stack
-                        screenOptions={{
-                            headerShown: false,
-                            animation: "none",
-                        }}
-                    >
-                        <Stack.Screen name="(app)" />
-                    </Stack>
-                </AuthProvider>
-            </QueryClientProvider>
-        </ThemeProvider>
+        <KeyboardProvider>
+            <ThemeProvider value={DarkTheme}>
+                <QueryClientProvider client={queryClient}>
+                    <AuthProvider>
+                        <Stack
+                            screenOptions={{
+                                headerShown: false,
+                                animation: "none",
+                            }}
+                        >
+                            <Stack.Screen name="(app)" />
+                        </Stack>
+                    </AuthProvider>
+                </QueryClientProvider>
+            </ThemeProvider>
+        </KeyboardProvider>
     );
 }

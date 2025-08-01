@@ -35,7 +35,7 @@
     "@react-navigation/native": "^7.0.14",
     "@scure/base": "^1.1.8",
     "@scure/bip39": "^1.4.0",
-    "@shopify/react-native-skia": "v2.0.0-next.4",
+    "@shopify/react-native-skia": "~2.1.1",
     "@tanstack/react-query": "^5.83.0",
     "expo": "^53.0.0",
     "expo-clipboard": "~7.1.5",
@@ -58,12 +58,14 @@
     "react": "19.0.0",
     "react-i18next": "^15.0.2",
     "react-native": "0.79.5",
+    "react-native-edge-to-edge": "1.6.0",
     "react-native-gesture-handler": "~2.24.0",
-    "react-native-reanimated": "~3.17.4",
+    "react-native-keyboard-controller": "^1.18.2",
+    "react-native-reanimated": "~3.19.0",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
-    "zod": "^3.23.8",
-    "react-native-svg": "15.11.2"
+    "react-native-svg": "15.11.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
