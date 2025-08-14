@@ -17,7 +17,7 @@
  *
  */
 
-import { edwardsToMontgomeryPub } from "@noble/curves/ed25519";
+import { ed25519 } from "@noble/curves/ed25519";
 import { base64nopad } from "@scure/base";
 import { z } from "zod";
 
@@ -89,5 +89,10 @@ export function formatConduitBip32Path(deviceNonce: number): string {
  * Ed25519 Inproxy key pair, recorded as proxy_id by psiphond.
  */
 export function getProxyId(conduitKeyPair: Ed25519KeyPair): string {
-    return base64nopad.encode(edwardsToMontgomeryPub(conduitKeyPair.publicKey));
+    if (!conduitKeyPair.publicKey) {
+        return "Loading...";
+    }
+    return base64nopad.encode(
+        ed25519.utils.toMontgomery(conduitKeyPair.publicKey),
+    );
 }
