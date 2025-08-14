@@ -25,7 +25,7 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import React, { MutableRefObject } from "react";
+import React, { RefObject } from "react";
 import { Text, View } from "react-native";
 import Animated, {
     clamp,
@@ -38,11 +38,7 @@ import Animated, {
 import { AnimatedText } from "@/src/components/AnimatedText";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 import { useTranslation } from "react-i18next";
-import {
-    Gesture,
-    GestureDetector,
-    ScrollView,
-} from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 interface EditableNumberSliderProps {
     label: string;
@@ -52,7 +48,7 @@ interface EditableNumberSliderProps {
     units?: string;
     style?: any;
     onChange: (newValue: number) => Promise<void>;
-    scrollRef: MutableRefObject<ScrollView | null>;
+    scrollRef: RefObject<any>;
 }
 export function EditableNumberSlider({
     label,

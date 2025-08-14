@@ -19,7 +19,7 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
-import React from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { NativeEventEmitter } from "react-native";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
@@ -59,10 +59,10 @@ import {
     getZeroedInproxyActivityStats,
 } from "@/src/inproxy/utils";
 
-const InproxyContext = React.createContext<InproxyContextValue | null>(null);
+const InproxyContext = createContext<InproxyContextValue | null>(null);
 
 export function useInproxyContext(): InproxyContextValue {
-    const value = React.useContext(InproxyContext);
+    const value = useContext(InproxyContext);
     if (!value) {
         throw new Error(
             "useInproxyContext must be used within a InproxyProvider",
@@ -81,7 +81,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // This provider handles tracking the user-selected Inproxy parameters, and
     // persisting them in AsyncStorage.
     const [inproxyParameters, setInproxyParameters] =
-        React.useState<InproxyParameters>(getDefaultInproxyParameters());
+        useState<InproxyParameters>(getDefaultInproxyParameters());
 
     // This provider makes use of react-query to track the data emitted by the
     // native module. When an event is received, the provider updates the query
@@ -89,7 +89,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // these values are implemented in `hooks.ts`.
     const queryClient = useQueryClient();
 
-    React.useEffect(() => {
+    useEffect(() => {
         // this manages InproxyEvent subscription and connects it to the handler
         const emitter = new NativeEventEmitter(ConduitModule);
         const subscription = emitter.addListener(
@@ -298,7 +298,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         ConduitModule.logError("ConduitAppErrors", errorMessage);
     }
 
-    React.useEffect(() => {
+    useEffect(() => {
         loadInproxyParameters();
     }, [conduitKeyPair.data]);
 

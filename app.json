@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "conduit",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -17,19 +18,30 @@
       "icon": "./assets/images/ios-icon.png"
     },
     "android": {
+      "package": "ca.psiphon.conduit",
       "versionCode": 6,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png"
       },
-      "package": "ca.psiphon.conduit"
+      "edgeToEdgeEnabled": true
     },
     "extra": {
       "supportsRTL": true
     },
     "plugins": [
       "expo-router",
-      "expo-localization"
+      "expo-localization",
+      "expo-font",
+      "expo-secure-store",
+      [
+        "react-native-edge-to-edge",
+        {
+          "android": {
+            "parentTheme": "Default"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

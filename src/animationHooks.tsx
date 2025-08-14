@@ -24,16 +24,10 @@ export const useAnimatedImageValue = (
     const isPaused = paused ?? defaultPaused;
     const currentFrame = useSharedValue<null | SkImage>(null);
     const lastTimestamp = useSharedValue(-1);
-    const animatedImage = useAnimatedImage(
-        source,
-        (err) => {
-            console.error(err);
-            throw new Error(
-                `Could not load animated image - got '${err.message}'`,
-            );
-        },
-        false,
-    );
+    const animatedImage = useAnimatedImage(source, (err) => {
+        console.error(err);
+        throw new Error(`Could not load animated image - got '${err.message}'`);
+    });
     const frameDuration =
         animatedImage?.currentFrameDuration() || DEFAULT_FRAME_DURATION;
 

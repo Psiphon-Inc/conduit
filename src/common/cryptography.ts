@@ -20,7 +20,7 @@
 import { ed25519 } from "@noble/curves/ed25519";
 import { base64nopad } from "@scure/base";
 import { mnemonicToSeedSync } from "@scure/bip39";
-import slip10 from "micro-key-producer/src/slip10";
+import slip10 from "micro-key-producer/slip10.js";
 import { z } from "zod";
 
 import { wrapError } from "@/src/common/errors";

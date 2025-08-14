@@ -4,27 +4,6 @@ apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
-static def versionToNumber(major, minor, patch) {
-  return patch * 100 + minor * 10000 + major * 1000000
-}
-
-def getRNVersion() {
-  def version = providers.exec {
-    workingDir(projectDir)
-    commandLine("node", "-e", "console.log(require('react-native/package.json').version);")
-  }.standardOutput.asText.get().trim()
-
-  def coreVersion = version.split("-")[0]
-  def (major, minor, patch) = coreVersion.tokenize('.').collect { it.toInteger() }
-
-  return versionToNumber(
-      major,
-      minor,
-      patch
-  )
-}
-def rnVersion = getRNVersion()
-
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -41,12 +20,12 @@ react {
     bundleCommand = "export:embed"
 
     /* Folders */
-    //   The root of your project, i.e. where "package.json" lives. Default is '..'
-    // root = file("../")
-    //   The folder where the react-native NPM package is. Default is ../node_modules/react-native
-    // reactNativeDir = file("../node_modules/react-native")
-    //   The folder where the react-native Codegen package is. Default is ../node_modules/@react-native/codegen
-    // codegenDir = file("../node_modules/@react-native/codegen")
+     //   The root of your project, i.e. where "package.json" lives. Default is '../..'
+    // root = file("../../")
+    //   The folder where the react-native NPM package is. Default is ../../node_modules/react-native
+    // reactNativeDir = file("../../node_modules/react-native")
+    //   The folder where the react-native Codegen package is. Default is ../../node_modules/@react-native/codegen
+    // codegenDir = file("../../node_modules/@react-native/codegen")
 
     /* Variants */
     //   The list of variants to that are debuggable. For those we're going to
@@ -79,10 +58,8 @@ react {
     //   The list of flags to pass to the Hermes compiler. By default is "-O", "-output-source-map"
     // hermesFlags = ["-O", "-output-source-map"]
 
-    if (rnVersion >= versionToNumber(0, 75, 0)) {
-        /* Autolinking */
-        autolinkLibrariesWithApp()
-    }
+    /* Autolinking */
+    autolinkLibrariesWithApp()
 }
 
 /**
@@ -103,7 +80,6 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
-
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
@@ -119,12 +95,12 @@ android {
         applicationId 'ca.psiphon.conduit'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 47
-        versionName "1.6.1"
+        versionCode 6
+        versionName "1.5.0"
     }
     signingConfigs {
         config {
-            keyAlias keystoreProperties['keyAlias']
+            keyAlias keystoreProperties['keyAlias']            
             keyPassword keystoreProperties['keyPassword']
             storeFile file(keystoreProperties['storeFile'])
             storePassword keystoreProperties['storePassword']
@@ -133,16 +109,15 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.config
-            shrinkResources false
-            minifyEnabled false
-            crunchPngs false
         }
         release {
+            // Caution! In production, you need to generate your own keystore file.
+            // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.config
-            shrinkResources enableProguardInReleaseBuilds
+            shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
-            crunchPngs true
+            crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
         }
     }
     packagingOptions {
@@ -150,22 +125,15 @@ android {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
         }
     }
-
-    // Enable AIDL generation for the Conduit module
     buildFeatures {
         aidl true
     }
-
     lintOptions {
         // Make translation issues fatal
         fatal 'StringFormatInvalid', 'StringFormatMatches'
     }
-}
-
-// Perform lint checks before any assemble task
-tasks.configureEach { task ->
-    if (task.name.contains("assemble")) {
-        task.dependsOn 'lint'
+    androidResources {
+        ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
 }
 
@@ -188,6 +156,7 @@ tasks.configureEach { task ->
         }
     }
 }
+
 // Configure a flatDir repository to resolve Psiphon tunnel-core library
 repositories {
     flatDir {
@@ -250,9 +219,4 @@ dependencies {
     } else {
         implementation jscFlavor
     }
-}
-
-if (rnVersion < versionToNumber(0, 75, 0)) {
-    apply from: new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim(), "../native_modules.gradle");
-    applyNativeModulesAppBuildGradle(project)
 }

@@ -21,7 +21,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Keyboard, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
+import { KeyboardEvents } from "react-native-keyboard-controller";
 
 import {
     QUERYKEY_CONDUIT_NAME,
@@ -86,8 +87,8 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
     // updated value to the mutation.
     const textInputRef = React.useRef<TextInput>(null);
     React.useEffect(() => {
-        const keyboardDidHideSubscription = Keyboard.addListener(
-            "keyboardDidHide",
+        const keyboardDidHideSubscription = KeyboardEvents.addListener(
+            "keyboardWillHide",
             () => {
                 if (textInputRef.current) {
                     textInputRef.current.blur();

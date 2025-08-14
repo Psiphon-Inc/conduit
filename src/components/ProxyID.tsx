@@ -22,7 +22,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { Icon } from "@/src/components/Icon";
-import { Jdenticon } from "@/src/components/Jdenticon";
+import { Identicon } from "@/src/components/Identicon";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ProxyID({
@@ -57,7 +57,7 @@ export function ProxyID({
                     height: 40,
                 }}
             >
-                <Jdenticon value={proxyId} size={40} />
+                <Identicon value={proxyId} size={40} />
             </View>
             <Text style={[ss.greyText, ss.bodyFont]}>
                 ({proxyId.substring(0, 4)}...)

@@ -41,6 +41,7 @@ import {
     GestureHandlerRootView,
     ScrollView,
 } from "react-native-gesture-handler";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, {
     useDerivedValue,
     useSharedValue,
@@ -177,7 +178,7 @@ export function ConduitSettings() {
 
     function Settings() {
         return (
-            <View style={[ss.flex]}>
+            <KeyboardAvoidingView behavior="padding" style={[ss.flex]}>
                 <View
                     style={[
                         ss.padded,
@@ -395,7 +396,7 @@ export function ConduitSettings() {
                         </View>
                     </ScrollView>
                 </GestureHandlerRootView>
-            </View>
+            </KeyboardAvoidingView>
         );
     }
 
