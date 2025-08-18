@@ -36,6 +36,18 @@ import { fonts, palette } from "@/src/styles";
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+// By default, react-query won't run requests when there is no network, but
+// we're not actually using any networked queries, so we want these to fire
+// always, regardless of network. The Conduit module has it's own network
+// state handling.
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            networkMode: "always",
+        },
+    },
+});
+
 export default function RootLayout() {
     const [loaded] = useFonts({
         JuraRegular: fonts.JuraRegular,
@@ -57,18 +69,6 @@ export default function RootLayout() {
     if (!loaded) {
         return null;
     }
-
-    // By default, react-query won't run requests when there is no network, but
-    // we're not actually using any networked queries, so we want these to fire
-    // always, regardless of network. The Conduit module has it's own network
-    // state handling.
-    const queryClient = new QueryClient({
-        defaultOptions: {
-            queries: {
-                networkMode: "always",
-            },
-        },
-    });
 
     return (
         <KeyboardProvider>
