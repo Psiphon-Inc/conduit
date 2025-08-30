@@ -53,6 +53,12 @@ public class PackageHelper {
                 // Add additional valid signatures for the package as needed:
                 // "THEOTHERSIGNATUREHASHHERE"
         ))));
+        // Psiphon package and its signature as SHA-256 hashes using uppercase hex encoding, continuous (no separator)
+        // app ID: com.psiphon3
+        // SHA256: 76:DB:EF:15:F6:77:26:D4:51:A1:23:59:B8:57:9C:D:7A:9F:63:5D:52:6A:A3:74:24:DF:13:16:32:F1:78:10
+        map.put("com.psiphon3", Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+                "76DBEF15F67726D451A12359B8579C0D7A9F635D526AA37424DF131632F17810"
+        ))));
         TRUSTED_PACKAGES = Collections.unmodifiableMap(map);
     }
 
