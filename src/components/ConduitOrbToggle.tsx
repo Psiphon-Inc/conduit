@@ -72,8 +72,7 @@ export function ConduitOrbToggle({
     width: number;
     height: number;
 }) {
-    const { t, i18n } = useTranslation();
-    const isRTL = i18n.dir() === "rtl" ? true : false;
+    const { t } = useTranslation();
 
     const { toggleInproxy } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
@@ -137,7 +136,7 @@ export function ConduitOrbToggle({
             translateY: orbCenterY,
         },
         {
-            translateX: isRTL ? (-1 * width) / 2 : width / 2,
+            translateX: width / 2,
         },
     ];
 
