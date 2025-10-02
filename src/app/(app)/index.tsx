@@ -65,8 +65,6 @@ export default function HomeScreen() {
                 <ConduitSettings />
                 {/* GIT_HASH absolutely positioned bottom left */}
                 <GitHash />
-                {/* Keep the screen open on iOS */}
-                <KeepAwakeOnIOS />
             </SafeAreaView>
         </GestureHandlerRootView>
     );
