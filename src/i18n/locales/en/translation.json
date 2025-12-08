@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Alias"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Claim rewards in Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Scan this QR code to link this Conduit Station into your Ryve account"
+    },
+    "CLOSE_I18N": {
+        "string": "Close"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "invalid qr code"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Analytics"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Get Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "Reveal"
     }
 }

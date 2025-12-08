@@ -140,7 +140,7 @@ export function EditableNumberSlider({
 
     return (
         <View style={[...style, ss.flex, ss.justifySpaceBetween]}>
-            <Text style={[ss.bodyFont, ss.whiteText]}>{label}</Text>
+            <Text style={[ss.bodyFont, ss.blackText]}>{label}</Text>
             <View style={[ss.row, ss.flex, { maxWidth: 180 }]}>
                 <View
                     style={[ss.flex, isRTL ? { transform: "scaleX(-1)" } : {}]}
@@ -152,7 +152,7 @@ export function EditableNumberSlider({
                             width={usableWidth}
                             height={trackHeight}
                             style="fill"
-                            color={palette.purpleShade4}
+                            color={palette.black}
                             r={circleR}
                         />
                         <RoundedRect
@@ -161,16 +161,16 @@ export function EditableNumberSlider({
                             width={circleCx}
                             height={trackHeight}
                             style="fill"
-                            color={palette.white}
+                            color={palette.peach}
                             r={circleR}
                         >
                             <LinearGradient
                                 start={filledStart}
                                 end={filledEnd}
                                 colors={[
-                                    palette.blueShade2,
-                                    palette.purple,
-                                    palette.red,
+                                    palette.mauve,
+                                    palette.peachyMauve,
+                                    palette.peach,
                                 ]}
                             />
                         </RoundedRect>
@@ -209,10 +209,10 @@ export function EditableNumberSlider({
                                 text={displayText}
                                 fontFamily={ss.boldFont.fontFamily}
                                 fontSize={ss.boldFont.fontSize}
-                                color={palette.white}
+                                color={palette.black}
                             />
                         </View>
-                        <Text style={[ss.bodyFont, ss.whiteText]}>{units}</Text>
+                        <Text style={[ss.bodyFont, ss.blackText]}>{units}</Text>
                     </View>
                 </View>
             </View>

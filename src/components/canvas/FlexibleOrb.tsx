@@ -179,24 +179,18 @@ export function FlexibleOrb({
                 opacity={privacyPolicyOpacity}
             />
             <Circle cx={cx} cy={cy} r={radius}>
-                <Shadow
-                    dx={10}
-                    dy={10}
-                    blur={10}
-                    color={palette.purple}
-                    inner
-                />
+                <Shadow dx={10} dy={10} blur={10} color={palette.mauve} inner />
                 <Shadow
                     dx={-10}
                     dy={-10}
                     blur={10}
-                    color={palette.blue}
+                    color={palette.peach}
                     inner
                 />
                 <RadialGradient
                     c={radialGradientC}
                     r={radius}
-                    colors={[palette.red, palette.black]}
+                    colors={[palette.fadedMauve, palette.purple]}
                 />
             </Circle>
             <Image

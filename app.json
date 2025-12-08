@@ -8,9 +8,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "image": "./assets/images/android-icon-background.png",
+      "resizeMode": "fill",
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,

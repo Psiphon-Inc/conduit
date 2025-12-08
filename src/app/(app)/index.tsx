@@ -22,12 +22,12 @@ import { useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ActionsArea } from "@/src/components/ActionsArea";
 import { ConduitOrbToggle } from "@/src/components/ConduitOrbToggle";
-import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { ConduitStatus } from "@/src/components/ConduitStatus";
-import { GitHash } from "@/src/components/GitHash";
 import { LogoWordmark } from "@/src/components/LogoWordmark";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { SkyBox } from "@/src/components/SkyBox";
 
 export default function HomeScreen() {
     const win = useWindowDimensions();
@@ -35,36 +35,35 @@ export default function HomeScreen() {
 
     // This layout is slightly imprecise due to a bug in Android/React Native
     // https://github.com/facebook/react-native/issues/47080
-    // For now, ConduitStatus is absolutely positioned and pinned to bottom to
-    // compensate for the slightly inaccurate totalUsableHeight value, and we
-    // leave 3% "blank" to hopefully avoid overlapping elements
-    const totalUsableHeight = win.height - insets.top * 1.5;
+    const totalUsableHeight = win.height - (insets.top + insets.bottom);
     const totalUsableWidth = win.width;
 
     // NOTE this assumes a portrait layout.
 
     return (
         <GestureHandlerRootView>
+            <SkyBox />
             <SafeAreaView>
                 {/* Header takes up 10% of vertical space */}
                 <LogoWordmark
                     width={totalUsableWidth}
                     height={totalUsableHeight * 0.1}
                 />
-                {/* Orb takes up the middle 52% of the vertical space */}
+                {/* Orb takes up the middle 50% of the vertical space */}
                 <ConduitOrbToggle
                     width={totalUsableWidth}
-                    height={totalUsableHeight * 0.52}
+                    height={totalUsableHeight * 0.5}
                 />
-                {/* Status taking up bottom 35% of the vertical space */}
+                {/* Status taking up the next 25% of the vertical space */}
                 <ConduitStatus
                     width={totalUsableWidth}
-                    height={totalUsableHeight * 0.35}
+                    height={totalUsableHeight * 0.25}
                 />
-                {/* Settings icon is absolutely positioned bottom right */}
-                <ConduitSettings />
-                {/* GIT_HASH absolutely positioned bottom left */}
-                <GitHash />
+                {/* Actions Area taking up the last 15% of the vertical space */}
+                <ActionsArea
+                    width={totalUsableWidth}
+                    height={totalUsableHeight * 0.2}
+                />
             </SafeAreaView>
         </GestureHandlerRootView>
     );

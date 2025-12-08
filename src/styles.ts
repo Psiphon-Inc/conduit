@@ -20,7 +20,7 @@
 import { StyleSheet } from "react-native";
 
 export const palette = {
-    black: "#000000",
+    black: "rgba(25, 18, 36, 1)",
     redTint5: "#faebe9",
     redTint4: "#f2c5be",
     redTint3: "#ea9f93",
@@ -48,7 +48,7 @@ export const palette = {
     purpleTint3: "#9d8da2",
     purpleTint2: "#7d6783",
     purpleTint1: "#6d5473",
-    purple: "#5d4264",
+    purple: "#4E3677",
     purpleShade1: "#533b5a",
     purpleShade2: "#412e46",
     purpleShade3: "#2e2132",
@@ -56,12 +56,19 @@ export const palette = {
     purpleShade5: "#09060a",
     maroon: "#513241",
     white: "#E0E0E0",
-    midGrey: "#909090",
+    midGrey: "#191224",
     grey: "#342F2F",
     transparent: "rgba(0,0,0,0)",
     transparentBlue: "rgba(59,122,150,0.5)",
     transparentPurple: "rgba(93,66,100,0.4)",
     statusTextBlue: "#4B7993",
+    peach: "#f5a086",
+    mauve: "#9d81c9",
+    fadedMauve: "#c8bae1",
+    deepMauve: "#6a548d",
+    peachyMauve: "#755484",
+    thinPurple: "rgba(156, 129, 201, 0.6)",
+    whiteHighlight: "rgba(255, 255, 255, 0.6)",
 };
 
 export const sharedStyles = StyleSheet.create({
@@ -247,7 +254,7 @@ export const sharedStyles = StyleSheet.create({
     },
     bodyFont: {
         fontSize: 18,
-        fontFamily: "JuraRegular",
+        fontFamily: "JuraBold",
     },
     largeFont: {
         fontSize: 24,
@@ -269,6 +276,9 @@ export const sharedStyles = StyleSheet.create({
     },
     blackText: {
         color: palette.black,
+    },
+    purpleText: {
+        color: palette.purple,
     },
     centeredText: {
         textAlign: "center",
@@ -310,6 +320,10 @@ export const sharedStyles = StyleSheet.create({
         borderColor: palette.midGrey,
         borderWidth: 1,
     },
+    purpleBorder: {
+        borderColor: palette.purple,
+        borderWidth: 1,
+    },
     absoluteFill: {
         position: "absolute",
         height: "100%",
@@ -321,6 +335,11 @@ export const sharedStyles = StyleSheet.create({
         width: "100%",
         position: "absolute",
         bottom: 0,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        borderWidth: 2,
+        borderBottomWidth: 0,
+        borderColor: palette.black,
     },
     modalCenter: {
         flex: 1,
@@ -423,7 +442,9 @@ export const iconButton = [
     sharedStyles.rounded5,
     sharedStyles.justifyCenter,
     sharedStyles.alignCenter,
-    sharedStyles.halfPadded,
+    {
+        backgroundColor: palette.black,
+    },
 ];
 
 export const fonts = {

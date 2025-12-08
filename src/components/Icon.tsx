@@ -28,10 +28,11 @@ import {
     useSVG,
 } from "@shopify/react-native-skia";
 import React from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { SharedValue } from "react-native-reanimated";
 
 import { FaderGroup } from "@/src/components/canvas/FaderGroup";
+import { sharedStyles as ss } from "../styles";
 
 const ICONS = {
     check: require("@/assets/images/icons/check.svg"),
@@ -42,6 +43,7 @@ const ICONS = {
     settings: require("@/assets/images/icons/settings.svg"),
     question: require("@/assets/images/icons/question.svg"),
     "external-link": require("@/assets/images/icons/external-link.svg"),
+    analytics: require("@/assets/images/icons/analytics.svg"),
 };
 
 type IconName =
@@ -52,18 +54,21 @@ type IconName =
     | "send"
     | "settings"
     | "question"
-    | "external-link";
+    | "external-link"
+    | "analytics";
 
 export function Icon({
     name,
     size,
     color,
     opacity = undefined,
+    label = undefined,
 }: {
     name: IconName;
     size: number;
     color: string;
     opacity?: SharedValue<number> | undefined;
+    label?: string | undefined;
 }) {
     const iconSvg = useSVG(ICONS[name]);
     const paintColor = React.useMemo(() => Skia.Paint(), []);
@@ -79,23 +84,41 @@ export function Icon({
     const dst = rect(0, 0, size, size);
 
     return (
-        <View style={{ width: size, height: size }}>
-            <Canvas style={{ flex: 1 }}>
-                <Group
-                    layer={paintColor}
-                    transform={fitbox("contain", src, dst)}
+        <View
+            style={{
+                justifyContent: "flex-start",
+                alignItems: "center",
+                width: label ? size * 2 : size,
+                height: label ? size * 2 : size,
+            }}
+        >
+            <View style={{ width: size, height: size }}>
+                <Canvas style={{ flex: 1 }}>
+                    <Group
+                        layer={paintColor}
+                        transform={fitbox("contain", src, dst)}
+                    >
+                        {opacity === undefined ? (
+                            <Group>
+                                <ImageSVG svg={iconSvg} />
+                            </Group>
+                        ) : (
+                            <FaderGroup opacity={opacity}>
+                                <ImageSVG svg={iconSvg} />
+                            </FaderGroup>
+                        )}
+                    </Group>
+                </Canvas>
+            </View>
+            {label && (
+                <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={true}
+                    style={[ss.bodyFont, { fontSize: 14 }]}
                 >
-                    {opacity === undefined ? (
-                        <Group>
-                            <ImageSVG svg={iconSvg} />
-                        </Group>
-                    ) : (
-                        <FaderGroup opacity={opacity}>
-                            <ImageSVG svg={iconSvg} />
-                        </FaderGroup>
-                    )}
-                </Group>
-            </Canvas>
+                    {label}
+                </Text>
+            )}
         </View>
     );
 }

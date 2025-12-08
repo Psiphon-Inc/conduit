@@ -24,7 +24,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { Icon } from "@/src/components/Icon";
 import { useInproxyContext } from "@/src/inproxy/context";
-import { iconButton, palette, sharedStyles as ss } from "@/src/styles";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function SendDiagnosticButton() {
     const { sendFeedback } = useInproxyContext();
@@ -43,7 +43,10 @@ export function SendDiagnosticButton() {
     } else {
         return (
             <Pressable
-                style={iconButton}
+                style={{
+                    backgroundColor: palette.black,
+                    borderRadius: 5,
+                }}
                 onPress={() => {
                     Haptics.selectionAsync();
                     sendFeedback();

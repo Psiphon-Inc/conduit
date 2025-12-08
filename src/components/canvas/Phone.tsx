@@ -19,7 +19,6 @@
 
 import { palette } from "@/src/styles";
 import {
-    Fill,
     Group,
     Image,
     LinearGradient,
@@ -107,7 +106,6 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
             >
                 <Group transform={phoneResizeTransform}>
                     <RoundedRect x={2} y={0} width={48} height={85} r={5}>
-                        <Fill color={palette.blue} />
                         <Turbulence
                             freqX={0.5}
                             freqY={0.5}
@@ -119,7 +117,7 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                         <LinearGradient
                             start={vec(25, 86)}
                             end={vec(25, 0)}
-                            colors={["#6B536A", "#5C7A90"]}
+                            colors={[palette.mauve, palette.fadedMauve]}
                         />
                     </Path>
                 </Group>
@@ -136,7 +134,7 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                         phoneDestWidth * 1.5 + sceneWidth * 0.1,
                         sceneHeight / 2,
                     )}
-                    colors={[palette.transparent, palette.red]}
+                    colors={[palette.transparent, palette.redShade3]}
                 />
             </Rect>
             <Group
@@ -166,7 +164,7 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                 <LinearGradient
                     start={vec(sceneWidth * 0.8, 0)}
                     end={vec(sceneWidth, 0)}
-                    colors={[palette.transparent, palette.blue]}
+                    colors={[palette.transparent, palette.peach]}
                 />
             </Rect>
             <Group>

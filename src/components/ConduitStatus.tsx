@@ -19,17 +19,14 @@
 
 import {
     Canvas,
-    LinearGradient,
+    Group,
     Paragraph,
-    Rect,
     SkParagraphStyle,
     SkTextStyle,
     Skia,
     TextAlign,
     TextDirection,
-    interpolateColors,
     useFonts,
-    vec,
 } from "@shopify/react-native-skia";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -43,7 +40,6 @@ import {
 
 import { drawBigFont, niceBytes } from "@/src/common/utils";
 import { FaderGroup } from "@/src/components/canvas/FaderGroup";
-import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
@@ -95,51 +91,29 @@ export function ConduitStatus({
 
     // Fade in gradient on app start
     const fadeIn = useSharedValue(0);
-    if (inproxyStatus !== "UNKNOWN") {
-        fadeIn.value = withDelay(
-            inproxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
-            withTiming(1, { duration: 2000 }),
-        );
-    }
-
     // Fade in status text when conduit is running
     const fader = useSharedValue(0);
     const shouldAnimateIn = React.useRef(true);
     const shouldAnimateOut = React.useRef(true);
-    if (inproxyStatus === "RUNNING") {
-        if (shouldAnimateIn.current) {
-            fader.value = withTiming(1, { duration: 1000 });
-            shouldAnimateIn.current = false;
-            shouldAnimateOut.current = true;
+
+    React.useEffect(() => {
+        if (inproxyStatus !== "UNKNOWN") {
+            fadeIn.value = withDelay(0, withTiming(1, { duration: 2000 }));
         }
-    } else if (inproxyStatus === "STOPPED") {
-        if (shouldAnimateOut.current) {
-            fader.value = withTiming(0, { duration: 1000 });
-            shouldAnimateIn.current = true;
-            shouldAnimateOut.current = false;
+        if (inproxyStatus === "RUNNING") {
+            if (shouldAnimateIn.current) {
+                fader.value = withTiming(1, { duration: 1000 });
+                shouldAnimateIn.current = false;
+                shouldAnimateOut.current = true;
+            }
+        } else if (inproxyStatus === "STOPPED") {
+            if (shouldAnimateOut.current) {
+                fader.value = withTiming(0, { duration: 1000 });
+                shouldAnimateIn.current = true;
+                shouldAnimateOut.current = false;
+            }
         }
-    }
-    // make gradient taller with fader
-    const gradientPairs = [
-        [palette.black, palette.purpleShade5],
-        [palette.black, palette.purpleShade4],
-        [palette.purpleShade5, palette.purpleShade3],
-        [palette.purpleShade4, palette.purpleShade2],
-        [palette.purpleShade3, palette.purpleShade1],
-        [palette.redShade4, palette.redShade2],
-    ];
-    const backgroundGradientColors = useDerivedValue(() => {
-        return [
-            palette.black,
-            interpolateColors(fader.value, [0, 1], gradientPairs[0]),
-            interpolateColors(fader.value, [0, 1], gradientPairs[1]),
-            interpolateColors(fader.value, [0, 1], gradientPairs[2]),
-            interpolateColors(fader.value, [0, 1], gradientPairs[3]),
-            interpolateColors(fader.value, [0, 1], gradientPairs[4]),
-            interpolateColors(fader.value, [0, 1], gradientPairs[5]),
-        ];
-    });
-    // implicit do nothing if inproxyStatus is "unknown"
+    }, [inproxyStatus]);
 
     const fontMgr = useFonts({ Jura: [fonts.JuraRegular] });
     const fontSize = drawBigFont(win) ? 20 : 16;
@@ -154,7 +128,7 @@ export function ConduitStatus({
             paragraphStyle.textDirection = TextDirection.RTL;
         }
         const mainTextStyle: SkTextStyle = {
-            color: Skia.Color(palette.statusTextBlue),
+            color: Skia.Color(palette.black),
             fontFamilies: ["Jura"],
             fontSize: fontSize,
             fontStyle: {
@@ -163,7 +137,7 @@ export function ConduitStatus({
             letterSpacing: 1, // 5% of 20
         };
         const runningTextStyle: SkTextStyle = {
-            color: Skia.Color(palette.red),
+            color: Skia.Color(palette.black),
             fontFamilies: ["Jura"],
             fontSize: fontSize,
             fontStyle: {
@@ -200,34 +174,21 @@ export function ConduitStatus({
         <View
             style={[
                 {
-                    position: "absolute",
-                    bottom: 0,
                     width: width,
                     height: height,
                 },
             ]}
         >
             <Canvas style={[ss.flex]}>
-                <Rect
-                    x={0}
-                    y={0}
-                    width={width}
-                    height={height}
-                    opacity={fadeIn}
-                >
-                    <LinearGradient
-                        start={vec(width / 2, 0)}
-                        end={vec(width / 2, height)}
-                        colors={backgroundGradientColors}
-                    />
-                </Rect>
                 <FaderGroup opacity={fader}>
-                    <Paragraph
-                        paragraph={statusParagraph}
-                        x={0}
-                        y={0}
-                        width={width}
-                    />
+                    <Group>
+                        <Paragraph
+                            paragraph={statusParagraph}
+                            x={0}
+                            y={0}
+                            width={width}
+                        />
+                    </Group>
                 </FaderGroup>
             </Canvas>
         </View>

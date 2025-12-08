@@ -21,9 +21,8 @@ import * as Clipboard from "expo-clipboard";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 
-import { Icon } from "@/src/components/Icon";
 import { Identicon } from "@/src/components/Identicon";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { sharedStyles as ss } from "@/src/styles";
 
 export function ProxyID({
     proxyId,
@@ -33,28 +32,23 @@ export function ProxyID({
     copyable?: boolean;
 }) {
     // proxyId is a base64nopad encoded X25519 public key
-    const [copyIcon, setCopyIcon] = React.useState(
-        <Icon name="copy" size={24} color={palette.black} />,
-    );
-
-    function showCopySuccess() {
-        setCopyIcon(<Icon name="check" size={24} color={palette.black} />);
-        setTimeout(() => {
-            setCopyIcon(<Icon name="copy" size={24} color={palette.black} />);
-        }, 2500);
-    }
-
     async function copyProxyIdToClipboard() {
         await Clipboard.setStringAsync(proxyId);
-        showCopySuccess();
     }
 
     return (
-        <View style={[ss.row, ss.alignCenter, ss.rounded5]}>
+        <Pressable
+            style={[ss.row, ss.alignCenter, ss.rounded5]}
+            onPress={() => {
+                copyable && copyProxyIdToClipboard();
+            }}
+        >
             <View
                 style={{
-                    width: 40,
-                    height: 40,
+                    width: 42,
+                    height: 42,
+                    borderWidth: 1,
+                    borderRadius: 20,
                 }}
             >
                 <Identicon value={proxyId} size={40} />
@@ -62,14 +56,6 @@ export function ProxyID({
             <Text style={[ss.greyText, ss.bodyFont]}>
                 ({proxyId.substring(0, 4)}...)
             </Text>
-            {copyable && (
-                <Pressable
-                    onPress={copyProxyIdToClipboard}
-                    style={[ss.rounded5, ss.whiteBg, ss.halfPadded]}
-                >
-                    {copyIcon}
-                </Pressable>
-            )}
-        </View>
+        </Pressable>
     );
 }

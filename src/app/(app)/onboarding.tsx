@@ -289,7 +289,7 @@ export default function OnboardingScreen() {
         }
 
         const textStyle: SkTextStyle = {
-            color: Skia.Color(palette.blueTint2),
+            color: Skia.Color(palette.peach),
             fontFamilies: ["Jura"],
             fontSize: bigFontSize * 0.8,
             fontStyle: {
@@ -414,7 +414,6 @@ export default function OnboardingScreen() {
                                 colors={[
                                     palette.black,
                                     palette.black,
-                                    palette.black,
                                     palette.purpleShade3,
                                     palette.maroon,
                                 ]}
@@ -466,7 +465,7 @@ export default function OnboardingScreen() {
                                     height={buttonSize.height}
                                     style="stroke"
                                     strokeWidth={3}
-                                    color={palette.blueTint2}
+                                    color={palette.peach}
                                     r={buttonBorderRadius}
                                 />
                                 <Paragraph
@@ -536,16 +535,16 @@ function ProgressDots({
 }) {
     // Couldn't figure out a way to avoid hardcoding these
     const dot0Fill = useDerivedValue(() => {
-        return currentView.value >= 0 ? palette.blueTint2 : palette.transparent;
+        return currentView.value >= 0 ? palette.peach : palette.transparent;
     });
     const dot1Fill = useDerivedValue(() => {
-        return currentView.value >= 1 ? palette.blueTint2 : palette.transparent;
+        return currentView.value >= 1 ? palette.peach : palette.transparent;
     });
     const dot2Fill = useDerivedValue(() => {
-        return currentView.value >= 2 ? palette.blueTint2 : palette.transparent;
+        return currentView.value >= 2 ? palette.peach : palette.transparent;
     });
     const dot3Fill = useDerivedValue(() => {
-        return currentView.value >= 3 ? palette.blueTint2 : palette.transparent;
+        return currentView.value >= 3 ? palette.peach : palette.transparent;
     });
 
     return (
@@ -555,7 +554,7 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"stroke"}
                 strokeWidth={1}
-                color={palette.blueTint2}
+                color={palette.peach}
             />
             <Circle
                 c={vec(dotWidth * 0, 0)}
@@ -568,7 +567,7 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"stroke"}
                 strokeWidth={1}
-                color={palette.blueTint2}
+                color={palette.peach}
             />
             <Circle
                 c={vec(dotWidth * 1, 0)}
@@ -581,7 +580,7 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"stroke"}
                 strokeWidth={1}
-                color={palette.blueTint2}
+                color={palette.peach}
             />
             <Circle
                 c={vec(dotWidth * 2, 0)}
@@ -594,7 +593,7 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"stroke"}
                 strokeWidth={1}
-                color={palette.blueTint2}
+                color={palette.peach}
             />
             <Circle
                 c={vec(dotWidth * 3, 0)}

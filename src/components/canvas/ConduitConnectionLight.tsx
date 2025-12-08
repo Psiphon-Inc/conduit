@@ -97,10 +97,10 @@ export function ConduitConnectionLight({
     // animate light color along trajectory
     const lightColors = [
         palette.transparent,
-        palette.white,
-        palette.blue,
+        palette.peach,
+        palette.mauve,
         palette.purple,
-        palette.red,
+        palette.transparent,
     ];
     const lightColor = useDerivedValue(() => {
         return interpolateColors(

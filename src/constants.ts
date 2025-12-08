@@ -25,12 +25,11 @@ export const INPROXY_MAX_CLIENTS_MAX = 25;
 export const INPROXY_MAX_MBPS_PER_PEER_MAX = 40;
 
 export const LEARN_MORE_URL = "https://conduit.psiphon.ca/en";
+export const RYVE_LEARN_MORE_URL = "https://ryve.app";
 export const PRIVACY_POLICY_URL =
     "https://conduit.psiphon.ca/en/conduit-privacy-policy";
-
-// Hard code a common delay value for animations that fade in to wait until the
-// particle video is done playing.
-export const PARTICLE_VIDEO_DELAY_MS = 2800;
+export const RYVE_APP_LISTING_GOOGLE =
+    "https://play.google.com/store/apps/details?id=network.ryve.app&referrer=utm_source%3Dconduit_app_a%26utm_campaign%3Dconduit_general%26utm_term%3Dryve_push";
 
 // Window height cutoff used to render smaller text in Skia Paragraphs
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;
