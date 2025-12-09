@@ -29,7 +29,7 @@ export const RYVE_LEARN_MORE_URL = "https://ryve.app";
 export const PRIVACY_POLICY_URL =
     "https://conduit.psiphon.ca/en/conduit-privacy-policy";
 export const RYVE_APP_LISTING_GOOGLE =
-    "https://play.google.com/store/apps/details?id=network.ryve.app&referrer=utm_source%3Dconduit_app_a%26utm_campaign%3Dconduit_general%26utm_term%3Dryve_push";
+    "https://play.google.com/store/apps/details?id=network.ryve.app&referrer=utm_source%3Dconduit_app_a%26utm_campaign%3Dryve_push";
 
 // Window height cutoff used to render smaller text in Skia Paragraphs
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;

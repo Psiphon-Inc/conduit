@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Psiphon Inc.
+ * Copyright (c) 2025, Psiphon Inc.
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
