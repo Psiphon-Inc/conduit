@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import {
     BlendMode,
     Canvas,
@@ -32,7 +31,7 @@ import { Text, View } from "react-native";
 import { SharedValue } from "react-native-reanimated";
 
 import { FaderGroup } from "@/src/components/canvas/FaderGroup";
-import { sharedStyles as ss } from "../styles";
+import { sharedStyles as ss } from "@/src/styles";
 
 const ICONS = {
     check: require("@/assets/images/icons/check.svg"),

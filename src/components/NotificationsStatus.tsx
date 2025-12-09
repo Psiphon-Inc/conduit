@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import React from "react";

@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -38,7 +37,6 @@ import {
     QUERYKEY_INPROXY_STATUS,
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
 } from "@/src/constants";
-
 import { ConduitModule } from "@/src/inproxy/module";
 import {
     InproxyActivityStats,

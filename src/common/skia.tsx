@@ -16,8 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
-import { Skia, SkPath } from "@shopify/react-native-skia";
+import { SkPath, Skia } from "@shopify/react-native-skia";
 
 function normalize(value: number, max: number) {
     return value / max;

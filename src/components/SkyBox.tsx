@@ -1,12 +1,12 @@
 import {
     Canvas,
-    interpolateColors,
     LinearGradient,
     Rect,
+    interpolateColors,
     vec,
 } from "@shopify/react-native-skia";
 import React from "react";
-import { useWindowDimensions, View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import {
     useDerivedValue,
     useSharedValue,

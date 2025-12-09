@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { Group, Path, fitbox, rect } from "@shopify/react-native-skia";
 import React from "react";
 import {

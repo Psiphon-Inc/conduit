@@ -1,12 +1,12 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Modal, Pressable, useWindowDimensions, View } from "react-native";
+import { Modal, Pressable, View, useWindowDimensions } from "react-native";
+import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
 import { Icon } from "@/src/components/Icon";
-import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
-import { useInproxyStatus } from "../inproxy/hooks";
-import { palette, sharedStyles as ss } from "../styles";
-import { InproxyStatusColorCanvas } from "./SkyBox";
+import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
+import { useInproxyStatus } from "@/src/inproxy/hooks";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitAnalytics() {
     const win = useWindowDimensions();

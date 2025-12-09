@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -31,12 +30,12 @@ import { z } from "zod";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
+import { Icon } from "@/src/components/Icon";
 import { QRDisplay } from "@/src/components/QRDisplay";
+import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
+import { RYVE_APP_LISTING_GOOGLE } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
-import { RYVE_APP_LISTING_GOOGLE } from "../constants";
-import { Icon } from "./Icon";
-import { InproxyStatusColorCanvas } from "./SkyBox";
 
 export const conduitScanData = z.object({
     version: z.number(),

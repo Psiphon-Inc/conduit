@@ -19,12 +19,12 @@
 import React from "react";
 import { View } from "react-native";
 import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
-
-import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ConduitSettings } from "./ConduitSettings";
-import { GitHash } from "./GitHash";
-import { RyveCallToAction } from "./RyveCallToAction";
+
+import { ConduitSettings } from "@/src/components/ConduitSettings";
+import { GitHash } from "@/src/components/GitHash";
+import { RyveCallToAction } from "@/src/components/RyveCallToAction";
+import { useInproxyStatus } from "@/src/inproxy/hooks";
 
 export function ActionsArea({
     width,

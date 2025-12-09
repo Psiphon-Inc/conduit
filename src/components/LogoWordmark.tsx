@@ -16,12 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
+import { Image } from "expo-image";
 import React from "react";
 import { View } from "react-native";
 
 import { palette } from "@/src/styles";
-import { Image } from "expo-image";
 
 export function LogoWordmark({
     width,

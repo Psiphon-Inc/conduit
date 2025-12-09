@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -26,13 +25,13 @@ import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 import { useAuthContext } from "@/src/auth/context";
 import { wrapError } from "@/src/common/errors";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { SkyBox } from "@/src/components/SkyBox";
 import { PsiphonConduitLoading } from "@/src/components/canvas/PsiphonConduitLoading";
 import {
     ASYNCSTORAGE_HAS_ONBOARDED_KEY,
     CURRENT_STORAGE_VERSION,
 } from "@/src/constants";
 import { applyMigrations } from "@/src/migrations";
-import { SkyBox } from "../components/SkyBox";
 
 export default function Index() {
     const { signIn } = useAuthContext();

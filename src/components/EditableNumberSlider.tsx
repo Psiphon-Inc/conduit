@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import {
     Canvas,
     Circle,
@@ -26,7 +25,9 @@ import {
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
 import React, { RefObject } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     clamp,
     runOnJS,
@@ -37,8 +38,6 @@ import Animated, {
 
 import { AnimatedText } from "@/src/components/AnimatedText";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
-import { useTranslation } from "react-i18next";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 interface EditableNumberSliderProps {
     label: string;

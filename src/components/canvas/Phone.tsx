@@ -16,8 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
-import { palette } from "@/src/styles";
 import {
     Group,
     Image,
@@ -44,6 +42,7 @@ import {
 } from "react-native-reanimated";
 
 import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
+import { palette } from "@/src/styles";
 
 interface PhoneProps {
     currentView: SharedValue<number>;

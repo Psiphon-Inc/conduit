@@ -1,6 +1,5 @@
 // NOTE: this file is a modified copy of a similar file from
 // @shopify/react-native-skia, see TODO
-
 import {
     DataSourceParam,
     SkImage,

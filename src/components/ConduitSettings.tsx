@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { BlendMode, Skia } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
@@ -54,6 +53,7 @@ import { NotificationsStatus } from "@/src/components/NotificationsStatus";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
+import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
 import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_MBPS_PER_PEER_MAX,
@@ -67,7 +67,6 @@ import {
 } from "@/src/inproxy/types";
 import { getProxyId } from "@/src/inproxy/utils";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
-import { InproxyStatusColorCanvas } from "./SkyBox";
 
 export function ConduitSettings() {
     const { t } = useTranslation();
