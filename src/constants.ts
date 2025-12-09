@@ -31,6 +31,8 @@ export const PRIVACY_POLICY_URL =
 export const RYVE_APP_LISTING_GOOGLE =
     "https://play.google.com/store/apps/details?id=network.ryve.app&referrer=utm_source%3Dconduit_app_a%26utm_campaign%3Dryve_push";
 
+export const RYVE_CLAIM_DEEP_LINK = "network.ryve.app://(app)/conduits?claim=";
+
 // Window height cutoff used to render smaller text in Skia Paragraphs
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;
 

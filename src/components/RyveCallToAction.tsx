@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+import { base64url } from "@scure/base";
 import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -33,7 +34,7 @@ import { keyPairToBase64nopad } from "@/src/common/cryptography";
 import { Icon } from "@/src/components/Icon";
 import { QRDisplay } from "@/src/components/QRDisplay";
 import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
-import { RYVE_APP_LISTING_GOOGLE } from "@/src/constants";
+import { RYVE_APP_LISTING_GOOGLE, RYVE_CLAIM_DEEP_LINK } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
@@ -44,6 +45,8 @@ export const conduitScanData = z.object({
         name: z.string().optional(),
     }),
 });
+
+export const conduitClaimDeepLink = z.string().startsWith(RYVE_CLAIM_DEEP_LINK);
 
 export function RyveCallToAction() {
     const win = useWindowDimensions();
@@ -104,6 +107,10 @@ export function RyveCallToAction() {
             },
         } as z.infer<typeof conduitScanData>);
 
+        const qrDeepLink = conduitClaimDeepLink.parse(
+            `${RYVE_CLAIM_DEEP_LINK}${base64url.encode(new TextEncoder().encode(JSON.stringify(data)))}`,
+        );
+
         return (
             <View
                 style={[
@@ -148,7 +155,7 @@ export function RyveCallToAction() {
                                 backgroundColor={palette.white}
                                 foregroundColor={palette.purple}
                                 size={win.width * 0.8}
-                                data={JSON.stringify(data)}
+                                data={qrDeepLink}
                             />
                         ) : (
                             <View
