@@ -19,7 +19,7 @@
 import { StyleSheet } from "react-native";
 
 export const palette = {
-    black: "rgba(25, 18, 36, 1)",
+    black: "#231F20",
     redTint5: "#faebe9",
     redTint4: "#f2c5be",
     redTint3: "#ea9f93",

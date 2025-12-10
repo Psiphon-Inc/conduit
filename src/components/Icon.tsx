@@ -113,7 +113,7 @@ export function Icon({
                 <Text
                     numberOfLines={1}
                     adjustsFontSizeToFit={true}
-                    style={[ss.bodyFont, { fontSize: 14 }]}
+                    style={[ss.bodyFont, ss.blackText, { fontSize: 14 }]}
                 >
                     {label}
                 </Text>

@@ -17,8 +17,10 @@
  *
  */
 import {
+    Blur,
     Canvas,
     Group,
+    Paint,
     Paragraph,
     SkParagraphStyle,
     SkTextStyle,
@@ -26,6 +28,7 @@ import {
     TextAlign,
     TextDirection,
     useFonts,
+    vec,
 } from "@shopify/react-native-skia";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -52,9 +55,11 @@ import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 export function ConduitStatus({
     width,
     height,
+    applyBlur = false,
 }: {
     width: number;
     height: number;
+    applyBlur: boolean;
 }) {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.dir() === "rtl" ? true : false;
@@ -131,23 +136,46 @@ export function ConduitStatus({
             fontFamilies: ["Jura"],
             fontSize: fontSize,
             fontStyle: {
-                weight: 300,
+                weight: 400,
+            },
+            letterSpacing: 1, // 5% of 20
+        };
+        const aliasTextStyle: SkTextStyle = {
+            color: Skia.Color(palette.black),
+            shadows: [
+                {
+                    color: new Float32Array([0.13, 0.12, 0.12, 0.3]),
+                    offset: vec(0, 1),
+                    blurRadius: 2,
+                },
+            ],
+            fontFamilies: ["Jura"],
+            fontSize: fontSize,
+            fontStyle: {
+                weight: 400,
             },
             letterSpacing: 1, // 5% of 20
         };
         const runningTextStyle: SkTextStyle = {
-            color: Skia.Color(palette.black),
+            color: Skia.Color(palette.white),
+            shadows: [
+                {
+                    color: new Float32Array([0.13, 0.12, 0.12, 0.3]),
+                    offset: vec(0, 1),
+                    blurRadius: 2,
+                },
+            ],
             fontFamilies: ["Jura"],
             fontSize: fontSize,
             fontStyle: {
-                weight: 300,
+                weight: 700,
             },
             letterSpacing: 1, // 5% of 20
         };
         const waitingTextStyle: SkTextStyle = {
             color: Skia.Color(palette.grey),
             fontFamilies: ["Jura"],
-            fontSize: fontSize,
+            fontSize: fontSize - 2,
             fontStyle: {
                 weight: 300,
             },
@@ -155,7 +183,7 @@ export function ConduitStatus({
         };
 
         return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
-            .pushStyle(mainTextStyle)
+            .pushStyle(aliasTextStyle)
             .addText(conduitStationText + " ")
             .pushStyle(runningTextStyle)
             .addText(proxyStatusText + "\n")
@@ -163,6 +191,7 @@ export function ConduitStatus({
             .pushStyle(waitingTextStyle)
             .addText(connectedPeers === 0 ? waitingForPeersText + "\n" : "\n")
             .pop()
+            .pushStyle(mainTextStyle)
             .addText(connectedPeersText + "\n")
             .addText(connectingPeersText + "\n")
             .addText(totalBytesTransferredText + "\n")
@@ -180,7 +209,9 @@ export function ConduitStatus({
         >
             <Canvas style={[ss.flex]}>
                 <FaderGroup opacity={fader}>
-                    <Group>
+                    <Group
+                        layer={<Paint>{applyBlur && <Blur blur={7} />}</Paint>}
+                    >
                         <Paragraph
                             paragraph={statusParagraph}
                             x={0}

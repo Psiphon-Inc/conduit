@@ -77,6 +77,9 @@ export default function RootLayout() {
                             screenOptions={{
                                 headerShown: false,
                                 animation: "none",
+                                contentStyle: {
+                                    backgroundColor: palette.white,
+                                },
                             }}
                         >
                             <Stack.Screen name="(app)" />

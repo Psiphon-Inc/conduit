@@ -61,9 +61,11 @@ import { palette, sharedStyles as ss } from "@/src/styles";
 export function ConduitOrbToggle({
     width,
     height,
+    applyBlur = false,
 }: {
     width: number;
     height: number;
+    applyBlur: boolean;
 }) {
     const { t } = useTranslation();
 
@@ -333,7 +335,7 @@ export function ConduitOrbToggle({
             }}
         >
             <Canvas style={[ss.flex]}>
-                <Group>
+                <Group layer={<Paint>{applyBlur && <Blur blur={5} />}</Paint>}>
                     {/* The Orb and Lights Scene*/}
                     <Group transform={orbCenteringTransform}>
                         {/* vec(0,0) at the center of the Orb */}

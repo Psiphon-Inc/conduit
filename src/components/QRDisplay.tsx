@@ -20,6 +20,8 @@ import { Canvas, Rect, RoundedRect } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
 
+import { palette } from "@/src/styles";
+
 interface QRDisplayProps {
     data: string;
     size?: number;
@@ -850,8 +852,8 @@ QRCodeGenerator.initializeTables();
 export const QRDisplay: React.FC<QRDisplayProps> = ({
     data,
     size = 200,
-    backgroundColor = "white",
-    foregroundColor = "black",
+    backgroundColor = palette.white,
+    foregroundColor = palette.black,
 }) => {
     const modules = React.useMemo(() => {
         const generator = new QRCodeGenerator();

@@ -35,7 +35,8 @@ export function LogoWordmark({
                 {
                     width: width,
                     height: height,
-                    padding: 20,
+                    justifyContent: "flex-end",
+                    paddingBottom: 20,
                 },
             ]}
         >
@@ -45,6 +46,7 @@ export function LogoWordmark({
                 style={{
                     width: "100%",
                     height: "100%",
+                    maxHeight: 40,
                 }}
                 contentFit={"contain"}
             />

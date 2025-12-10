@@ -37,6 +37,8 @@ export default function HomeScreen() {
     const totalUsableHeight = win.height - (insets.top + insets.bottom);
     const totalUsableWidth = win.width;
 
+    const [bgBlur, setBgBlur] = React.useState(false);
+
     // NOTE this assumes a portrait layout.
 
     return (
@@ -52,16 +54,19 @@ export default function HomeScreen() {
                 <ConduitOrbToggle
                     width={totalUsableWidth}
                     height={totalUsableHeight * 0.5}
+                    applyBlur={bgBlur}
                 />
                 {/* Status taking up the next 25% of the vertical space */}
                 <ConduitStatus
                     width={totalUsableWidth}
                     height={totalUsableHeight * 0.25}
+                    applyBlur={bgBlur}
                 />
                 {/* Actions Area taking up the last 15% of the vertical space */}
                 <ActionsArea
                     width={totalUsableWidth}
                     height={totalUsableHeight * 0.2}
+                    setBgBlur={setBgBlur}
                 />
             </SafeAreaView>
         </GestureHandlerRootView>

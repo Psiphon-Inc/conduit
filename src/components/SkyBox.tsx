@@ -31,6 +31,7 @@ import {
     withDelay,
     withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
@@ -49,6 +50,7 @@ export function SkyBox() {
                     top: 0,
                     width: width,
                     height: height,
+                    backgroundColor: "white",
                 },
             ]}
         >
@@ -60,14 +62,18 @@ export function SkyBox() {
 export function InproxyStatusColorCanvas({
     width,
     height,
+    faderInitial = 0,
 }: {
     width: number;
     height: number;
+    faderInitial?: number;
 }) {
+    const insets = useSafeAreaInsets();
+
     const { data: inproxyStatus } = useInproxyStatus();
 
-    const fadeIn = useSharedValue(0);
-    const fader = useSharedValue(0);
+    const fadeIn = useSharedValue(faderInitial);
+    const fader = useSharedValue(faderInitial);
     const shouldAnimateIn = React.useRef(true);
     const shouldAnimateOut = React.useRef(true);
 
@@ -92,8 +98,8 @@ export function InproxyStatusColorCanvas({
 
     // make gradient taller with fader
     const gradientPairs = [
-        [palette.white, palette.white],
-        [palette.white, palette.white],
+        ["rgba(255,255,255,0)", "rgba(255,255,255,0)"],
+        [palette.white, palette.fadedMauve],
         [palette.fadedMauve, palette.mauve],
         [palette.mauve, palette.peach],
     ];
@@ -126,6 +132,15 @@ export function InproxyStatusColorCanvas({
                     />
                 </Rect>
             </Canvas>
+            <View
+                style={{
+                    position: "absolute",
+                    bottom: 0,
+                    width: "100%",
+                    height: insets.bottom,
+                    backgroundColor: palette.black,
+                }}
+            />
         </View>
     );
 }

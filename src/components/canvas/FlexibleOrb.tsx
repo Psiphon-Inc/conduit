@@ -55,7 +55,6 @@ export function FlexibleOrb({
     const cx = useSharedValue(sceneWidth);
     const cy = sceneHeight / 2;
 
-    const orbsWorldPng = useImage(require("@/assets/images/orbs-world.png"));
     const notificationsPng = useImage(
         require("@/assets/images/onboarding-permissions.png"),
     );
@@ -159,15 +158,6 @@ export function FlexibleOrb({
 
     return (
         <Group>
-            <Image
-                image={orbsWorldPng}
-                x={0}
-                y={0}
-                width={sceneWidth}
-                height={sceneHeight}
-                fit={"contain"}
-                opacity={backgroundOpacity}
-            />
             <Image
                 image={privacyPolicyPng}
                 x={sceneWidth * 0.55}

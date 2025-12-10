@@ -36,6 +36,7 @@ import { QRDisplay } from "@/src/components/QRDisplay";
 import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
 import { RYVE_APP_LISTING_GOOGLE, RYVE_CLAIM_DEEP_LINK } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
+import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export const conduitScanData = z.object({
@@ -48,7 +49,11 @@ export const conduitScanData = z.object({
 
 export const conduitClaimDeepLink = z.string().startsWith(RYVE_CLAIM_DEEP_LINK);
 
-export function RyveCallToAction() {
+export function RyveCallToAction({
+    setBgBlur,
+}: {
+    setBgBlur: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
     const win = useWindowDimensions();
     const { t } = useTranslation();
 
@@ -57,9 +62,11 @@ export function RyveCallToAction() {
 
     const conduitKeyPair = useConduitKeyPair();
     const conduitName = useConduitName();
+    const inproxyStatus = useInproxyStatus();
 
     function onClose() {
         setModalOpen(false);
+        setBgBlur(false);
         setQrRevealed(false); // Reset reveal state when modal closes
     }
 
@@ -153,7 +160,7 @@ export function RyveCallToAction() {
                         {qrRevealed ? (
                             <QRDisplay
                                 backgroundColor={palette.white}
-                                foregroundColor={palette.purple}
+                                foregroundColor={palette.black}
                                 size={win.width * 0.8}
                                 data={qrDeepLink}
                             />
@@ -242,6 +249,7 @@ export function RyveCallToAction() {
             <Pressable
                 onPress={() => {
                     setModalOpen(true);
+                    setBgBlur(true);
                 }}
             >
                 <View
@@ -269,7 +277,6 @@ export function RyveCallToAction() {
                 transparent={true}
                 onRequestClose={onClose}
             >
-                <View style={[ss.underlay]} />
                 <View
                     style={[
                         ss.modalBottom90,
@@ -281,11 +288,18 @@ export function RyveCallToAction() {
                     <InproxyStatusColorCanvas
                         width={win.width}
                         height={win.height}
+                        faderInitial={
+                            inproxyStatus.data &&
+                            inproxyStatus.data === "RUNNING"
+                                ? 1
+                                : 0
+                        }
                     />
                     <Pressable
                         style={[ss.row, ss.padded]}
                         onPress={() => {
                             setModalOpen(false);
+                            setBgBlur(false);
                             setQrRevealed(false);
                         }}
                     >

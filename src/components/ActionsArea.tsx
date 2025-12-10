@@ -29,9 +29,11 @@ import { useInproxyStatus } from "@/src/inproxy/hooks";
 export function ActionsArea({
     width,
     height,
+    setBgBlur,
 }: {
     width: number;
     height: number;
+    setBgBlur: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
     const insets = useSafeAreaInsets();
 
@@ -75,7 +77,7 @@ export function ActionsArea({
                 },
             ]}
         >
-            <RyveCallToAction />
+            <RyveCallToAction setBgBlur={setBgBlur} />
             <View
                 style={{
                     flexDirection: "row",
@@ -91,7 +93,7 @@ export function ActionsArea({
                         flexDirection: "row",
                     }}
                 >
-                    <ConduitSettings />
+                    <ConduitSettings setBgBlur={setBgBlur} />
                 </View>
             </View>
         </View>

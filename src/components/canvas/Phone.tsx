@@ -116,7 +116,7 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                         <LinearGradient
                             start={vec(25, 86)}
                             end={vec(25, 0)}
-                            colors={[palette.mauve, palette.fadedMauve]}
+                            colors={[palette.purple, palette.mauve]}
                         />
                     </Path>
                 </Group>
@@ -133,7 +133,19 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                         phoneDestWidth * 1.5 + sceneWidth * 0.1,
                         sceneHeight / 2,
                     )}
-                    colors={[palette.transparent, palette.redShade3]}
+                    colors={[palette.white, palette.deepMauve]}
+                />
+            </Rect>
+            <Rect
+                x={sceneWidth * 0.8}
+                y={0}
+                height={sceneHeight}
+                width={sceneWidth * 0.2}
+            >
+                <LinearGradient
+                    start={vec(sceneWidth * 0.8, 0)}
+                    end={vec(sceneWidth, 0)}
+                    colors={[palette.white, palette.peach]}
                 />
             </Rect>
             <Group
@@ -154,18 +166,6 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                     y0init={0}
                 />
             </Group>
-            <Rect
-                x={sceneWidth * 0.8}
-                y={0}
-                height={sceneHeight}
-                width={sceneWidth * 0.2}
-            >
-                <LinearGradient
-                    start={vec(sceneWidth * 0.8, 0)}
-                    end={vec(sceneWidth, 0)}
-                    colors={[palette.transparent, palette.peach]}
-                />
-            </Rect>
             <Group>
                 <Image
                     image={psiphonLogoPng}

@@ -190,6 +190,14 @@ export function EditableNumberSlider({
                             style="fill"
                             color={palette.white}
                         />
+                        <Circle
+                            cx={circleCx}
+                            cy={circleCy}
+                            r={circleR}
+                            style="stroke"
+                            strokeWidth={1}
+                            color={palette.purple}
+                        />
                     </Canvas>
                     <GestureDetector gesture={sliderGesture}>
                         <Animated.View style={[overlayStyle]} />

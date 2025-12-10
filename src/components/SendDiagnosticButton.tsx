@@ -34,7 +34,7 @@ export function SendDiagnosticButton() {
     if (showThankYou) {
         return (
             <View>
-                <Text style={[ss.bodyFont, ss.whiteText]}>
+                <Text style={[ss.bodyFont, ss.blackText]}>
                     {t("SENT_THANK_YOU_I18N.string")}
                 </Text>
             </View>
@@ -43,7 +43,7 @@ export function SendDiagnosticButton() {
         return (
             <Pressable
                 style={{
-                    backgroundColor: palette.black,
+                    backgroundColor: palette.purple,
                     borderRadius: 5,
                 }}
                 onPress={() => {

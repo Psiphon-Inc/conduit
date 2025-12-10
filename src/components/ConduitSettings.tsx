@@ -68,7 +68,11 @@ import {
 import { getProxyId } from "@/src/inproxy/utils";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 
-export function ConduitSettings() {
+export function ConduitSettings({
+    setBgBlur,
+}: {
+    setBgBlur: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
     const { t } = useTranslation();
     const win = useWindowDimensions();
     const router = useRouter();
@@ -168,9 +172,11 @@ export function ConduitSettings() {
             } else {
                 await commitChanges();
                 setModalOpen(false);
+                setBgBlur(false);
             }
         } else {
             setModalOpen(false);
+            setBgBlur(false);
         }
     }
 
@@ -257,7 +263,7 @@ export function ConduitSettings() {
                                 originalValue={bytesToMB(
                                     inproxyParameters.limitUpstreamBytesPerSecond,
                                 )}
-                                min={8}
+                                min={2}
                                 max={INPROXY_MAX_MBPS_PER_PEER_MAX}
                                 style={[...lineItemStyle, ss.alignCenter]}
                                 onChange={updateInproxyLimitBytesPerSecond}
@@ -361,6 +367,7 @@ export function ConduitSettings() {
                                 <Pressable
                                     onPress={() => {
                                         setModalOpen(false);
+                                        setBgBlur(false);
                                         router.push("/(app)/onboarding");
                                     }}
                                 >
@@ -373,11 +380,12 @@ export function ConduitSettings() {
                                             {
                                                 backgroundColor: palette.white,
                                                 borderWidth: 1,
+                                                borderColor: palette.purple,
                                             },
                                         ]}
                                     >
                                         <Text
-                                            style={[ss.bodyFont, ss.blackText]}
+                                            style={[ss.bodyFont, ss.purpleText]}
                                         >
                                             {t("REPLAY_INTRO_I18N.string")}
                                         </Text>
@@ -438,6 +446,7 @@ export function ConduitSettings() {
                                 );
                                 await commitChanges();
                                 setModalOpen(false);
+                                setBgBlur(false);
                                 setDisplayRestartConfirmation(false);
                             }}
                         >
@@ -455,6 +464,7 @@ export function ConduitSettings() {
                                 resetSettingsFromInproxyProvider();
                                 setDisplayRestartConfirmation(false);
                                 setModalOpen(false);
+                                setBgBlur(false);
                             }}
                         >
                             <Text
@@ -500,6 +510,7 @@ export function ConduitSettings() {
                     accessibilityRole={"button"}
                     onPress={() => {
                         setModalOpen(true);
+                        setBgBlur(true);
                     }}
                     style={{
                         justifyContent: "center",
@@ -534,12 +545,34 @@ export function ConduitSettings() {
                 transparent={true}
                 onRequestClose={onSettingsClose}
             >
-                <View style={[ss.underlay]} />
-                <View style={[ss.modalBottom90, { overflow: "hidden" }]}>
-                    <InproxyStatusColorCanvas
-                        width={win.width}
-                        height={win.height * 0.9}
+                <View style={{ ...ss.modalBottom90, overflow: "hidden" }}>
+                    <View
+                        style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            height: "100%",
+                            width: "100%",
+                            backgroundColor: "#FEFEFE",
+                            opacity: 0.5,
+                        }}
                     />
+
+                    <View
+                        style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            height: "80%",
+                            width: "100%",
+                        }}
+                    >
+                        <InproxyStatusColorCanvas
+                            width={win.width}
+                            height={win.height * 0.8}
+                            faderInitial={inproxyStatus === "RUNNING" ? 1 : 0}
+                        />
+                    </View>
                 </View>
                 <View style={[ss.modalBottom90]}>
                     {displayRestartConfirmation ? (

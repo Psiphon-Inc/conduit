@@ -108,7 +108,7 @@
         "string": "Conduit recommends you enable notifications so we can provide critical updates about your Conduit Station.\n\nReady to begin?"
     },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
-        "string": "Begin"
+        "string": "Host Conduit"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Privacy Policy"
