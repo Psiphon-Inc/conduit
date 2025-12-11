@@ -21,9 +21,7 @@ import {
     Canvas,
     Circle,
     ColorMatrix,
-    Fill,
     Group,
-    LinearGradient,
     Paint,
     Paragraph,
     RoundedRect,
@@ -64,6 +62,7 @@ import { drawBigFont } from "@/src/common/utils";
 import { LearnMoreLink } from "@/src/components/LearnMoreLink";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { SkyBox } from "@/src/components/SkyBox";
 import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
 import { ASYNCSTORAGE_HAS_ONBOARDED_KEY } from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
@@ -410,6 +409,7 @@ export default function OnboardingScreen() {
     return (
         <GestureHandlerRootView>
             <View onLayout={onScreenLayout} style={[ss.absoluteFill]} />
+            <SkyBox />
             <SafeAreaView>
                 <Canvas style={[ss.flex]}>
                     <Group
@@ -419,18 +419,6 @@ export default function OnboardingScreen() {
                             </Paint>
                         }
                     >
-                        <Fill>
-                            <LinearGradient
-                                start={vec(win.width / 2, 0)}
-                                end={vec(win.width / 2, win.height)}
-                                colors={[
-                                    palette.white,
-                                    palette.white,
-                                    palette.fadedMauve,
-                                    palette.mauve,
-                                ]}
-                            />
-                        </Fill>
                         <Group
                             layer={
                                 <Paint>

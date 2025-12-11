@@ -24,23 +24,26 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import React from "react";
-import { View, useWindowDimensions } from "react-native";
+import { View } from "react-native";
 import {
     useDerivedValue,
     useSharedValue,
     withDelay,
     withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+    useSafeAreaFrame,
+    useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function SkyBox() {
-    const win = useWindowDimensions();
+    const frame = useSafeAreaFrame();
 
-    const width = win.width;
-    const height = win.height;
+    const width = frame.width;
+    const height = frame.height;
 
     return (
         <View
@@ -50,7 +53,7 @@ export function SkyBox() {
                     top: 0,
                     width: width,
                     height: height,
-                    backgroundColor: "white",
+                    backgroundColor: palette.white,
                 },
             ]}
         >

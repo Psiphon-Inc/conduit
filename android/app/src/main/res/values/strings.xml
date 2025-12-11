@@ -1,11 +1,11 @@
 <resources>
   <string name="app_name">conduit</string>
-  <string name="expo_splash_screen_resize_mode" translatable="false">fill</string>
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
   <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
   <string name="conduit_service_stop_label_text">Stop</string>
-  <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
-  <string name="conduit_service_running_notification_long_text">Clients: %1$d connected / %2$d connecting\nData: %3$s transferred</string>
+  <string name="conduit_service_running_notification_short_text">%1$d / %2$d u00B7 %3$s</string>
+  <string name="conduit_service_running_notification_long_text">Clients: %1$d connected / %2$d connectingnData: %3$s transferred</string>
   <string name="conduit_service_no_internet_notification_text">Waiting for network connectivity</string>
   <string name="conduit_service_channel_description">Notification for the Conduit service</string>
   <string name="notification_conduit_inproxy_must_upgrade_text">Update required: Please download the latest version of the app to continue using it.</string>

@@ -1,51 +1,54 @@
 {
-  "expo": {
-    "name": "conduit",
-    "slug": "conduit",
-    "version": "1.8.0",
-    "orientation": "portrait",
-    "scheme": "conduit",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/images/android-icon-background.png",
-      "resizeMode": "fill",
-      "backgroundColor": "#FFFFFF"
-    },
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "ca.psiphon.conduit",
-      "buildNumber": "5",
-      "icon": "./assets/images/ios-icon.png"
-    },
-    "android": {
-      "package": "ca.psiphon.conduit",
-      "versionCode": 56,
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png"
-      },
-      "edgeToEdgeEnabled": true
-    },
-    "extra": {
-      "supportsRTL": true
-    },
-    "plugins": [
-      "expo-router",
-      "expo-localization",
-      "expo-font",
-      "expo-secure-store",
-      [
-        "react-native-edge-to-edge",
-        {
-          "android": {
-            "parentTheme": "Default"
-          }
+    "expo": {
+        "name": "conduit",
+        "slug": "conduit",
+        "version": "1.8.0",
+        "orientation": "portrait",
+        "scheme": "conduit",
+        "userInterfaceStyle": "automatic",
+        "newArchEnabled": true,
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "ca.psiphon.conduit",
+            "buildNumber": "5",
+            "icon": "./assets/images/ios-icon.png"
+        },
+        "android": {
+            "package": "ca.psiphon.conduit",
+            "versionCode": 57,
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/images/android-icon-foreground.png",
+                "backgroundImage": "./assets/images/android-icon-background.png"
+            },
+            "edgeToEdgeEnabled": true
+        },
+        "extra": {
+            "supportsRTL": true
+        },
+        "plugins": [
+            "expo-router",
+            "expo-localization",
+            "expo-font",
+            "expo-secure-store",
+            [
+                "react-native-edge-to-edge",
+                {
+                    "android": {
+                        "parentTheme": "Default"
+                    }
+                }
+            ],
+            [
+                "expo-splash-screen",
+                {
+                    "backgroundColor": "#FEFEFE",
+                    "image": "./assets/images/conduit-launcher.png",
+                    "imageWidth": 200
+                }
+            ]
+        ],
+        "experiments": {
+            "typedRoutes": true
         }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true
     }
-  }
 }

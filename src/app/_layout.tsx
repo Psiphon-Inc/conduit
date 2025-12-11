@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { DarkTheme, ThemeProvider } from "@react-navigation/native";
+import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -70,7 +70,7 @@ export default function RootLayout() {
 
     return (
         <KeyboardProvider>
-            <ThemeProvider value={DarkTheme}>
+            <ThemeProvider value={DefaultTheme}>
                 <QueryClientProvider client={queryClient}>
                     <AuthProvider>
                         <Stack
