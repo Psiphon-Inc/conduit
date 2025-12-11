@@ -90,6 +90,7 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
             "keyboardWillHide",
             () => {
                 if (textInputRef.current) {
+                    onEndEditing();
                     textInputRef.current.blur();
                 }
             },

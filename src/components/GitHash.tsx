@@ -44,6 +44,7 @@ export function GitHash() {
             style={{
                 justifyContent: "flex-end",
                 alignItems: "flex-end",
+                paddingLeft: 15,
             }}
         >
             <Animated.Text
