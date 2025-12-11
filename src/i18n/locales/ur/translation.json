@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "اٹلس"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Ryve میں انعام حاصل کریں"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "اس QR کوڈ کو Ryve ایپ سے اسکین کریں تاکہ یہ Conduit اسٹیشن آپ کے Ryve اکاؤنٹ سے جڑ جائے"
+    },
+    "CLOSE_I18N": {
+        "string": "بند کریں"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "غلط QR کوڈ"
+    },
+    "ANALYTICS_I18N": {
+        "string": "تجزیات"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Ryve حاصل کریں"
+    },
+    "REVEAL_I18N": {
+        "string": "ظاہر کریں"
     }
 }

@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Biệt danh"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Nhận phần thưởng trong Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Quét mã QR này bằng ứng dụng Ryve để liên kết Trạm Conduit này với tài khoản Ryve của bạn"
+    },
+    "CLOSE_I18N": {
+        "string": "Đóng"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "mã QR không hợp lệ"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Phân tích"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Tải Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "Hiển thị"
     }
 }

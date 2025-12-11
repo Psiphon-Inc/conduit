@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "उर्फ"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Ryve में रिवॉर्ड प्राप्त करें"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "इस QR कोड को Ryve ऐप से स्कैन करें ताकि यह Conduit स्टेशन आपके Ryve खाते से जुड़ सके"
+    },
+    "CLOSE_I18N": {
+        "string": "बंद करें"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "अमान्य QR कोड"
+    },
+    "ANALYTICS_I18N": {
+        "string": "एनालिटिक्स"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Ryve प्राप्त करें"
+    },
+    "REVEAL_I18N": {
+        "string": "दिखाएँ"
     }
 }

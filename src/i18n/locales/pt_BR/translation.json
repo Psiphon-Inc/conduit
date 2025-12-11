@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Pseudônimo"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Resgatar recompensas no Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Escaneie este código QR no aplicativo Ryve para vincular esta Conduit Station à sua conta Ryve"
+    },
+    "CLOSE_I18N": {
+        "string": "Fechar"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "código QR inválido"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Análises"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Obter Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "Revelar"
     }
 }
