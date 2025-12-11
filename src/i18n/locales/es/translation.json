@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Alias"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Canjear recompensas en Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Escanea este código QR en la app de Ryve para vincular esta terminal Conduit con tu cuenta de Ryve"
+    },
+    "CLOSE_I18N": {
+        "string": "Cerrar"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "código QR no válido"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Analíticas"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Obtener Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "Mostrar"
     }
 }

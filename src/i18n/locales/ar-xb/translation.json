@@ -139,5 +139,26 @@
     },
     "ALIAS_I18N": {
         "string": "‮∀ʅıɐs‬"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "‮Ↄɐıɯ‬ ‮ɹǝʍɐɹps‬ ‮ıu‬ ‮ᴚʎʌǝ‬"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "‮Sɔɐu‬ ‮ʇɥıs‬ ‮ɟɹou‬ ɹʎʌǝ‬ ‮ɐdd‬ ‮ʇo‬ ‮ʅıuʞ‬ ‮ʇɥıs‬ ‮Ↄoupnıʇ‬ ‮Sʇɐʇıou‬ ıuʇo‬ ʎonɹ‬ ‮ᴚʎʌǝ‬ ‮ɐɔɔonuʇ‬"
+    },
+    "CLOSE_I18N": {
+        "string": "‮Ↄʅosǝ‬"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "‮ıuʌɐʅıp‬ ‮nb‬ ɹɔ‬ ɔopǝ‬"
+    },
+    "ANALYTICS_I18N": {
+        "string": "‮∀uɐʅʎʇıɔs‬"
+    },
+    "GET_RYVE_I18N": {
+        "string": "‮⅁ǝʇ‬ ‮ᴚʎʌǝ‬"
+    },
+    "REVEAL_I18N": {
+        "string": "‮ᴚǝʌǝɐʅ‬"
     }
 }

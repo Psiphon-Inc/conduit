@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Takma ad"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Ryve’de ödülleri talep et"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Bu QR kodunu Ryve uygulamasından tarayarak bu Conduit istasyonunu Ryve hesabınızla ilişkilendirin"
+    },
+    "CLOSE_I18N": {
+        "string": "Kapat"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "geçersiz QR kodu"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Analizler"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Ryve’i edin"
+    },
+    "REVEAL_I18N": {
+        "string": "Göster"
     }
 }

@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Alias"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Klaim hadiah di Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Pindai kode QR ini di aplikasi Ryve untuk menautkan Conduit Station ini ke akun Ryve Anda"
+    },
+    "CLOSE_I18N": {
+        "string": "Tutup"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "kode QR tidak valid"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Analitik"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Dapatkan Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "Tampilkan"
     }
 }

@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "الاسم المستعار"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "احصل على المكافآت في Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "امسح رمز QR هذا من تطبيق Ryve لربط محطة Conduit هذه بحسابك في Ryve"
+    },
+    "CLOSE_I18N": {
+        "string": "إغلاق"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "رمز QR غير صالح"
+    },
+    "ANALYTICS_I18N": {
+        "string": "التحليلات"
+    },
+    "GET_RYVE_I18N": {
+        "string": "احصل على Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "إظهار"
     }
 }

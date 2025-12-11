@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Lakabu"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Dai zawadi kwenye Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Skena msimbo huu wa QR katika programu ya Ryve ili kuunganisha Kituo hiki cha Conduit na akaunti yako ya Ryve"
+    },
+    "CLOSE_I18N": {
+        "string": "Funga"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "msimbo batili wa QR"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Takwimu"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Pata Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "Onyesha"
     }
 }

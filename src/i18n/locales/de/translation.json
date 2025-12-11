@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Alias"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Belohnungen in Ryve einlösen"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Scannen Sie diesen QR-Code in der Ryve-App, um diese Conduit-Station mit Ihrem Ryve-Konto zu verknüpfen"
+    },
+    "CLOSE_I18N": {
+        "string": "Schließen"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "ungültiger QR-Code"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Analysen"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Ryve holen"
+    },
+    "REVEAL_I18N": {
+        "string": "Anzeigen"
     }
 }
