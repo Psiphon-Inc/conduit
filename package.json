@@ -8,7 +8,7 @@
     "get-git-hash": "echo \"export const GIT_HASH = '$(git rev-parse --short HEAD)$(git status --porcelain | grep -q . && echo '?')';\" > ./src/git-hash.ts",
     "build-release": "npm run  get-git-hash && cd android && ./gradlew assembleRelease && cd ..",
     "test": "jest --verbose",
-    "format": "prettier --write ./src",
+    "format": "node scripts/convert-to-absolute-imports.js && prettier --write ./src",
     "tsc": "tsc --noUnusedLocals --noUnusedParameters",
     "check": "jest && prettier --check ./src && tsc --noUnusedLocals --noUnusedParameters",
     "dev-server": "expo start"
@@ -24,9 +24,21 @@
   },
   "prettier": {
     "tabWidth": 4,
-    "plugins": [
-      "prettier-plugin-organize-imports"
-    ]
+        "plugins": [
+            "@trivago/prettier-plugin-sort-imports"
+        ],
+        "importOrder": [
+            "<THIRD_PARTY_MODULES>",
+            "^@/src/(.*)$",
+            "^[./]"
+        ],
+        "importOrderSeparation": true,
+        "importOrderSortSpecifiers": true,
+        "importOrderParserPlugins": [
+            "typescript",
+            "jsx",
+            "decorators-legacy"
+        ]
   },
   "dependencies": {
     "@noble/curves": "^1.6.0",
@@ -35,7 +47,7 @@
     "@react-navigation/native": "^7.0.14",
     "@scure/base": "^1.1.8",
     "@scure/bip39": "^1.4.0",
-    "@shopify/react-native-skia": "~2.1.1",
+    "@shopify/react-native-skia": "~2.4.7",
     "@tanstack/react-query": "^5.83.0",
     "expo": "^53.0.0",
     "expo-clipboard": "~7.1.5",
@@ -43,6 +55,7 @@
     "expo-crypto": "~14.1.5",
     "expo-font": "~13.3.2",
     "expo-haptics": "~14.1.4",
+    "expo-image": "~2.4.1",
     "expo-keep-awake": "~14.1.4",
     "expo-linking": "~7.1.7",
     "expo-localization": "~16.1.6",
@@ -75,7 +88,7 @@
     "jest": "^29.2.1",
     "jest-expo": "~53.0.6",
     "prettier": "^3.3.3",
-    "prettier-plugin-organize-imports": "^4.0.0",
+    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
     "react-test-renderer": "19.0.0",
     "typescript": "~5.8.3"
   },

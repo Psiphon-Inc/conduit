@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import {
     Canvas,
     Circle,
@@ -26,7 +25,9 @@ import {
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
 import React, { RefObject } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     clamp,
     runOnJS,
@@ -37,8 +38,6 @@ import Animated, {
 
 import { AnimatedText } from "@/src/components/AnimatedText";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
-import { useTranslation } from "react-i18next";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 interface EditableNumberSliderProps {
     label: string;
@@ -140,7 +139,7 @@ export function EditableNumberSlider({
 
     return (
         <View style={[...style, ss.flex, ss.justifySpaceBetween]}>
-            <Text style={[ss.bodyFont, ss.whiteText]}>{label}</Text>
+            <Text style={[ss.bodyFont, ss.blackText]}>{label}</Text>
             <View style={[ss.row, ss.flex, { maxWidth: 180 }]}>
                 <View
                     style={[ss.flex, isRTL ? { transform: "scaleX(-1)" } : {}]}
@@ -152,7 +151,7 @@ export function EditableNumberSlider({
                             width={usableWidth}
                             height={trackHeight}
                             style="fill"
-                            color={palette.purpleShade4}
+                            color={palette.black}
                             r={circleR}
                         />
                         <RoundedRect
@@ -161,16 +160,16 @@ export function EditableNumberSlider({
                             width={circleCx}
                             height={trackHeight}
                             style="fill"
-                            color={palette.white}
+                            color={palette.peach}
                             r={circleR}
                         >
                             <LinearGradient
                                 start={filledStart}
                                 end={filledEnd}
                                 colors={[
-                                    palette.blueShade2,
-                                    palette.purple,
-                                    palette.red,
+                                    palette.mauve,
+                                    palette.peachyMauve,
+                                    palette.peach,
                                 ]}
                             />
                         </RoundedRect>
@@ -191,6 +190,14 @@ export function EditableNumberSlider({
                             style="fill"
                             color={palette.white}
                         />
+                        <Circle
+                            cx={circleCx}
+                            cy={circleCy}
+                            r={circleR}
+                            style="stroke"
+                            strokeWidth={1}
+                            color={palette.purple}
+                        />
                     </Canvas>
                     <GestureDetector gesture={sliderGesture}>
                         <Animated.View style={[overlayStyle]} />
@@ -209,10 +216,10 @@ export function EditableNumberSlider({
                                 text={displayText}
                                 fontFamily={ss.boldFont.fontFamily}
                                 fontSize={ss.boldFont.fontSize}
-                                color={palette.white}
+                                color={palette.black}
                             />
                         </View>
-                        <Text style={[ss.bodyFont, ss.whiteText]}>{units}</Text>
+                        <Text style={[ss.bodyFont, ss.blackText]}>{units}</Text>
                     </View>
                 </View>
             </View>

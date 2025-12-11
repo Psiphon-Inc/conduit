@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { DefinedUseQueryResult, useQuery } from "@tanstack/react-query";
 
 import {

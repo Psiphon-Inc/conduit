@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
@@ -26,12 +25,11 @@ import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
+import { AuthProvider } from "@/src/auth/context";
 import i18nService from "@/src/i18n/i18n";
+import { fonts, palette } from "@/src/styles";
 
 i18nService.initI18n();
-
-import { AuthProvider } from "@/src/auth/context";
-import { fonts, palette } from "@/src/styles";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -79,6 +77,9 @@ export default function RootLayout() {
                             screenOptions={{
                                 headerShown: false,
                                 animation: "none",
+                                contentStyle: {
+                                    backgroundColor: palette.white,
+                                },
                             }}
                         >
                             <Stack.Screen name="(app)" />

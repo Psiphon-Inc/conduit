@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { ed25519 } from "@noble/curves/ed25519";
 import { base64nopad } from "@scure/base";
 import { z } from "zod";

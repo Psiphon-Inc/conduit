@@ -16,15 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
-import {
-    BlendMode,
-    Canvas,
-    LinearGradient,
-    RoundedRect,
-    Skia,
-    vec,
-} from "@shopify/react-native-skia";
+import { BlendMode, Skia } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -32,6 +24,7 @@ import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
     Modal,
+    Platform,
     Pressable,
     Text,
     View,
@@ -41,8 +34,8 @@ import {
     GestureHandlerRootView,
     ScrollView,
 } from "react-native-gesture-handler";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import Animated, {
+    useAnimatedReaction,
     useDerivedValue,
     useSharedValue,
     withDelay,
@@ -60,10 +53,10 @@ import { NotificationsStatus } from "@/src/components/NotificationsStatus";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
+import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
 import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_MBPS_PER_PEER_MAX,
-    PARTICLE_VIDEO_DELAY_MS,
 } from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
@@ -75,7 +68,11 @@ import {
 import { getProxyId } from "@/src/inproxy/utils";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 
-export function ConduitSettings() {
+export function ConduitSettings({
+    setBgBlur,
+}: {
+    setBgBlur: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
     const { t } = useTranslation();
     const win = useWindowDimensions();
     const router = useRouter();
@@ -108,13 +105,22 @@ export function ConduitSettings() {
         ) {
             settingsChanged = true;
         }
-        if (settingsChanged) {
-            applyChangesNoteOpacity.value = withTiming(1, { duration: 500 });
-        } else {
-            applyChangesNoteOpacity.value = 0;
-        }
         return settingsChanged;
     });
+
+    // Update opacity based on changes - separate from derived value to avoid writing during render
+    useAnimatedReaction(
+        () => changesPending.value,
+        (current) => {
+            if (current) {
+                applyChangesNoteOpacity.value = withTiming(1, {
+                    duration: 500,
+                });
+            } else {
+                applyChangesNoteOpacity.value = 0;
+            }
+        },
+    );
 
     function resetSettingsFromInproxyProvider() {
         modifiedMaxPeers.value = inproxyParameters.maxClients;
@@ -166,9 +172,11 @@ export function ConduitSettings() {
             } else {
                 await commitChanges();
                 setModalOpen(false);
+                setBgBlur(false);
             }
         } else {
             setModalOpen(false);
+            setBgBlur(false);
         }
     }
 
@@ -178,7 +186,7 @@ export function ConduitSettings() {
 
     function Settings() {
         return (
-            <KeyboardAvoidingView behavior="padding" style={[ss.flex]}>
+            <View style={[ss.flex]}>
                 <View
                     style={[
                         ss.padded,
@@ -193,11 +201,11 @@ export function ConduitSettings() {
                         >
                             <Icon
                                 name={"chevron-down"}
-                                color={palette.white}
+                                color={palette.black}
                                 size={30}
                             />
                         </View>
-                        <Text style={[ss.whiteText, ss.extraLargeFont]}>
+                        <Text style={[ss.blackText, ss.extraLargeFont]}>
                             {t("SETTINGS_I18N.string")}
                         </Text>
                     </Pressable>
@@ -215,7 +223,7 @@ export function ConduitSettings() {
                             <Text
                                 style={[
                                     ss.bodyFont,
-                                    ss.whiteText,
+                                    ss.blackText,
                                     { fontSize: 12 },
                                 ]}
                             >
@@ -224,7 +232,7 @@ export function ConduitSettings() {
                             <Text
                                 style={[
                                     ss.bodyFont,
-                                    ss.whiteText,
+                                    ss.blackText,
                                     { fontSize: 12 },
                                 ]}
                             >
@@ -255,7 +263,7 @@ export function ConduitSettings() {
                                 originalValue={bytesToMB(
                                     inproxyParameters.limitUpstreamBytesPerSecond,
                                 )}
-                                min={1}
+                                min={2}
                                 max={INPROXY_MAX_MBPS_PER_PEER_MAX}
                                 style={[...lineItemStyle, ss.alignCenter]}
                                 onChange={updateInproxyLimitBytesPerSecond}
@@ -269,12 +277,12 @@ export function ConduitSettings() {
                                     ss.justifySpaceBetween,
                                 ]}
                             >
-                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                <Text style={[ss.bodyFont, ss.blackText]}>
                                     {t("REQUIRED_BANDWIDTH_I18N.string")}
                                 </Text>
                                 <AnimatedText
                                     text={displayTotalMBps}
-                                    color={palette.white}
+                                    color={palette.black}
                                     fontFamily={ss.bodyFont.fontFamily}
                                     fontSize={ss.bodyFont.fontSize}
                                 />
@@ -284,7 +292,6 @@ export function ConduitSettings() {
                                     ss.greyBorderBottom,
                                     ss.flex,
                                     ss.alignCenter,
-                                    { height: 140 },
                                     ss.column,
                                     ss.padded,
                                 ]}
@@ -297,12 +304,13 @@ export function ConduitSettings() {
                                         ss.alignCenter,
                                     ]}
                                 >
-                                    <Text style={[ss.bodyFont, ss.whiteText]}>
+                                    <Text style={[ss.bodyFont, ss.blackText]}>
                                         {t("YOUR_CONDUIT_ID_I18N.string")}
                                     </Text>
                                     {conduitKeyPair ? (
                                         <ProxyID
                                             proxyId={getProxyId(conduitKeyPair)}
+                                            copyable={true}
                                         />
                                     ) : (
                                         <ActivityIndicator
@@ -312,7 +320,7 @@ export function ConduitSettings() {
                                     )}
                                 </View>
                                 <View style={[ss.row, ss.flex, ss.alignCenter]}>
-                                    <Text style={[ss.whiteText, ss.bodyFont]}>
+                                    <Text style={[ss.blackText, ss.bodyFont]}>
                                         {t("ALIAS_I18N.string")}:
                                     </Text>
                                     <ConduitName />
@@ -326,12 +334,13 @@ export function ConduitSettings() {
                                     ss.justifySpaceBetween,
                                 ]}
                             >
-                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                <Text style={[ss.bodyFont, ss.blackText]}>
                                     {t("SEND_DIAGNOSTIC_I18N.string")}
                                 </Text>
                                 <SendDiagnosticButton />
                             </View>
-                            {notificationsPermission &&
+                            {!["macos", "ios"].includes(Platform.OS) &&
+                                notificationsPermission &&
                                 notificationsPermission != "GRANTED" && (
                                     <View
                                         style={[
@@ -352,12 +361,13 @@ export function ConduitSettings() {
                                     ss.justifySpaceBetween,
                                 ]}
                             >
-                                <Text style={[ss.bodyFont, ss.whiteText]}>
+                                <Text style={[ss.bodyFont, ss.blackText]}>
                                     {t("LEARN_MORE_I18N.string")}
                                 </Text>
                                 <Pressable
                                     onPress={() => {
                                         setModalOpen(false);
+                                        setBgBlur(false);
                                         router.push("/(app)/onboarding");
                                     }}
                                 >
@@ -369,11 +379,13 @@ export function ConduitSettings() {
                                             ss.halfPadded,
                                             {
                                                 backgroundColor: palette.white,
+                                                borderWidth: 1,
+                                                borderColor: palette.purple,
                                             },
                                         ]}
                                     >
                                         <Text
-                                            style={[ss.bodyFont, ss.blackText]}
+                                            style={[ss.bodyFont, ss.purpleText]}
                                         >
                                             {t("REPLAY_INTRO_I18N.string")}
                                         </Text>
@@ -396,7 +408,7 @@ export function ConduitSettings() {
                         </View>
                     </ScrollView>
                 </GestureHandlerRootView>
-            </KeyboardAvoidingView>
+            </View>
         );
     }
 
@@ -413,12 +425,12 @@ export function ConduitSettings() {
                         ss.doublePadded,
                     ]}
                 >
-                    <Text style={[ss.whiteText, ss.bodyFont]}>
+                    <Text style={[ss.blackText, ss.bodyFont]}>
                         {t(
                             "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N.string",
                         )}
                     </Text>
-                    <Text style={[ss.whiteText, ss.bodyFont]}>
+                    <Text style={[ss.blackText, ss.bodyFont]}>
                         {t("CONFIRM_CHANGES_I18N.string")}
                     </Text>
                     <View style={[ss.row]}>
@@ -434,6 +446,7 @@ export function ConduitSettings() {
                                 );
                                 await commitChanges();
                                 setModalOpen(false);
+                                setBgBlur(false);
                                 setDisplayRestartConfirmation(false);
                             }}
                         >
@@ -451,6 +464,7 @@ export function ConduitSettings() {
                                 resetSettingsFromInproxyProvider();
                                 setDisplayRestartConfirmation(false);
                                 setModalOpen(false);
+                                setBgBlur(false);
                             }}
                         >
                             <Text
@@ -467,12 +481,11 @@ export function ConduitSettings() {
 
     // fadeIn on first load
     const fadeIn = useSharedValue(0);
-    if (inproxyStatus !== "UNKNOWN") {
-        fadeIn.value = withDelay(
-            inproxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
-            withTiming(0.8, { duration: 2000 }),
-        );
-    }
+    React.useEffect(() => {
+        if (inproxyStatus !== "UNKNOWN") {
+            fadeIn.value = withDelay(0, withTiming(0.8, { duration: 2000 }));
+        }
+    }, [inproxyStatus]);
 
     const settingsIconSize = win.width * 0.2;
     const paint = React.useMemo(() => Skia.Paint(), []);
@@ -484,13 +497,10 @@ export function ConduitSettings() {
         <>
             <View
                 style={[
-                    ss.absolute,
-                    ss.doublePadded,
                     {
+                        padding: 7,
                         bottom: 0,
                         right: 0,
-                        width: settingsIconSize,
-                        height: settingsIconSize,
                     },
                 ]}
             >
@@ -500,13 +510,20 @@ export function ConduitSettings() {
                     accessibilityRole={"button"}
                     onPress={() => {
                         setModalOpen(true);
+                        setBgBlur(true);
+                    }}
+                    style={{
+                        justifyContent: "center",
+                        alignItems: "center",
+                        height: "100%",
                     }}
                 >
                     <Icon
                         name="settings"
-                        size={settingsIconSize - ss.doublePadded.padding * 2}
-                        color={palette.blueTint2}
+                        size={30}
+                        color={palette.black}
                         opacity={fadeIn}
+                        label={t("SETTINGS_I18N.string")}
                     />
                 </Pressable>
             </View>
@@ -523,33 +540,39 @@ export function ConduitSettings() {
                 ]}
             ></View>
             <Modal
-                animationType="slide"
+                animationType="fade"
                 visible={modalOpen}
                 transparent={true}
                 onRequestClose={onSettingsClose}
             >
-                <View style={[ss.underlay]} />
-                <View style={[ss.modalBottom90]}>
-                    <Canvas style={[ss.flex]}>
-                        <RoundedRect
-                            x={0}
-                            y={0}
+                <View style={{ ...ss.modalBottom90, overflow: "hidden" }}>
+                    <View
+                        style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            height: "100%",
+                            width: "100%",
+                            backgroundColor: "#FEFEFE",
+                            opacity: 0.5,
+                        }}
+                    />
+
+                    <View
+                        style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            height: "80%",
+                            width: "100%",
+                        }}
+                    >
+                        <InproxyStatusColorCanvas
                             width={win.width}
-                            height={win.height}
-                            r={20}
-                        >
-                            <LinearGradient
-                                start={vec(win.width / 2, 0)}
-                                end={vec(win.width / 2, win.height)}
-                                colors={[
-                                    palette.blue,
-                                    palette.purple,
-                                    palette.black,
-                                    palette.black,
-                                ]}
-                            />
-                        </RoundedRect>
-                    </Canvas>
+                            height={win.height * 0.8}
+                            faderInitial={inproxyStatus === "RUNNING" ? 1 : 0}
+                        />
+                    </View>
                 </View>
                 <View style={[ss.modalBottom90]}>
                     {displayRestartConfirmation ? (

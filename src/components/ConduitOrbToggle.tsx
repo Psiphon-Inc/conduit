@@ -16,19 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import {
     Blur,
     Canvas,
     Circle,
     ColorMatrix,
     Group,
-    Image,
     Paint,
     RadialGradient,
     Shadow,
     interpolateColors,
-    useImage,
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
@@ -50,13 +47,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { z } from "zod";
 
-import { useAnimatedImageValue } from "@/src/animationHooks";
 import { timedLog } from "@/src/common/utils";
 import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
-import {
-    INPROXY_MAX_CLIENTS_MAX,
-    PARTICLE_VIDEO_DELAY_MS,
-} from "@/src/constants";
+import { INPROXY_MAX_CLIENTS_MAX } from "@/src/constants";
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
     useInproxyCurrentConnectedClients,
@@ -68,9 +61,11 @@ import { palette, sharedStyles as ss } from "@/src/styles";
 export function ConduitOrbToggle({
     width,
     height,
+    applyBlur = false,
 }: {
     width: number;
     height: number;
+    applyBlur: boolean;
 }) {
     const { t } = useTranslation();
 
@@ -80,35 +75,23 @@ export function ConduitOrbToggle({
         useInproxyCurrentConnectedClients();
     const { data: inproxyMustUpgrade } = useInproxyMustUpgrade();
 
-    // At the top of the canvas there is a grid of dots around the Psiphon logo,
-    // representing the Psiphon Network the Inproxy is proxying traffic towards.
-    const dotsPng = useImage(require("@/assets/images/dots.png"));
-    const psiphonLogoPng = useImage(
-        require("@/assets/images/psiphon-logo.png"),
-    );
-    const psiphonLogoSize = 29;
-    // the dots and Psiphon logo will fade in
-    const dotsOpacity = useSharedValue(0);
-    const psiphonLogoOpacity = useDerivedValue(() => {
-        return dotsOpacity.value - 0.2;
-    }, [dotsOpacity]);
-
-    // between the following colors
+    // interpolate between the following colors
     const orbColors = [
-        palette.black,
-        palette.blueShade3,
-        palette.purpleShade3,
-        palette.redShade3,
-        palette.purpleShade3,
+        palette.deepMauve,
+        palette.peach,
+        palette.fadedMauve,
+        palette.mauve,
+        palette.fadedMauve,
     ];
     // Animate the index of this array of colors, interpolating a gradient
     const orbColorsIndex = useSharedValue(0);
     const orbGradientColors = useDerivedValue(() => {
         return [
-            palette.black,
+            palette.white,
             interpolateColors(orbColorsIndex.value, [0, 1, 2, 3, 4], orbColors),
         ];
     });
+
     // The "Turn On" text also uses interpolation to appear to fade in by going
     // from transparent to it's final color.
     const tapToTurnOnInstructionOpacity = useSharedValue(0);
@@ -151,14 +134,12 @@ export function ConduitOrbToggle({
             true,
         );
         tapToTurnOnInstructionOpacity.value = withTiming(0, { duration: 500 });
-        dotsOpacity.value = withTiming(1, { duration: 1000 });
     }
 
     function animateProxyInUse() {
         timedLog("animateProxyInUse()");
         cancelAnimation(orbColorsIndex);
         orbColorsIndex.value = withTiming(4, { duration: 2000 });
-        dotsOpacity.value = withTiming(1, { duration: 1000 });
         tapToTurnOnInstructionOpacity.value = withTiming(0, { duration: 500 });
     }
 
@@ -167,7 +148,6 @@ export function ConduitOrbToggle({
         cancelAnimation(orbColorsIndex);
         orbColorsIndex.value = withTiming(0, { duration: 500 });
         tapToTurnOnInstructionOpacity.value = withTiming(1, { duration: 500 });
-        dotsOpacity.value = withTiming(0.2, { duration: 1000 });
     }
 
     function animateIntro(delay: number) {
@@ -181,10 +161,6 @@ export function ConduitOrbToggle({
                 restDisplacementThreshold: 0.01,
                 restSpeedThreshold: 2,
             }),
-        );
-        dotsOpacity.value = withDelay(
-            delay,
-            withTiming(0.2, { duration: 1000 }),
         );
         tapToTurnOnInstructionOpacity.value = withDelay(
             delay,
@@ -206,41 +182,19 @@ export function ConduitOrbToggle({
     type AnimationState = z.infer<typeof AnimationStateSchema>;
     const animationState = React.useRef<AnimationState>("Unknown");
 
-    // In addition to the 4 inproxyStatus dependent animation states above, we
-    // also have an intro animation gif to play when the app is opened.
-    // Use initialStateDetermined ref to track the very first render
-    // If Inproxy is already RUNNING when the app is opened, the intro animation
-    // will be a quick fade in of the UI. If the Inproxy is STOPPED when the app
-    // is opened, this fade should be delayed until the particle animation video
-    // has played.
-    // The inproxyStatus will begin as UNKNOWN, and then become RUNNING or
-    // STOPPED once the module is hooked up.
     // Use this in initialStateDetermined state variable to coordiate the order
     // of animations: first we want the intro to play, then we want to be hooked
     // up to InproxyStatus changes.
-    const particleSwirlPaused = useSharedValue(true);
-    const particleSwirlOpacity = useSharedValue(0);
-    const particleSwirlGif = useAnimatedImageValue(
-        require("@/assets/images/particle-swirl.gif"),
-        particleSwirlPaused,
-    );
     const [initialStateDetermined, setInitialStateDetermined] =
         React.useState(false);
+
     React.useEffect(() => {
         if (!initialStateDetermined) {
             if (inproxyStatus === "RUNNING") {
                 animateIntro(0);
                 setInitialStateDetermined(true);
             } else if (inproxyStatus === "STOPPED") {
-                particleSwirlPaused.value = false;
-                particleSwirlOpacity.value = 1;
-                particleSwirlOpacity.value = withDelay(
-                    PARTICLE_VIDEO_DELAY_MS - 200,
-                    withTiming(0, { duration: 200 }, () => {
-                        particleSwirlPaused.value = true;
-                    }),
-                );
-                animateIntro(PARTICLE_VIDEO_DELAY_MS);
+                animateIntro(0);
                 setInitialStateDetermined(true);
             }
             // implicit do nothing if status is UNKNOWN
@@ -381,29 +335,7 @@ export function ConduitOrbToggle({
             }}
         >
             <Canvas style={[ss.flex]}>
-                <Group>
-                    {/* Intro particle swirl animation */}
-                    <Image
-                        y={0}
-                        image={particleSwirlGif}
-                        width={width}
-                        height={height}
-                        opacity={particleSwirlOpacity}
-                    />
-                </Group>
-                <Group>
-                    {/* the red dots at top representing Psiphon Network */}
-                    <Image
-                        image={dotsPng}
-                        x={width / 2 - 128 / 2}
-                        y={0}
-                        width={128}
-                        height={90}
-                        fit={"contain"}
-                        opacity={dotsOpacity}
-                    />
-                </Group>
-                <Group>
+                <Group layer={<Paint>{applyBlur && <Blur blur={5} />}</Paint>}>
                     {/* The Orb and Lights Scene*/}
                     <Group transform={orbCenteringTransform}>
                         {/* vec(0,0) at the center of the Orb */}
@@ -416,14 +348,18 @@ export function ConduitOrbToggle({
                                         dx={10}
                                         dy={10}
                                         blur={10}
-                                        color={palette.purple}
+                                        color={palette.mauve}
                                         inner
                                     />
                                     <Shadow
                                         dx={-10}
                                         dy={-10}
                                         blur={10}
-                                        color={palette.blue}
+                                        color={
+                                            inproxyStatus === "RUNNING"
+                                                ? palette.peach
+                                                : palette.peachyMauve
+                                        }
                                         inner
                                     />
                                     <RadialGradient
@@ -436,7 +372,7 @@ export function ConduitOrbToggle({
                                     r={finalOrbRadius}
                                     style="stroke"
                                     strokeWidth={2}
-                                    color={palette.blueTint4}
+                                    color={palette.deepMauve}
                                 />
                             </Group>
                             {/* 1 flying light per connected client */}
@@ -458,10 +394,7 @@ export function ConduitOrbToggle({
                                             )}
                                             endPoint={vec(
                                                 0,
-                                                -(
-                                                    orbCenterY -
-                                                    psiphonLogoSize / 2
-                                                ),
+                                                -(orbCenterY * 1.4),
                                             )} // land in P logo
                                             randomize={true}
                                         />
@@ -470,18 +403,6 @@ export function ConduitOrbToggle({
                             )}
                         </Group>
                     </Group>
-                </Group>
-                <Group>
-                    {/* the psiphon logo at top z-indexed above orbs */}
-                    <Image
-                        image={psiphonLogoPng}
-                        x={width / 2 - 29 / 2}
-                        y={0}
-                        width={psiphonLogoSize}
-                        height={psiphonLogoSize}
-                        fit={"contain"}
-                        opacity={psiphonLogoOpacity}
-                    />
                 </Group>
             </Canvas>
             {/* Pressable overlay over orb to handle gestures */}
@@ -508,7 +429,7 @@ export function ConduitOrbToggle({
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
-                    ss.whiteText,
+                    ss.blackText,
                     ss.bodyFont,
                     ss.absolute,
                     {
@@ -526,7 +447,7 @@ export function ConduitOrbToggle({
                 adjustsFontSizeToFit
                 numberOfLines={1}
                 style={[
-                    ss.whiteText,
+                    ss.blackText,
                     ss.bodyFont,
                     ss.absolute,
                     {

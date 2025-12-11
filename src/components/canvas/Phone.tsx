@@ -16,10 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
-import { palette } from "@/src/styles";
 import {
-    Fill,
     Group,
     Image,
     LinearGradient,
@@ -45,6 +42,7 @@ import {
 } from "react-native-reanimated";
 
 import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
+import { palette } from "@/src/styles";
 
 interface PhoneProps {
     currentView: SharedValue<number>;
@@ -107,7 +105,6 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
             >
                 <Group transform={phoneResizeTransform}>
                     <RoundedRect x={2} y={0} width={48} height={85} r={5}>
-                        <Fill color={palette.blue} />
                         <Turbulence
                             freqX={0.5}
                             freqY={0.5}
@@ -119,7 +116,7 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                         <LinearGradient
                             start={vec(25, 86)}
                             end={vec(25, 0)}
-                            colors={["#6B536A", "#5C7A90"]}
+                            colors={[palette.purple, palette.mauve]}
                         />
                     </Path>
                 </Group>
@@ -136,7 +133,19 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                         phoneDestWidth * 1.5 + sceneWidth * 0.1,
                         sceneHeight / 2,
                     )}
-                    colors={[palette.transparent, palette.red]}
+                    colors={[palette.white, palette.deepMauve]}
+                />
+            </Rect>
+            <Rect
+                x={sceneWidth * 0.8}
+                y={0}
+                height={sceneHeight}
+                width={sceneWidth * 0.2}
+            >
+                <LinearGradient
+                    start={vec(sceneWidth * 0.8, 0)}
+                    end={vec(sceneWidth, 0)}
+                    colors={[palette.white, palette.peach]}
                 />
             </Rect>
             <Group
@@ -157,18 +166,6 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                     y0init={0}
                 />
             </Group>
-            <Rect
-                x={sceneWidth * 0.8}
-                y={0}
-                height={sceneHeight}
-                width={sceneWidth * 0.2}
-            >
-                <LinearGradient
-                    start={vec(sceneWidth * 0.8, 0)}
-                    end={vec(sceneWidth, 0)}
-                    colors={[palette.transparent, palette.blue]}
-                />
-            </Rect>
             <Group>
                 <Image
                     image={psiphonLogoPng}

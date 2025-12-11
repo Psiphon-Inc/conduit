@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
@@ -112,19 +111,19 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
                 ref={textInputRef}
                 style={[
                     ss.flex,
-                    ss.whiteText,
+                    ss.blackText,
                     ss.bodyFont,
-                    ss.midGreyBorder,
+                    ss.purpleBorder,
                     ss.rounded10,
                     ss.padded,
                 ]}
                 placeholder={t("NAME_YOUR_CONDUIT_I18N.string")}
-                placeholderTextColor={palette.midGrey}
+                placeholderTextColor={palette.peachyMauve}
                 onChangeText={onChangeText}
                 onFocus={onFocus}
                 onEndEditing={onEndEditing}
                 value={value}
-                selectionColor={palette.blue}
+                selectionColor={palette.peach}
                 maxLength={maxLength}
                 autoCorrect={false}
                 autoComplete={"off"}

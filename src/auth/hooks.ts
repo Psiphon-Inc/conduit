@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 
 import { createOrLoadAccount } from "@/src/auth/account";

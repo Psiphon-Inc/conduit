@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { ScaledSize } from "react-native";
 
 import { wrapError } from "@/src/common/errors";
