@@ -18,7 +18,6 @@
  */
 
 import Foundation
-import os
 import PsiphonTunnel
 import Logging
 
