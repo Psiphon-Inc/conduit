@@ -43,6 +43,7 @@
 
 
 import Foundation
+import os
 
 #if canImport(Logging)
 import Logging
