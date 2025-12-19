@@ -126,9 +126,11 @@ public class ConduitServiceInteractor {
         Intent intent = new Intent(context, ConduitService.class);
         intent.setAction(ConduitService.INTENT_ACTION_START_IN_PROXY_WITH_LAST_PARAMS);
         // Use startForegroundService instead of startService since:
-        // 1. When restarting after app upgrade from ConduitUpdateReceiver, we must use
-        //    startForegroundService to start from background, as Android allows this via
-        //    ACTION_MY_PACKAGE_REPLACED exemption.
+        // 1. When restarting after app upgrade or system reboot from ConduitRestartReceiver,
+        //    we must use startForegroundService to start from background, as Android allows this
+        //    via ACTION_MY_PACKAGE_REPLACED or ACTION_BOOT_COMPLETED exemptions, see:
+        //    https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start#background-start-restriction-exemptions
+        //
         // 2. The service will be foreground anyway - it's either already running as foreground
         //    or will promote itself to foreground shortly after starting.
         ContextCompat.startForegroundService(context, intent);

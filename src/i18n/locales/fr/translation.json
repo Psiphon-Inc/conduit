@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "Alias"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "Récupérer les récompenses dans Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "Scannez ce code QR dans l’application Ryve pour lier cette station Conduit à votre compte Ryve"
+    },
+    "CLOSE_I18N": {
+        "string": "Fermer"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "code QR invalide"
+    },
+    "ANALYTICS_I18N": {
+        "string": "Analyses"
+    },
+    "GET_RYVE_I18N": {
+        "string": "Obtenir Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "Afficher"
     }
 }

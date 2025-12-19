@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { DefinedUseQueryResult, useQuery } from "@tanstack/react-query";
 
 import {
@@ -42,8 +41,8 @@ import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
 export const useInproxyStatus = (): DefinedUseQueryResult<InproxyStatusEnum> =>
     useQuery({
         queryKey: [QUERYKEY_INPROXY_STATUS],
-        queryFn: () => undefined,
-        initialData: "UNKNOWN",
+        queryFn: async () => "UNKNOWN" as InproxyStatusEnum,
+        initialData: "UNKNOWN" as InproxyStatusEnum,
         enabled: false,
     });
 
@@ -51,7 +50,8 @@ export const useInproxyActivityBy1000ms =
     (): DefinedUseQueryResult<InproxyActivityByPeriod> =>
         useQuery({
             queryKey: [QUERYKEY_INPROXY_ACTIVITY_BY_1000MS],
-            queryFn: () => undefined,
+            queryFn: async () =>
+                getZeroedInproxyActivityStats().dataByPeriod["1000ms"],
             initialData: getZeroedInproxyActivityStats().dataByPeriod["1000ms"],
             enabled: false,
         });
@@ -60,7 +60,7 @@ export const useInproxyCurrentConnectedClients =
     (): DefinedUseQueryResult<number> =>
         useQuery({
             queryKey: [QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS],
-            queryFn: () => undefined,
+            queryFn: async () => 0,
             initialData: 0,
             enabled: false,
         });
@@ -69,7 +69,7 @@ export const useInproxyCurrentConnectingClients =
     (): DefinedUseQueryResult<number> =>
         useQuery({
             queryKey: [QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS],
-            queryFn: () => undefined,
+            queryFn: async () => 0,
             initialData: 0,
             enabled: false,
         });
@@ -78,7 +78,7 @@ export const useInproxyTotalBytesTransferred =
     (): DefinedUseQueryResult<number> =>
         useQuery({
             queryKey: [QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED],
-            queryFn: () => undefined,
+            queryFn: async () => 0,
             initialData: 0,
             enabled: false,
         });
@@ -86,7 +86,7 @@ export const useInproxyTotalBytesTransferred =
 export const useInproxyMustUpgrade = (): DefinedUseQueryResult<boolean> =>
     useQuery({
         queryKey: [QUERYKEY_INPROXY_MUST_UPGRADE],
-        queryFn: () => undefined,
+        queryFn: async () => false,
         initialData: false,
         enabled: false,
     });

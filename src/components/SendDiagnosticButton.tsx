@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -24,7 +23,7 @@ import { Pressable, Text, View } from "react-native";
 
 import { Icon } from "@/src/components/Icon";
 import { useInproxyContext } from "@/src/inproxy/context";
-import { iconButton, palette, sharedStyles as ss } from "@/src/styles";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function SendDiagnosticButton() {
     const { sendFeedback } = useInproxyContext();
@@ -35,7 +34,7 @@ export function SendDiagnosticButton() {
     if (showThankYou) {
         return (
             <View>
-                <Text style={[ss.bodyFont, ss.whiteText]}>
+                <Text style={[ss.bodyFont, ss.blackText]}>
                     {t("SENT_THANK_YOU_I18N.string")}
                 </Text>
             </View>
@@ -43,7 +42,10 @@ export function SendDiagnosticButton() {
     } else {
         return (
             <Pressable
-                style={iconButton}
+                style={{
+                    backgroundColor: palette.purple,
+                    borderRadius: 5,
+                }}
                 onPress={() => {
                     Haptics.selectionAsync();
                     sendFeedback();

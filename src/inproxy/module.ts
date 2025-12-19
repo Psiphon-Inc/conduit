@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { NativeModules } from "react-native";
 
 import { InproxyParameters } from "@/src/inproxy/types";

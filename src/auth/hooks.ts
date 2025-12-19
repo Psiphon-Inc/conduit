@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 
+import { createOrLoadAccount } from "@/src/auth/account";
 import { Ed25519KeyPair } from "@/src/common/cryptography";
 import {
     QUERYKEY_ACCOUNT_KEYPAIR,
@@ -28,13 +28,25 @@ import {
 export const useAccountKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
     useQuery({
         queryKey: [QUERYKEY_ACCOUNT_KEYPAIR],
-        queryFn: () => undefined,
-        enabled: false,
+        queryFn: async () => {
+            const account = await createOrLoadAccount();
+            if (account instanceof Error) {
+                return {} as Ed25519KeyPair;
+            }
+            return account.accountKey;
+        },
+        enabled: true,
     });
 
 export const useConduitKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
     useQuery({
         queryKey: [QUERYKEY_INPROXY_KEYPAIR],
-        queryFn: () => undefined,
-        enabled: false,
+        queryFn: async () => {
+            const account = await createOrLoadAccount();
+            if (account instanceof Error) {
+                return {} as Ed25519KeyPair;
+            }
+            return account.inproxyKey;
+        },
+        enabled: true,
     });

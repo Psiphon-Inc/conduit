@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import {
     Circle,
     Group,
@@ -56,7 +55,6 @@ export function FlexibleOrb({
     const cx = useSharedValue(sceneWidth);
     const cy = sceneHeight / 2;
 
-    const orbsWorldPng = useImage(require("@/assets/images/orbs-world.png"));
     const notificationsPng = useImage(
         require("@/assets/images/onboarding-permissions.png"),
     );
@@ -161,15 +159,6 @@ export function FlexibleOrb({
     return (
         <Group>
             <Image
-                image={orbsWorldPng}
-                x={0}
-                y={0}
-                width={sceneWidth}
-                height={sceneHeight}
-                fit={"contain"}
-                opacity={backgroundOpacity}
-            />
-            <Image
                 image={privacyPolicyPng}
                 x={sceneWidth * 0.55}
                 y={sceneHeight / 4}
@@ -179,24 +168,18 @@ export function FlexibleOrb({
                 opacity={privacyPolicyOpacity}
             />
             <Circle cx={cx} cy={cy} r={radius}>
-                <Shadow
-                    dx={10}
-                    dy={10}
-                    blur={10}
-                    color={palette.purple}
-                    inner
-                />
+                <Shadow dx={10} dy={10} blur={10} color={palette.mauve} inner />
                 <Shadow
                     dx={-10}
                     dy={-10}
                     blur={10}
-                    color={palette.blue}
+                    color={palette.peach}
                     inner
                 />
                 <RadialGradient
                     c={radialGradientC}
                     r={radius}
-                    colors={[palette.red, palette.black]}
+                    colors={[palette.fadedMauve, palette.purple]}
                 />
             </Circle>
             <Image

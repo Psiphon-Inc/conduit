@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";

@@ -142,5 +142,26 @@
     },
     "ALIAS_I18N": {
         "string": "نام مستعار"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "دریافت پاداش‌ها در Ryve"
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "این کد QR را در اپلیکیشن Ryve اسکن کنید تا این ایستگاه Conduit را به حساب Ryve خود متصل کنید"
+    },
+    "CLOSE_I18N": {
+        "string": "بستن"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "کد QR نامعتبر"
+    },
+    "ANALYTICS_I18N": {
+        "string": "تحلیل‌ها"
+    },
+    "GET_RYVE_I18N": {
+        "string": "دریافت Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "نمایش"
     }
 }

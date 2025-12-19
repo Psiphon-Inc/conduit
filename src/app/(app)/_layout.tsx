@@ -16,11 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { Stack } from "expo-router";
 import React from "react";
 
 import { InproxyProvider } from "@/src/inproxy/context";
+import { palette } from "@/src/styles";
 
 export default function AppLayout() {
     return (
@@ -29,6 +29,9 @@ export default function AppLayout() {
                 screenOptions={{
                     headerShown: false,
                     animation: "fade",
+                    contentStyle: {
+                        backgroundColor: palette.white,
+                    },
                 }}
             >
                 <Stack.Screen name="index" />

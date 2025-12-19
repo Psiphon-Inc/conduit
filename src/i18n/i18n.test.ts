@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import { getLocales } from "expo-localization";
 import * as fs from "fs";
 import i18n from "i18next";

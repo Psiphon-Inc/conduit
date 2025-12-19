@@ -71,32 +71,32 @@ ConduitModule.logError("MyTag", "This is an error message");
 
 All events emitted to the React Native host follow the same structure:
 
--   **Top-Level Structure**: Each event contains two objects at the top level:
-    -   `type`: The type of event (e.g., `proxyState`, `proxyError`, `inProxyActivityStats`).
-    -   `data`: An object containing event-specific information, which may include an `action` field and arbitrary keys for further details.
+- **Top-Level Structure**: Each event contains two objects at the top level:
+    - `type`: The type of event (e.g., `proxyState`, `proxyError`, `inProxyActivityStats`).
+    - `data`: An object containing event-specific information, which may include an `action` field and arbitrary keys for further details.
 
 #### 1. **Proxy State Updates**
 
 This event is emitted when there is an update in the proxy's state.
 
--   **Event Name (`type`)**: `proxyState`
--   **Data Included (`data`)**:
-    -   `status`: The current status of the proxy service (`RUNNING`, `STOPPED`, `UNKNOWN`).
-    -   `networkState`: The current network state (`HAS_INTERNET`, `NO_INTERNET`).
-        -   **Note**: `networkState` will be `null` if the `status` is `STOPPED` or `UNKNOWN`.
+- **Event Name (`type`)**: `proxyState`
+- **Data Included (`data`)**:
+    - `status`: The current status of the proxy service (`RUNNING`, `STOPPED`, `UNKNOWN`).
+    - `networkState`: The current network state (`HAS_INTERNET`, `NO_INTERNET`).
+        - **Note**: `networkState` will be `null` if the `status` is `STOPPED` or `UNKNOWN`.
 
 #### 2. **Error Events**
 
 These events are related to error conditions that occur within the proxy service. Each error event includes an `action` field in `data`, along with potential additional arbitrary keys.
 
--   **Event Name (`type`)**: `proxyError`
--   **Data Included (`data`)**:
-    -   `action`: Specific action corresponding to the error (e.g., `inProxyStartFailed`, `inProxyRestartFailed`).
-    -   Arbitrary keys with additional error details, which may vary based on the error context.
--   **Possible Actions**:
-    -   `inProxyStartFailed`: Emitted when the proxy fails to start.
-    -   `inProxyRestartFailed`: Emitted when the proxy fails to restart.
-    -   `inProxyMustUpgrade`: Emitted when an in-proxy upgrade is required.
+- **Event Name (`type`)**: `proxyError`
+- **Data Included (`data`)**:
+    - `action`: Specific action corresponding to the error (e.g., `inProxyStartFailed`, `inProxyRestartFailed`).
+    - Arbitrary keys with additional error details, which may vary based on the error context.
+- **Possible Actions**:
+    - `inProxyStartFailed`: Emitted when the proxy fails to start.
+    - `inProxyRestartFailed`: Emitted when the proxy fails to restart.
+    - `inProxyMustUpgrade`: Emitted when an in-proxy upgrade is required.
 
 **Note**: The `data` object may include further arbitrary keys, providing additional context or information about the error.
 
@@ -104,14 +104,14 @@ These events are related to error conditions that occur within the proxy service
 
 This event provides statistics related to in-proxy activity.
 
--   **Event Name (`type`)**: `inProxyActivityStats`
--   **Data Included (`data`)**:
-    -   `elapsedTime`: Total time in milliseconds.
-    -   `totalBytesUp`: Cumulative bytes uploaded.
-    -   `totalBytesDown`: Cumulative bytes downloaded.
-    -   `currentConnectingClients`: Number of connecting clients.
-    -   `currentConnectedClients`: Number of connected clients.
-    -   `dataByPeriod`: A map containing detailed activity statistics by time period.
+- **Event Name (`type`)**: `inProxyActivityStats`
+- **Data Included (`data`)**:
+    - `elapsedTime`: Total time in milliseconds.
+    - `totalBytesUp`: Cumulative bytes uploaded.
+    - `totalBytesDown`: Cumulative bytes downloaded.
+    - `currentConnectingClients`: Number of connecting clients.
+    - `currentConnectedClients`: Number of connected clients.
+    - `dataByPeriod`: A map containing detailed activity statistics by time period.
 
 ### React Native Event Handling Example
 
@@ -151,6 +151,6 @@ The mock simulates inproxy activity and emits events like the real module, but
 without actual users connecting to an InProxy (and without running any native
 code). The mock does have some different behaviours:
 
--   The data generation process resets on app reload, since the underlying data
-    generating process is not being persisted anywhere.
--   The mock module does not invoke any notifications
+- The data generation process resets on app reload, since the underlying data
+  generating process is not being persisted anywhere.
+- The mock module does not invoke any notifications

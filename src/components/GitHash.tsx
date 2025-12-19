@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import React from "react";
 import { View } from "react-native";
 import Animated, {
@@ -25,7 +24,6 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
-import { PARTICLE_VIDEO_DELAY_MS } from "@/src/constants";
 // @ts-ignore (this file is gitignored)
 import { GIT_HASH } from "@/src/git-hash";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
@@ -35,19 +33,24 @@ export function GitHash() {
     const { data: inproxyStatus } = useInproxyStatus();
 
     const opacity = useSharedValue(0);
-    if (inproxyStatus !== "UNKNOWN") {
-        opacity.value = withDelay(
-            inproxyStatus === "STOPPED" ? PARTICLE_VIDEO_DELAY_MS : 0,
-            withTiming(0.8, { duration: 2000 }),
-        );
-    }
+    React.useEffect(() => {
+        if (inproxyStatus !== "UNKNOWN") {
+            opacity.value = withDelay(0, withTiming(0.8, { duration: 2000 }));
+        }
+    }, [inproxyStatus]);
 
     return (
-        <View style={[ss.absoluteBottomLeft]}>
+        <View
+            style={{
+                justifyContent: "flex-end",
+                alignItems: "flex-end",
+                paddingLeft: 15,
+            }}
+        >
             <Animated.Text
                 style={[
-                    { color: palette.blueShade2, opacity: opacity },
                     ss.bodyFont,
+                    { color: palette.grey, opacity: opacity, fontSize: 14 },
                 ]}
             >
                 v.{GIT_HASH.substring(0, 12)}

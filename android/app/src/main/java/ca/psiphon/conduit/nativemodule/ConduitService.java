@@ -516,10 +516,23 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
             }
         }
 
-        // Start the service in the foreground with a notification.
-        Notification startingNotification = buildNotification(R.drawable.ic_conduit_active,
-                getString(R.string.conduit_service_starting_notification_text),
-                getString(R.string.conduit_service_starting_notification_text));
+        // NOTIFICATION ISSUE: Initial notification would sometimes get stuck showing "Starting"
+        // instead of updating to "Running" state.
+        //
+        // CAUSE: When calling startForeground() with a "Starting" notification and immediately updating it
+        // to "Running" (~9ms later), the update would sometimes be ignored by the system.
+        //
+        // IMPACT: The notification would remain stuck at "Starting" until the next natural update
+        // triggered by tunnel core callbacks (activity stats or network state changes), which
+        // might not happen immediately in some cases.
+        //
+        // FIX: Start directly with a "Running" notification with empty stats object rather than showing
+        // a temporary "Starting" notification. This avoids the unreliable rapid notification update
+        // and provides a consistent user experience.
+
+        ProxyState startProxyState = ProxyState.unknown().toBuilder().setStatus(ProxyState.Status.RUNNING).build();
+        ProxyActivityStats startProxyActivityStats = new ProxyActivityStats();
+        Notification startingNotification = notificationForProxyState(startProxyState, startProxyActivityStats);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceCompat.startForeground(this, R.id.notification_id_proxy_state, startingNotification,

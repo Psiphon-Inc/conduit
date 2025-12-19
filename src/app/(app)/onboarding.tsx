@@ -16,15 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
     Canvas,
     Circle,
     ColorMatrix,
-    Fill,
     Group,
-    LinearGradient,
     Paint,
     Paragraph,
     RoundedRect,
@@ -38,7 +35,7 @@ import {
 } from "@shopify/react-native-skia";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
-import React from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
     BackHandler,
@@ -66,6 +63,7 @@ import { drawBigFont } from "@/src/common/utils";
 import { LearnMoreLink } from "@/src/components/LearnMoreLink";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { SkyBox } from "@/src/components/SkyBox";
 import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
 import { ASYNCSTORAGE_HAS_ONBOARDED_KEY } from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
@@ -80,11 +78,11 @@ export default function OnboardingScreen() {
     const router = useRouter();
 
     const [shouldAskForNotifications, setShouldAskForNotifications] =
-        React.useState(false);
+        useState(false);
 
     const buttonTextChanged = useSharedValue(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (
             notificationPermissions.data &&
             notificationPermissions.data === "NOT_GRANTED_CAN_ASK"
@@ -96,14 +94,14 @@ export default function OnboardingScreen() {
 
     // Derive usable dimensions from an absolutely positioned View
     // https://github.com/facebook/react-native/issues/47080
-    const [totalUsableWidth, setTotalUsableWidth] = React.useState(win.width);
-    const [totalUsableHeight, setTotalUsableHeight] = React.useState(
-        win.height,
-    );
+    const [totalUsableWidth, setTotalUsableWidth] = useState(win.width);
+    const [totalUsableHeight, setTotalUsableHeight] = useState(win.height);
 
     function onScreenLayout(event: LayoutChangeEvent) {
         setTotalUsableWidth(event.nativeEvent.layout.width);
-        setTotalUsableHeight(event.nativeEvent.layout.height - insets.top);
+        setTotalUsableHeight(
+            event.nativeEvent.layout.height - (insets.top + insets.bottom),
+        );
     }
 
     const views = [
@@ -148,6 +146,11 @@ export default function OnboardingScreen() {
     ];
 
     const currentView = useSharedValue(0);
+    const [currentBodyText, setCurrentBodyText] = useState(views[0].bodyText);
+    const [currentButtonText, setCurrentButtonText] = useState(
+        views[0].buttonText,
+    );
+
     const learnMoreLinkStyle = useAnimatedStyle(() => {
         return currentView.value === 1
             ? {
@@ -203,10 +206,10 @@ export default function OnboardingScreen() {
         width: totalUsableWidth * 0.88,
         height: totalUsableHeight * 0.36,
     };
-    // indicator dots take up the next 3% of usableHeight (79% total)
+    // indicator dots take up the next 3% of usableHeight (78% total)
     const dotWidth = 24;
     const dotsTransform = [
-        { translateY: totalUsableHeight * 0.79 },
+        { translateY: totalUsableHeight * 0.77 },
         {
             translateX:
                 totalUsableWidth * 0.5 - (dotWidth * (views.length - 1)) / 2,
@@ -214,7 +217,7 @@ export default function OnboardingScreen() {
     ];
     // button claims the next 8% of usableHeight (90% total)
     const buttonTransform = [
-        { translateY: totalUsableHeight * 0.82 },
+        { translateY: totalUsableHeight * 0.81 },
         { translateX: totalUsableWidth * 0.06 },
     ];
     const buttonSize = {
@@ -244,7 +247,7 @@ export default function OnboardingScreen() {
             paragraphStyle.textDirection = TextDirection.RTL;
         }
         const textStyle: SkTextStyle = {
-            color: Skia.Color(palette.white),
+            color: Skia.Color(palette.black),
             fontFamilies: ["Jura"],
             fontSize: bigFontSize,
             fontStyle: {
@@ -270,7 +273,7 @@ export default function OnboardingScreen() {
             paragraphStyle.textDirection = TextDirection.RTL;
         }
         const textStyle: SkTextStyle = {
-            color: Skia.Color(palette.white),
+            color: Skia.Color(palette.black),
             fontFamilies: ["Rajdhani"],
             fontSize: fontSize,
             fontStyle: {
@@ -298,7 +301,7 @@ export default function OnboardingScreen() {
         }
 
         const textStyle: SkTextStyle = {
-            color: Skia.Color(palette.blueTint2),
+            color: Skia.Color(palette.purple),
             fontFamilies: ["Jura"],
             fontSize: bigFontSize * 0.8,
             fontStyle: {
@@ -314,7 +317,7 @@ export default function OnboardingScreen() {
     });
 
     // Take over "Back" Navigation from the system, we'll use gestures below
-    React.useEffect(() => {
+    useEffect(() => {
         const backListener = BackHandler.addEventListener(
             "hardwareBackPress",
             () => {
@@ -339,7 +342,7 @@ export default function OnboardingScreen() {
         if (router.canGoBack()) {
             router.back();
         } else {
-            router.replace("/(app)/");
+            router.replace("/(app)");
         }
     }
 
@@ -351,6 +354,9 @@ export default function OnboardingScreen() {
         if (currentView.value < views.length - 1) {
             // continue onboarding
             currentView.value += 1;
+            const newIndex = currentView.value;
+            setCurrentBodyText(views[newIndex].bodyText);
+            setCurrentButtonText(views[newIndex].buttonText);
         } else {
             // onboarding done, record completion and fade to main view
             await AsyncStorage.setItem(ASYNCSTORAGE_HAS_ONBOARDED_KEY, "true");
@@ -371,6 +377,9 @@ export default function OnboardingScreen() {
                 // when user swipes over 10% to the left, move view backwards
                 if (currentView.value > 0) {
                     currentView.value -= 1;
+                    const newIndex = currentView.value;
+                    setCurrentBodyText(views[newIndex].bodyText);
+                    setCurrentButtonText(views[newIndex].buttonText);
                 }
             }
         })
@@ -400,13 +409,14 @@ export default function OnboardingScreen() {
         ];
     });
 
-    React.useEffect(() => {
+    useEffect(() => {
         everythingOpacity.value = withTiming(1, { duration: 1000 });
     }, []);
 
     return (
         <GestureHandlerRootView>
             <View onLayout={onScreenLayout} style={[ss.absoluteFill]} />
+            <SkyBox />
             <SafeAreaView>
                 <Canvas style={[ss.flex]}>
                     <Group
@@ -416,19 +426,6 @@ export default function OnboardingScreen() {
                             </Paint>
                         }
                     >
-                        <Fill>
-                            <LinearGradient
-                                start={vec(win.width / 2, 0)}
-                                end={vec(win.width / 2, win.height)}
-                                colors={[
-                                    palette.black,
-                                    palette.black,
-                                    palette.black,
-                                    palette.purpleShade3,
-                                    palette.maroon,
-                                ]}
-                            />
-                        </Fill>
                         <Group
                             layer={
                                 <Paint>
@@ -475,7 +472,16 @@ export default function OnboardingScreen() {
                                     height={buttonSize.height}
                                     style="stroke"
                                     strokeWidth={3}
-                                    color={palette.blueTint2}
+                                    color={palette.purple}
+                                    r={buttonBorderRadius}
+                                />
+                                <RoundedRect
+                                    x={0}
+                                    y={0}
+                                    width={buttonSize.width}
+                                    height={buttonSize.height}
+                                    style="fill"
+                                    color={palette.white}
                                     r={buttonBorderRadius}
                                 />
                                 <Paragraph
@@ -493,7 +499,7 @@ export default function OnboardingScreen() {
                         accessible={true}
                         accessibilityLabel={"Onboarding Info, will update"}
                         accessibilityRole={"text"}
-                        aria-valuetext={bodyText}
+                        aria-valuetext={currentBodyText}
                         style={{
                             position: "absolute",
                             width: totalUsableWidth,
@@ -504,7 +510,7 @@ export default function OnboardingScreen() {
                 <GestureDetector gesture={buttonGesture}>
                     <Animated.View
                         accessible={true}
-                        accessibilityLabel={buttonText}
+                        accessibilityLabel={currentButtonText}
                         accessibilityRole={"button"}
                         style={{
                             position: "absolute",
@@ -512,13 +518,14 @@ export default function OnboardingScreen() {
                             transform: buttonTransform,
                             width: buttonSize.width,
                             height: buttonSize.height,
+                            top: insets.top,
                         }}
                     />
                 </GestureDetector>
                 <Animated.View style={{ opacity: everythingOpacity }}>
                     <Animated.View style={learnMoreLinkStyle}>
                         <LearnMoreLink
-                            textStyle={{ ...ss.boldFont, ...ss.whiteText }}
+                            textStyle={{ ...ss.boldFont, ...ss.purpleText }}
                             containerHeight={privacyPolicyHeight}
                         />
                     </Animated.View>
@@ -526,7 +533,7 @@ export default function OnboardingScreen() {
                 <Animated.View style={{ opacity: everythingOpacity }}>
                     <Animated.View style={privacyPolicyLinkStyle}>
                         <PrivacyPolicyLink
-                            textStyle={{ ...ss.boldFont, ...ss.whiteText }}
+                            textStyle={{ ...ss.boldFont, ...ss.purpleText }}
                             containerHeight={privacyPolicyHeight}
                         />
                     </Animated.View>
@@ -545,16 +552,16 @@ function ProgressDots({
 }) {
     // Couldn't figure out a way to avoid hardcoding these
     const dot0Fill = useDerivedValue(() => {
-        return currentView.value >= 0 ? palette.blueTint2 : palette.transparent;
+        return currentView.value >= 0 ? palette.purple : palette.transparent;
     });
     const dot1Fill = useDerivedValue(() => {
-        return currentView.value >= 1 ? palette.blueTint2 : palette.transparent;
+        return currentView.value >= 1 ? palette.purple : palette.transparent;
     });
     const dot2Fill = useDerivedValue(() => {
-        return currentView.value >= 2 ? palette.blueTint2 : palette.transparent;
+        return currentView.value >= 2 ? palette.purple : palette.transparent;
     });
     const dot3Fill = useDerivedValue(() => {
-        return currentView.value >= 3 ? palette.blueTint2 : palette.transparent;
+        return currentView.value >= 3 ? palette.purple : palette.transparent;
     });
 
     return (
@@ -564,7 +571,7 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"stroke"}
                 strokeWidth={1}
-                color={palette.blueTint2}
+                color={palette.purple}
             />
             <Circle
                 c={vec(dotWidth * 0, 0)}
@@ -577,7 +584,7 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"stroke"}
                 strokeWidth={1}
-                color={palette.blueTint2}
+                color={palette.purple}
             />
             <Circle
                 c={vec(dotWidth * 1, 0)}
@@ -590,7 +597,7 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"stroke"}
                 strokeWidth={1}
-                color={palette.blueTint2}
+                color={palette.purple}
             />
             <Circle
                 c={vec(dotWidth * 2, 0)}
@@ -603,7 +610,7 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"stroke"}
                 strokeWidth={1}
-                color={palette.blueTint2}
+                color={palette.purple}
             />
             <Circle
                 c={vec(dotWidth * 3, 0)}

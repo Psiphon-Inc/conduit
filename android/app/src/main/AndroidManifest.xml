@@ -1,18 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
   <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-  <!-- Required for the Conduit service -->
-  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-  <!-- Declare use of custom permission for 'service starting' broadcast verification -->
-  <uses-permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION" />
-  <!-- Define custom permission for 'service starting' broadcast verification -->
-  <permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION" android:protectionLevel="signature" />
-  <!-- End Conduit service requirements -->
+  <uses-permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -20,10 +16,19 @@
       <data android:scheme="https"/>
     </intent>
   </queries>
-  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme">
+  <permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION" android:protectionLevel="signature"/>
+  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true" android:fullBackupContent="@xml/secure_store_backup_rules" android:dataExtractionRules="@xml/secure_store_data_extraction_rules" tools:replace="android:fullBackupContent">
     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
+    <service android:name=".nativemodule.ConduitService" android:exported="false" android:foregroundServiceType="specialUse" android:label="@string/app_name" android:process=":ConduitService">
+      <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="P2P proxy for the Psiphon network"/>
+    </service>
+    <service android:name=".nativemodule.ConduitStateService" android:exported="true">
+      <intent-filter>
+        <action android:name="ca.psiphon.conduit.ACTION_BIND_CONDUIT_STATE"/>
+      </intent-filter>
+    </service>
     <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode|locale|layoutDirection" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -33,47 +38,18 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="ca.psiphon.conduit"/>
         <data android:scheme="conduit"/>
+        <data android:scheme="ca.psiphon.conduit"/>
       </intent-filter>
     </activity>
     <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" android:exported="false"/>
-
-    <!-- TunnelIntentsProxy activity-alias for handling intents from the Conduit service securely -->
     <activity-alias android:name=".TunnelIntentsProxy" android:targetActivity=".MainActivity"/>
-    <!-- Conduit service -->
-    <service
-        android:name=".nativemodule.ConduitService"
-        android:exported="false"
-        android:foregroundServiceType="specialUse"
-        android:label="@string/app_name"
-        android:process=":ConduitService">
-      <property
-          android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-          android:value="P2P proxy for the Psiphon network" />
-    </service>
-
-
-    <!-- Conduit logging content provider -->
-    <provider
-        android:name=".nativemodule.logging.LoggingContentProvider"
-        android:authorities="${applicationId}.log"
-        android:exported="false"/>
-    <!-- Receiver for handling app updates -->
-    <receiver android:name=".nativemodule.ConduitUpdateReceiver"
-        android:exported="false">
+    <provider android:name=".nativemodule.logging.LoggingContentProvider" android:authorities="${applicationId}.log" android:exported="false"/>
+    <receiver android:name=".nativemodule.ConduitRestartReceiver" android:exported="false">
       <intent-filter>
-        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
       </intent-filter>
     </receiver>
-    <!-- Service for reporting Conduit state to other apps -->
-    <service
-        android:name=".nativemodule.ConduitStateService"
-        android:exported="true">
-      <intent-filter>
-        <action android:name="ca.psiphon.conduit.ACTION_BIND_CONDUIT_STATE" />
-      </intent-filter>
-    </service>
-
   </application>
 </manifest>

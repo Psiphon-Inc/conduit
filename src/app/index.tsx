@@ -16,9 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Canvas } from "@shopify/react-native-skia";
 import { useRouter } from "expo-router";
 import React from "react";
 import { View, useWindowDimensions } from "react-native";
@@ -27,20 +25,20 @@ import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 import { useAuthContext } from "@/src/auth/context";
 import { wrapError } from "@/src/common/errors";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { SkyBox } from "@/src/components/SkyBox";
 import { PsiphonConduitLoading } from "@/src/components/canvas/PsiphonConduitLoading";
 import {
     ASYNCSTORAGE_HAS_ONBOARDED_KEY,
     CURRENT_STORAGE_VERSION,
 } from "@/src/constants";
 import { applyMigrations } from "@/src/migrations";
-import { sharedStyles as ss } from "@/src/styles";
 
 export default function Index() {
     const { signIn } = useAuthContext();
     const win = useWindowDimensions();
     const router = useRouter();
 
-    const loadingIndicatorCanvasSize = win.width / 3;
+    const loadingIndicatorCanvasSize = win.width / 2;
 
     const opacity = useSharedValue(0);
 
@@ -71,9 +69,9 @@ export default function Index() {
             const hasOnboarded = await AsyncStorage.getItem(
                 ASYNCSTORAGE_HAS_ONBOARDED_KEY,
             );
-            opacity.value = withTiming(0, { duration: 400 }, () => {
+            opacity.value = withTiming(0, { duration: 300 }, () => {
                 if (hasOnboarded !== null) {
-                    runOnJS(router.replace)("/(app)/");
+                    runOnJS(router.replace)("/(app)");
                 } else {
                     runOnJS(router.replace)("/(app)/onboarding");
                 }
@@ -84,7 +82,7 @@ export default function Index() {
     React.useEffect(() => {
         // This is introducing an artificial delay of 500ms to have the nice
         // fade in before signing in, since sign in is nearly instant.
-        opacity.value = withTiming(1, { duration: 500 }, () =>
+        opacity.value = withTiming(1, { duration: 1000 }, () =>
             runOnJS(loadApp)(),
         );
     }, []);
@@ -98,18 +96,14 @@ export default function Index() {
                     alignItems: "center",
                 }}
             >
+                <SkyBox />
                 <View
                     style={{
                         width: loadingIndicatorCanvasSize,
                         height: loadingIndicatorCanvasSize,
                     }}
                 >
-                    <Canvas style={[ss.flex]}>
-                        <PsiphonConduitLoading
-                            size={loadingIndicatorCanvasSize}
-                            opacity={opacity}
-                        />
-                    </Canvas>
+                    <PsiphonConduitLoading />
                 </View>
             </View>
         </SafeAreaView>

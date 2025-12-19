@@ -17,21 +17,21 @@
  *
  */
 
-export const DEFAULT_INPROXY_MAX_CLIENTS = 4;
-export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 10 * 1000 * 1000; // 10 MB
+export const DEFAULT_INPROXY_MAX_CLIENTS = 2;
+export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 2 * 1000 * 1000; // 2 MB
 
 // if these are maxed out, it means a potential of 8Gbps at full capacity
 export const INPROXY_MAX_CLIENTS_MAX = 25;
 export const INPROXY_MAX_MBPS_PER_PEER_MAX = 40;
 
-export const LEARN_MORE_URL = "https://conduit.psiphon.ca";
-export const PRIVACY_POLICY_URL =
-    "https://conduit.psiphon.ca/conduit-privacy-policy";
+export const LEARN_MORE_URL = "https://conduit.psiphon.ca/en";
 export const RYVE_LEARN_MORE_URL = "https://ryve.app";
+export const PRIVACY_POLICY_URL =
+    "https://conduit.psiphon.ca/en/conduit-privacy-policy";
+export const RYVE_APP_LISTING_GOOGLE =
+    "https://play.google.com/store/apps/details?id=network.ryve.app&referrer=utm_source%3Dconduit_app%26utm_campaign%3Dconduit_modal";
 
-// Hard code a common delay value for animations that fade in to wait until the
-// particle video is done playing.
-export const PARTICLE_VIDEO_DELAY_MS = 2800;
+export const RYVE_CLAIM_DEEP_LINK = "network.ryve.app://(app)/conduits?claim=";
 
 // Window height cutoff used to render smaller text in Skia Paragraphs
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;

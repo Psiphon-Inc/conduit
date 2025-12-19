@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 // must be rendered within a canvas
 import {
     Blur,
@@ -97,10 +96,10 @@ export function ConduitConnectionLight({
     // animate light color along trajectory
     const lightColors = [
         palette.transparent,
-        palette.white,
-        palette.blue,
+        palette.peach,
+        palette.mauve,
         palette.purple,
-        palette.red,
+        palette.transparent,
     ];
     const lightColor = useDerivedValue(() => {
         return interpolateColors(
