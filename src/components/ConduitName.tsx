@@ -20,8 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Text, TextInput, View } from "react-native";
-import { KeyboardEvents } from "react-native-keyboard-controller";
+import { Keyboard, Text, TextInput, View } from "react-native";
 
 import {
     QUERYKEY_CONDUIT_NAME,
@@ -86,8 +85,8 @@ export function EditableConduitName({ initialName }: { initialName: string }) {
     // updated value to the mutation.
     const textInputRef = React.useRef<TextInput>(null);
     React.useEffect(() => {
-        const keyboardDidHideSubscription = KeyboardEvents.addListener(
-            "keyboardWillHide",
+        const keyboardDidHideSubscription = Keyboard.addListener(
+            "keyboardDidHide",
             () => {
                 if (textInputRef.current) {
                     onEndEditing();

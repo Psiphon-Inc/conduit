@@ -22,6 +22,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
     Modal,
+    Platform,
     Pressable,
     Text,
     View,
@@ -34,7 +35,11 @@ import { keyPairToBase64nopad } from "@/src/common/cryptography";
 import { Icon } from "@/src/components/Icon";
 import { QRDisplay } from "@/src/components/QRDisplay";
 import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
-import { RYVE_APP_LISTING_GOOGLE, RYVE_CLAIM_DEEP_LINK } from "@/src/constants";
+import {
+    RYVE_APP_LISTING_APPLE,
+    RYVE_APP_LISTING_GOOGLE,
+    RYVE_CLAIM_DEEP_LINK,
+} from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
@@ -220,7 +225,11 @@ export function RyveCallToAction({
                             },
                         ]}
                         onPress={() => {
-                            Linking.openURL(RYVE_APP_LISTING_GOOGLE);
+                            Linking.openURL(
+                                Platform.OS === "ios"
+                                    ? RYVE_APP_LISTING_APPLE
+                                    : RYVE_APP_LISTING_GOOGLE,
+                            );
                         }}
                     >
                         <Text

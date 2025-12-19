@@ -102,6 +102,8 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		67B7196A2D35C574006BE288 /* conduitTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = conduitTests;
 			sourceTree = "<group>";
 		};

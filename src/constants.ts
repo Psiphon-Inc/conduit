@@ -30,6 +30,8 @@ export const PRIVACY_POLICY_URL =
     "https://conduit.psiphon.ca/en/conduit-privacy-policy";
 export const RYVE_APP_LISTING_GOOGLE =
     "https://play.google.com/store/apps/details?id=network.ryve.app&referrer=utm_source%3Dconduit_app%26utm_campaign%3Dconduit_modal";
+export const RYVE_APP_LISTING_APPLE =
+    "https://apps.apple.com/app/ryve-wallet/id6748471259";
 
 export const RYVE_CLAIM_DEEP_LINK = "network.ryve.app://(app)/conduits?claim=";
 

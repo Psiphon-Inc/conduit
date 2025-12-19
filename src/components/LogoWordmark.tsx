@@ -42,11 +42,11 @@ export function LogoWordmark({
         >
             <Image
                 source={require("@/assets/images/psiphon-conduit-wordmark.svg")}
-                tintColor={palette.black}
                 style={{
                     width: "100%",
                     height: "100%",
                     maxHeight: 40,
+                    tintColor: palette.black,
                 }}
                 contentFit={"contain"}
             />
