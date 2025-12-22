@@ -19,13 +19,6 @@ if [ ! -d "$APP_PATH" ]; then
     exit 1
 fi
 
-echo "=== Re-signing Frameworks ==="
-echo "Re-signing hermes.framework with hardened runtime..."
-codesign --force --options runtime --sign "$SIGNING_IDENTITY" "$APP_PATH/Contents/Frameworks/hermes.framework"
-
-echo "Re-signing main app..."
-codesign --force --options runtime --sign "$SIGNING_IDENTITY" "$APP_PATH"
-
 echo ""
 echo "=== Verifying Signature ==="
 codesign -dv --verbose=2 "$APP_PATH" 2>&1 | grep -E "^(Authority|Flags)"
