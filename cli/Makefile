@@ -1,4 +1,4 @@
-.PHONY: setup build build-embedded build-all clean test fmt lint deps check-go
+.PHONY: setup build build-embedded build-all build-all-embedded clean test fmt lint deps check-go
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS := -ldflags "-X github.com/Psiphon-Inc/conduit/cli/cmd.version=$(VERSION)"
@@ -87,6 +87,19 @@ check-setup:
 # Build for all platforms
 build-all: check-go check-setup build-linux build-linux-arm build-darwin build-darwin-arm build-windows
 
+# Build for all platforms with embedded config
+# Usage: make build-all-embedded PSIPHON_CONFIG=path/to/psiphon_config.json
+build-all-embedded: check-go check-setup check-psiphon-config
+	@echo "Building all platforms with embedded config: $(PSIPHON_CONFIG)"
+	@cp "$(PSIPHON_CONFIG)" internal/config/psiphon_config.json
+	GOOS=linux GOARCH=amd64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-linux-amd64 .
+	GOOS=linux GOARCH=arm64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-linux-arm64 .
+	GOOS=darwin GOARCH=amd64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-darwin-amd64 .
+	GOOS=darwin GOARCH=arm64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-darwin-arm64 .
+	GOOS=windows GOARCH=amd64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-windows-amd64.exe .
+	@rm -f internal/config/psiphon_config.json
+	@echo "Built all platforms with embedded config in dist/"
+
 build-linux: check-go check-setup
 	GOOS=linux GOARCH=amd64 $(GO) build $(BUILD_TAGS) $(LDFLAGS) -o dist/conduit-linux-amd64 .
 
@@ -142,17 +155,19 @@ install: check-go check-setup
 help:
 	@echo "Conduit CLI - Makefile targets:"
 	@echo ""
-	@echo "  setup            Clone psiphon-tunnel-core (required before build)"
-	@echo "  build            Build for current platform"
-	@echo "  build-embedded   Build with embedded psiphon config (single binary)"
-	@echo "  build-all        Build for all platforms"
-	@echo "  run              Run with verbose logging"
-	@echo "  deps             Download dependencies"
-	@echo "  clean            Remove build artifacts"
-	@echo "  clean-all        Remove build artifacts and psiphon-tunnel-core"
+	@echo "  setup              Clone psiphon-tunnel-core (required before build)"
+	@echo "  build              Build for current platform"
+	@echo "  build-embedded     Build with embedded psiphon config (single binary)"
+	@echo "  build-all          Build for all platforms"
+	@echo "  build-all-embedded Build all platforms with embedded config"
+	@echo "  run                Run with verbose logging"
+	@echo "  deps               Download dependencies"
+	@echo "  clean              Remove build artifacts"
+	@echo "  clean-all          Remove build artifacts and psiphon-tunnel-core"
 	@echo ""
-	@echo "Embedded build:"
+	@echo "Embedded builds:"
 	@echo "  make build-embedded PSIPHON_CONFIG=path/to/config.json"
+	@echo "  make build-all-embedded PSIPHON_CONFIG=path/to/config.json"
 	@echo ""
 	@echo "Requirements:"
 	@echo "  Go 1.24.x (Go 1.25+ is NOT supported due to psiphon-tls)"

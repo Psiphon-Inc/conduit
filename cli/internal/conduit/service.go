@@ -277,7 +277,7 @@ func (s *Service) displayStats(ctx context.Context) {
 			uptime := time.Since(s.stats.StartTime).Truncate(time.Second)
 
 			if s.isTTY {
-				// Interactive TTY mode - update status line in place
+				// Interactive TTY mode - multi-line status that updates in place
 				status := "Waiting"
 				if s.stats.ConnectedClients > 0 {
 					status = "Active"
@@ -285,13 +285,13 @@ func (s *Service) displayStats(ctx context.Context) {
 					status = "Connecting"
 				}
 
-				fmt.Printf("\r  [%s] Clients: %d | Up: %s | Down: %s | Uptime: %s          ",
-					status,
-					s.stats.ConnectedClients,
-					formatBytes(s.stats.TotalBytesUp),
-					formatBytes(s.stats.TotalBytesDown),
-					formatDuration(uptime),
-				)
+				// Move cursor up 5 lines and clear, then print updated stats
+				fmt.Print("\033[5A\033[J")
+				fmt.Printf("  Status:    %s\n", status)
+				fmt.Printf("  Clients:   %d\n", s.stats.ConnectedClients)
+				fmt.Printf("  Upload:    %s\n", formatBytes(s.stats.TotalBytesUp))
+				fmt.Printf("  Download:  %s\n", formatBytes(s.stats.TotalBytesDown))
+				fmt.Printf("  Uptime:    %s\n", formatDuration(uptime))
 			} else {
 				// Non-TTY mode - log periodically (every 30 seconds) or on client changes
 				shouldLog := time.Since(lastLog) >= 30*time.Second
