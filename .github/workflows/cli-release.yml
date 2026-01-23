@@ -1,0 +1,172 @@
+name: CLI Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./cli
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set version from commit hash
+        id: version
+        run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Set up Go 1.24.3
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.3'
+
+      - name: Verify Go version
+        run: go version
+
+      - name: Setup dependencies
+        run: make setup
+
+      - name: Create Psiphon config
+        run: echo '${{ secrets.PSIPHON_CONFIG_JSON }}' > psiphon_config.json
+
+      - name: Build all platforms with embedded config
+        run: make build-all-embedded PSIPHON_CONFIG=psiphon_config.json VERSION=${{ steps.version.outputs.VERSION }}
+
+      - name: Remove Psiphon config
+        run: rm -f psiphon_config.json internal/config/psiphon_config.json
+
+      - name: Create checksums
+        run: |
+          cd dist
+          sha256sum conduit-* > checksums.txt
+          cat checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: Conduit CLI ${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            cli/dist/conduit-linux-amd64
+            cli/dist/conduit-linux-arm64
+            cli/dist/conduit-darwin-amd64
+            cli/dist/conduit-darwin-arm64
+            cli/dist/conduit-windows-amd64.exe
+            cli/dist/checksums.txt
+          body: |
+            ## Conduit CLI ${{ steps.version.outputs.VERSION }}
+
+            Conduit is a volunteer-run proxy node that helps relay traffic for users in censored regions.
+
+            ### Downloads
+
+            | Platform | Architecture | Download |
+            |----------|--------------|----------|
+            | Linux | x86_64 (amd64) | [conduit-linux-amd64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-linux-amd64) |
+            | Linux | ARM64 | [conduit-linux-arm64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-linux-arm64) |
+            | macOS | Intel (amd64) | [conduit-darwin-amd64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-darwin-amd64) |
+            | macOS | Apple Silicon (arm64) | [conduit-darwin-arm64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-darwin-arm64) |
+            | Windows | x86_64 (amd64) | [conduit-windows-amd64.exe](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-windows-amd64.exe) |
+
+            ### Quick Start
+
+            #### Linux
+
+            ```bash
+            # Download
+            curl -L -o conduit https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-linux-amd64
+            chmod +x conduit
+
+            # Run directly
+            ./conduit start
+
+            # Or install as a system service (recommended for servers)
+            sudo mv conduit /usr/local/bin/
+            sudo conduit service install
+            sudo conduit service start
+
+            # View live statistics
+            sudo conduit service status -f
+            ```
+
+            #### macOS
+
+            ```bash
+            # Download (Apple Silicon)
+            curl -L -o conduit https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-darwin-arm64
+            # Or for Intel Mac: conduit-darwin-amd64
+            chmod +x conduit
+
+            # Run directly
+            ./conduit start
+
+            # Or install as a system service
+            sudo mv conduit /usr/local/bin/
+            sudo conduit service install
+            sudo conduit service start
+
+            # View live statistics
+            conduit service status -f
+            ```
+
+            #### Windows
+
+            > **Note:** Windows service support is implemented but not fully tested.
+
+            ```powershell
+            # Download conduit-windows-amd64.exe and rename to conduit.exe
+
+            # Run directly
+            .\conduit.exe start
+
+            # Or install as a Windows service (run as Administrator)
+            .\conduit.exe service install
+            .\conduit.exe service start
+
+            # View live statistics
+            .\conduit.exe service status -f
+            ```
+
+            ### Service Management Commands
+
+            | Command | Description |
+            |---------|-------------|
+            | `conduit service install` | Install as system service |
+            | `conduit service start` | Start the service |
+            | `conduit service stop` | Stop the service |
+            | `conduit service status` | Show service status |
+            | `conduit service status -f` | Live statistics display |
+            | `conduit service logs` | Stream service logs |
+            | `conduit service uninstall` | Remove the service |
+
+            ### Configuration Options
+
+            ```bash
+            # Install with custom settings
+            conduit service install --max-clients 500 --bandwidth 10
+            ```
+
+            | Option | Default | Max | Description |
+            |--------|---------|-----|-------------|
+            | `--max-clients` | 200 | 1000 | Maximum concurrent client connections |
+            | `--bandwidth` | 5 | 40 | Bandwidth limit in Mbps |
+
+            ### Verify Downloads
+
+            ```bash
+            # Download checksums
+            curl -L -o checksums.txt https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/checksums.txt
+
+            # Verify (Linux/macOS)
+            sha256sum -c checksums.txt --ignore-missing
+            ```
+
+            ### Requirements
+
+            - **Linux:** systemd-based distribution (Ubuntu, Debian, Fedora, etc.)
+            - **macOS:** macOS 10.15 or later
+            - **Windows:** Windows 10 or later (service support untested)
