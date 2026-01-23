@@ -49,7 +49,6 @@ type Options struct {
 	MaxClients        int
 	BandwidthMbps     float64
 	Verbose           bool
-	IsTTY             bool
 }
 
 // Config represents the validated configuration for the Conduit service
@@ -62,7 +61,6 @@ type Config struct {
 	PsiphonConfigPath       string
 	PsiphonConfigData       []byte // Embedded config data (if used)
 	Verbose                 bool
-	IsTTY                   bool
 }
 
 // persistedKey represents the key data saved to disk
@@ -82,7 +80,7 @@ func LoadOrCreate(opts Options) (*Config, error) {
 	}
 
 	// Try to load existing key, or generate new one
-	keyPair, privateKeyBase64, err := loadOrCreateKey(opts.DataDir, opts.IsTTY, opts.Verbose)
+	keyPair, privateKeyBase64, err := loadOrCreateKey(opts.DataDir, opts.Verbose)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load or create key: %w", err)
 	}
@@ -122,12 +120,11 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		PsiphonConfigPath:       opts.PsiphonConfigPath,
 		PsiphonConfigData:       psiphonConfigData,
 		Verbose:                 opts.Verbose,
-		IsTTY:                   opts.IsTTY,
 	}, nil
 }
 
 // loadOrCreateKey loads an existing key from disk or generates a new one
-func loadOrCreateKey(dataDir string, isTTY bool, verbose bool) (*crypto.KeyPair, string, error) {
+func loadOrCreateKey(dataDir string, verbose bool) (*crypto.KeyPair, string, error) {
 	keyPath := filepath.Join(dataDir, keyFileName)
 
 	// Try to load existing key

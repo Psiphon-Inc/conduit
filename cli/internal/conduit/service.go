@@ -30,7 +30,6 @@ import (
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/config"
 	"github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon"
-	"golang.org/x/term"
 )
 
 // Service represents the Conduit inproxy service
@@ -39,7 +38,6 @@ type Service struct {
 	controller *psiphon.Controller
 	stats      *Stats
 	mu         sync.RWMutex
-	isTTY      bool
 }
 
 // Stats tracks proxy activity statistics
@@ -59,7 +57,6 @@ func New(cfg *config.Config) (*Service, error) {
 		stats: &Stats{
 			StartTime: time.Now(),
 		},
-		isTTY: term.IsTerminal(int(os.Stdout.Fd())),
 	}, nil
 }
 
@@ -92,9 +89,6 @@ func (s *Service) Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create controller: %w", err)
 	}
-
-	// Start stats display in background
-	go s.displayStats(ctx)
 
 	// Run the controller (blocks until context is cancelled)
 	s.controller.Run(ctx)
@@ -187,6 +181,8 @@ func (s *Service) handleNotice(notice []byte) {
 	switch noticeData.NoticeType {
 	case "InproxyProxyActivity":
 		s.mu.Lock()
+		prevConnecting := s.stats.ConnectingClients
+		prevConnected := s.stats.ConnectedClients
 		if v, ok := noticeData.Data["connectingClients"].(float64); ok {
 			s.stats.ConnectingClients = int(v)
 		}
@@ -199,11 +195,17 @@ func (s *Service) handleNotice(notice []byte) {
 		if v, ok := noticeData.Data["bytesDown"].(float64); ok {
 			s.stats.TotalBytesDown += int64(v)
 		}
+		// Log if client counts changed
+		if s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
+			s.logStats()
+		}
 		s.mu.Unlock()
 
 	case "InproxyProxyTotalActivity":
 		// Update stats from total activity notices
 		s.mu.Lock()
+		prevConnecting := s.stats.ConnectingClients
+		prevConnected := s.stats.ConnectedClients
 		if v, ok := noticeData.Data["connectingClients"].(float64); ok {
 			s.stats.ConnectingClients = int(v)
 		}
@@ -216,6 +218,10 @@ func (s *Service) handleNotice(notice []byte) {
 		if v, ok := noticeData.Data["totalBytesDown"].(float64); ok {
 			s.stats.TotalBytesDown = int64(v)
 		}
+		// Log if client counts changed
+		if s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
+			s.logStats()
+		}
 		s.mu.Unlock()
 
 	case "Info":
@@ -226,11 +232,7 @@ func (s *Service) handleNotice(notice []byte) {
 				if !s.stats.IsLive {
 					s.stats.IsLive = true
 					s.mu.Unlock()
-					if s.isTTY {
-						fmt.Printf("\r  [OK] Connected to Psiphon network                              \n\n")
-					} else {
-						fmt.Println("[OK] Connected to Psiphon network")
-					}
+					fmt.Println("[OK] Connected to Psiphon network")
 				} else {
 					s.mu.Unlock()
 				}
@@ -261,53 +263,17 @@ func (s *Service) handleNotice(notice []byte) {
 	}
 }
 
-// displayStats periodically displays proxy statistics
-func (s *Service) displayStats(ctx context.Context) {
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
-
-	var lastLog time.Time
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			s.mu.RLock()
-			uptime := time.Since(s.stats.StartTime).Truncate(time.Second)
-
-			if s.isTTY {
-				// Interactive TTY mode - multi-line status that updates in place
-				status := "Waiting"
-				if s.stats.ConnectedClients > 0 {
-					status = "Active"
-				} else if s.stats.ConnectingClients > 0 {
-					status = "Connecting"
-				}
-
-				// Move cursor up 5 lines and clear, then print updated stats
-				fmt.Print("\033[5A\033[J")
-				fmt.Printf("  Status:    %s\n", status)
-				fmt.Printf("  Clients:   %d\n", s.stats.ConnectedClients)
-				fmt.Printf("  Upload:    %s\n", formatBytes(s.stats.TotalBytesUp))
-				fmt.Printf("  Download:  %s\n", formatBytes(s.stats.TotalBytesDown))
-				fmt.Printf("  Uptime:    %s\n", formatDuration(uptime))
-			} else {
-				// Non-TTY mode - log periodically (every 30 seconds) or on client changes
-				shouldLog := time.Since(lastLog) >= 30*time.Second
-				if shouldLog {
-					fmt.Printf("[STATS] Clients: %d | Up: %s | Down: %s | Uptime: %s\n",
-						s.stats.ConnectedClients,
-						formatBytes(s.stats.TotalBytesUp),
-						formatBytes(s.stats.TotalBytesDown),
-						formatDuration(uptime),
-					)
-					lastLog = time.Now()
-				}
-			}
-			s.mu.RUnlock()
-		}
-	}
+// logStats logs the current proxy statistics (must be called with lock held)
+func (s *Service) logStats() {
+	uptime := time.Since(s.stats.StartTime).Truncate(time.Second)
+	fmt.Printf("%s [STATS] Connecting: %d | Connected: %d | Up: %s | Down: %s | Uptime: %s\n",
+		time.Now().Format("2006-01-02 15:04:05"),
+		s.stats.ConnectingClients,
+		s.stats.ConnectedClients,
+		formatBytes(s.stats.TotalBytesUp),
+		formatBytes(s.stats.TotalBytesDown),
+		formatDuration(uptime),
+	)
 }
 
 // formatDuration formats duration in a human-readable way

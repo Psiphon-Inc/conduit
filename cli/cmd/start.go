@@ -29,7 +29,6 @@ import (
 	"github.com/Psiphon-Inc/conduit/cli/internal/conduit"
 	"github.com/Psiphon-Inc/conduit/cli/internal/config"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 )
 
 var (
@@ -85,8 +84,6 @@ func runStart(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("psiphon config required: use --psiphon-config flag or build with embedded config")
 	}
 
-	isTTY := term.IsTerminal(int(os.Stdout.Fd()))
-
 	// Load or create configuration (auto-generates keys on first run)
 	cfg, err := config.LoadOrCreate(config.Options{
 		DataDir:           GetDataDir(),
@@ -95,7 +92,6 @@ func runStart(cmd *cobra.Command, args []string) error {
 		MaxClients:        maxClients,
 		BandwidthMbps:     bandwidthMbps,
 		Verbose:           IsVerbose(),
-		IsTTY:             isTTY,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
@@ -117,19 +113,12 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 	go func() {
 		<-sigChan
-		if isTTY {
-			fmt.Print("\r")
-		}
 		fmt.Println("\nShutting down...")
 		cancel()
 	}()
 
-	// Print startup banner
-	if isTTY {
-		printBanner(cfg, bandwidthMbps)
-	} else {
-		fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %.0f Mbps)\n", cfg.MaxClients, bandwidthMbps)
-	}
+	// Print startup message
+	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %.0f Mbps)\n", cfg.MaxClients, bandwidthMbps)
 
 	// Run the service
 	if err := service.Run(ctx); err != nil && ctx.Err() == nil {
@@ -138,23 +127,4 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 	fmt.Println("Stopped.")
 	return nil
-}
-
-func printBanner(cfg *config.Config, bandwidthMbps float64) {
-	fmt.Println()
-	fmt.Println("  ┌─────────────────────────────────────────────────┐")
-	fmt.Println("  │               PSIPHON CONDUIT                   │")
-	fmt.Println("  └─────────────────────────────────────────────────┘")
-	fmt.Println()
-	fmt.Printf("  Max Clients:  %d\n", cfg.MaxClients)
-	fmt.Printf("  Bandwidth:    %.0f Mbps\n", bandwidthMbps)
-	fmt.Println()
-	fmt.Println("  Press Ctrl+C to stop")
-	fmt.Println()
-	// Print placeholder lines for the updating stats (5 lines)
-	fmt.Println("  Status:    Starting...")
-	fmt.Println("  Clients:   0")
-	fmt.Println("  Upload:    0 B")
-	fmt.Println("  Download:  0 B")
-	fmt.Println("  Uptime:    0s")
 }
