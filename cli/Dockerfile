@@ -1,3 +1,19 @@
+# Conduit - Psiphon inproxy node
+#
+# Build:
+#   docker build -t conduit .
+#
+# Run (with persistent data volume and config file):
+#   docker run -d --name conduit \
+#     -v conduit-data:/home/conduit/data \
+#     -v /path/to/psiphon_config.json:/config.json:ro \
+#     --restart unless-stopped \
+#     conduit start --psiphon-config /config.json
+#
+# The data volume stores your proxy's private key. The Psiphon broker tracks
+# proxy reputation by key, so preserving it ensures you continue receiving
+# client connections.
+
 # Build stage
 FROM golang:1.24-bookworm AS builder
 
