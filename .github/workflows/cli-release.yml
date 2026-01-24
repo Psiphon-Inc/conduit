@@ -50,7 +50,10 @@ jobs:
           sha256sum conduit-* > checksums.txt
           cat checksums.txt
 
-      # Docker build and push
+      # Docker build and push (multi-arch)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -70,6 +73,7 @@ jobs:
           context: ./cli
           file: ./cli/Dockerfile.embedded
           push: true
+          platforms: linux/amd64,linux/arm64
           build-args: |
             PSIPHON_CONFIG=psiphon_config.json
           tags: |
