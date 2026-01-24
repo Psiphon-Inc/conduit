@@ -1,0 +1,39 @@
+# Build stage
+FROM golang:1.24-bookworm AS builder
+
+WORKDIR /build
+
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+
+# Clone psiphon-tunnel-core for replace directives
+RUN git clone --depth 1 https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build static binary
+RUN CGO_ENABLED=1 go build -tags "PSIPHON_ENABLE_INPROXY" \
+    -ldflags="-s -w" \
+    -o conduit .
+
+# Runtime stage - minimal Debian
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/conduit /usr/local/bin/conduit
+
+# Create non-root user
+RUN useradd -r -u 1000 conduit
+USER conduit
+
+WORKDIR /home/conduit
+
+ENTRYPOINT ["conduit"]
+CMD ["start"]
