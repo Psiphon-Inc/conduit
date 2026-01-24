@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/conduit"
@@ -35,6 +36,7 @@ var (
 	maxClients        int
 	bandwidthMbps     float64
 	psiphonConfigPath string
+	statsFilePath     string
 )
 
 var startCmd = &cobra.Command{
@@ -59,6 +61,8 @@ func init() {
 
 	startCmd.Flags().IntVarP(&maxClients, "max-clients", "m", config.DefaultMaxClients, "maximum number of proxy clients (1-1000)")
 	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
+	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
+	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
 
 	// Only show --psiphon-config flag if no config is embedded
 	if !config.HasEmbeddedConfig() {
@@ -84,6 +88,12 @@ func runStart(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("psiphon config required: use --psiphon-config flag or build with embedded config")
 	}
 
+	// Resolve stats file path - if relative, place in data dir
+	resolvedStatsFile := statsFilePath
+	if resolvedStatsFile != "" && !filepath.IsAbs(resolvedStatsFile) {
+		resolvedStatsFile = filepath.Join(GetDataDir(), resolvedStatsFile)
+	}
+
 	// Load or create configuration (auto-generates keys on first run)
 	cfg, err := config.LoadOrCreate(config.Options{
 		DataDir:           GetDataDir(),
@@ -92,6 +102,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 		MaxClients:        maxClients,
 		BandwidthMbps:     bandwidthMbps,
 		Verbosity:         Verbosity(),
+		StatsFile:         resolvedStatsFile,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
