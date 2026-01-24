@@ -236,20 +236,39 @@ func (s *Service) handleNotice(notice []byte) {
 				} else {
 					s.mu.Unlock()
 				}
-				if s.config.Verbose {
+				if s.config.Verbosity >= 2 {
 					fmt.Printf("[DEBUG] Info: %v\n", noticeData.Data)
 				}
-			} else if s.config.Verbose {
-				fmt.Printf("[DEBUG] Info: %v\n", noticeData.Data)
+			} else if s.config.Verbosity >= 1 {
+				// -v: show info messages except noisy announcement requests
+				if msg != "announcement request" {
+					fmt.Printf("[INFO] %s\n", msg)
+				} else if s.config.Verbosity >= 2 {
+					// -vv: show everything including announcement requests
+					fmt.Printf("[DEBUG] Info: %v\n", noticeData.Data)
+				}
 			}
 		}
 
 	case "InproxyMustUpgrade":
 		fmt.Println("\nWARNING: A newer version of Conduit is required. Please upgrade.")
 
+	case "Error":
+		// Handle errors based on verbosity
+		if s.config.Verbosity >= 1 {
+			if errMsg, ok := noticeData.Data["error"].(string); ok {
+				// -v: filter out noisy "limited" errors (normal when no clients available)
+				if s.config.Verbosity >= 2 || !isNoisyError(errMsg) {
+					fmt.Printf("[ERROR] %s\n", errMsg)
+				}
+			} else if s.config.Verbosity >= 2 {
+				fmt.Printf("[DEBUG] Error: %v\n", noticeData.Data)
+			}
+		}
+
 	default:
-		// Only show debug output in verbose mode
-		if s.config.Verbose {
+		// Only show debug output in debug mode (-vv)
+		if s.config.Verbosity >= 2 {
 			// Filter out noisy warnings that are expected in inproxy mode
 			if noticeData.NoticeType == "Warning" {
 				if msg, ok := noticeData.Data["message"].(string); ok {
@@ -261,6 +280,26 @@ func (s *Service) handleNotice(notice []byte) {
 			fmt.Printf("[DEBUG] %s: %v\n", noticeData.NoticeType, noticeData.Data)
 		}
 	}
+}
+
+// isNoisyError returns true for errors that occur frequently during normal operation
+func isNoisyError(errMsg string) bool {
+	// These errors happen when proxy announces but no client is matched - normal operation
+	// "limited" - announcement timed out
+	// "no match" - no client was waiting
+	// "announcement" - general announcement-related errors
+	return len(errMsg) > 7 && errMsg[:7] == "inproxy" &&
+		(containsStr(errMsg, "limited") || containsStr(errMsg, "no match") || containsStr(errMsg, "announcement"))
+}
+
+// containsStr checks if s contains substr
+func containsStr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
 
 // logStats logs the current proxy statistics (must be called with lock held)

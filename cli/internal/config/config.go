@@ -48,7 +48,7 @@ type Options struct {
 	UseEmbeddedConfig bool
 	MaxClients        int
 	BandwidthMbps     float64
-	Verbose           bool
+	Verbosity         int // 0=normal, 1=verbose, 2+=debug
 }
 
 // Config represents the validated configuration for the Conduit service
@@ -60,7 +60,7 @@ type Config struct {
 	DataDir                 string
 	PsiphonConfigPath       string
 	PsiphonConfigData       []byte // Embedded config data (if used)
-	Verbose                 bool
+	Verbosity               int    // 0=normal, 1=verbose, 2+=debug
 }
 
 // persistedKey represents the key data saved to disk
@@ -80,7 +80,7 @@ func LoadOrCreate(opts Options) (*Config, error) {
 	}
 
 	// Try to load existing key, or generate new one
-	keyPair, privateKeyBase64, err := loadOrCreateKey(opts.DataDir, opts.Verbose)
+	keyPair, privateKeyBase64, err := loadOrCreateKey(opts.DataDir, opts.Verbosity > 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load or create key: %w", err)
 	}
@@ -119,7 +119,7 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		DataDir:                 opts.DataDir,
 		PsiphonConfigPath:       opts.PsiphonConfigPath,
 		PsiphonConfigData:       psiphonConfigData,
-		Verbose:                 opts.Verbose,
+		Verbosity:               opts.Verbosity,
 	}, nil
 }
 

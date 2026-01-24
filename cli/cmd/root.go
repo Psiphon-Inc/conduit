@@ -27,9 +27,9 @@ import (
 )
 
 var (
-	verbose bool
-	dataDir string
-	version = "dev"
+	verbosity int
+	dataDir   string
+	version   = "dev"
 )
 
 var rootCmd = &cobra.Command{
@@ -47,13 +47,13 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose output")
+	rootCmd.PersistentFlags().CountVarP(&verbosity, "verbose", "v", "increase verbosity (-v for verbose, -vv for debug)")
 	rootCmd.PersistentFlags().StringVarP(&dataDir, "data-dir", "d", "./data", "data directory (stores keys and state)")
 }
 
-// IsVerbose returns whether verbose mode is enabled
-func IsVerbose() bool {
-	return verbose
+// Verbosity returns the verbosity level (0=normal, 1=verbose, 2+=debug)
+func Verbosity() int {
+	return verbosity
 }
 
 // GetDataDir returns the data directory path

@@ -91,7 +91,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 		UseEmbeddedConfig: useEmbedded,
 		MaxClients:        maxClients,
 		BandwidthMbps:     bandwidthMbps,
-		Verbose:           IsVerbose(),
+		Verbosity:         Verbosity(),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
