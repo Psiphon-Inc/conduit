@@ -3,9 +3,16 @@ name: CLI Release
 on:
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/conduit
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     defaults:
       run:
         working-directory: ./cli
@@ -34,7 +41,7 @@ jobs:
       - name: Build all platforms with embedded config
         run: make build-all-embedded PSIPHON_CONFIG=psiphon_config.json VERSION=${{ steps.version.outputs.VERSION }}
 
-      - name: Remove Psiphon config
+      - name: Remove Psiphon config from dist
         run: rm -f psiphon_config.json internal/config/psiphon_config.json
 
       - name: Create checksums
@@ -42,6 +49,35 @@ jobs:
           cd dist
           sha256sum conduit-* > checksums.txt
           cat checksums.txt
+
+      # Docker build and push
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Re-create Psiphon config for Docker build
+        run: echo '${{ secrets.PSIPHON_CONFIG_JSON }}' > psiphon_config.json
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./cli
+          file: ./cli/Dockerfile.embedded
+          push: true
+          build-args: |
+            PSIPHON_CONFIG=psiphon_config.json
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Remove Psiphon config
+        run: rm -f psiphon_config.json
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -56,6 +92,7 @@ jobs:
             cli/dist/conduit-darwin-amd64
             cli/dist/conduit-darwin-arm64
             cli/dist/conduit-windows-amd64.exe
+            cli/dist/conduit-freebsd-amd64
             cli/dist/checksums.txt
           body: |
             ## Conduit CLI ${{ steps.version.outputs.VERSION }}
@@ -71,102 +108,52 @@ jobs:
             | macOS | Intel (amd64) | [conduit-darwin-amd64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-darwin-amd64) |
             | macOS | Apple Silicon (arm64) | [conduit-darwin-arm64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-darwin-arm64) |
             | Windows | x86_64 (amd64) | [conduit-windows-amd64.exe](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-windows-amd64.exe) |
+            | FreeBSD | x86_64 (amd64) | [conduit-freebsd-amd64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-freebsd-amd64) |
 
             ### Quick Start
 
-            #### Linux
-
             ```bash
-            # Download
+            # Download (Linux x86_64 example)
             curl -L -o conduit https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-linux-amd64
             chmod +x conduit
 
-            # Run directly
+            # Run
             ./conduit start
 
-            # Or install as a system service (recommended for servers)
-            sudo mv conduit /usr/local/bin/
-            sudo conduit service install
-            sudo conduit service start
+            # Run with verbose output
+            ./conduit start -v
 
-            # View live statistics
-            sudo conduit service status -f
+            # Run with debug output
+            ./conduit start -vv
             ```
 
-            #### macOS
+            ### Docker
 
             ```bash
-            # Download (Apple Silicon)
-            curl -L -o conduit https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/conduit-darwin-arm64
-            # Or for Intel Mac: conduit-darwin-amd64
-            chmod +x conduit
+            # Pull from GitHub Container Registry
+            docker pull ghcr.io/${{ github.repository }}/conduit:latest
 
-            # Run directly
-            ./conduit start
-
-            # Or install as a system service
-            sudo mv conduit /usr/local/bin/
-            sudo conduit service install
-            sudo conduit service start
-
-            # View live statistics
-            conduit service status -f
+            # Run with persistent data volume (recommended)
+            docker run -d --name conduit \
+              -v conduit-data:/home/conduit/data \
+              --restart unless-stopped \
+              ghcr.io/${{ github.repository }}/conduit:latest
             ```
 
-            #### Windows
-
-            > **Note:** Windows service support is implemented but not fully tested.
-
-            ```powershell
-            # Download conduit-windows-amd64.exe and rename to conduit.exe
-
-            # Run directly
-            .\conduit.exe start
-
-            # Or install as a Windows service (run as Administrator)
-            .\conduit.exe service install
-            .\conduit.exe service start
-
-            # View live statistics
-            .\conduit.exe service status -f
-            ```
-
-            ### Service Management Commands
-
-            | Command | Description |
-            |---------|-------------|
-            | `conduit service install` | Install as system service |
-            | `conduit service start` | Start the service |
-            | `conduit service stop` | Stop the service |
-            | `conduit service status` | Show service status |
-            | `conduit service status -f` | Live statistics display |
-            | `conduit service logs` | Stream service logs |
-            | `conduit service uninstall` | Remove the service |
+            **Important:** Always use a persistent volume for the data directory. The Psiphon broker tracks proxy reputation by key - without persistence, you'll start fresh each time.
 
             ### Configuration Options
 
-            ```bash
-            # Install with custom settings
-            conduit service install --max-clients 500 --bandwidth 10
-            ```
-
-            | Option | Default | Max | Description |
-            |--------|---------|-----|-------------|
-            | `--max-clients` | 200 | 1000 | Maximum concurrent client connections |
-            | `--bandwidth` | 5 | 40 | Bandwidth limit in Mbps |
+            | Option | Default | Description |
+            |--------|---------|-------------|
+            | `--max-clients, -m` | 200 | Maximum concurrent clients (1-1000) |
+            | `--bandwidth, -b` | 5 | Bandwidth limit in Mbps (1-40) |
+            | `--data-dir, -d` | ./data | Directory for keys and state |
+            | `-v` | - | Verbose output (`-vv` for debug) |
 
             ### Verify Downloads
 
             ```bash
-            # Download checksums
             curl -L -o checksums.txt https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.VERSION }}/checksums.txt
-
-            # Verify (Linux/macOS)
             sha256sum -c checksums.txt --ignore-missing
             ```
-
-            ### Requirements
-
-            - **Linux:** systemd-based distribution (Ubuntu, Debian, Fedora, etc.)
-            - **macOS:** macOS 10.15 or later
-            - **Windows:** Windows 10 or later (service support untested)

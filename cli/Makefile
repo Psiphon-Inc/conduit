@@ -85,7 +85,7 @@ check-setup:
 	fi
 
 # Build for all platforms
-build-all: check-go check-setup build-linux build-linux-arm build-darwin build-darwin-arm build-windows
+build-all: check-go check-setup build-linux build-linux-arm build-darwin build-darwin-arm build-windows build-freebsd
 
 # Build for all platforms with embedded config
 # Usage: make build-all-embedded PSIPHON_CONFIG=path/to/psiphon_config.json
@@ -97,6 +97,7 @@ build-all-embedded: check-go check-setup check-psiphon-config
 	GOOS=darwin GOARCH=amd64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-darwin-amd64 .
 	GOOS=darwin GOARCH=arm64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-darwin-arm64 .
 	GOOS=windows GOARCH=amd64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-windows-amd64.exe .
+	GOOS=freebsd GOARCH=amd64 $(GO) build $(BUILD_TAGS_EMBEDDED) $(LDFLAGS) -o dist/conduit-freebsd-amd64 .
 	@rm -f internal/config/psiphon_config.json
 	@echo "Built all platforms with embedded config in dist/"
 
@@ -114,6 +115,9 @@ build-darwin-arm: check-go check-setup
 
 build-windows: check-go check-setup
 	GOOS=windows GOARCH=amd64 $(GO) build $(BUILD_TAGS) $(LDFLAGS) -o dist/conduit-windows-amd64.exe .
+
+build-freebsd: check-go check-setup
+	GOOS=freebsd GOARCH=amd64 $(GO) build $(BUILD_TAGS) $(LDFLAGS) -o dist/conduit-freebsd-amd64 .
 
 # Development
 run: check-go check-setup
