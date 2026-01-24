@@ -34,11 +34,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /build/conduit /usr/local/bin/conduit
 
-# Create non-root user
-RUN useradd -r -u 1000 conduit
+# Create non-root user with home directory
+RUN useradd -r -u 1000 -m conduit
 USER conduit
 
 WORKDIR /home/conduit
 
+# Create data directory owned by conduit user
+RUN mkdir -p /home/conduit/data
+
 ENTRYPOINT ["conduit"]
-CMD ["start"]
+CMD ["start", "--data-dir", "/home/conduit/data"]
