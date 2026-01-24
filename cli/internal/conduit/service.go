@@ -284,12 +284,20 @@ func (s *Service) handleNotice(notice []byte) {
 
 // isNoisyError returns true for errors that occur frequently during normal operation
 func isNoisyError(errMsg string) bool {
-	// These errors happen when proxy announces but no client is matched - normal operation
+	// These errors happen during normal operation and will auto-retry:
 	// "limited" - announcement timed out
 	// "no match" - no client was waiting
 	// "announcement" - general announcement-related errors
-	return len(errMsg) > 7 && errMsg[:7] == "inproxy" &&
-		(containsStr(errMsg, "limited") || containsStr(errMsg, "no match") || containsStr(errMsg, "announcement"))
+	// "502" / "503" / "504" - transient broker/gateway errors
+	if len(errMsg) > 7 && errMsg[:7] == "inproxy" {
+		return containsStr(errMsg, "limited") ||
+			containsStr(errMsg, "no match") ||
+			containsStr(errMsg, "announcement") ||
+			containsStr(errMsg, "status code 502") ||
+			containsStr(errMsg, "status code 503") ||
+			containsStr(errMsg, "status code 504")
+	}
+	return false
 }
 
 // containsStr checks if s contains substr
