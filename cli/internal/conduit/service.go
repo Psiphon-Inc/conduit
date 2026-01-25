@@ -51,6 +51,17 @@ type Stats struct {
 	IsLive            bool // Connected to broker and ready to accept clients
 }
 
+// StatsJSON represents the JSON structure for persisted stats
+type StatsJSON struct {
+	ConnectingClients int    `json:"connectingClients"`
+	ConnectedClients  int    `json:"connectedClients"`
+	TotalBytesUp      int64  `json:"totalBytesUp"`
+	TotalBytesDown    int64  `json:"totalBytesDown"`
+	UptimeSeconds     int64  `json:"uptimeSeconds"`
+	IsLive            bool   `json:"isLive"`
+	Timestamp         string `json:"timestamp"`
+}
+
 // New creates a new Conduit service
 func New(cfg *config.Config) (*Service, error) {
 	return &Service{
@@ -315,6 +326,37 @@ func (s *Service) logStats() {
 		formatBytes(s.stats.TotalBytesDown),
 		formatDuration(uptime),
 	)
+
+	// Write stats to file if configured (copy data while locked, write async)
+	if s.config.StatsFile != "" {
+		statsJSON := StatsJSON{
+			ConnectingClients: s.stats.ConnectingClients,
+			ConnectedClients:  s.stats.ConnectedClients,
+			TotalBytesUp:      s.stats.TotalBytesUp,
+			TotalBytesDown:    s.stats.TotalBytesDown,
+			UptimeSeconds:     int64(time.Since(s.stats.StartTime).Seconds()),
+			IsLive:            s.stats.IsLive,
+			Timestamp:         time.Now().Format(time.RFC3339),
+		}
+		go s.writeStatsToFile(statsJSON)
+	}
+}
+
+// writeStatsToFile writes stats to the configured JSON file asynchronously
+func (s *Service) writeStatsToFile(statsJSON StatsJSON) {
+	data, err := json.MarshalIndent(statsJSON, "", "  ")
+	if err != nil {
+		if s.config.Verbosity >= 1 {
+			fmt.Printf("[ERROR] Failed to marshal stats: %v\n", err)
+		}
+		return
+	}
+
+	if err := os.WriteFile(s.config.StatsFile, data, 0644); err != nil {
+		if s.config.Verbosity >= 1 {
+			fmt.Printf("[ERROR] Failed to write stats file: %v\n", err)
+		}
+	}
 }
 
 // formatDuration formats duration in a human-readable way
