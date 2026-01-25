@@ -58,7 +58,7 @@ func init() {
 	rootCmd.AddCommand(startCmd)
 
 	startCmd.Flags().IntVarP(&maxClients, "max-clients", "m", config.DefaultMaxClients, "maximum number of proxy clients (1-1000)")
-	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "bandwidth limit per peer in Mbps (1-40)")
+	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
 
 	// Only show --psiphon-config flag if no config is embedded
 	if !config.HasEmbeddedConfig() {
@@ -118,7 +118,11 @@ func runStart(cmd *cobra.Command, args []string) error {
 	}()
 
 	// Print startup message
-	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %.0f Mbps)\n", cfg.MaxClients, bandwidthMbps)
+	bandwidthStr := "unlimited"
+	if bandwidthMbps != config.UnlimitedBandwidth {
+		bandwidthStr = fmt.Sprintf("%.0f Mbps", bandwidthMbps)
+	}
+	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", cfg.MaxClients, bandwidthStr)
 
 	// Run the service
 	if err := service.Run(ctx); err != nil && ctx.Err() == nil {

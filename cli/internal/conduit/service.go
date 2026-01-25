@@ -128,8 +128,11 @@ func (s *Service) createPsiphonConfig() (*psiphon.Config, error) {
 	// Inproxy mode settings - these override any values in the base config
 	configJSON["InproxyEnableProxy"] = true
 	configJSON["InproxyMaxClients"] = s.config.MaxClients
-	configJSON["InproxyLimitUpstreamBytesPerSecond"] = s.config.BandwidthBytesPerSecond
-	configJSON["InproxyLimitDownstreamBytesPerSecond"] = s.config.BandwidthBytesPerSecond
+	// Only set bandwidth limits if not unlimited (0 means unlimited)
+	if s.config.BandwidthBytesPerSecond > 0 {
+		configJSON["InproxyLimitUpstreamBytesPerSecond"] = s.config.BandwidthBytesPerSecond
+		configJSON["InproxyLimitDownstreamBytesPerSecond"] = s.config.BandwidthBytesPerSecond
+	}
 	configJSON["InproxyProxySessionPrivateKey"] = s.config.PrivateKeyBase64
 
 	// Disable regular tunnel functionality - we're just a proxy
