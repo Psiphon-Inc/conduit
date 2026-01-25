@@ -304,7 +304,7 @@ func isNoisyError(errMsg string) bool {
 	// "no match" - no client was waiting
 	// "announcement" - general announcement-related errors
 	// "502" / "503" / "504" - transient broker/gateway errors
-	if len(errMsg) > 7 && errMsg[:7] == "inproxy" {
+	if strings.HasPrefix(errMsg, "inproxy") {
 		return strings.Contains(errMsg, "limited") ||
 			strings.Contains(errMsg, "no match") ||
 			strings.Contains(errMsg, "announcement") ||
