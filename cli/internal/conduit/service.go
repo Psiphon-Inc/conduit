@@ -75,11 +75,13 @@ func New(cfg *config.Config) (*Service, error) {
 // Run starts the Conduit inproxy service and blocks until context is cancelled
 func (s *Service) Run(ctx context.Context) error {
 	// Set up notice handling FIRST - before any psiphon calls
-	psiphon.SetNoticeWriter(psiphon.NewNoticeReceiver(
+	if err := psiphon.SetNoticeWriter(psiphon.NewNoticeReceiver(
 		func(notice []byte) {
 			s.handleNotice(notice)
 		},
-	))
+	)); err != nil {
+		return fmt.Errorf("failed to set notice writer: %w", err)
+	}
 
 	// Create Psiphon configuration
 	psiphonConfig, err := s.createPsiphonConfig()
