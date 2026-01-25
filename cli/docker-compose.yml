@@ -1,0 +1,14 @@
+services:
+  conduit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: conduit
+    restart: unless-stopped
+    volumes:
+      - conduit-data:/home/conduit/data
+      - ./psiphon_config.json:/etc/conduit/psiphon_config.json:ro
+    command: ["start", "--psiphon-config", "/etc/conduit/psiphon_config.json", "--data-dir", "/home/conduit/data"]
+
+volumes:
+  conduit-data:

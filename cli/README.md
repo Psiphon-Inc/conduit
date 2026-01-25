@@ -119,6 +119,19 @@ docker run -d --name conduit \
   conduit start --psiphon-config /config.json
 ```
 
+### Docker Compose
+
+Using Docker Compose is the easiest way to manage your Conduit node.
+
+1. Ensure you have a `psiphon_config.json` in the `cli/` directory.
+2. Start the node:
+
+```bash
+docker compose up -d
+```
+
+Your data will be persisted in a Docker volume named `conduit-data`.
+
 ## Data Directory
 
 Keys and state are stored in the data directory (default: `./data`):
