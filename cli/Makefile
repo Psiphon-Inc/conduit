@@ -31,18 +31,18 @@ define GO_BUILD
 	BUILDREPO=$$(cd psiphon-tunnel-core && git config --get remote.origin.url) && \
 	BUILDREV=$$(cd psiphon-tunnel-core && git rev-parse --short HEAD) && \
 	GOVERSION="$$($(GO) version | sed 's/go version //')" && \
-	ALL_TAGS="$(BASE_TAGS)$(if $(2),,$(empty))$(if $(2),,$(empty))" && \
+	ALL_TAGS="$(BASE_TAGS)" && \
 	if [ -n "$(2)" ]; then ALL_TAGS="$$ALL_TAGS,$(2)"; fi && \
-	echo "Building $$GOOS/$$GOARCH -> $(1) with tags: $$ALL_TAGS" && \
+	echo "Building $(3)/$(4) -> $(1) with tags: $$ALL_TAGS" && \
 	GOOS=$(3) GOARCH=$(4) $(GO) build \
 	  -tags "$$ALL_TAGS" \
 	  -ldflags "\
 	    -s -w \
 	    $(LDFLAGS_VERSION) \
 	    -X github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common/buildinfo.buildDate=$$BUILDDATE \
-	    -X github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common.buildinfo.buildRepo=$$BUILDREPO \
-	    -X github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common.buildinfo.buildRev=$$BUILDREV \
-	    -X 'github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common.buildinfo.goVersion=$$GOVERSION' \
+	    -X github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common/buildinfo.buildRepo=$$BUILDREPO \
+	    -X github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common/buildinfo.buildRev=$$BUILDREV \
+	    -X 'github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common/buildinfo.goVersion=$$GOVERSION' \
 	  " \
 	  -o $(1) .
 endef
@@ -98,7 +98,7 @@ check-setup:
 
 # Build for current platform (no embedded config)
 build: check-go check-setup
-	$(GO_BUILD,dist/conduit,,,$(shell go env GOOS),$(shell go env GOARCH))
+	$(call GO_BUILD,dist/conduit,,$(shell go env GOOS),$(shell go env GOARCH))
 
 # Build with embedded psiphon config (single binary distribution)
 build-embedded: check-go check-setup check-psiphon-config
