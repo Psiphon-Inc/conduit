@@ -1,0 +1,142 @@
+name: CLI Release
+
+on:
+    push:
+        tags: ["release-cli-*"]
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./cli
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Go 1.24.12
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24.12"
+
+            - name: Verify Go version
+              run: go version
+
+            - name: Setup dependencies
+              run: make setup
+
+            - name: Run tests
+              run: make test
+
+    lint:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./cli
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Go 1.24.12
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24.12"
+
+            - name: Verify Go version
+              run: go version
+
+            - name: Setup dependencies
+              run: make setup
+
+            - name: Install golangci-lint
+              run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.5
+
+            - name: Run lint
+              run: make lint
+
+    build:
+        runs-on: ubuntu-latest
+        environment: release-cli
+        needs: [test, lint]
+        permissions:
+            contents: write
+            packages: write
+        defaults:
+            run:
+                working-directory: ./cli
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set version from tag
+              id: version
+              run: |
+                  echo "TAG_NAME=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+                  echo "VERSION=${GITHUB_REF_NAME#release-cli-}" >> $GITHUB_OUTPUT
+
+            - name: Set up Go 1.24.12
+              uses: actions/setup-go@v5
+              with:
+                  go-version: "1.24.12"
+
+            - name: Verify Go version
+              run: go version
+
+            - name: Setup dependencies
+              run: make setup
+
+            - name: Create Psiphon config
+              run: printf '%s' "$PSIPHON_CONFIG_JSON" > psiphon_config.json
+              env:
+                  PSIPHON_CONFIG_JSON: ${{ secrets.PSIPHON_CONFIG_JSON }}
+
+            - name: Build all platforms with embedded config
+              run: make build-all-embedded PSIPHON_CONFIG=psiphon_config.json VERSION=${{ steps.version.outputs.VERSION }}
+
+            - name: Remove Psiphon config from dist
+              run: rm -f psiphon_config.json internal/config/psiphon_config.json
+
+            - name: Create checksums
+              run: |
+                  cd dist
+                  sha256sum conduit-* > checksums.txt
+                  cat checksums.txt
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v2
+              if: github.ref_type == 'tag'
+              with:
+                  tag_name: ${{ steps.version.outputs.TAG_NAME }}
+                  name: Conduit CLI ${{ steps.version.outputs.VERSION }}
+                  draft: true
+                  prerelease: true
+                  files: |
+                      cli/dist/conduit-linux-amd64
+                      cli/dist/conduit-linux-arm64
+                      cli/dist/conduit-darwin-amd64
+                      cli/dist/conduit-darwin-arm64
+                      cli/dist/conduit-windows-amd64.exe
+                      cli/dist/conduit-freebsd-amd64
+                      cli/dist/checksums.txt
+                  body: |
+                      ## Conduit CLI ${{ steps.version.outputs.VERSION }}
+
+                      Conduit is a volunteer-run proxy node that helps relay traffic for users in censored regions.
+
+                      ### Quick Start
+                      
+                      Download the correct binary for your platform, then:
+
+                      ```bash
+                      ./conduit start
+                      ```
+
+                      This binary includes an embedded configuration file, so you do not need to provide one. 
+
+                      | Option | Default | Description |
+                      |--------|---------|-------------|
+                      | `--max-clients, -m` | 50 | Maximum concurrent clients (1-1000) |
+                      | `--bandwidth, -b` | 5 | Bandwidth limit per peer in Mbps (1-40) |
+                      | `--data-dir, -d` | ./data | Directory for keys and state |
+                      | `-v` | - | Verbose output (`-vv` for debug) |
+

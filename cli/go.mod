@@ -6,7 +6,6 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	golang.org/x/crypto v0.39.0
-	golang.org/x/term v0.32.0
 )
 
 require (

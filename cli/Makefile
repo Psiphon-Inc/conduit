@@ -11,11 +11,8 @@ EMBED_TAG := embed_config
 PSIPHON_CONFIG ?= psiphon_config.json
 
 # Go 1.24.x is REQUIRED due to psiphon-tls compatibility (Go 1.25+ breaks it)
-# The Makefile will automatically install go1.24.3 if not present
 GO_REQUIRED_VERSION := 1.24
-GO_INSTALL_VERSION := 1.24.3
-GOPATH := $(shell go env GOPATH)
-GO := $(shell which go$(GO_INSTALL_VERSION) 2>/dev/null || which go1.24 2>/dev/null || echo "$(GOPATH)/bin/go$(GO_INSTALL_VERSION)")
+GO := $(shell which go)
 
 # Psiphon tunnel-core branch with inproxy support
 PSIPHON_BRANCH ?= staging-client
@@ -50,11 +47,8 @@ endef
 # Check and install correct Go version
 check-go:
 	@if [ ! -x "$(GO)" ]; then \
-		echo "Go $(GO_REQUIRED_VERSION).x not found. Installing go$(GO_INSTALL_VERSION)..."; \
-		go install golang.org/dl/go$(GO_INSTALL_VERSION)@latest; \
-		echo "Downloading Go $(GO_INSTALL_VERSION) SDK..."; \
-		"$(GOPATH)/bin/go$(GO_INSTALL_VERSION)" download; \
-		echo "Go $(GO_INSTALL_VERSION) installed successfully."; \
+		echo "Error: Go $(GO_REQUIRED_VERSION).x not found on PATH."; \
+		exit 1; \
 	fi
 	@GO_VERSION=$$($(GO) version | grep -oE 'go[0-9]+\.[0-9]+' | sed 's/go//'); \
 	GO_MAJOR=$$(echo $$GO_VERSION | cut -d. -f1); \
@@ -62,9 +56,6 @@ check-go:
 	if [ "$$GO_MAJOR" -gt 1 ] || ([ "$$GO_MAJOR" -eq 1 ] && [ "$$GO_MINOR" -ge 25 ]); then \
 		echo "Error: Go $$GO_VERSION detected, but Go $(GO_REQUIRED_VERSION).x is required."; \
 		echo "Go 1.25+ breaks psiphon-tls due to internal TLS struct changes."; \
-		echo ""; \
-		echo "Install Go $(GO_INSTALL_VERSION) with:"; \
-		echo "  go install golang.org/dl/go$(GO_INSTALL_VERSION)@latest && go$(GO_INSTALL_VERSION) download"; \
 		echo ""; \
 		exit 1; \
 	fi
@@ -199,7 +190,7 @@ help:
 	@echo ""
 	@echo "Requirements:"
 	@echo "  Go 1.24.x (Go 1.25+ is NOT supported due to psiphon-tls)"
-	@echo "  The Makefile will auto-install go$(GO_INSTALL_VERSION) if needed"
+	@echo "  Go must be available on PATH"
 	@echo ""
 	@echo "First time setup:"
 	@echo "  make setup && make build"
