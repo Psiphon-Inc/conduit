@@ -32,7 +32,7 @@ import (
 
 // Default values for CLI usage
 const (
-	DefaultMaxClients    = 200
+	DefaultMaxClients    = 50
 	DefaultBandwidthMbps = 40.0
 	MaxClientsLimit      = 1000
 	UnlimitedBandwidth   = -1.0 // Special value for no bandwidth limit
