@@ -1,0 +1,21 @@
+# Build artifacts
+dist/
+/conduit
+
+# Dependencies - cloned by 'make setup', not committed
+psiphon-tunnel-core/
+
+# Data directory (contains user keys)
+data/
+
+# Psiphon config files (may contain sensitive network identifiers)
+psiphon_config.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store

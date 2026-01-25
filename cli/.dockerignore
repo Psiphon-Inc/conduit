@@ -1,0 +1,19 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+conduit
+*.exe
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# Test files
+*_test.go
+
+# Docs
+*.md
+LICENSE

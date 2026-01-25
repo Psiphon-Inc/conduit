@@ -1,0 +1,10 @@
+{
+    "PropagationChannelId": "FFFFFFFFFFFFFFFF",
+    "SponsorId": "FFFFFFFFFFFFFFFF",
+    "AdditionalParameters": {
+        "_comment": "Base64-encoded, encrypted broker configuration provided by Psiphon"
+    },
+
+    "_comment": "Example configuration - these placeholder values will NOT connect to the Psiphon network.",
+    "_instructions": "Contact Psiphon (info@psiphon.ca) to obtain valid network configuration values."
+}
