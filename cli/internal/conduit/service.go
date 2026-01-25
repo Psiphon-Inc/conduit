@@ -336,24 +336,23 @@ func (s *Service) logStats() {
 		formatDuration(uptime),
 	)
 
-	// Write stats to file if configured
+	// Write stats to file if configured (copy data while locked, write async)
 	if s.config.StatsFile != "" {
-		s.writeStatsToFile()
+		statsJSON := StatsJSON{
+			ConnectingClients: s.stats.ConnectingClients,
+			ConnectedClients:  s.stats.ConnectedClients,
+			TotalBytesUp:      s.stats.TotalBytesUp,
+			TotalBytesDown:    s.stats.TotalBytesDown,
+			UptimeSeconds:     int64(time.Since(s.stats.StartTime).Seconds()),
+			IsLive:            s.stats.IsLive,
+			Timestamp:         time.Now().Format(time.RFC3339),
+		}
+		go s.writeStatsToFile(statsJSON)
 	}
 }
 
-// writeStatsToFile writes current stats to the configured JSON file (must be called with lock held)
-func (s *Service) writeStatsToFile() {
-	statsJSON := StatsJSON{
-		ConnectingClients: s.stats.ConnectingClients,
-		ConnectedClients:  s.stats.ConnectedClients,
-		TotalBytesUp:      s.stats.TotalBytesUp,
-		TotalBytesDown:    s.stats.TotalBytesDown,
-		UptimeSeconds:     int64(time.Since(s.stats.StartTime).Seconds()),
-		IsLive:            s.stats.IsLive,
-		Timestamp:         time.Now().Format(time.RFC3339),
-	}
-
+// writeStatsToFile writes stats to the configured JSON file asynchronously
+func (s *Service) writeStatsToFile(statsJSON StatsJSON) {
 	data, err := json.MarshalIndent(statsJSON, "", "  ")
 	if err != nil {
 		if s.config.Verbosity >= 1 {
