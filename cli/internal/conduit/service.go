@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -230,7 +231,7 @@ func (s *Service) handleNotice(notice []byte) {
 	case "Info":
 		// Check for broker connection status
 		if msg, ok := noticeData.Data["message"].(string); ok {
-			if len(msg) > 25 && msg[:25] == "inproxy: selected broker " {
+			if strings.HasPrefix(msg, "inproxy: selected broker ") {
 				s.mu.Lock()
 				if !s.stats.IsLive {
 					s.stats.IsLive = true
@@ -293,22 +294,12 @@ func isNoisyError(errMsg string) bool {
 	// "announcement" - general announcement-related errors
 	// "502" / "503" / "504" - transient broker/gateway errors
 	if len(errMsg) > 7 && errMsg[:7] == "inproxy" {
-		return containsStr(errMsg, "limited") ||
-			containsStr(errMsg, "no match") ||
-			containsStr(errMsg, "announcement") ||
-			containsStr(errMsg, "status code 502") ||
-			containsStr(errMsg, "status code 503") ||
-			containsStr(errMsg, "status code 504")
-	}
-	return false
-}
-
-// containsStr checks if s contains substr
-func containsStr(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
+		return strings.Contains(errMsg, "limited") ||
+			strings.Contains(errMsg, "no match") ||
+			strings.Contains(errMsg, "announcement") ||
+			strings.Contains(errMsg, "status code 502") ||
+			strings.Contains(errMsg, "status code 503") ||
+			strings.Contains(errMsg, "status code 504")
 	}
 	return false
 }
