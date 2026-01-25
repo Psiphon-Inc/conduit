@@ -123,46 +123,20 @@ jobs:
 
                       Conduit is a volunteer-run proxy node that helps relay traffic for users in censored regions.
 
-                      ### Downloads
-
-                      | Platform | Architecture | Download |
-                      |----------|--------------|----------|
-                      | Linux | x86_64 (amd64) | [conduit-linux-amd64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG_NAME }}/conduit-linux-amd64) |
-                      | Linux | ARM64 | [conduit-linux-arm64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG_NAME }}/conduit-linux-arm64) |
-                      | macOS | Intel (amd64) | [conduit-darwin-amd64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG_NAME }}/conduit-darwin-amd64) |
-                      | macOS | Apple Silicon (arm64) | [conduit-darwin-arm64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG_NAME }}/conduit-darwin-arm64) |
-                      | Windows | x86_64 (amd64) | [conduit-windows-amd64.exe](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG_NAME }}/conduit-windows-amd64.exe) |
-                      | FreeBSD | x86_64 (amd64) | [conduit-freebsd-amd64](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG_NAME }}/conduit-freebsd-amd64) |
-
                       ### Quick Start
+                      
+                      Download the correct binary for your platform, then:
 
                       ```bash
-                      # Download (Linux x86_64 example)
-                      curl -L -o conduit https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG_NAME }}/conduit-linux-amd64
-                      chmod +x conduit
-
-                      # Run
                       ./conduit start
-
-                      # Run with verbose output
-                      ./conduit start -v
-
-                      # Run with debug output
-                      ./conduit start -vv
                       ```
 
-                      ### Configuration Options
+                      This binary includes an embedded configuration file, so you do not need to provide one. 
 
                       | Option | Default | Description |
                       |--------|---------|-------------|
-                      | `--max-clients, -m` | 200 | Maximum concurrent clients (1-1000) |
-                      | `--bandwidth, -b` | 5 | Bandwidth limit in Mbps (1-40) |
+                      | `--max-clients, -m` | 50 | Maximum concurrent clients (1-1000) |
+                      | `--bandwidth, -b` | 5 | Bandwidth limit per peer in Mbps (1-40) |
                       | `--data-dir, -d` | ./data | Directory for keys and state |
                       | `-v` | - | Verbose output (`-vv` for debug) |
 
-                      ### Verify Downloads
-
-                      ```bash
-                      curl -L -o checksums.txt https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.TAG_NAME }}/checksums.txt
-                      sha256sum -c checksums.txt --ignore-missing
-                      ```
