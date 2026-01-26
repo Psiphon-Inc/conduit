@@ -192,3 +192,33 @@ func loadOrCreateKey(dataDir string, verbose bool) (*crypto.KeyPair, string, err
 
 	return keyPair, privateKeyBase64, nil
 }
+
+// loadOrCreateKey loads an existing key from disk or generates a new one
+func LoadKey(dataDir string) (*crypto.KeyPair, string, error) {
+	keyPath := filepath.Join(dataDir, keyFileName)
+
+	// Try to load existing key
+	data, err := os.ReadFile(keyPath)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to load key: %w", err)
+	}
+
+	var pk persistedKey
+	if err := json.Unmarshal(data, &pk); err != nil || pk.PrivateKeyBase64 == "" {
+		return nil, "", fmt.Errorf("failed to parse key: %w", err)
+	}
+
+	// Parse the stored key
+	privateKeyBytes, err := base64.RawStdEncoding.DecodeString(pk.PrivateKeyBase64)
+	if err != nil {
+		privateKeyBytes, err = base64.StdEncoding.DecodeString(pk.PrivateKeyBase64)
+	}
+
+	if err != nil {
+		return nil, pk.PrivateKeyBase64, fmt.Errorf("failed to parse key: %w", err)
+	}
+
+	keyPair, err := crypto.ParsePrivateKey(privateKeyBytes)
+	return keyPair, pk.PrivateKeyBase64, err
+
+}
