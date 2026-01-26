@@ -29,6 +29,7 @@ import (
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/conduit"
 	"github.com/Psiphon-Inc/conduit/cli/internal/config"
+	"github.com/Psiphon-Inc/conduit/cli/internal/ryve"
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +38,8 @@ var (
 	bandwidthMbps     float64
 	psiphonConfigPath string
 	statsFilePath     string
+	showRyveQR        bool
+	conduitName       string
 )
 
 var startCmd = &cobra.Command{
@@ -63,6 +66,8 @@ func init() {
 	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
 	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
 	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
+	startCmd.Flags().BoolVar(&showRyveQR, "show-ryve-qr", false, "display Ryve QR code before starting the service")
+	startCmd.Flags().StringVar(&conduitName, "name", "", "custom name for your Conduit (shown in Ryve app)")
 
 	// Only show --psiphon-config flag if no config is embedded
 	if !config.HasEmbeddedConfig() {
@@ -106,6 +111,19 @@ func runStart(cmd *cobra.Command, args []string) error {
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
+	}
+
+	// Display Ryve QR code if requested
+	if showRyveQR {
+		deepLink, err := ryve.GenerateDeepLink(cfg.PrivateKeyBase64, conduitName)
+		if err != nil {
+			return fmt.Errorf("failed to generate Ryve deep link: %w", err)
+		}
+		fmt.Println()
+		fmt.Println("Scan this QR code with the Ryve app to claim rewards:")
+		fmt.Println()
+		ryve.PrintQRAndURL(os.Stdout, deepLink)
+		fmt.Println()
 	}
 
 	// Create conduit service
