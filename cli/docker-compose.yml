@@ -1,0 +1,20 @@
+services:
+    conduit:
+        image: ghcr.io/psiphon-inc/conduit/cli:latest
+        container_name: conduit
+        restart: unless-stopped
+        command:
+            [
+                "start",
+                "--max-clients",
+                "50",
+                "--bandwidth",
+                "50",
+                "--data-dir",
+                "/home/conduit/data",
+            ]
+        volumes:
+            - conduit-data:/home/conduit/data
+
+volumes:
+    conduit-data:
