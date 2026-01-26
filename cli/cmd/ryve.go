@@ -22,10 +22,10 @@ var ryveCmd = &cobra.Command{
 }
 
 var (
-	name            string
+	name         string
 	inverseColor bool
-	pngOutput       string
-	pngSize         int16
+	pngOutput    string
+	pngSize      int16
 )
 
 func init() {
@@ -42,10 +42,10 @@ func init() {
 
 	rootCmd.AddCommand(ryveCmd)
 
-	ryveCmd.Flags().BoolVarP(&inverseColor, "inverse", "i", false, "inverse colors for terminals with white background (default: false)")
-	ryveCmd.Flags().StringVarP(&name, "name", "n", defaultName, "Name for Ryve association (default: $HOST-cli-$USERNAME)")
-	ryveCmd.Flags().StringVarP(&pngOutput, "output", "o", "", "PNG output file path (default: '')")
-	ryveCmd.Flags().Int16VarP(&pngSize, "size", "s", 200, "PNG output dimensions (if --output is set, default: 200)")
+	ryveCmd.Flags().BoolVarP(&inverseColor, "inverse", "i", false, "inverse colors for terminals with white background")
+	ryveCmd.Flags().StringVarP(&name, "name", "n", defaultName, "Name for Ryve association")
+	ryveCmd.Flags().StringVarP(&pngOutput, "output", "o", "", "PNG output file path (optional)")
+	ryveCmd.Flags().Int16VarP(&pngSize, "size", "s", 200, "PNG output dimensions; ignored if --output is not set")
 
 }
 
