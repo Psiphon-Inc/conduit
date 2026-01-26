@@ -70,6 +70,7 @@ export const QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS =
 export const QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED =
     "inproxyTotalBytesTransferred";
 export const QUERYKEY_INPROXY_MUST_UPGRADE = "inproxyMustUpgrade";
+export const QUERYKEY_INPROXY_LAST_ERROR = "inproxyLastError";
 export const QUERYKEY_CONDUIT_NAME = "conduitName";
 export const QUERYKEY_NOTIFICATIONS_PERMISSIONS =
     "sync-notifications-permissions";

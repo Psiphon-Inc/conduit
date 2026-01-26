@@ -163,5 +163,13 @@
     },
     "REVEAL_I18N": {
         "string": "Reveal"
+    },
+    "ERROR_INPROXY_START_FAILED_I18N": {
+        "string": "Failed to start Conduit. Please try again.",
+        "developer_comment": "Error message shown when the proxy fails to start."
+    },
+    "ERROR_INPROXY_RESTART_FAILED_I18N": {
+        "string": "Failed to restart Conduit. Please try again.",
+        "developer_comment": "Error message shown when the proxy fails to restart after settings change."
     }
 }

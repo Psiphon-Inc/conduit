@@ -53,6 +53,7 @@ import { INPROXY_MAX_CLIENTS_MAX } from "@/src/constants";
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
     useInproxyCurrentConnectedClients,
+    useInproxyLastError,
     useInproxyMustUpgrade,
     useInproxyStatus,
 } from "@/src/inproxy/hooks";
@@ -74,6 +75,7 @@ export function ConduitOrbToggle({
     const { data: inproxyCurrentConnectedClients } =
         useInproxyCurrentConnectedClients();
     const { data: inproxyMustUpgrade } = useInproxyMustUpgrade();
+    const { data: inproxyLastError } = useInproxyLastError();
 
     // interpolate between the following colors
     const orbColors = [
@@ -259,6 +261,29 @@ export function ConduitOrbToggle({
 
     // If the module reports that inproxy must upgrade, show instructions
     const upgradeRequiredInstructionOpacity = useSharedValue(0);
+
+    // If the module reports an error (start/restart failed), show it
+    const errorMessageOpacity = useSharedValue(0);
+    const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+    // Show error message when inproxyLastError changes
+    React.useEffect(() => {
+        if (inproxyLastError) {
+            if (inproxyLastError.action === "inProxyStartFailed") {
+                setErrorMessage(t("ERROR_INPROXY_START_FAILED_I18N.string"));
+            } else if (inproxyLastError.action === "inProxyRestartFailed") {
+                setErrorMessage(t("ERROR_INPROXY_RESTART_FAILED_I18N.string"));
+            }
+            // Don't show for inProxyMustUpgrade - that has its own handling
+            if (inproxyLastError.action !== "inProxyMustUpgrade") {
+                errorMessageOpacity.value = withSequence(
+                    withTiming(1, { duration: 500 }),
+                    withTiming(1, { duration: 4000 }),
+                    withTiming(0, { duration: 500 }),
+                );
+            }
+        }
+    }, [inproxyLastError]);
 
     function toggle() {
         if (inproxyMustUpgrade) {
@@ -476,6 +501,24 @@ export function ConduitOrbToggle({
                 ]}
             >
                 {t("UPGRADE_REQUIRED_I18N.string")}
+            </Animated.Text>
+            {/* Error message for start/restart failures */}
+            <Animated.Text
+                adjustsFontSizeToFit
+                numberOfLines={2}
+                style={[
+                    ss.blackText,
+                    ss.bodyFont,
+                    ss.absolute,
+                    {
+                        top: orbCenterY + finalOrbRadius + ss.padded.padding,
+                        width: "100%",
+                        textAlign: "center",
+                        opacity: errorMessageOpacity,
+                    },
+                ]}
+            >
+                {errorMessage}
             </Animated.Text>
         </View>
     );

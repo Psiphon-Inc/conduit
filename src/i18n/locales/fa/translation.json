@@ -163,5 +163,13 @@
     },
     "REVEAL_I18N": {
         "string": "نمایش"
+    },
+    "ERROR_INPROXY_START_FAILED_I18N": {
+        "string": "راه‌اندازی Conduit ناموفق بود. لطفاً دوباره تلاش کنید.",
+        "developer_comment": "Error message shown when the proxy fails to start."
+    },
+    "ERROR_INPROXY_RESTART_FAILED_I18N": {
+        "string": "راه‌اندازی مجدد Conduit ناموفق بود. لطفاً دوباره تلاش کنید.",
+        "developer_comment": "Error message shown when the proxy fails to restart after settings change."
     }
 }

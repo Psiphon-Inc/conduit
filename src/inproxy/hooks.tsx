@@ -22,6 +22,7 @@ import {
     QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
     QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
+    QUERYKEY_INPROXY_LAST_ERROR,
     QUERYKEY_INPROXY_MUST_UPGRADE,
     QUERYKEY_INPROXY_STATUS,
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
@@ -29,6 +30,7 @@ import {
 import {
     InproxyActivityByPeriod,
     InproxyStatusEnum,
+    ProxyError,
 } from "@/src/inproxy/types";
 import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
 
@@ -89,3 +91,12 @@ export const useInproxyMustUpgrade = (): DefinedUseQueryResult<boolean> =>
         initialData: false,
         enabled: false,
     });
+
+export const useInproxyLastError =
+    (): DefinedUseQueryResult<ProxyError | null> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_LAST_ERROR],
+            queryFn: async () => null,
+            initialData: null,
+            enabled: false,
+        });
