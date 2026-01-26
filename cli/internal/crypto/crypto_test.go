@@ -103,8 +103,5 @@ func TestKeyPairToBase64NoPad(t *testing.T) {
 		t.Fatalf("KeyPairToBase64NoPad failed: %v", err)
 	}
 
-	fmt.Println("encoded:", "'"+encoded+"'")
-	t.Log("len", len(encoded))
-
-	t.Fail()
+	fmt.Println("encoded:", "'"+encoded+"'", "len:", len(encoded))
 }
