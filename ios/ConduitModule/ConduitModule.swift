@@ -18,8 +18,10 @@
  */
 
 import Foundation
+import os
 import PsiphonTunnel
 import Logging
+import React
 
 extension Logging.Logger {
     static let conduitModule = Logger(label: "ConduitModule")
@@ -170,15 +172,22 @@ struct ConduitParams: Equatable {
     let privateKey: String?
     
     init?(params: NSDictionary) {
+        // React Native sends numbers as NSNumber; "as? Int" fails for NSNumber.
+        // Support both NSNumber (from JS bridge) and Int (from Swift tests).
+        func toInt(_ v: Any?) -> Int? {
+            if let n = v as? NSNumber { return n.intValue }
+            if let i = v as? Int { return i }
+            return nil
+        }
         guard
-            let maxClients = params["maxClients"] as? Int,
-            let limitUpstream = params["limitUpstreamBytesPerSecond"] as? Int,
-            let limitDownstream = params["limitDownstreamBytesPerSecond"] as? Int,
+            let maxClients = toInt(params["maxClients"]),
+            let limitUpstream = toInt(params["limitUpstreamBytesPerSecond"]),
+            let limitDownstream = toInt(params["limitDownstreamBytesPerSecond"]),
             let privateKey = params["privateKey"] as? String?
         else {
             return nil
         }
-        
+
         self.maxClients = maxClients
         self.limitUpstream = limitUpstream
         self.limitDownstream = limitDownstream

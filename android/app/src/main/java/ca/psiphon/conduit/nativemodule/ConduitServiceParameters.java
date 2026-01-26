@@ -42,6 +42,8 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
     private static final int CURRENT_SCHEMA_VERSION = 1;
 
     // Parse method for ReadableMap
+    // React Native may send numbers as Double; use getDouble and cast to int to avoid
+    // ClassCastException from getInt when the bridge encodes integers as doubles.
     public static ConduitServiceParameters parse(ReadableMap map) {
         // Check if all keys are present
         if (!map.hasKey(MAX_CLIENTS_KEY) ||
@@ -51,9 +53,17 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
             return null;
         }
 
-        int maxClients = map.getInt(MAX_CLIENTS_KEY);
-        int limitUpstreamBytes = map.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY);
-        int limitDownstreamBytes = map.getInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY);
+        int maxClients;
+        int limitUpstreamBytes;
+        int limitDownstreamBytes;
+        try {
+            maxClients = (int) map.getDouble(MAX_CLIENTS_KEY);
+            limitUpstreamBytes = (int) map.getDouble(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY);
+            limitDownstreamBytes = (int) map.getDouble(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY);
+        } catch (Exception e) {
+            MyLog.e(TAG, "Failed to parse numeric params from ReadableMap: " + e);
+            return null;
+        }
         String proxyPrivateKey = map.getString(PRIVATE_KEY_KEY);
 
         // Validate parsed values
