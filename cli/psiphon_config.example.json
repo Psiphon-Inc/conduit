@@ -6,5 +6,5 @@
     },
 
     "_comment": "Example configuration - these placeholder values will NOT connect to the Psiphon network.",
-    "_instructions": "Contact Psiphon (info@psiphon.ca) to obtain valid network configuration values."
+    "_instructions": "Use the official Conduit CLI releases which have embedded configuration. Otherwise, contact Psiphon (conduit-oss@psiphon.ca) to obtain valid network configuration values."
 }

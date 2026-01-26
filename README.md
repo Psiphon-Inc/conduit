@@ -10,7 +10,7 @@ For more information about Conduit, [visit the web site](https://conduit.psiphon
 
 The React Native app is implemented in src/ and the relevant native folders (android/, ios/). This project uses expo, so follow the instructions there for setting up an expo development environment.
 
-To run the app in a development environment, you need a psiphon config file. This can be obtained from Psiphon at info@psiphon.ca.
+To run the app in a development environment, you need a psiphon config file. This can be obtained from Psiphon at conduit-oss@psiphon.ca.
 
 Run the android client with:
 
