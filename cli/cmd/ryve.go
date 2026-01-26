@@ -17,13 +17,13 @@ import (
 var ryveCmd = &cobra.Command{
 	Use:   "ryve",
 	Short: "Get ryve association data",
-	Long:  "TODO",
+	Long:  `Show Ryve association URI and Qr-code in both terminal and PNG format.`,
 	RunE:  runRyve,
 }
 
 var (
 	name            string
-	inverseQrcodeBg bool
+	inverseColor bool
 	pngOutput       string
 	pngSize         int16
 )
@@ -42,10 +42,10 @@ func init() {
 
 	rootCmd.AddCommand(ryveCmd)
 
-	ryveCmd.Flags().BoolVarP(&inverseQrcodeBg, "inverse", "i", false, "inverse qrcode background color")
-	ryveCmd.Flags().StringVarP(&name, "name", "n", defaultName, "name for Ryve association")
-	ryveCmd.Flags().StringVarP(&pngOutput, "output", "o", "", "PNG output file path")
-	ryveCmd.Flags().Int16VarP(&pngSize, "size", "s", 200, "PNG output dimensions")
+	ryveCmd.Flags().BoolVarP(&inverseColor, "inverse", "i", false, "inverse colors for terminals with white background (default: false)")
+	ryveCmd.Flags().StringVarP(&name, "name", "n", defaultName, "Name for Ryve association (default: $HOST-cli-$USERNAME)")
+	ryveCmd.Flags().StringVarP(&pngOutput, "output", "o", "", "PNG output file path (default: '')")
+	ryveCmd.Flags().Int16VarP(&pngSize, "size", "s", 200, "PNG output dimensions (if --output is set, default: 200)")
 
 }
 
@@ -56,7 +56,7 @@ func generateQrCode(uri string) (string, error) {
 		return "", fmt.Errorf("failed to generate QR code: %s", err)
 	}
 
-	terminalOutput := q.ToSmallString(inverseQrcodeBg)
+	terminalOutput := q.ToSmallString(inverseColor)
 	if pngOutput != "" {
 		err = q.WriteFile(int(pngSize), pngOutput)
 
