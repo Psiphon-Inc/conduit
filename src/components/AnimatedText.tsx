@@ -31,7 +31,9 @@ export function AnimatedText({
     fontSize: number;
     fontFamily: string;
 }) {
-    const [renderText, setRenderText] = React.useState(text.value);
+    // Avoid reading text.value during render (Reanimated strict mode). useDerivedValue
+    // will push the initial and subsequent values to JS.
+    const [renderText, setRenderText] = React.useState("");
     useDerivedValue(() => runOnJS(setRenderText)(text.value));
 
     return (
