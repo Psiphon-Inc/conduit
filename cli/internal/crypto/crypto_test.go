@@ -98,7 +98,7 @@ func TestKeyPairToBase64NoPad(t *testing.T) {
 	t.Log("prvKey len:", len(kp.PrivateKey))
 	t.Log("pubKey len:", len(kp.PrivateKey))
 
-	encoded, err := KeyPairToBase64NoPad(*kp)
+	encoded, err := KeyPairToBase64NoPad(kp)
 	if err != nil {
 		t.Fatalf("KeyPairToBase64NoPad failed: %v", err)
 	}

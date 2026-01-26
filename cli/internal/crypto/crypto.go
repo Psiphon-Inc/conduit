@@ -116,7 +116,10 @@ func ParsePrivateKey(privateKeyBytes []byte) (*KeyPair, error) {
 	}, nil
 }
 
-func KeyPairToBase64NoPad(kp KeyPair) (string, error) {
+func KeyPairToBase64NoPad(kp *KeyPair) (string, error) {
+	if kp == nil {
+		return "", errors.New("key pair is nil")
+	}
 	if len(kp.PrivateKey) < 32 || len(kp.PublicKey) < 32 {
 		return "", errors.New("keys are too short")
 	}
