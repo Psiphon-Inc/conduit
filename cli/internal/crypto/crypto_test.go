@@ -21,6 +21,8 @@ package crypto
 
 import (
 	"crypto/ed25519"
+	"encoding/base64"
+	"fmt"
 	"testing"
 )
 
@@ -78,4 +80,31 @@ func TestDeriveKeyPairFromMnemonicDeterministic(t *testing.T) {
 	if string(kp1.PublicKey) != string(kp2.PublicKey) {
 		t.Fatalf("derived public keys differ for same mnemonic/path")
 	}
+}
+
+func TestKeyPairToBase64NoPad(t *testing.T) {
+
+	prvKeyB64str := "251pKn4kZiRYtyvGzvl7/taXkQ5dXY7JvuraIrClHa8hzAL4Lnj84SZK7HcCiBSXFy8u1tN+cLHw11UvQk3ZzA"
+
+	privateKeyBytes, err := base64.RawStdEncoding.DecodeString(prvKeyB64str)
+	if err != nil {
+		privateKeyBytes, err = base64.StdEncoding.DecodeString(prvKeyB64str)
+	}
+
+	kp, err := ParsePrivateKey(privateKeyBytes)
+	if err != nil {
+		t.Fatalf("ParsePrivateKey failed: %v", err)
+	}
+	t.Log("prvKey len:", len(kp.PrivateKey))
+	t.Log("pubKey len:", len(kp.PrivateKey))
+
+	encoded, err := KeyPairToBase64NoPad(*kp)
+	if err != nil {
+		t.Fatalf("KeyPairToBase64NoPad failed: %v", err)
+	}
+
+	fmt.Println("encoded:", "'"+encoded+"'")
+	t.Log("len", len(encoded))
+
+	t.Fail()
 }

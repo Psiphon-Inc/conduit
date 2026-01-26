@@ -23,12 +23,15 @@ package crypto
 import (
 	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"crypto/sha256"
+	"io"
+
 	"github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/hkdf"
-	"io"
 )
 
 // KeyPair represents an Ed25519 key pair
@@ -111,4 +114,18 @@ func ParsePrivateKey(privateKeyBytes []byte) (*KeyPair, error) {
 		PrivateKey: privateKey,
 		PublicKey:  publicKey,
 	}, nil
+}
+
+func KeyPairToBase64NoPad(kp KeyPair) (string, error) {
+	if len(kp.PrivateKey) < 32 || len(kp.PublicKey) < 32 {
+		return "", errors.New("keys are too short")
+	}
+
+	combined := make([]byte, 64)
+
+	copy(combined[0:32], kp.PrivateKey[0:32])
+
+	copy(combined[32:64], kp.PublicKey[0:32])
+
+	return base64.RawStdEncoding.EncodeToString(combined), nil
 }
