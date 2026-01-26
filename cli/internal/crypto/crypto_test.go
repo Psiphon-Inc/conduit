@@ -88,7 +88,11 @@ func TestKeyPairToBase64NoPad(t *testing.T) {
 
 	privateKeyBytes, err := base64.RawStdEncoding.DecodeString(prvKeyB64str)
 	if err != nil {
-		privateKeyBytes, err = base64.StdEncoding.DecodeString(prvKeyB64str)
+		var errStd error
+		privateKeyBytes, errStd = base64.StdEncoding.DecodeString(prvKeyB64str)
+		if errStd != nil {
+			t.Fatalf("failed to decode private key base64: %v", errStd)
+		}
 	}
 
 	kp, err := ParsePrivateKey(privateKeyBytes)
