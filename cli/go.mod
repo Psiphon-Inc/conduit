@@ -3,6 +3,8 @@ module github.com/Psiphon-Inc/conduit/cli
 go 1.24.0
 
 require (
+	filippo.io/edwards25519 v1.1.0
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/cobra v1.8.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	golang.org/x/crypto v0.39.0
@@ -10,7 +12,6 @@ require (
 
 require (
 	filippo.io/bigmod v0.0.1 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
 	filippo.io/keygen v0.0.0-20230306160926-5201437acf8e // indirect
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
 	github.com/Jigsaw-Code/outline-sdk v0.0.16 // indirect

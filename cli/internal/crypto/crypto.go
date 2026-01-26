@@ -23,12 +23,16 @@ package crypto
 import (
 	"crypto/ed25519"
 	"crypto/rand"
-	"fmt"
-
 	"crypto/sha256"
-	"github.com/tyler-smith/go-bip39"
-	"golang.org/x/crypto/hkdf"
+	"encoding/base64"
+	"errors"
+	"fmt"
 	"io"
+
+	"filippo.io/edwards25519"
+	"github.com/tyler-smith/go-bip39"
+	"golang.org/x/crypto/curve25519"
+	"golang.org/x/crypto/hkdf"
 )
 
 // KeyPair represents an Ed25519 key pair
@@ -111,4 +115,40 @@ func ParsePrivateKey(privateKeyBytes []byte) (*KeyPair, error) {
 		PrivateKey: privateKey,
 		PublicKey:  publicKey,
 	}, nil
+}
+
+func KeyPairToBase64NoPad(kp *KeyPair) (string, error) {
+	if kp == nil {
+		return "", errors.New("key pair is nil")
+	}
+	if len(kp.PrivateKey) < 32 || len(kp.PublicKey) < 32 {
+		return "", errors.New("keys are too short")
+	}
+
+	combined := make([]byte, 64)
+
+	copy(combined[0:32], kp.PrivateKey[0:32])
+
+	copy(combined[32:64], kp.PublicKey[0:32])
+
+	return base64.RawStdEncoding.EncodeToString(combined), nil
+}
+
+func KeyPairToCurve25519Base64(kp *KeyPair) (string, error) {
+	if kp == nil {
+		return "", errors.New("key pair is nil")
+	}
+	if len(kp.PublicKey) < 32 {
+		return "", errors.New("public key is too short")
+	}
+
+	p, err := new(edwards25519.Point).SetBytes(kp.PublicKey[:32])
+	if err != nil {
+		return "", fmt.Errorf("failed to convert public key: %w", err)
+	}
+
+	var curveKey [curve25519.PointSize]byte
+	copy(curveKey[:], p.BytesMontgomery())
+
+	return base64.RawStdEncoding.EncodeToString(curveKey[:]), nil
 }
