@@ -68,7 +68,14 @@ export default function RootLayout() {
     // SplashScreen remains until loaded; this is a fallback if it's already gone.
     if (!loaded) {
         return (
-            <View style={{ flex: 1, backgroundColor: palette.white, justifyContent: "center", alignItems: "center" }}>
+            <View
+                style={{
+                    flex: 1,
+                    backgroundColor: palette.white,
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
                 <ActivityIndicator size="large" color={palette.blue} />
             </View>
         );

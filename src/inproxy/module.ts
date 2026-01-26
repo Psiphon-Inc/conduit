@@ -41,5 +41,6 @@ const useMock =
     process.env.EXPO_PUBLIC_USE_MOCK_INPROXY === "1";
 
 export const ConduitModule: ConduitModuleAPI = useMock
-    ? (require("./mockModule") as { ConduitModule: ConduitModuleAPI }).ConduitModule
+    ? (require("./mockModule") as { ConduitModule: ConduitModuleAPI })
+          .ConduitModule
     : NativeModules.ConduitModule;
