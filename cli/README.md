@@ -8,7 +8,7 @@ Want to run a Conduit station? Get the latest CLI release: https://github.com/Ps
 
 Conduit requires a Psiphon network configuration file containing connection parameters. Our official CLI releases include an embedded psiphon config, so they just work.
 
-Contact Psiphon (info@psiphon.ca) to discuss custom configuration values.
+Contact Psiphon (conduit-oss@psiphon.ca) to discuss custom configuration values.
 
 ## Docker
 
