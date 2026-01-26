@@ -47,6 +47,18 @@ conduit start --psiphon-config ./psiphon_config.json
 # Customize limits
 conduit start --psiphon-config ./psiphon_config.json --max-clients 500 --bandwidth 10
 
+# Hardware-aware automatic limits (recommended for unknown hardware)
+conduit start --psiphon-config ./psiphon_config.json --adaptive
+
+# Use a specific hardware profile
+conduit start --psiphon-config ./psiphon_config.json --profile low-end
+
+# Enable runtime back-pressure monitoring
+conduit start --psiphon-config ./psiphon_config.json --backpressure
+
+# Full protection for low-end devices (recommended)
+conduit start --psiphon-config ./psiphon_config.json --adaptive --backpressure
+
 # Verbose output (info messages)
 conduit start --psiphon-config ./psiphon_config.json -v
 
@@ -60,9 +72,44 @@ conduit start --psiphon-config ./psiphon_config.json -vv
 | ---------------------- | -------- | ------------------------------------------ |
 | `--psiphon-config, -c` | -        | Path to Psiphon network configuration file |
 | `--max-clients, -m`    | 50       | Maximum concurrent clients                 |
-| `--bandwidth, -b`      | 40        | Bandwidth limit per peer in Mbps           |
+| `--bandwidth, -b`      | 40       | Bandwidth limit per peer in Mbps           |
 | `--data-dir, -d`       | `./data` | Directory for keys and state               |
+| `--adaptive`           | off      | Enable hardware-aware automatic limits     |
+| `--backpressure`       | off      | Reject new clients when CPU/memory is high |
+| `--profile`            | -        | Hardware profile: low-end, standard, high-end, auto |
 | `-v`                   | -        | Verbose output (use `-vv` for debug)       |
+
+### Hardware-Aware Limits
+
+The `--adaptive` flag enables automatic hardware detection and adjusts max-clients based on:
+
+- **CPU cores**: More cores = more capacity
+- **Architecture**: ARM devices get lower limits than x86
+- **Network type**: WiFi connections get reduced limits
+
+**Profile recommendations:**
+
+| Profile    | Max Clients | Use Case                                    |
+| ---------- | ----------- | ------------------------------------------- |
+| `low-end`  | 10          | Raspberry Pi Zero, single-core ARM          |
+| `standard` | 50          | Desktop computers, multi-core ARM           |
+| `high-end` | 200         | Servers, high-core-count systems            |
+
+### Back-Pressure Monitoring
+
+The `--backpressure` flag enables runtime monitoring of system load:
+
+- Monitors CPU usage (estimated), memory, and goroutine count
+- Logs warnings when system is overloaded
+- Reports load status in stats output
+
+**Important limitations:**
+
+- This is **monitoring only** - it cannot actively reject incoming connections
+- The psiphon-tunnel-core library does not expose an API for dynamic client rejection
+- For actual client limiting, use `--adaptive` or `--max-clients` at startup
+
+**Recommendation:** Use `--adaptive` to set appropriate limits based on hardware, and `--backpressure` for visibility into system load.
 
 ## Data Directory
 

@@ -50,6 +50,9 @@ type Options struct {
 	BandwidthMbps     float64
 	Verbosity         int    // 0=normal, 1=verbose, 2+=debug
 	StatsFile         string // Path to write stats JSON file (empty = disabled)
+	AdaptiveMode      bool   // Enable hardware-aware automatic limits
+	BackPressure      bool   // Enable runtime load monitoring and warnings
+	Profile           string // Hardware profile: "low-end", "standard", "high-end", "auto"
 }
 
 // Config represents the validated configuration for the Conduit service
@@ -63,6 +66,9 @@ type Config struct {
 	PsiphonConfigData       []byte // Embedded config data (if used)
 	Verbosity               int    // 0=normal, 1=verbose, 2+=debug
 	StatsFile               string // Path to write stats JSON file (empty = disabled)
+	AdaptiveMode            bool   // Enable hardware-aware automatic limits
+	BackPressure            bool   // Enable runtime load monitoring
+	Profile                 string // Hardware profile name (if specified)
 }
 
 // persistedKey represents the key data saved to disk
@@ -128,6 +134,9 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		PsiphonConfigData:       psiphonConfigData,
 		Verbosity:               opts.Verbosity,
 		StatsFile:               opts.StatsFile,
+		AdaptiveMode:            opts.AdaptiveMode,
+		BackPressure:            opts.BackPressure,
+		Profile:                 opts.Profile,
 	}, nil
 }
 

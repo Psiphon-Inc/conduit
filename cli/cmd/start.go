@@ -29,6 +29,7 @@ import (
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/conduit"
 	"github.com/Psiphon-Inc/conduit/cli/internal/config"
+	"github.com/Psiphon-Inc/conduit/cli/internal/hardware"
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +38,9 @@ var (
 	bandwidthMbps     float64
 	psiphonConfigPath string
 	statsFilePath     string
+	adaptiveMode      bool
+	backPressure      bool
+	profile           string
 )
 
 var startCmd = &cobra.Command{
@@ -68,6 +72,11 @@ func init() {
 	if !config.HasEmbeddedConfig() {
 		startCmd.Flags().StringVarP(&psiphonConfigPath, "psiphon-config", "c", "", "path to Psiphon network config file (JSON)")
 	}
+
+	// Hardware-aware and back-pressure flags
+	startCmd.Flags().BoolVar(&adaptiveMode, "adaptive", false, "enable hardware-aware automatic limits")
+	startCmd.Flags().BoolVar(&backPressure, "backpressure", false, "enable system load monitoring and warnings")
+	startCmd.Flags().StringVar(&profile, "profile", "", "hardware profile: low-end, standard, high-end, auto")
 }
 
 func runStart(cmd *cobra.Command, args []string) error {
@@ -94,15 +103,55 @@ func runStart(cmd *cobra.Command, args []string) error {
 		resolvedStatsFile = filepath.Join(GetDataDir(), resolvedStatsFile)
 	}
 
+	// Handle hardware-aware limits
+	effectiveMaxClients := maxClients
+	effectiveProfile := profile
+
+	// If --adaptive or --profile auto, detect hardware and adjust limits
+	if adaptiveMode || profile == "auto" {
+		hwProfile := hardware.Detect()
+		if Verbosity() >= 1 {
+			fmt.Printf("[INFO] %s\n", hwProfile.String())
+		}
+		if hwProfile.WarningMessage != "" {
+			fmt.Printf("[WARNING] %s\n", hwProfile.WarningMessage)
+		}
+
+		// Only override max-clients if user didn't explicitly set it
+		if !cmd.Flags().Changed("max-clients") {
+			effectiveMaxClients = hwProfile.SuggestMaxClients()
+			if Verbosity() >= 1 {
+				fmt.Printf("[INFO] Auto-adjusted max-clients to %d based on hardware\n", effectiveMaxClients)
+			}
+		}
+		effectiveProfile = hwProfile.ProfileName
+	} else if profile != "" {
+		// User specified a profile explicitly
+		hwProfile, err := hardware.FromProfileName(profile)
+		if err != nil {
+			return fmt.Errorf("invalid profile: %w", err)
+		}
+		if !cmd.Flags().Changed("max-clients") {
+			effectiveMaxClients = hwProfile.SuggestMaxClients()
+		}
+		effectiveProfile = hwProfile.ProfileName
+		if hwProfile.WarningMessage != "" {
+			fmt.Printf("[INFO] %s\n", hwProfile.WarningMessage)
+		}
+	}
+
 	// Load or create configuration (auto-generates keys on first run)
 	cfg, err := config.LoadOrCreate(config.Options{
 		DataDir:           GetDataDir(),
 		PsiphonConfigPath: effectiveConfigPath,
 		UseEmbeddedConfig: useEmbedded,
-		MaxClients:        maxClients,
+		MaxClients:        effectiveMaxClients,
 		BandwidthMbps:     bandwidthMbps,
 		Verbosity:         Verbosity(),
 		StatsFile:         resolvedStatsFile,
+		AdaptiveMode:      adaptiveMode,
+		BackPressure:      backPressure,
+		Profile:           effectiveProfile,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
@@ -133,7 +182,20 @@ func runStart(cmd *cobra.Command, args []string) error {
 	if bandwidthMbps != config.UnlimitedBandwidth {
 		bandwidthStr = fmt.Sprintf("%.0f Mbps", bandwidthMbps)
 	}
-	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", cfg.MaxClients, bandwidthStr)
+
+	// Build startup message with optional features
+	startupMsg := fmt.Sprintf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s", cfg.MaxClients, bandwidthStr)
+	if cfg.AdaptiveMode {
+		startupMsg += ", Adaptive: ON"
+	}
+	if cfg.BackPressure {
+		startupMsg += ", BackPressure: ON"
+	}
+	if cfg.Profile != "" {
+		startupMsg += fmt.Sprintf(", Profile: %s", cfg.Profile)
+	}
+	startupMsg += ")"
+	fmt.Println(startupMsg)
 
 	// Run the service
 	if err := service.Run(ctx); err != nil && ctx.Err() == nil {

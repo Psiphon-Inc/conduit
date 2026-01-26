@@ -29,16 +29,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Psiphon-Inc/conduit/cli/internal/backpressure"
 	"github.com/Psiphon-Inc/conduit/cli/internal/config"
 	"github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon"
 )
 
 // Service represents the Conduit inproxy service
 type Service struct {
-	config     *config.Config
-	controller *psiphon.Controller
-	stats      *Stats
-	mu         sync.RWMutex
+	config              *config.Config
+	controller          *psiphon.Controller
+	stats               *Stats
+	backpressureMonitor *backpressure.Monitor
+	mu                  sync.RWMutex
 }
 
 // Stats tracks proxy activity statistics
@@ -53,27 +55,55 @@ type Stats struct {
 
 // StatsJSON represents the JSON structure for persisted stats
 type StatsJSON struct {
-	ConnectingClients int    `json:"connectingClients"`
-	ConnectedClients  int    `json:"connectedClients"`
-	TotalBytesUp      int64  `json:"totalBytesUp"`
-	TotalBytesDown    int64  `json:"totalBytesDown"`
-	UptimeSeconds     int64  `json:"uptimeSeconds"`
-	IsLive            bool   `json:"isLive"`
-	Timestamp         string `json:"timestamp"`
+	ConnectingClients int     `json:"connectingClients"`
+	ConnectedClients  int     `json:"connectedClients"`
+	TotalBytesUp      int64   `json:"totalBytesUp"`
+	TotalBytesDown    int64   `json:"totalBytesDown"`
+	UptimeSeconds     int64   `json:"uptimeSeconds"`
+	IsLive            bool    `json:"isLive"`
+	Timestamp         string  `json:"timestamp"`
+	BackPressure      *BackPressureStats `json:"backPressure,omitempty"`
+}
+
+// BackPressureStats represents back-pressure monitoring status
+type BackPressureStats struct {
+	Enabled          bool    `json:"enabled"`
+	CPUPercent       float64 `json:"cpuPercent"`
+	MemoryPercent    float64 `json:"memoryPercent"`
+	IsOverloaded     bool    `json:"isOverloaded"`
+	RejectingClients bool    `json:"rejectingClients"`
 }
 
 // New creates a new Conduit service
 func New(cfg *config.Config) (*Service, error) {
-	return &Service{
+	s := &Service{
 		config: cfg,
 		stats: &Stats{
 			StartTime: time.Now(),
 		},
-	}, nil
+	}
+
+	// Initialize back-pressure monitor if enabled
+	if cfg.BackPressure {
+		s.backpressureMonitor = backpressure.NewMonitor(backpressure.MonitorConfig{
+			Verbosity: cfg.Verbosity,
+		})
+	}
+
+	return s, nil
 }
 
 // Run starts the Conduit inproxy service and blocks until context is cancelled
 func (s *Service) Run(ctx context.Context) error {
+	// Start back-pressure monitor if enabled
+	if s.backpressureMonitor != nil {
+		s.backpressureMonitor.Start(ctx)
+		defer s.backpressureMonitor.Stop()
+		if s.config.Verbosity >= 1 {
+			fmt.Println("[INFO] Back-pressure monitoring enabled")
+		}
+	}
+
 	// Set up notice handling FIRST - before any psiphon calls
 	if err := psiphon.SetNoticeWriter(psiphon.NewNoticeReceiver(
 		func(notice []byte) {
@@ -320,7 +350,9 @@ func isNoisyError(errMsg string) bool {
 // logStats logs the current proxy statistics (must be called with lock held)
 func (s *Service) logStats() {
 	uptime := time.Since(s.stats.StartTime).Truncate(time.Second)
-	fmt.Printf("%s [STATS] Connecting: %d | Connected: %d | Up: %s | Down: %s | Uptime: %s\n",
+
+	// Build stats line
+	statsLine := fmt.Sprintf("%s [STATS] Connecting: %d | Connected: %d | Up: %s | Down: %s | Uptime: %s",
 		time.Now().Format("2006-01-02 15:04:05"),
 		s.stats.ConnectingClients,
 		s.stats.ConnectedClients,
@@ -328,6 +360,18 @@ func (s *Service) logStats() {
 		formatBytes(s.stats.TotalBytesDown),
 		formatDuration(uptime),
 	)
+
+	// Add back-pressure status if enabled
+	if s.backpressureMonitor != nil {
+		load := s.backpressureMonitor.GetCurrentLoad()
+		if load.RejectingClients {
+			statsLine += fmt.Sprintf(" | BP: REJECTING (CPU: %.0f%%)", load.CPUPercent)
+		} else {
+			statsLine += fmt.Sprintf(" | BP: OK (CPU: %.0f%%)", load.CPUPercent)
+		}
+	}
+
+	fmt.Println(statsLine)
 
 	// Write stats to file if configured (copy data while locked, write async)
 	if s.config.StatsFile != "" {
@@ -340,6 +384,19 @@ func (s *Service) logStats() {
 			IsLive:            s.stats.IsLive,
 			Timestamp:         time.Now().Format(time.RFC3339),
 		}
+
+		// Add back-pressure stats if enabled
+		if s.backpressureMonitor != nil {
+			load := s.backpressureMonitor.GetCurrentLoad()
+			statsJSON.BackPressure = &BackPressureStats{
+				Enabled:          true,
+				CPUPercent:       load.CPUPercent,
+				MemoryPercent:    load.MemoryPercent,
+				IsOverloaded:     load.IsOverloaded,
+				RejectingClients: load.RejectingClients,
+			}
+		}
+
 		go s.writeStatsToFile(statsJSON)
 	}
 }
