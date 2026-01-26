@@ -31,4 +31,15 @@ export interface ConduitModuleAPI {
     logWarn: (tag: string, msg: string) => void;
 }
 
-export const ConduitModule: ConduitModuleAPI = NativeModules.ConduitModule;
+/**
+ * Use the mock in-proxy when EXPO_PUBLIC_USE_MOCK_INPROXY=1 (e.g. in .env).
+ * Lets you test the UI without ios_embedded_server_entries / Psiphon config.
+ */
+const useMock =
+    typeof __DEV__ !== "undefined" &&
+    __DEV__ &&
+    process.env.EXPO_PUBLIC_USE_MOCK_INPROXY === "1";
+
+export const ConduitModule: ConduitModuleAPI = useMock
+    ? (require("./mockModule") as { ConduitModule: ConduitModuleAPI }).ConduitModule
+    : NativeModules.ConduitModule;

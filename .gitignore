@@ -31,6 +31,10 @@ android_embedded_server_entries
 ios_psiphon_config
 ios_embedded_server_entries
 
+# Local environment
+.env
+.env.local
+
 # VSCode
 .idea/
 .vscode/

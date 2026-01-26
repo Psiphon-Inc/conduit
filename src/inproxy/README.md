@@ -138,9 +138,20 @@ emitter.addListener("ConduitEvent", (event) => {
 
 ## Mock Module
 
-To help with developing and testing the UI, there is a mocked implementation of
-the module available in `mockModule.ts`. To use this, replace the import in the
-`context.tsx` file:
+To help with developing and testing the UI **without real Psiphon resources**
+(embedded server entries, psiphon config), use the mocked in-proxy.
+
+**Option A – env switch (recommended)**  
+In the project root, create a `.env` file (or add to it):
+
+```
+EXPO_PUBLIC_USE_MOCK_INPROXY=1
+```
+
+Then run the app (`npm run ios` or `npm run android`). The `module` layer will use the mock when `__DEV__` is true and this env is set. Restart Metro / the app if the env was not set before.
+
+**Option B – change import**  
+In `context.tsx`, replace:
 
 ```
 - import { ConduitModule } from "@/src/inproxy/module";

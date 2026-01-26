@@ -33,6 +33,7 @@ import {
     QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
     QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
+    QUERYKEY_INPROXY_LAST_ERROR,
     QUERYKEY_INPROXY_MUST_UPGRADE,
     QUERYKEY_INPROXY_STATUS,
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
@@ -157,9 +158,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     function handleProxyError(inproxyError: ProxyError): void {
         if (inproxyError.action === "inProxyMustUpgrade") {
             queryClient.setQueryData([QUERYKEY_INPROXY_MUST_UPGRADE], true);
-        } else {
-            // TODO: display other errors in UI?
         }
+        // Store all errors so UI can display them
+        queryClient.setQueryData([QUERYKEY_INPROXY_LAST_ERROR], inproxyError);
     }
 
     function handleInproxyActivityStats(
@@ -259,7 +260,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             timedLog(`ConduitModule.toggleInProxy(...) invoked`);
         } catch (error) {
             logErrorToDiagnostic(
-                new Error("ConduitModule.toggleInProxy(...) failed"),
+                wrapError(error, "ConduitModule.toggleInProxy(...) failed"),
             );
         }
     }
@@ -279,7 +280,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         try {
             const feedbackResult = await ConduitModule.sendFeedback(inproxyId);
             timedLog("ConduitModule.sendFeedback() invoked");
-            if (!feedbackResult === null) {
+            if (feedbackResult !== null) {
                 timedLog(
                     `ConduitModule.sendFeedback() returned non-null value: ${feedbackResult}`,
                 );

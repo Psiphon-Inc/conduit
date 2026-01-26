@@ -177,6 +177,20 @@ actor ConduitManager {
             Logger.conduitMan.warning("Restart conduit with duplicate parameters denied.")
             return
         }
+
+        // Fail fast with a clear error if embedded server entries are missing or empty.
+        // Psiphon needs them to connect; see ios/README.md.
+        do {
+            let data = try Data(contentsOf: ResourceFile.embeddedServerEntries.url)
+            let s = String(data: data, encoding: .utf8) ?? ""
+            if s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                throw Err("Embedded server entries are missing or empty. Replace ios_embedded_server_entries with the actual file from the Conduit/Psiphon project. See ios/README.md.")
+            }
+        } catch let e as Err {
+            throw e
+        } catch {
+            throw Err("Failed to read embedded server entries: \(error). See ios/README.md.")
+        }
         
         setConduitStatus(.starting)
         
