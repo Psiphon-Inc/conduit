@@ -3,6 +3,8 @@ module github.com/Psiphon-Inc/conduit/cli
 go 1.24.0
 
 require (
+	filippo.io/edwards25519 v1.1.0
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/cobra v1.8.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	golang.org/x/crypto v0.39.0
@@ -10,7 +12,6 @@ require (
 
 require (
 	filippo.io/bigmod v0.0.1 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
 	filippo.io/keygen v0.0.0-20230306160926-5201437acf8e // indirect
 	github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96 // indirect
 	github.com/Jigsaw-Code/outline-sdk v0.0.16 // indirect
@@ -115,11 +116,8 @@ require (
 	tailscale.com v1.58.2 // indirect
 )
 
-require (
-	// Use staging-client branch for inproxy support
-	github.com/Psiphon-Labs/psiphon-tunnel-core v0.0.0-20251128193008-996f485b1e13
-	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-)
+// Use staging-client branch for inproxy support
+require github.com/Psiphon-Labs/psiphon-tunnel-core v0.0.0-20251128193008-996f485b1e13
 
 // Required for PSIPHON_ENABLE_INPROXY build tag - use Psiphon's forked pion libraries
 // These are automatically set up by 'make setup' which clones psiphon-tunnel-core

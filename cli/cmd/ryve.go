@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"bufio"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
-	"os/user"
+	"path/filepath"
+	"strings"
+	"text/tabwriter"
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/config"
 	"github.com/Psiphon-Inc/conduit/cli/internal/crypto"
@@ -14,38 +18,33 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ryveCmd = &cobra.Command{
-	Use:   "ryve",
-	Short: "Get ryve association data",
-	Long:  `Show Ryve association URI and Qr-code in both terminal and PNG format.`,
-	RunE:  runRyve,
+var ryveClaimCmd = &cobra.Command{
+	Use:   "ryve-claim",
+	Short: "Output Conduit claim data for Ryve",
+	Long:  `Show Ryve Claim Qr-code in both terminal and PNG format.`,
+	RunE:  runRyveClaim,
 }
 
 var (
-	name         string
-	inverseColor bool
-	pngOutput    string
-	pngSize      int16
+	name                    string
+	pngOutput               string
+	defaultName             string
+	defaultNameFromHostname bool
 )
 
 func init() {
-	var defaultName string
+	defaultName = "unnamed"
+	defaultNameFromHostname = false
 
 	if hostname, err := os.Hostname(); err == nil {
-		defaultName = hostname + "-cli"
-	} else {
-		defaultName = "unknown-cli"
-	}
-	if userName, err := user.Current(); err == nil {
-		defaultName += "-" + userName.Username
+		defaultName = hostname
+		defaultNameFromHostname = true
 	}
 
-	rootCmd.AddCommand(ryveCmd)
+	rootCmd.AddCommand(ryveClaimCmd)
 
-	ryveCmd.Flags().BoolVarP(&inverseColor, "inverse", "i", false, "inverse colors for terminals with white background")
-	ryveCmd.Flags().StringVarP(&name, "name", "n", defaultName, "Name for Ryve association")
-	ryveCmd.Flags().StringVarP(&pngOutput, "output", "o", "", "PNG output file path (optional)")
-	ryveCmd.Flags().Int16VarP(&pngSize, "size", "s", 200, "PNG output dimensions; ignored if --output is not set")
+	ryveClaimCmd.Flags().StringVarP(&name, "name", "n", defaultName, "Name for Ryve association")
+	ryveClaimCmd.Flags().StringVarP(&pngOutput, "output", "o", "", "PNG output file path (optional)")
 
 }
 
@@ -56,30 +55,54 @@ func generateQrCode(uri string) (string, error) {
 		return "", fmt.Errorf("failed to generate QR code: %s", err)
 	}
 
-	terminalOutput := q.ToSmallString(inverseColor)
+	terminalOutput := q.ToSmallString(false)
 	if pngOutput != "" {
-		err = q.WriteFile(int(pngSize), pngOutput)
-
+		if err := q.WriteFile(300, pngOutput); err != nil {
+			return "", err
+		}
 	}
 
-	return terminalOutput, err
+	return terminalOutput, nil
 
 }
 
-func runRyve(cmd *cobra.Command, args []string) error {
+func runRyveClaim(cmd *cobra.Command, args []string) error {
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("This command will reveal your station's private key to terminal output. Please only reveal in a secure location. Continue? (y/n) ")
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return fmt.Errorf("failed to read confirmation: %w", err)
+	}
+	response = strings.TrimSpace(strings.ToLower(response))
+	if response != "y" && response != "yes" {
+		fmt.Println("Aborted.")
+		return nil
+	}
 
 	datadir := GetDataDir()
 
 	kp, _, err := config.LoadKey(datadir)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return fmt.Errorf("failed to load key: %s", err)
+		if errors.Is(err, os.ErrNotExist) {
+			fmt.Println("Start your station first to create a key")
+			return errors.New("missing key")
+		}
+		return fmt.Errorf("failed to load key: %w", err)
 	}
 
 	keyData, err := crypto.KeyPairToBase64NoPad(kp)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return fmt.Errorf("failed to get keypair data: %s", err)
+		return fmt.Errorf("failed to get keypair data: %w", err)
+	}
+	nameValue := name
+	if defaultNameFromHostname && !cmd.Flags().Changed("name") {
+		nameValue += " (use --name to explicitly set)"
+	}
+
+	proxyID, err := crypto.KeyPairToCurve25519Base64(kp)
+	if err != nil {
+		return fmt.Errorf("failed to derive proxy id: %w", err)
 	}
 
 	payload := map[string]any{
@@ -96,20 +119,22 @@ func runRyve(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unexpected: failed to marshal payload: %s", err)
 	}
 
-	claim := base64.StdEncoding.EncodeToString(payloadJson)
+	claim := base64.URLEncoding.EncodeToString(payloadJson)
 	uri := "network.ryve.app://(app)/conduits?claim=" + claim
 
-	fmt.Println("Name:\t", name)
-	fmt.Println("Key:\t", keyData)
-	fmt.Println("Claim:\t", claim)
-	fmt.Println("Uri:\t", uri)
+	if pngOutput == "" {
+		pngOutput = filepath.Join(datadir, "ryve-claim-qr.png")
+	}
 
 	qrOutput, err := generateQrCode(uri)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return fmt.Errorf("failed to generate QR code: %s", err)
+		return fmt.Errorf("failed to generate QR code: %w", err)
 	}
-	fmt.Println("\nQR Code:")
+	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintf(writer, "Station Name:\t%s\n", nameValue)
+	fmt.Fprintf(writer, "Proxy ID:\t%s\n", proxyID)
+	writer.Flush()
+	fmt.Printf("claim QR code created at %s, scan this to claim this station in Ryve\n", pngOutput)
 	fmt.Println(qrOutput)
 
 	return nil
