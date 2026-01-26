@@ -75,3 +75,21 @@ Watch server continuously:
 ```bash
 ./scripts/watch-dev-server.sh
 ```
+
+### View Connected Devices
+
+See who is currently connected:
+```bash
+./scripts/show-connections.sh
+```
+
+Watch connections in real-time:
+```bash
+./scripts/watch-connections.sh
+```
+
+This will show:
+- Active connections with IP addresses
+- Connection statistics
+- Listening ports
+- Server network address

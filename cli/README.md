@@ -20,7 +20,7 @@ make build
 - **Go 1.24.x** (Go 1.25+ is not supported due to psiphon-tls compatibility)
 - Psiphon network configuration file (JSON)
 
-The Makefile will automatically install Go 1.24.3 if not present.
+**Installing Go:** See [INSTALL-GO.md](INSTALL-GO.md) for installation instructions.
 
 ## Configuration
 

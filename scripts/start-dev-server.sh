@@ -17,4 +17,5 @@ echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-npm run dev-server
+# Start with --lan flag to allow devices on the same network to connect
+npx expo start --lan
