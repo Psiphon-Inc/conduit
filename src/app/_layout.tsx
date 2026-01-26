@@ -23,6 +23,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { AuthProvider } from "@/src/auth/context";
@@ -63,9 +64,14 @@ export default function RootLayout() {
         SystemUI.setBackgroundColorAsync(palette.black).then(() => {});
     }, []);
 
-    // Splash screens should be showing until we're done loading
+    // Show a light loading screen while fonts load instead of a black void.
+    // SplashScreen remains until loaded; this is a fallback if it's already gone.
     if (!loaded) {
-        return null;
+        return (
+            <View style={{ flex: 1, backgroundColor: palette.white, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator size="large" color={palette.blue} />
+            </View>
+        );
     }
 
     return (

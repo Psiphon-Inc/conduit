@@ -43,6 +43,7 @@
 
 
 import Foundation
+import os
 
 #if canImport(Logging)
 import Logging
@@ -155,7 +156,8 @@ public struct PsiphonLogHandler: LogHandler {
         // Log with Puppy
         do {
             let metadata = mergedMetadata(metadata)
-            let encodedMetadata = try metadataEncoder.encode(metadata)
+            let encodableMetadata = metadata.mapValues { EncodableMetadataValue(value: $0) }
+            let encodedMetadata = try metadataEncoder.encode(encodableMetadata)
             var swiftLogInfo = ["label": label, "source": source]
             
             if let encodedMetadata = String(data: encodedMetadata, encoding: .utf8) {
@@ -180,22 +182,23 @@ public struct PsiphonLogHandler: LogHandler {
     
 }
 
-extension Logging.Logger.MetadataValue : Encodable {
-    
-    public func encode(to encoder: any Encoder) throws {
+/// Encodable wrapper for `Logging.Logger.MetadataValue` to avoid conforming an imported type to `Encodable`.
+private struct EncodableMetadataValue: Encodable {
+    let value: Logging.Logger.MetadataValue
+
+    func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        switch self {
+        switch value {
         case .stringConvertible(let stringConvertible):
             try container.encode(stringConvertible.description)
         case .string(let string):
             try container.encode(string)
         case .array(let array):
-            try container.encode(array)
+            try container.encode(array.map { EncodableMetadataValue(value: $0) })
         case .dictionary(let dict):
-            try container.encode(dict)
+            try container.encode(dict.mapValues { EncodableMetadataValue(value: $0) })
         }
     }
-    
 }
 
 extension Logging.Logger.Level {

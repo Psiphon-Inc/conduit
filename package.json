@@ -3,7 +3,7 @@
   "main": "src/entrypoint",
   "version": "app.json",
   "scripts": {
-    "android": "npm run  get-git-hash && expo run:android",
+    "android": "npm run get-git-hash && ./scripts/run-android.sh",
     "ios": "npm run  get-git-hash && expo run:ios",
     "get-git-hash": "echo \"export const GIT_HASH = '$(git rev-parse --short HEAD)$(git status --porcelain | grep -q . && echo '?')';\" > ./src/git-hash.ts",
     "build-release": "npm run  get-git-hash && cd android && ./gradlew assembleRelease && cd ..",
