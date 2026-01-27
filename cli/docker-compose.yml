@@ -1,6 +1,6 @@
 services:
     conduit:
-        image: ghcr.io/psiphon-inc/conduit/cli:latest
+        image: conduit-local:latest
         container_name: conduit
         restart: unless-stopped
         command:
@@ -12,6 +12,10 @@ services:
                 "50",
                 "--data-dir",
                 "/home/conduit/data",
+                "--traffic-limit",
+                "500",
+                "--traffic-period",
+                "10",
             ]
         volumes:
             - conduit-data:/home/conduit/data

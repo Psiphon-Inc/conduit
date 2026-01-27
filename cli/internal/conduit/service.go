@@ -35,10 +35,12 @@ import (
 
 // Service represents the Conduit inproxy service
 type Service struct {
-	config     *config.Config
-	controller *psiphon.Controller
-	stats      *Stats
-	mu         sync.RWMutex
+	config       *config.Config
+	controller   *psiphon.Controller
+	stats        *Stats
+	trafficState *trafficState
+	mu           sync.RWMutex
+	limitReached bool // Flag to indicate traffic limit has been reached
 }
 
 // Stats tracks proxy activity statistics
@@ -49,6 +51,12 @@ type Stats struct {
 	TotalBytesDown    int64
 	StartTime         time.Time
 	IsLive            bool // Connected to broker and ready to accept clients
+}
+
+// trafficState tracks traffic usage for limit enforcement
+type trafficState struct {
+	PeriodStartTime time.Time `json:"periodStartTime"`
+	BytesUsed       int64     `json:"bytesUsed"`
 }
 
 // StatsJSON represents the JSON structure for persisted stats
@@ -64,12 +72,27 @@ type StatsJSON struct {
 
 // New creates a new Conduit service
 func New(cfg *config.Config) (*Service, error) {
-	return &Service{
+	s := &Service{
 		config: cfg,
 		stats: &Stats{
 			StartTime: time.Now(),
 		},
-	}, nil
+	}
+
+	// Load traffic state if traffic limiting is enabled
+	if cfg.TrafficLimitBytes > 0 {
+		state, err := s.loadTrafficState()
+		if err != nil {
+			// If we can't load, start fresh
+			state = &trafficState{
+				PeriodStartTime: time.Now(),
+				BytesUsed:       0,
+			}
+		}
+		s.trafficState = state
+	}
+
+	return s, nil
 }
 
 // Run starts the Conduit inproxy service and blocks until context is cancelled
@@ -83,14 +106,8 @@ func (s *Service) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to set notice writer: %w", err)
 	}
 
-	// Create Psiphon configuration
-	psiphonConfig, err := s.createPsiphonConfig()
-	if err != nil {
-		return fmt.Errorf("failed to create psiphon config: %w", err)
-	}
-
-	// Open the data store
-	err = psiphon.OpenDataStore(&psiphon.Config{
+	// Open the data store once
+	err := psiphon.OpenDataStore(&psiphon.Config{
 		DataRootDirectory: s.config.DataDir,
 	})
 	if err != nil {
@@ -98,16 +115,121 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 	defer psiphon.CloseDataStore()
 
-	// Create and run controller
-	s.controller, err = psiphon.NewController(psiphonConfig)
-	if err != nil {
-		return fmt.Errorf("failed to create controller: %w", err)
+	// Main loop - handles traffic limit wait/resume cycles
+	for {
+		// Check if we need to wait for period to end
+		if s.config.TrafficLimitBytes > 0 && s.trafficState != nil {
+			now := time.Now()
+			periodEnd := s.trafficState.PeriodStartTime.Add(s.config.TrafficPeriod)
+			
+			// Check if period has expired - reset if so
+			if now.After(periodEnd) {
+				s.mu.Lock()
+				s.trafficState.PeriodStartTime = now
+				s.trafficState.BytesUsed = 0
+				s.limitReached = false
+				s.saveTrafficState()
+				s.mu.Unlock()
+				fmt.Printf("[INFO] Traffic period reset. New period starts now.\n")
+			} else if s.trafficState.BytesUsed >= s.config.TrafficLimitBytes {
+				// Limit reached, wait for period to end
+				waitDuration := time.Until(periodEnd)
+				fmt.Printf("[INFO] Traffic limit reached. Waiting %s until period ends at %s\n", 
+					formatDuration(waitDuration), 
+					periodEnd.Format("2006-01-02 15:04:05"))
+				
+				select {
+				case <-time.After(waitDuration):
+					// Period ended, reset and continue
+					s.mu.Lock()
+					s.trafficState.PeriodStartTime = time.Now()
+					s.trafficState.BytesUsed = 0
+					s.limitReached = false
+					s.saveTrafficState()
+					s.mu.Unlock()
+					fmt.Printf("[INFO] Traffic period reset. Resuming service.\n")
+				case <-ctx.Done():
+					return nil
+				}
+			}
+		}
+
+		// Create Psiphon configuration
+		psiphonConfig, err := s.createPsiphonConfig()
+		if err != nil {
+			return fmt.Errorf("failed to create psiphon config: %w", err)
+		}
+
+		// Create controller
+		s.mu.Lock()
+		s.controller, err = psiphon.NewController(psiphonConfig)
+		s.mu.Unlock()
+		if err != nil {
+			return fmt.Errorf("failed to create controller: %w", err)
+		}
+
+		// Run the controller in a goroutine so we can monitor for limit
+		controllerDone := make(chan struct{})
+		controllerCtx, controllerCancel := context.WithCancel(ctx)
+		
+		go func() {
+			s.controller.Run(controllerCtx)
+			close(controllerDone)
+		}()
+
+		// Monitor for limit reached or context cancellation
+		if s.config.TrafficLimitBytes > 0 {
+			ticker := time.NewTicker(1 * time.Second)
+			
+			for {
+				select {
+				case <-ticker.C:
+					s.mu.RLock()
+					limitReached := s.limitReached
+					s.mu.RUnlock()
+					
+					if limitReached {
+						fmt.Println("[INFO] Stopping controller due to traffic limit...")
+						ticker.Stop()
+						controllerCancel()
+						<-controllerDone
+						goto nextCycle
+					}
+				case <-controllerDone:
+					ticker.Stop()
+					controllerCancel()
+					// Controller stopped on its own or due to parent context
+					if ctx.Err() != nil {
+						return nil
+					}
+					goto nextCycle
+				case <-ctx.Done():
+					ticker.Stop()
+					controllerCancel()
+					<-controllerDone
+					return nil
+				}
+			}
+		} else {
+			// No traffic limiting, just wait for controller or context
+			select {
+			case <-controllerDone:
+				controllerCancel()
+				if ctx.Err() != nil {
+					return nil
+				}
+				return nil
+			case <-ctx.Done():
+				controllerCancel()
+				<-controllerDone
+				return nil
+			}
+		}
+		
+	nextCycle:
+		// Continue to next cycle (wait for period end)
+		continue
 	}
-
-	// Run the controller (blocks until context is cancelled)
-	s.controller.Run(ctx)
-
-	return nil
 }
 
 // createPsiphonConfig creates the Psiphon tunnel-core configuration
@@ -206,12 +328,33 @@ func (s *Service) handleNotice(notice []byte) {
 		if v, ok := noticeData.Data["connectedClients"].(float64); ok {
 			s.stats.ConnectedClients = int(v)
 		}
+		
+		// Track traffic for limit enforcement
+		var bytesAdded int64
 		if v, ok := noticeData.Data["bytesUp"].(float64); ok {
 			s.stats.TotalBytesUp += int64(v)
+			bytesAdded += int64(v)
 		}
 		if v, ok := noticeData.Data["bytesDown"].(float64); ok {
 			s.stats.TotalBytesDown += int64(v)
+			bytesAdded += int64(v)
 		}
+		
+		// Update traffic state if limiting is enabled
+		if s.trafficState != nil && bytesAdded > 0 {
+			s.trafficState.BytesUsed += bytesAdded
+			go s.saveTrafficState() // Save asynchronously
+			
+			// Check if limit is reached
+			if !s.limitReached && s.trafficState.BytesUsed >= s.config.TrafficLimitBytes {
+				s.limitReached = true
+				fmt.Printf("\n[WARNING] Traffic limit reached: %s / %s\n", 
+					formatBytes(s.trafficState.BytesUsed), 
+					formatBytes(s.config.TrafficLimitBytes))
+				// Controller will be stopped in the Run loop
+			}
+		}
+		
 		// Log if client counts changed
 		if s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
 			s.logStats()
@@ -223,6 +366,9 @@ func (s *Service) handleNotice(notice []byte) {
 		s.mu.Lock()
 		prevConnecting := s.stats.ConnectingClients
 		prevConnected := s.stats.ConnectedClients
+		prevBytesUp := s.stats.TotalBytesUp
+		prevBytesDown := s.stats.TotalBytesDown
+		
 		if v, ok := noticeData.Data["connectingClients"].(float64); ok {
 			s.stats.ConnectingClients = int(v)
 		}
@@ -235,6 +381,25 @@ func (s *Service) handleNotice(notice []byte) {
 		if v, ok := noticeData.Data["totalBytesDown"].(float64); ok {
 			s.stats.TotalBytesDown = int64(v)
 		}
+		
+		// Update traffic state if limiting is enabled
+		if s.trafficState != nil {
+			bytesAdded := (s.stats.TotalBytesUp - prevBytesUp) + (s.stats.TotalBytesDown - prevBytesDown)
+			if bytesAdded > 0 {
+				s.trafficState.BytesUsed += bytesAdded
+				go s.saveTrafficState() // Save asynchronously
+				
+				// Check if limit is reached
+				if !s.limitReached && s.trafficState.BytesUsed >= s.config.TrafficLimitBytes {
+					s.limitReached = true
+					fmt.Printf("\n[WARNING] Traffic limit reached: %s / %s\n", 
+						formatBytes(s.trafficState.BytesUsed), 
+						formatBytes(s.config.TrafficLimitBytes))
+					// Controller will be stopped in the Run loop
+				}
+			}
+		}
+		
 		// Log if client counts changed
 		if s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
 			s.logStats()
@@ -394,4 +559,35 @@ func formatBytes(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+// loadTrafficState loads the traffic state from disk
+func (s *Service) loadTrafficState() (*trafficState, error) {
+	stateFile := fmt.Sprintf("%s/traffic_state.json", s.config.DataDir)
+	data, err := os.ReadFile(stateFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var state trafficState
+	if err := json.Unmarshal(data, &state); err != nil {
+		return nil, err
+	}
+
+	return &state, nil
+}
+
+// saveTrafficState saves the traffic state to disk
+func (s *Service) saveTrafficState() error {
+	if s.trafficState == nil {
+		return nil
+	}
+
+	stateFile := fmt.Sprintf("%s/traffic_state.json", s.config.DataDir)
+	data, err := json.MarshalIndent(s.trafficState, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(stateFile, data, 0644)
 }

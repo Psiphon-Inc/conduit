@@ -37,6 +37,8 @@ var (
 	bandwidthMbps     float64
 	psiphonConfigPath string
 	statsFilePath     string
+	trafficLimitGB    float64
+	trafficPeriodDays int
 )
 
 var startCmd = &cobra.Command{
@@ -63,6 +65,8 @@ func init() {
 	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
 	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
 	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
+	startCmd.Flags().Float64VarP(&trafficLimitGB, "traffic-limit", "t", 0, "total traffic limit in GB (0 for unlimited, requires --traffic-period)")
+	startCmd.Flags().IntVarP(&trafficPeriodDays, "traffic-period", "p", 0, "time period in days for traffic limit (requires --traffic-limit)")
 
 	// Only show --psiphon-config flag if no config is embedded
 	if !config.HasEmbeddedConfig() {
@@ -103,6 +107,8 @@ func runStart(cmd *cobra.Command, args []string) error {
 		BandwidthMbps:     bandwidthMbps,
 		Verbosity:         Verbosity(),
 		StatsFile:         resolvedStatsFile,
+		TrafficLimitGB:    trafficLimitGB,
+		TrafficPeriodDays: trafficPeriodDays,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
@@ -134,6 +140,11 @@ func runStart(cmd *cobra.Command, args []string) error {
 		bandwidthStr = fmt.Sprintf("%.0f Mbps", bandwidthMbps)
 	}
 	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", cfg.MaxClients, bandwidthStr)
+	
+	// Print traffic limit info if configured
+	if cfg.TrafficLimitBytes > 0 {
+		fmt.Printf("Traffic Limit: %.0f GB per %d days\n", trafficLimitGB, trafficPeriodDays)
+	}
 
 	// Run the service
 	if err := service.Run(ctx); err != nil && ctx.Err() == nil {
