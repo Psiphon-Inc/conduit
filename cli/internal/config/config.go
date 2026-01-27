@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/crypto"
 )
@@ -50,6 +51,8 @@ type Options struct {
 	BandwidthMbps     float64
 	Verbosity         int    // 0=normal, 1=verbose, 2+=debug
 	StatsFile         string // Path to write stats JSON file (empty = disabled)
+	TrafficLimitGB    float64 // Total traffic limit in GB (0 = unlimited)
+	TrafficPeriodDays int     // Time period in days for traffic limit
 }
 
 // Config represents the validated configuration for the Conduit service
@@ -60,9 +63,11 @@ type Config struct {
 	BandwidthBytesPerSecond int
 	DataDir                 string
 	PsiphonConfigPath       string
-	PsiphonConfigData       []byte // Embedded config data (if used)
-	Verbosity               int    // 0=normal, 1=verbose, 2+=debug
-	StatsFile               string // Path to write stats JSON file (empty = disabled)
+	PsiphonConfigData       []byte        // Embedded config data (if used)
+	Verbosity               int           // 0=normal, 1=verbose, 2+=debug
+	StatsFile               string        // Path to write stats JSON file (empty = disabled)
+	TrafficLimitBytes       int64         // Total traffic limit in bytes (0 = unlimited)
+	TrafficPeriod           time.Duration // Time period for traffic limit
 }
 
 // persistedKey represents the key data saved to disk
@@ -112,6 +117,21 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		bandwidthBytesPerSecond = int(bandwidthMbps * 1000 * 1000 / 8)
 	}
 
+	// Validate and convert traffic limit
+	var trafficLimitBytes int64
+	var trafficPeriod time.Duration
+
+	if opts.TrafficLimitGB > 0 {
+		if opts.TrafficPeriodDays <= 0 {
+			return nil, fmt.Errorf("traffic-period must be greater than 0 when traffic-limit is set")
+		}
+		// Convert GB to bytes (1 GB = 1024^3 bytes)
+		trafficLimitBytes = int64(opts.TrafficLimitGB * 1024 * 1024 * 1024)
+		trafficPeriod = time.Duration(opts.TrafficPeriodDays) * 24 * time.Hour
+	} else if opts.TrafficPeriodDays > 0 {
+		return nil, fmt.Errorf("traffic-limit must be set when traffic-period is specified")
+	}
+
 	// Handle psiphon config source
 	var psiphonConfigData []byte
 	if opts.UseEmbeddedConfig {
@@ -128,6 +148,8 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		PsiphonConfigData:       psiphonConfigData,
 		Verbosity:               opts.Verbosity,
 		StatsFile:               opts.StatsFile,
+		TrafficLimitBytes:       trafficLimitBytes,
+		TrafficPeriod:           trafficPeriod,
 	}, nil
 }
 
