@@ -37,6 +37,7 @@ var (
 	bandwidthMbps     float64
 	psiphonConfigPath string
 	statsFilePath     string
+	metricsAddr       string
 )
 
 var startCmd = &cobra.Command{
@@ -63,6 +64,7 @@ func init() {
 	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
 	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
 	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
+	startCmd.Flags().StringVar(&metricsAddr, "metrics-addr", "", "address for Prometheus metrics endpoint (e.g., :9090 or 127.0.0.1:9090)")
 
 	// Only show --psiphon-config flag if no config is embedded
 	if !config.HasEmbeddedConfig() {
@@ -103,6 +105,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 		BandwidthMbps:     bandwidthMbps,
 		Verbosity:         Verbosity(),
 		StatsFile:         resolvedStatsFile,
+		MetricsAddr:       metricsAddr,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
