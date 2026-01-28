@@ -35,7 +35,8 @@ import (
 
 type StartCMD struct {
 	// public fields
-	Root *RootCMD
+	DataDir   string
+	Verbosity int
 
 	// private fields
 	maxClients        int
@@ -96,17 +97,17 @@ func (s *StartCMD) main(cmd *cobra.Command, args []string) error {
 	// Resolve stats file path - if relative, place in data dir
 	resolvedStatsFile := s.statsFilePath
 	if resolvedStatsFile != "" && !filepath.IsAbs(resolvedStatsFile) {
-		resolvedStatsFile = filepath.Join(s.Root.GetDataDir(), resolvedStatsFile)
+		resolvedStatsFile = filepath.Join(s.DataDir, resolvedStatsFile)
 	}
 
 	// Load or create configuration (auto-generates keys on first run)
 	cfg, err := config.LoadOrCreate(config.Options{
-		DataDir:           s.Root.GetDataDir(),
+		DataDir:           s.DataDir,
 		PsiphonConfigPath: effectiveConfigPath,
 		UseEmbeddedConfig: useEmbedded,
 		MaxClients:        s.maxClients,
 		BandwidthMbps:     s.bandwidthMbps,
-		Verbosity:         s.Root.Verbosity(),
+		Verbosity:         s.Verbosity,
 		StatsFile:         resolvedStatsFile,
 	})
 	if err != nil {

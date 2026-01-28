@@ -36,10 +36,11 @@ func main() {
 	// create and add the sub commands
 	root.AddCommand(
 		(&cmd.RyveCMD{
-			Root: &rootCmd,
+			DataDir: rootCmd.GetDataDir(),
 		}).Command(),
 		(&cmd.StartCMD{
-			Root: &rootCmd,
+			DataDir:   rootCmd.GetDataDir(),
+			Verbosity: rootCmd.Verbosity(),
 		}).Command(),
 	)
 

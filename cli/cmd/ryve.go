@@ -20,7 +20,7 @@ import (
 
 type RyveCMD struct {
 	// public fields
-	Root *RootCMD
+	DataDir string
 
 	// private fields
 	name                    string
@@ -85,7 +85,7 @@ func (r *RyveCMD) main(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	datadir := r.Root.GetDataDir()
+	datadir := r.DataDir
 
 	kp, _, err := config.LoadKey(datadir)
 	if err != nil {
