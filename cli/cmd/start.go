@@ -44,12 +44,12 @@ type StartCMD struct {
 	statsFilePath     string
 }
 
-func (s StartCMD) Command() *cobra.Command {
+func (s *StartCMD) Command() *cobra.Command {
 	startCmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start the Conduit inproxy service",
 		Long:  s.getStartLongHelp(),
-		RunE:  s.runStart,
+		RunE:  s.main,
 	}
 
 	startCmd.Flags().IntVarP(&s.maxClients, "max-clients", "m", config.DefaultMaxClients, "maximum number of proxy clients (1-1000)")
@@ -65,7 +65,7 @@ func (s StartCMD) Command() *cobra.Command {
 	return startCmd
 }
 
-func (s StartCMD) getStartLongHelp() string {
+func (s *StartCMD) getStartLongHelp() string {
 	if config.HasEmbeddedConfig() {
 		return `Start the Conduit inproxy service to relay traffic for users in censored regions.`
 	}
@@ -75,7 +75,7 @@ Requires a Psiphon network configuration file (JSON) containing the
 PropagationChannelId, SponsorId, and broker specifications.`
 }
 
-func (s StartCMD) runStart(cmd *cobra.Command, args []string) error {
+func (s *StartCMD) main(cmd *cobra.Command, args []string) error {
 	// Determine psiphon config source: flag > embedded > error
 	effectiveConfigPath := s.psiphonConfigPath
 	useEmbedded := false

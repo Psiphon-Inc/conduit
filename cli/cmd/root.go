@@ -37,7 +37,7 @@ type RootCMD struct {
 }
 
 // Command returns a new cobra instance of the RootCMD.
-func (r RootCMD) Command() *cobra.Command {
+func (r *RootCMD) Command() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "conduit",
 		Short: "Conduit - A volunteer-run proxy relay for the Psiphon network",
@@ -55,12 +55,12 @@ Run 'conduit start' to begin relaying traffic.`,
 }
 
 // Verbosity returns the verbosity level (0=normal, 1=verbose, 2+=debug)
-func (r RootCMD) Verbosity() int {
+func (r *RootCMD) Verbosity() int {
 	return r.verbosity
 }
 
 // GetDataDir returns the data directory path
-func (r RootCMD) GetDataDir() string {
+func (r *RootCMD) GetDataDir() string {
 	if r.dataDir != "" {
 		return r.dataDir
 	}

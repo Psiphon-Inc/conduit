@@ -35,12 +35,12 @@ func main() {
 
 	// create and add the sub commands
 	root.AddCommand(
-		cmd.RyveCMD{
+		(&cmd.RyveCMD{
 			Root: &rootCmd,
-		}.Command(),
-		cmd.StartCMD{
+		}).Command(),
+		(&cmd.StartCMD{
 			Root: &rootCmd,
-		}.Command(),
+		}).Command(),
 	)
 
 	// execute the root command

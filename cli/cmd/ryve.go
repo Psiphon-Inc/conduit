@@ -29,7 +29,7 @@ type RyveCMD struct {
 	defaultNameFromHostname bool
 }
 
-func (r RyveCMD) Command() *cobra.Command {
+func (r *RyveCMD) Command() *cobra.Command {
 	r.defaultName = "unnamed"
 	r.defaultNameFromHostname = false
 
@@ -42,7 +42,7 @@ func (r RyveCMD) Command() *cobra.Command {
 		Use:   "ryve-claim",
 		Short: "Output Conduit claim data for Ryve",
 		Long:  `Show Ryve Claim Qr-code in both terminal and PNG format.`,
-		RunE:  r.runRyveClaim,
+		RunE:  r.main,
 	}
 
 	ryveClaimCmd.Flags().StringVarP(&r.name, "name", "n", r.defaultName, "Name for Ryve association")
@@ -51,7 +51,7 @@ func (r RyveCMD) Command() *cobra.Command {
 	return ryveClaimCmd
 }
 
-func (r RyveCMD) generateQrCode(uri string) (string, error) {
+func (r *RyveCMD) generateQrCode(uri string) (string, error) {
 	q, err := qrcode.New(uri, qrcode.Low)
 
 	if err != nil {
@@ -69,7 +69,7 @@ func (r RyveCMD) generateQrCode(uri string) (string, error) {
 
 }
 
-func (r RyveCMD) runRyveClaim(cmd *cobra.Command, args []string) error {
+func (r *RyveCMD) main(cmd *cobra.Command, args []string) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Print("This command will reveal your station's private key to terminal output. Please only reveal in a secure location. Continue? (y/n) ")
