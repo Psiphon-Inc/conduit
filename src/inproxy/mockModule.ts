@@ -38,6 +38,7 @@ async function* generateMockData(
         // shift every array to drop the first value
         data.dataByPeriod["1000ms"].connectedClients.shift();
         data.dataByPeriod["1000ms"].connectingClients.shift();
+        data.dataByPeriod["1000ms"].announcingWorkers.shift();
         data.dataByPeriod["1000ms"].bytesUp.shift();
         data.dataByPeriod["1000ms"].bytesDown.shift();
 
@@ -71,6 +72,16 @@ async function* generateMockData(
         } else {
             data.dataByPeriod["1000ms"].connectingClients.push(0);
         }
+
+        data.currentAnnouncingWorkers = Math.max(
+            maxClients -
+                data.currentConnectedClients -
+                data.currentConnectingClients,
+            0,
+        );
+        data.dataByPeriod["1000ms"].announcingWorkers.push(
+            data.currentAnnouncingWorkers > 0 ? 1 : 0,
+        );
 
         if (data.currentConnectedClients > 0) {
             // some random amount of bytes up and down

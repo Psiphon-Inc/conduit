@@ -46,6 +46,14 @@ export const ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY = "MockInproxyRunning";
 export const ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY = "InproxyMaxClients";
 export const ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY =
     "InproxyLimitBytesPerSecond";
+export const ASYNCSTORAGE_INPROXY_REDUCED_START_TIME_KEY =
+    "InproxyReducedStartTime";
+export const ASYNCSTORAGE_INPROXY_REDUCED_END_TIME_KEY =
+    "InproxyReducedEndTime";
+export const ASYNCSTORAGE_INPROXY_REDUCED_MAX_CLIENTS_KEY =
+    "InproxyReducedMaxClients";
+export const ASYNCSTORAGE_INPROXY_REDUCED_LIMIT_BYTES_PER_SECOND_KEY =
+    "InproxyReducedLimitBytesPerSecond";
 
 // SecureStore keys, centralized to prevent accidental collision
 export const SECURESTORE_MNEMONIC_KEY = "mnemonic";
@@ -67,6 +75,8 @@ export const QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS =
     "inproxyCurrentConnectedClients";
 export const QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS =
     "inproxyCurrentConnectingClients";
+export const QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS =
+    "inproxyCurrentAnnouncingWorkers";
 export const QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED =
     "inproxyTotalBytesTransferred";
 export const QUERYKEY_INPROXY_MUST_UPGRADE = "inproxyMustUpgrade";

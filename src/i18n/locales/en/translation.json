@@ -163,5 +163,50 @@
     },
     "REVEAL_I18N": {
         "string": "Reveal"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "Reduced Usage Window"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "Configure lower usage limits during a daily window. For instance, during the daytime when you need your bandwidth and battery to last."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "Local time"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "Configure Usage Window"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "Not configured"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "Reduced usage between"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "local time"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "Start time"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "End time"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "Select start and end times in 30-minute steps."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "Use HH:MM"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "Start and end must be different"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "Reduced Max Peers"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "Reduced Max MB/s Per Peer"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "Reduced Required Bandwidth"
     }
 }

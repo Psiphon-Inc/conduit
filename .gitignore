@@ -35,3 +35,4 @@ ios_embedded_server_entries
 .idea/
 .vscode/
 
+android/.kotlin

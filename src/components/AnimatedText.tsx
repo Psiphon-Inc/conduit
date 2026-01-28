@@ -17,8 +17,13 @@
  *
  */
 import React from "react";
-import { Text } from "react-native";
-import { SharedValue, runOnJS, useDerivedValue } from "react-native-reanimated";
+import { TextInput } from "react-native";
+import Animated, {
+    SharedValue,
+    useAnimatedProps,
+} from "react-native-reanimated";
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export function AnimatedText({
     text,
@@ -31,14 +36,21 @@ export function AnimatedText({
     fontSize: number;
     fontFamily: string;
 }) {
-    const [renderText, setRenderText] = React.useState(text.value);
-    useDerivedValue(() => runOnJS(setRenderText)(text.value));
+    const animatedProps = useAnimatedProps(() => {
+        return { text: text.value, defaultValue: text.value } as any;
+    });
 
     return (
-        <Text
-            style={{ color: color, fontSize: fontSize, fontFamily: fontFamily }}
-        >
-            {renderText}
-        </Text>
+        <AnimatedTextInput
+            animatedProps={animatedProps}
+            editable={false}
+            style={{
+                color: color,
+                fontSize: fontSize,
+                fontFamily: fontFamily,
+                padding: 0,
+                margin: 0,
+            }}
+        />
     );
 }
