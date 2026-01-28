@@ -27,7 +27,24 @@ import (
 )
 
 func main() {
-	if err := cmd.Execute(); err != nil {
+	// create the root command
+	rootCmd := cmd.RootCMD{
+		Version: "dev",
+	}
+	root := rootCmd.Command()
+
+	// create and add the sub commands
+	root.AddCommand(
+		cmd.RyveCMD{
+			Root: &rootCmd,
+		}.Command(),
+		cmd.StartCMD{
+			Root: &rootCmd,
+		}.Command(),
+	)
+
+	// execute the root command
+	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}

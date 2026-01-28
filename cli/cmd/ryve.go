@@ -19,14 +19,17 @@ import (
 )
 
 type RyveCMD struct {
-	Root                    *RootCMD
+	// public fields
+	Root *RootCMD
+
+	// private fields
 	name                    string
 	pngOutput               string
 	defaultName             string
 	defaultNameFromHostname bool
 }
 
-func (r *RyveCMD) Command() *cobra.Command {
+func (r RyveCMD) Command() *cobra.Command {
 	r.defaultName = "unnamed"
 	r.defaultNameFromHostname = false
 
@@ -48,7 +51,7 @@ func (r *RyveCMD) Command() *cobra.Command {
 	return ryveClaimCmd
 }
 
-func (r *RyveCMD) generateQrCode(uri string) (string, error) {
+func (r RyveCMD) generateQrCode(uri string) (string, error) {
 	q, err := qrcode.New(uri, qrcode.Low)
 
 	if err != nil {
@@ -66,7 +69,7 @@ func (r *RyveCMD) generateQrCode(uri string) (string, error) {
 
 }
 
-func (r *RyveCMD) runRyveClaim(cmd *cobra.Command, args []string) error {
+func (r RyveCMD) runRyveClaim(cmd *cobra.Command, args []string) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Print("This command will reveal your station's private key to terminal output. Please only reveal in a secure location. Continue? (y/n) ")

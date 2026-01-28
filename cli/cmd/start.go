@@ -29,24 +29,43 @@ import (
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/conduit"
 	"github.com/Psiphon-Inc/conduit/cli/internal/config"
+
 	"github.com/spf13/cobra"
 )
 
-var (
+type StartCMD struct {
+	// public fields
+	Root *RootCMD
+
+	// private fields
 	maxClients        int
 	bandwidthMbps     float64
 	psiphonConfigPath string
 	statsFilePath     string
-)
-
-var startCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Start the Conduit inproxy service",
-	Long:  getStartLongHelp(),
-	RunE:  runStart,
 }
 
-func getStartLongHelp() string {
+func (s StartCMD) Command() *cobra.Command {
+	startCmd := &cobra.Command{
+		Use:   "start",
+		Short: "Start the Conduit inproxy service",
+		Long:  s.getStartLongHelp(),
+		RunE:  s.runStart,
+	}
+
+	startCmd.Flags().IntVarP(&s.maxClients, "max-clients", "m", config.DefaultMaxClients, "maximum number of proxy clients (1-1000)")
+	startCmd.Flags().Float64VarP(&s.bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
+	startCmd.Flags().StringVarP(&s.statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
+	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
+
+	// Only show --psiphon-config flag if no config is embedded
+	if !config.HasEmbeddedConfig() {
+		startCmd.Flags().StringVarP(&s.psiphonConfigPath, "psiphon-config", "c", "", "path to Psiphon network config file (JSON)")
+	}
+
+	return startCmd
+}
+
+func (s StartCMD) getStartLongHelp() string {
 	if config.HasEmbeddedConfig() {
 		return `Start the Conduit inproxy service to relay traffic for users in censored regions.`
 	}
@@ -56,29 +75,15 @@ Requires a Psiphon network configuration file (JSON) containing the
 PropagationChannelId, SponsorId, and broker specifications.`
 }
 
-func init() {
-	rootCmd.AddCommand(startCmd)
-
-	startCmd.Flags().IntVarP(&maxClients, "max-clients", "m", config.DefaultMaxClients, "maximum number of proxy clients (1-1000)")
-	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
-	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
-	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
-
-	// Only show --psiphon-config flag if no config is embedded
-	if !config.HasEmbeddedConfig() {
-		startCmd.Flags().StringVarP(&psiphonConfigPath, "psiphon-config", "c", "", "path to Psiphon network config file (JSON)")
-	}
-}
-
-func runStart(cmd *cobra.Command, args []string) error {
+func (s StartCMD) runStart(cmd *cobra.Command, args []string) error {
 	// Determine psiphon config source: flag > embedded > error
-	effectiveConfigPath := psiphonConfigPath
+	effectiveConfigPath := s.psiphonConfigPath
 	useEmbedded := false
 
-	if psiphonConfigPath != "" {
+	if s.psiphonConfigPath != "" {
 		// User provided a config path - validate it exists
-		if _, err := os.Stat(psiphonConfigPath); os.IsNotExist(err) {
-			return fmt.Errorf("psiphon config file not found: %s", psiphonConfigPath)
+		if _, err := os.Stat(s.psiphonConfigPath); os.IsNotExist(err) {
+			return fmt.Errorf("psiphon config file not found: %s", s.psiphonConfigPath)
 		}
 	} else if config.HasEmbeddedConfig() {
 		// No flag provided, but we have embedded config
@@ -89,19 +94,19 @@ func runStart(cmd *cobra.Command, args []string) error {
 	}
 
 	// Resolve stats file path - if relative, place in data dir
-	resolvedStatsFile := statsFilePath
+	resolvedStatsFile := s.statsFilePath
 	if resolvedStatsFile != "" && !filepath.IsAbs(resolvedStatsFile) {
-		resolvedStatsFile = filepath.Join(GetDataDir(), resolvedStatsFile)
+		resolvedStatsFile = filepath.Join(s.Root.GetDataDir(), resolvedStatsFile)
 	}
 
 	// Load or create configuration (auto-generates keys on first run)
 	cfg, err := config.LoadOrCreate(config.Options{
-		DataDir:           GetDataDir(),
+		DataDir:           s.Root.GetDataDir(),
 		PsiphonConfigPath: effectiveConfigPath,
 		UseEmbeddedConfig: useEmbedded,
-		MaxClients:        maxClients,
-		BandwidthMbps:     bandwidthMbps,
-		Verbosity:         Verbosity(),
+		MaxClients:        s.maxClients,
+		BandwidthMbps:     s.bandwidthMbps,
+		Verbosity:         s.Root.Verbosity(),
 		StatsFile:         resolvedStatsFile,
 	})
 	if err != nil {
@@ -130,8 +135,8 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 	// Print startup message
 	bandwidthStr := "unlimited"
-	if bandwidthMbps != config.UnlimitedBandwidth {
-		bandwidthStr = fmt.Sprintf("%.0f Mbps", bandwidthMbps)
+	if s.bandwidthMbps != config.UnlimitedBandwidth {
+		bandwidthStr = fmt.Sprintf("%.0f Mbps", s.bandwidthMbps)
 	}
 	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", cfg.MaxClients, bandwidthStr)
 
