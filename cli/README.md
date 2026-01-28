@@ -6,7 +6,7 @@ Command-line interface for running a Psiphon Conduit node - a volunteer-run prox
 
 Want to run a Conduit station? Get the latest CLI release: https://github.com/Psiphon-Inc/conduit/releases
 
-Conduit requires a Psiphon network configuration file containing connection parameters. Our official CLI releases include an embedded psiphon config, so they just work.
+Our official CLI releases include an embedded psiphon config.
 
 Contact Psiphon (conduit-oss@psiphon.ca) to discuss custom configuration values.
 
@@ -17,6 +17,8 @@ Use the official Docker image, which includes an embedded Psiphon config. Docker
 ```bash
 docker compose up
 ```
+
+The compose file enables Prometheus metrics on `:9090` inside the container. To scrape from the host, publish the port or run Prometheus on the same Docker network and scrape `conduit:9090`.
 
 ## Building From Source
 
@@ -42,16 +44,13 @@ The Makefile will automatically install Go 1.24.12 if not present.
 
 ```bash
 # Start with default settings
-conduit start --psiphon-config ./psiphon_config.json
+conduit start 
 
 # Customize limits
-conduit start --psiphon-config ./psiphon_config.json --max-clients 500 --bandwidth 10
+conduit start --max-clients 20 --bandwidth 10
 
 # Verbose output (info messages)
-conduit start --psiphon-config ./psiphon_config.json -v
-
-# Debug output (everything)
-conduit start --psiphon-config ./psiphon_config.json -vv
+conduit start -v
 ```
 
 ### Options
@@ -60,8 +59,9 @@ conduit start --psiphon-config ./psiphon_config.json -vv
 | ---------------------- | -------- | ------------------------------------------ |
 | `--psiphon-config, -c` | -        | Path to Psiphon network configuration file |
 | `--max-clients, -m`    | 50       | Maximum concurrent clients                 |
-| `--bandwidth, -b`      | 40        | Bandwidth limit per peer in Mbps           |
+| `--bandwidth, -b`      | 40       | Bandwidth limit per peer in Mbps           |
 | `--data-dir, -d`       | `./data` | Directory for keys and state               |
+| `--metrics-addr`       | -        | Prometheus metrics listen address          |
 | `-v`                   | -        | Verbose output (use `-vv` for debug)       |
 
 ## Data Directory
@@ -69,7 +69,7 @@ conduit start --psiphon-config ./psiphon_config.json -vv
 Keys and state are stored in the data directory (default: `./data`):
 
 - `conduit_key.json` - Node identity keypair
-The Psiphon broker tracks proxy reputation by key. Always use a persistent volume to preserve your key across container restarts, otherwise you'll start with zero reputation and may not receive client connections for some time.
+  The Psiphon broker tracks proxy reputation by key. Always use a persistent volume to preserve your key across container restarts, otherwise you'll start with zero reputation and may not receive client connections for some time.
 
 ## Building
 

@@ -132,7 +132,7 @@ jobs:
 
                       Conduit is a volunteer-run proxy node that helps relay traffic for users in censored regions.
 
-                      ### Quick Start
+                      ### Running the Conduit CLI 
 
                       Download the correct binary for your platform, then:
 
@@ -148,12 +148,8 @@ jobs:
                       docker pull ghcr.io/psiphon-inc/conduit/cli:latest
                       ```
 
-                      | Option | Default | Description |
-                      |--------|---------|-------------|
-                      | `--max-clients, -m` | 50 | Maximum concurrent clients |
-                      | `--bandwidth, -b` | 40 | Bandwidth limit per peer in Mbps |
-                      | `--data-dir, -d` | ./data | Directory for keys and state |
-                      | `-v` | - | Verbose output (`-vv` for debug) |
+                      Refer to https://github.com/Psiphon-Inc/conduit/blob/main/cli/README.md for more details.
+
 
     docker:
         runs-on: ubuntu-latest
