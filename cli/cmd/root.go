@@ -26,44 +26,49 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
+// RootCMD is the main command of the cli.
+type RootCMD struct {
+	// public fields
+	Version string
+
+	// private fields
 	verbosity int
 	dataDir   string
-	version   = "dev"
-)
+}
 
-var rootCmd = &cobra.Command{
-	Use:   "conduit",
-	Short: "Conduit - A volunteer-run proxy relay for the Psiphon network",
-	Long: `Conduit is a Psiphon inproxy service that relays traffic for users
+// Command returns a new cobra instance of the RootCMD.
+func (r *RootCMD) Command() *cobra.Command {
+	rootCmd := &cobra.Command{
+		Use:   "conduit",
+		Short: "Conduit - A volunteer-run proxy relay for the Psiphon network",
+		Long: `Conduit is a Psiphon inproxy service that relays traffic for users
 in censored regions, helping them access the open internet.
 
 Run 'conduit start' to begin relaying traffic.`,
-	Version: version,
-}
+		Version: r.Version,
+	}
 
-func Execute() error {
-	return rootCmd.Execute()
-}
+	rootCmd.PersistentFlags().CountVarP(&r.verbosity, "verbose", "v", "increase verbosity (-v for verbose, -vv for debug)")
+	rootCmd.PersistentFlags().StringVarP(&r.dataDir, "data-dir", "d", "./data", "data directory (stores keys and state)")
 
-func init() {
-	rootCmd.PersistentFlags().CountVarP(&verbosity, "verbose", "v", "increase verbosity (-v for verbose, -vv for debug)")
-	rootCmd.PersistentFlags().StringVarP(&dataDir, "data-dir", "d", "./data", "data directory (stores keys and state)")
+	return rootCmd
 }
 
 // Verbosity returns the verbosity level (0=normal, 1=verbose, 2+=debug)
-func Verbosity() int {
-	return verbosity
+func (r *RootCMD) Verbosity() int {
+	return r.verbosity
 }
 
 // GetDataDir returns the data directory path
-func GetDataDir() string {
-	if dataDir != "" {
-		return dataDir
+func (r *RootCMD) GetDataDir() string {
+	if r.dataDir != "" {
+		return r.dataDir
 	}
+
 	dir, err := os.Getwd()
 	if err != nil {
 		return "./data"
 	}
+
 	return fmt.Sprintf("%s/data", dir)
 }
