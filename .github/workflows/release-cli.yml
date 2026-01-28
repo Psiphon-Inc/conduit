@@ -148,7 +148,8 @@ jobs:
                       docker pull ghcr.io/psiphon-inc/conduit/cli:latest
                       ```
 
-                      Refer to cli/README.md for more details
+                      Refer to https://github.com/Psiphon-Inc/conduit/blob/main/cli/README.md for more details.
+
 
     docker:
         runs-on: ubuntu-latest
