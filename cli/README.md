@@ -61,6 +61,8 @@ conduit start -v
 | `--max-clients, -m`    | 50       | Maximum concurrent clients                 |
 | `--bandwidth, -b`      | 40       | Bandwidth limit per peer in Mbps           |
 | `--data-dir, -d`       | `./data` | Directory for keys and state               |
+| `--stats-file, -s`     | -        | Persist stats to JSON file                 |
+| `--geo`                | false    | Enable client geolocation tracking         |
 | `--metrics-addr`       | -        | Prometheus metrics listen address          |
 | `-v`                   | -        | Verbose output (use `-vv` for debug)       |
 
@@ -70,6 +72,68 @@ Keys and state are stored in the data directory (default: `./data`):
 
 - `conduit_key.json` - Node identity keypair
   The Psiphon broker tracks proxy reputation by key. Always use a persistent volume to preserve your key across container restarts, otherwise you'll start with zero reputation and may not receive client connections for some time.
+
+## Geo Stats
+
+Track where your clients are connecting from:
+
+```bash
+conduit start --geo --stats-file stats.json --psiphon-config ./psiphon_config.json
+```
+
+On first run, the GeoLite2 database (~6MB) is automatically downloaded. Stats are updated in real-time as clients connect and disconnect.
+
+Example `stats.json`:
+
+```json
+{
+  "connectingClients": 5,
+  "connectedClients": 12,
+  "totalBytesUp": 1234567,
+  "totalBytesDown": 9876543,
+  "uptimeSeconds": 3600,
+  "isLive": true,
+  "geo": [
+    {
+      "code": "IR",
+      "country": "Iran",
+      "count": 3,
+      "count_total": 47,
+      "bytes_up": 524288000,
+      "bytes_down": 2684354560
+    },
+    {
+      "code": "CN",
+      "country": "China",
+      "count": 1,
+      "count_total": 23,
+      "bytes_up": 314572800,
+      "bytes_down": 1610612736
+    },
+    {
+      "code": "RELAY",
+      "country": "Unknown (TURN Relay)",
+      "count": 1,
+      "count_total": 8,
+      "bytes_up": 52428800,
+      "bytes_down": 268435456
+    }
+  ],
+  "timestamp": "2026-01-25T15:44:00Z"
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `count` | Currently connected clients |
+| `count_total` | Total unique clients since start |
+| `bytes_up` | Total bytes uploaded since start |
+| `bytes_down` | Total bytes downloaded since start |
+
+**Notes:**
+- Connections through TURN relay servers appear as `RELAY` since the actual client country cannot be determined.
+- The `connectedClients` field is reported by the Psiphon broker and may differ slightly from the sum of geo `count` values, which are tracked locally via WebRTC callbacks.
+- Bandwidth (`bytes_up`/`bytes_down`) is attributed to a country when the connection closes. Active connections contribute to `totalBytesUp`/`totalBytesDown` but won't appear in geo stats until they disconnect.
 
 ## Building
 

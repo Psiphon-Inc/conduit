@@ -15,8 +15,9 @@ GO_REQUIRED_VERSION := 1.24
 GO := $(shell which go)
 
 # Psiphon tunnel-core branch with inproxy support
-PSIPHON_BRANCH ?= staging-client
-PSIPHON_REPO := https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
+# Using ssmirr fork with OnConnectionEstablished callback until upstreamed
+PSIPHON_BRANCH ?= feat/inproxy-client-connected-callback
+PSIPHON_REPO := https://github.com/ssmirr/psiphon-tunnel-core.git
 
 # Compute build-info and invoke go build:
 # $(1) = output path

@@ -4,6 +4,7 @@ go 1.24.0
 
 require (
 	filippo.io/edwards25519 v1.1.0
+	github.com/oschwald/geoip2-golang v1.11.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/spf13/cobra v1.8.1
@@ -64,6 +65,7 @@ require (
 	github.com/mroth/weightedrand v1.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/ginkgo/v2 v2.12.0 // indirect
+	github.com/oschwald/maxminddb-golang v1.13.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pion/datachannel v1.5.5 // indirect
 	github.com/pion/dtls/v2 v2.2.7 // indirect
@@ -126,6 +128,8 @@ require (
 
 // Use staging-client branch for inproxy support
 require github.com/Psiphon-Labs/psiphon-tunnel-core v0.0.0-20251128193008-996f485b1e13
+
+replace github.com/Psiphon-Labs/psiphon-tunnel-core => ./psiphon-tunnel-core
 
 // Required for PSIPHON_ENABLE_INPROXY build tag - use Psiphon's forked pion libraries
 // These are automatically set up by 'make setup' which clones psiphon-tunnel-core
