@@ -51,6 +51,7 @@ type Options struct {
 	Verbosity         int    // 0=normal, 1=verbose, 2+=debug
 	StatsFile         string // Path to write stats JSON file (empty = disabled)
 	MetricsAddr       string // Address for Prometheus metrics endpoint (empty = disabled)
+	GeoEnabled        bool   // Enable geo tracking via tcpdump
 }
 
 // Config represents the validated configuration for the Conduit service
@@ -65,6 +66,7 @@ type Config struct {
 	Verbosity               int    // 0=normal, 1=verbose, 2+=debug
 	StatsFile               string // Path to write stats JSON file (empty = disabled)
 	MetricsAddr             string // Address for Prometheus metrics endpoint (empty = disabled)
+	GeoEnabled              bool   // Enable geo tracking via tcpdump
 }
 
 // persistedKey represents the key data saved to disk
@@ -131,6 +133,7 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		Verbosity:               opts.Verbosity,
 		StatsFile:               opts.StatsFile,
 		MetricsAddr:             opts.MetricsAddr,
+		GeoEnabled:              opts.GeoEnabled,
 	}, nil
 }
 

@@ -38,6 +38,7 @@ var (
 	psiphonConfigPath string
 	statsFilePath     string
 	metricsAddr       string
+	geoEnabled        bool
 )
 
 var startCmd = &cobra.Command{
@@ -65,6 +66,7 @@ func init() {
 	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
 	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
 	startCmd.Flags().StringVar(&metricsAddr, "metrics-addr", "", "address for Prometheus metrics endpoint (e.g., :9090 or 127.0.0.1:9090)")
+	startCmd.Flags().BoolVar(&geoEnabled, "geo", false, "enable client location tracking (requires tcpdump, geoip-bin)")
 
 	// Only show --psiphon-config flag if no config is embedded
 	if !config.HasEmbeddedConfig() {
@@ -106,6 +108,7 @@ func runStart(cmd *cobra.Command, args []string) error {
 		Verbosity:         Verbosity(),
 		StatsFile:         resolvedStatsFile,
 		MetricsAddr:       metricsAddr,
+		GeoEnabled:        geoEnabled,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
