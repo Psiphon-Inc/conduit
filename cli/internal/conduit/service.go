@@ -116,6 +116,12 @@ func (s *Service) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to create psiphon config: %w", err)
 	}
 
+	bandwidthStr := "unlimited"
+	if s.config.BandwidthBytesPerSecond > 0 {
+		bandwidthStr = fmt.Sprintf("%.0f Mbps", float64(s.config.BandwidthBytesPerSecond)*8/1000/1000)
+	}
+	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", s.config.MaxClients, bandwidthStr)
+
 	// Open the data store
 	err = psiphon.OpenDataStore(&psiphon.Config{
 		DataRootDirectory: s.config.DataDir,
