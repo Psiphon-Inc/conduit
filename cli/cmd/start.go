@@ -65,11 +65,7 @@ func init() {
 	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
 	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
 	startCmd.Flags().StringVar(&metricsAddr, "metrics-addr", "", "address for Prometheus metrics endpoint (e.g., :9090 or 127.0.0.1:9090)")
-
-	// Only show --psiphon-config flag if no config is embedded
-	if !config.HasEmbeddedConfig() {
-		startCmd.Flags().StringVarP(&psiphonConfigPath, "psiphon-config", "c", "", "path to Psiphon network config file (JSON)")
-	}
+	startCmd.Flags().StringVarP(&psiphonConfigPath, "psiphon-config", "c", "", "path to Psiphon network config file (JSON)")
 }
 
 func runStart(cmd *cobra.Command, args []string) error {
@@ -96,13 +92,32 @@ func runStart(cmd *cobra.Command, args []string) error {
 		resolvedStatsFile = filepath.Join(GetDataDir(), resolvedStatsFile)
 	}
 
+	maxClientsFromFlag := 0
+	if cmd.Flags().Changed("max-clients") {
+		if maxClients < 1 {
+			return fmt.Errorf("max-clients must be between 1 and %d", config.MaxClientsLimit)
+		}
+		maxClientsFromFlag = maxClients
+	}
+
+	bandwidthFromFlag := 0.0
+	bandwidthFromFlagSet := false
+	if cmd.Flags().Changed("bandwidth") {
+		if bandwidthMbps != config.UnlimitedBandwidth && bandwidthMbps < 1 {
+			return fmt.Errorf("bandwidth must be at least 1 Mbps (or -1 for unlimited)")
+		}
+		bandwidthFromFlag = bandwidthMbps
+		bandwidthFromFlagSet = true
+	}
+
 	// Load or create configuration (auto-generates keys on first run)
 	cfg, err := config.LoadOrCreate(config.Options{
 		DataDir:           GetDataDir(),
 		PsiphonConfigPath: effectiveConfigPath,
 		UseEmbeddedConfig: useEmbedded,
-		MaxClients:        maxClients,
-		BandwidthMbps:     bandwidthMbps,
+		MaxClients:        maxClientsFromFlag,
+		BandwidthMbps:     bandwidthFromFlag,
+		BandwidthSet:      bandwidthFromFlagSet,
 		Verbosity:         Verbosity(),
 		StatsFile:         resolvedStatsFile,
 		MetricsAddr:       metricsAddr,
@@ -130,13 +145,6 @@ func runStart(cmd *cobra.Command, args []string) error {
 		fmt.Println("\nShutting down...")
 		cancel()
 	}()
-
-	// Print startup message
-	bandwidthStr := "unlimited"
-	if bandwidthMbps != config.UnlimitedBandwidth {
-		bandwidthStr = fmt.Sprintf("%.0f Mbps", bandwidthMbps)
-	}
-	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", cfg.MaxClients, bandwidthStr)
 
 	// Run the service
 	if err := service.Run(ctx); err != nil && ctx.Err() == nil {

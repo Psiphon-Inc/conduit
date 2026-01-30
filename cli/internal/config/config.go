@@ -48,6 +48,7 @@ type Options struct {
 	UseEmbeddedConfig bool
 	MaxClients        int
 	BandwidthMbps     float64
+	BandwidthSet      bool
 	Verbosity         int    // 0=normal, 1=verbose, 2+=debug
 	StatsFile         string // Path to write stats JSON file (empty = disabled)
 	MetricsAddr       string // Address for Prometheus metrics endpoint (empty = disabled)
@@ -89,8 +90,37 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		return nil, fmt.Errorf("failed to load or create key: %w", err)
 	}
 
-	// Validate limits
+	// Handle psiphon config source
+	var psiphonConfigData []byte
+	var psiphonConfigFileData []byte
+	if opts.UseEmbeddedConfig {
+		psiphonConfigData = GetEmbeddedPsiphonConfig()
+		psiphonConfigFileData = psiphonConfigData
+	} else if opts.PsiphonConfigPath != "" {
+		data, err := os.ReadFile(opts.PsiphonConfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read psiphon config file: %w", err)
+		}
+		psiphonConfigFileData = data
+	}
+
+	// Parse inproxy settings from config if available
+	var inproxyConfig struct {
+		InproxyMaxClients                    *int `json:"InproxyMaxClients"`
+		InproxyLimitUpstreamBytesPerSecond   *int `json:"InproxyLimitUpstreamBytesPerSecond"`
+		InproxyLimitDownstreamBytesPerSecond *int `json:"InproxyLimitDownstreamBytesPerSecond"`
+	}
+	if len(psiphonConfigFileData) > 0 {
+		if err := json.Unmarshal(psiphonConfigFileData, &inproxyConfig); err != nil {
+			return nil, fmt.Errorf("failed to parse psiphon config file: %w", err)
+		}
+	}
+
+	// Resolve max clients: flag > config > default
 	maxClients := opts.MaxClients
+	if maxClients == 0 && inproxyConfig.InproxyMaxClients != nil {
+		maxClients = *inproxyConfig.InproxyMaxClients
+	}
 	if maxClients == 0 {
 		maxClients = DefaultMaxClients
 	}
@@ -98,26 +128,43 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		return nil, fmt.Errorf("max-clients must be between 1 and %d", MaxClientsLimit)
 	}
 
-	bandwidthMbps := opts.BandwidthMbps
-	if bandwidthMbps == 0 {
-		bandwidthMbps = DefaultBandwidthMbps
-	}
-	if bandwidthMbps != UnlimitedBandwidth && bandwidthMbps < 1 {
-		return nil, fmt.Errorf("bandwidth must be at least 1 Mbps (or -1 for unlimited)")
-	}
-
-	// Convert Mbps to bytes per second (0 means unlimited)
+	// Resolve bandwidth: flag > config > default
 	var bandwidthBytesPerSecond int
-	if bandwidthMbps == UnlimitedBandwidth {
-		bandwidthBytesPerSecond = 0 // 0 signals unlimited
+	if opts.BandwidthSet {
+		bandwidthMbps := opts.BandwidthMbps
+		if bandwidthMbps != UnlimitedBandwidth && bandwidthMbps < 1 {
+			return nil, fmt.Errorf("bandwidth must be at least 1 Mbps (or -1 for unlimited)")
+		}
+		if bandwidthMbps == UnlimitedBandwidth {
+			bandwidthBytesPerSecond = 0
+		} else {
+			bandwidthBytesPerSecond = int(bandwidthMbps * 1000 * 1000 / 8)
+		}
 	} else {
-		bandwidthBytesPerSecond = int(bandwidthMbps * 1000 * 1000 / 8)
-	}
-
-	// Handle psiphon config source
-	var psiphonConfigData []byte
-	if opts.UseEmbeddedConfig {
-		psiphonConfigData = GetEmbeddedPsiphonConfig()
+		hasUpstream := inproxyConfig.InproxyLimitUpstreamBytesPerSecond != nil
+		hasDownstream := inproxyConfig.InproxyLimitDownstreamBytesPerSecond != nil
+		if hasUpstream && *inproxyConfig.InproxyLimitUpstreamBytesPerSecond < 0 {
+			return nil, fmt.Errorf("bandwidth must be at least 1 Mbps (or -1 for unlimited)")
+		}
+		if hasDownstream && *inproxyConfig.InproxyLimitDownstreamBytesPerSecond < 0 {
+			return nil, fmt.Errorf("bandwidth must be at least 1 Mbps (or -1 for unlimited)")
+		}
+		minPositive := 0
+		if hasUpstream && *inproxyConfig.InproxyLimitUpstreamBytesPerSecond > 0 {
+			minPositive = *inproxyConfig.InproxyLimitUpstreamBytesPerSecond
+		}
+		if hasDownstream && *inproxyConfig.InproxyLimitDownstreamBytesPerSecond > 0 {
+			if minPositive == 0 || *inproxyConfig.InproxyLimitDownstreamBytesPerSecond < minPositive {
+				minPositive = *inproxyConfig.InproxyLimitDownstreamBytesPerSecond
+			}
+		}
+		if minPositive > 0 {
+			bandwidthBytesPerSecond = minPositive
+		} else if hasUpstream || hasDownstream {
+			bandwidthBytesPerSecond = 0
+		} else {
+			bandwidthBytesPerSecond = int(DefaultBandwidthMbps * 1000 * 1000 / 8)
+		}
 	}
 
 	return &Config{
