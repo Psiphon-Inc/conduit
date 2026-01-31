@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"time"
 
 	"github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common/buildinfo"
 	"github.com/prometheus/client_golang/prometheus"
@@ -43,7 +42,6 @@ type Metrics struct {
 	IsLive            prometheus.Gauge
 	MaxClients        prometheus.Gauge
 	BandwidthLimit    prometheus.Gauge
-	UptimeSeconds     prometheus.Gauge
 	BytesUploaded     prometheus.Gauge
 	BytesDownloaded   prometheus.Gauge
 
@@ -54,8 +52,14 @@ type Metrics struct {
 	server   *http.Server
 }
 
+// GaugeFuncs holds functions that compute metrics at scrape time
+type GaugeFuncs struct {
+	GetUptimeSeconds func() float64
+	GetIdleSeconds   func() float64
+}
+
 // New creates a new Metrics instance with all metrics registered
-func New() *Metrics {
+func New(gaugeFuncs GaugeFuncs) *Metrics {
 	registry := prometheus.NewRegistry()
 
 	// Add standard Go metrics
@@ -98,13 +102,6 @@ func New() *Metrics {
 				Help:      "Configured bandwidth limit in bytes per second (0 = unlimited)",
 			},
 		),
-		UptimeSeconds: prometheus.NewGauge(
-			prometheus.GaugeOpts{
-				Namespace: namespace,
-				Name:      "uptime_seconds",
-				Help:      "Number of seconds since the service started",
-			},
-		),
 		BytesUploaded: prometheus.NewGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
@@ -130,13 +127,32 @@ func New() *Metrics {
 		registry: registry,
 	}
 
+	// Create GaugeFunc metrics (computed at scrape time)
+	uptimeSeconds := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "uptime_seconds",
+			Help:      "Number of seconds since the service started",
+		},
+		gaugeFuncs.GetUptimeSeconds,
+	)
+	idleSeconds := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Namespace: namespace,
+			Name:      "idle_seconds",
+			Help:      "Number of seconds the proxy has been idle (0 connecting and 0 connected clients)",
+		},
+		gaugeFuncs.GetIdleSeconds,
+	)
+
 	// Register all metrics
 	registry.MustRegister(m.ConnectingClients)
 	registry.MustRegister(m.ConnectedClients)
 	registry.MustRegister(m.IsLive)
 	registry.MustRegister(m.MaxClients)
 	registry.MustRegister(m.BandwidthLimit)
-	registry.MustRegister(m.UptimeSeconds)
+	registry.MustRegister(uptimeSeconds)
+	registry.MustRegister(idleSeconds)
 	registry.MustRegister(m.BytesUploaded)
 	registry.MustRegister(m.BytesDownloaded)
 	registry.MustRegister(m.BuildInfo)
@@ -172,11 +188,6 @@ func (m *Metrics) SetIsLive(isLive bool) {
 	} else {
 		m.IsLive.Set(0)
 	}
-}
-
-// SetUptime updates the uptime gauge
-func (m *Metrics) SetUptime(startTime time.Time) {
-	m.UptimeSeconds.Set(time.Since(startTime).Seconds())
 }
 
 // SetBytesUploaded sets the bytes uploaded gauge
