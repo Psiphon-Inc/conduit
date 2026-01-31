@@ -132,23 +132,56 @@ jobs:
 
                       Conduit is a volunteer-run proxy node that helps relay traffic for users in censored regions.
 
-                      ### Running the Conduit CLI 
+                      ### Install on your PC
 
-                      Download the correct binary for your platform, then:
+                      Download the binary for your platform:
+
+                      | Platform        | File                          |
+                      |-----------------|-------------------------------|
+                      | Linux (amd64)   | `conduit-linux-amd64`         |
+                      | Linux (arm64)   | `conduit-linux-arm64`        |
+                      | macOS (Intel)   | `conduit-darwin-amd64`        |
+                      | macOS (Apple Silicon) | `conduit-darwin-arm64` |
+                      | Windows (amd64) | `conduit-windows-amd64.exe`   |
+                      | FreeBSD (amd64) | `conduit-freebsd-amd64`      |
+
+                      On Linux/macOS/FreeBSD: make it executable and optionally put it in your PATH:
+                      ```bash
+                      chmod +x conduit-*
+                      # Optional: mv conduit-* /usr/local/bin/conduit
+                      ```
+
+                      Verify with `./conduit --help` (or `conduit --help` if in PATH).
+
+                      ### Run Conduit on this machine
+
+                      This binary includes an embedded configuration file, so you do not need to provide one:
 
                       ```bash
                       ./conduit start
                       ```
 
-                      This binary includes an embedded configuration file, so you do not need to provide one. 
+                      ### Provision other servers (Hetzner Cloud)
 
-                      This release is also available through a docker image, which also embeds a configuration file.
-                      
+                      From your PC you can provision Conduit servers in the cloud. Run:
+
+                      ```bash
+                      ./conduit hetzner setup
+                      ```
+
+                      You will be prompted for a Hetzner API token (get one from [Hetzner Cloud Console](https://console.hetzner.cloud)), number of servers, server type (e.g. cx11), location, and Conduit options. Servers are created with Ubuntu, Docker, and Conduit; each runs Conduit automatically. Use this to run Conduit on one machine and set up more nodes from your desktop.
+
+                      ### Docker
+
+                      This release is also available as a Docker image (embedded config):
+
                       ```bash
                       docker pull ghcr.io/psiphon-inc/conduit/cli:latest
                       ```
 
-                      Refer to https://github.com/Psiphon-Inc/conduit/blob/main/cli/README.md for more details.
+                      ### Checksums and docs
+
+                      Verify downloads with `checksums.txt`. For more details and options: https://github.com/Psiphon-Inc/conduit/blob/main/cli/README.md
 
 
     docker:
