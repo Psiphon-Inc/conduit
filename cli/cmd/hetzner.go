@@ -224,7 +224,6 @@ func runHetznerSetup(cmd *cobra.Command, args []string) error {
 		sshPub = strings.TrimSpace(string(data))
 	}
 
-	const progressLineWidth = 120
 	reports := make([]hetzner.ProgressReport, count)
 	printedCreating := make([]bool, count)
 	step1Printed := false
