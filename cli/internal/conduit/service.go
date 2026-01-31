@@ -50,7 +50,8 @@ type Stats struct {
 	TotalBytesUp      int64
 	TotalBytesDown    int64
 	StartTime         time.Time
-	IsLive            bool // Connected to broker and ready to accept clients
+	LastActiveTime    time.Time // Last time there was at least one client (connecting or connected)
+	IsLive            bool      // Connected to broker and ready to accept clients
 }
 
 // StatsJSON represents the JSON structure for persisted stats
@@ -60,6 +61,7 @@ type StatsJSON struct {
 	TotalBytesUp      int64  `json:"totalBytesUp"`
 	TotalBytesDown    int64  `json:"totalBytesDown"`
 	UptimeSeconds     int64  `json:"uptimeSeconds"`
+	IdleSeconds       int64  `json:"idleSeconds"`
 	IsLive            bool   `json:"isLive"`
 	Timestamp         string `json:"timestamp"`
 }
@@ -74,7 +76,10 @@ func New(cfg *config.Config) (*Service, error) {
 	}
 
 	if cfg.MetricsAddr != "" {
-		s.metrics = metrics.New()
+		s.metrics = metrics.New(metrics.GaugeFuncs{
+			GetUptimeSeconds: s.getUptimeSeconds,
+			GetIdleSeconds:   s.getIdleSecondsFloat,
+		})
 		s.metrics.SetConfig(cfg.MaxClients, cfg.BandwidthBytesPerSecond)
 	}
 
@@ -222,11 +227,35 @@ func (s *Service) updateMetrics() {
 		return
 	}
 
-	s.metrics.SetUptime(s.stats.StartTime)
 	s.metrics.SetConnectingClients(s.stats.ConnectingClients)
 	s.metrics.SetConnectedClients(s.stats.ConnectedClients)
 	s.metrics.SetBytesUploaded(float64(s.stats.TotalBytesUp))
 	s.metrics.SetBytesDownloaded(float64(s.stats.TotalBytesDown))
+}
+
+// getUptimeSeconds returns the uptime in seconds (thread-safe, for Prometheus scrape)
+func (s *Service) getUptimeSeconds() float64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return time.Since(s.stats.StartTime).Seconds()
+}
+
+// getIdleSecondsFloat returns how long the proxy has been idle (thread-safe, for Prometheus scrape)
+func (s *Service) getIdleSecondsFloat() float64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.calcIdleSeconds()
+}
+
+// calcIdleSeconds calculates idle time. Must be called with lock held.
+func (s *Service) calcIdleSeconds() float64 {
+	if s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0 {
+		return 0
+	}
+	if s.stats.LastActiveTime.IsZero() {
+		return time.Since(s.stats.StartTime).Seconds()
+	}
+	return time.Since(s.stats.LastActiveTime).Seconds()
 }
 
 // handleNotice processes notices from psiphon-tunnel-core
@@ -258,6 +287,12 @@ func (s *Service) handleNotice(notice []byte) {
 		if v, ok := noticeData.Data["bytesDown"].(float64); ok {
 			s.stats.TotalBytesDown += int64(v)
 		}
+
+		// Track last active time for idle calculation
+		if s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0 {
+			s.stats.LastActiveTime = time.Now()
+		}
+
 		// Log if client counts changed
 		if s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
 			s.logStats()
@@ -284,6 +319,12 @@ func (s *Service) handleNotice(notice []byte) {
 		if v, ok := noticeData.Data["totalBytesDown"].(float64); ok {
 			s.stats.TotalBytesDown = int64(v)
 		}
+
+		// Track last active time for idle calculation
+		if s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0 {
+			s.stats.LastActiveTime = time.Now()
+		}
+
 		// Log if client counts changed
 		if s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
 			s.logStats()
@@ -392,6 +433,7 @@ func (s *Service) logStats() {
 			TotalBytesUp:      s.stats.TotalBytesUp,
 			TotalBytesDown:    s.stats.TotalBytesDown,
 			UptimeSeconds:     int64(time.Since(s.stats.StartTime).Seconds()),
+			IdleSeconds:       int64(s.calcIdleSeconds()),
 			IsLive:            s.stats.IsLive,
 			Timestamp:         time.Now().Format(time.RFC3339),
 		}
