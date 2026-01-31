@@ -31,7 +31,7 @@ define GO_BUILD
 	ALL_TAGS="$(BASE_TAGS)" && \
 	if [ -n "$(2)" ]; then ALL_TAGS="$$ALL_TAGS,$(2)"; fi && \
 	echo "Building $(3)/$(4) -> $(1) with tags: $$ALL_TAGS" && \
-	GOOS=$(3) GOARCH=$(4) $(GO) build \
+	CGO_ENABLED=0 GOOS=$(3) GOARCH=$(4) $(GO) build \
 	  -tags "$$ALL_TAGS" \
 	  -ldflags "\
 	    -s -w \
