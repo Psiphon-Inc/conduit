@@ -47,11 +47,11 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().CountVarP(&verbosity, "verbose", "v", "increase verbosity (-v for verbose, -vv for debug)")
+	rootCmd.PersistentFlags().CountVarP(&verbosity, "verbose", "v", "increase verbosity (-v for verbose output)")
 	rootCmd.PersistentFlags().StringVarP(&dataDir, "data-dir", "d", "./data", "data directory (stores keys and state)")
 }
 
-// Verbosity returns the verbosity level (0=normal, 1=verbose, 2+=debug)
+// Verbosity returns the verbosity level (0=normal, 1+=verbose)
 func Verbosity() int {
 	return verbosity
 }
