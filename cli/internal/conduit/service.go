@@ -25,26 +25,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/config"
+	"github.com/Psiphon-Inc/conduit/cli/internal/logging"
 	"github.com/Psiphon-Inc/conduit/cli/internal/metrics"
 	"github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon"
 )
 
 // Service represents the Conduit inproxy service
 type Service struct {
-	config     *config.Config
-	controller *psiphon.Controller
-	stats      *Stats
-	metrics    *metrics.Metrics
-	mu         sync.RWMutex
+	config               *config.Config
+	controller           *psiphon.Controller
+	stats                *Stats
+	metrics              *metrics.Metrics
+	mu                   sync.RWMutex
+	lastActivityLogTime  time.Time
+	lastLoggedAnnouncing int
+	lastLoggedConnecting int
+	lastLoggedConnected  int
+
+	startTimeUnixNano  int64
+	lastActiveUnixNano atomic.Int64
+	connectingClients  atomic.Int64
+	connectedClients   atomic.Int64
 }
 
 // Stats tracks proxy activity statistics
 type Stats struct {
+	Announcing        int
 	ConnectingClients int
 	ConnectedClients  int
 	TotalBytesUp      int64
@@ -56,6 +67,7 @@ type Stats struct {
 
 // StatsJSON represents the JSON structure for persisted stats
 type StatsJSON struct {
+	Announcing        int    `json:"announcing"`
 	ConnectingClients int    `json:"connectingClients"`
 	ConnectedClients  int    `json:"connectedClients"`
 	TotalBytesUp      int64  `json:"totalBytesUp"`
@@ -74,6 +86,7 @@ func New(cfg *config.Config) (*Service, error) {
 			StartTime: time.Now(),
 		},
 	}
+	s.startTimeUnixNano = s.stats.StartTime.UnixNano()
 
 	if cfg.MetricsAddr != "" {
 		s.metrics = metrics.New(metrics.GaugeFuncs{
@@ -93,7 +106,7 @@ func (s *Service) Run(ctx context.Context) error {
 			return fmt.Errorf("failed to start metrics server: %w", err)
 		}
 
-		fmt.Printf("Prometheus metrics available at http://%s/metrics\n", s.config.MetricsAddr)
+		logging.Printf("[OK] Prometheus metrics available at http://%s/metrics\n", s.config.MetricsAddr)
 
 		// Ensure metrics server is shut down when we're done
 		defer func() {
@@ -101,7 +114,7 @@ func (s *Service) Run(ctx context.Context) error {
 			defer cancel()
 
 			if err := s.metrics.Shutdown(ctx); err != nil {
-				fmt.Printf("[ERROR] Failed to shutdown metrics server: %v\n", err)
+				logging.Printf("[ERROR] Failed to shutdown metrics server: %v\n", err)
 			}
 		}()
 	}
@@ -125,7 +138,7 @@ func (s *Service) Run(ctx context.Context) error {
 	if s.config.BandwidthBytesPerSecond > 0 {
 		bandwidthStr = fmt.Sprintf("%.0f Mbps", float64(s.config.BandwidthBytesPerSecond)*8/1000/1000)
 	}
-	fmt.Printf("Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", s.config.MaxClients, bandwidthStr)
+	logging.Printf("[OK] Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", s.config.MaxClients, bandwidthStr)
 
 	// Open the data store
 	err = psiphon.OpenDataStore(&psiphon.Config{
@@ -197,9 +210,8 @@ func (s *Service) createPsiphonConfig() (*psiphon.Config, error) {
 	// Enable activity notices for stats
 	configJSON["EmitInproxyProxyActivity"] = true
 
-	// Keep diagnostic notices enabled (we filter in handleNotice)
-	// This is needed to get the broker connection status
-	configJSON["EmitDiagnosticNotices"] = true
+	// Enable diagnostic notices only in verbose modes
+	configJSON["EmitDiagnosticNotices"] = s.config.Verbosity >= 1
 
 	// Serialize config
 	configData, err := json.Marshal(configJSON)
@@ -227,6 +239,7 @@ func (s *Service) updateMetrics() {
 		return
 	}
 
+	s.metrics.SetAnnouncing(s.stats.Announcing)
 	s.metrics.SetConnectingClients(s.stats.ConnectingClients)
 	s.metrics.SetConnectedClients(s.stats.ConnectedClients)
 	s.metrics.SetBytesUploaded(float64(s.stats.TotalBytesUp))
@@ -235,16 +248,27 @@ func (s *Service) updateMetrics() {
 
 // getUptimeSeconds returns the uptime in seconds (thread-safe, for Prometheus scrape)
 func (s *Service) getUptimeSeconds() float64 {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return time.Since(s.stats.StartTime).Seconds()
+	if s.startTimeUnixNano == 0 {
+		return 0
+	}
+	return time.Since(time.Unix(0, s.startTimeUnixNano)).Seconds()
 }
 
 // getIdleSecondsFloat returns how long the proxy has been idle (thread-safe, for Prometheus scrape)
 func (s *Service) getIdleSecondsFloat() float64 {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.calcIdleSeconds()
+	connecting := s.connectingClients.Load()
+	connected := s.connectedClients.Load()
+	if connecting > 0 || connected > 0 {
+		return 0
+	}
+	lastActive := s.lastActiveUnixNano.Load()
+	if lastActive == 0 {
+		if s.startTimeUnixNano == 0 {
+			return 0
+		}
+		return time.Since(time.Unix(0, s.startTimeUnixNano)).Seconds()
+	}
+	return time.Since(time.Unix(0, lastActive)).Seconds()
 }
 
 // calcIdleSeconds calculates idle time. Must be called with lock held.
@@ -275,6 +299,10 @@ func (s *Service) handleNotice(notice []byte) {
 		s.mu.Lock()
 		prevConnecting := s.stats.ConnectingClients
 		prevConnected := s.stats.ConnectedClients
+		now := time.Now()
+		if v, ok := noticeData.Data["announcing"].(float64); ok {
+			s.stats.Announcing = int(v)
+		}
 		if v, ok := noticeData.Data["connectingClients"].(float64); ok {
 			s.stats.ConnectingClients = int(v)
 		}
@@ -290,7 +318,17 @@ func (s *Service) handleNotice(notice []byte) {
 
 		// Track last active time for idle calculation
 		if s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0 {
-			s.stats.LastActiveTime = time.Now()
+			s.stats.LastActiveTime = now
+			s.lastActiveUnixNano.Store(now.UnixNano())
+		}
+
+		becameLive := false
+		if !s.stats.IsLive && (s.stats.Announcing > 0 || s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0) {
+			s.stats.IsLive = true
+			if s.metrics != nil {
+				s.metrics.SetIsLive(true)
+			}
+			becameLive = true
 		}
 
 		// Log if client counts changed
@@ -298,15 +336,30 @@ func (s *Service) handleNotice(notice []byte) {
 			s.logStats()
 		}
 
+		shouldLog, announcingCount, connectingCount, connectedCount := s.shouldLogInproxyActivity(now)
+		s.syncSnapshotLocked()
 		s.updateMetrics()
 
 		s.mu.Unlock()
+		if becameLive {
+			logging.Println("[OK] Announcing presence to Psiphon broker, you will see announcing=1 while bootstrapping is underway")
+		}
+		if shouldLog {
+			logging.Printf("[INFO] Inproxy activity: announcing=%d connecting=%d connected=%d\n",
+				announcingCount,
+				connectingCount,
+				connectedCount,
+			)
+		}
 
 	case "InproxyProxyTotalActivity":
 		// Update stats from total activity notices
 		s.mu.Lock()
 		prevConnecting := s.stats.ConnectingClients
 		prevConnected := s.stats.ConnectedClients
+		if v, ok := noticeData.Data["announcing"].(float64); ok {
+			s.stats.Announcing = int(v)
+		}
 		if v, ok := noticeData.Data["connectingClients"].(float64); ok {
 			s.stats.ConnectingClients = int(v)
 		}
@@ -322,7 +375,18 @@ func (s *Service) handleNotice(notice []byte) {
 
 		// Track last active time for idle calculation
 		if s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0 {
-			s.stats.LastActiveTime = time.Now()
+			now := time.Now()
+			s.stats.LastActiveTime = now
+			s.lastActiveUnixNano.Store(now.UnixNano())
+		}
+
+		becameLive := false
+		if !s.stats.IsLive && (s.stats.Announcing > 0 || s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0) {
+			s.stats.IsLive = true
+			if s.metrics != nil {
+				s.metrics.SetIsLive(true)
+			}
+			becameLive = true
 		}
 
 		// Log if client counts changed
@@ -330,87 +394,40 @@ func (s *Service) handleNotice(notice []byte) {
 			s.logStats()
 		}
 
+		s.syncSnapshotLocked()
 		s.updateMetrics()
 
 		s.mu.Unlock()
+		if becameLive {
+			logging.Println("[OK] Announcing to Psiphon broker")
+		}
 
 	case "Info":
-		// Check for broker connection status
 		if msg, ok := noticeData.Data["message"].(string); ok {
-			if strings.HasPrefix(msg, "inproxy: selected broker ") {
-				s.mu.Lock()
-				if !s.stats.IsLive {
-					s.stats.IsLive = true
-					if s.metrics != nil {
-						s.metrics.SetIsLive(true)
-					}
-					s.mu.Unlock()
-					fmt.Println("[OK] Connected to Psiphon network")
-				} else {
-					s.mu.Unlock()
-				}
-				if s.config.Verbosity >= 2 {
-					fmt.Printf("[DEBUG] Info: %v\n", noticeData.Data)
-				}
-			} else if s.config.Verbosity >= 1 {
-				// -v: show info messages except noisy announcement requests
-				if msg != "announcement request" {
-					fmt.Printf("[INFO] %s\n", msg)
-				} else if s.config.Verbosity >= 2 {
-					// -vv: show everything including announcement requests
-					fmt.Printf("[DEBUG] Info: %v\n", noticeData.Data)
-				}
+			if s.config.Verbosity >= 1 {
+				logging.Printf("[INFO] %s\n", msg)
 			}
 		}
 
 	case "InproxyMustUpgrade":
-		fmt.Println("\nWARNING: A newer version of Conduit is required. Please upgrade.")
+		logging.Printf("WARNING: A newer version of Conduit is required. Please upgrade.\n")
 
 	case "Error":
 		// Handle errors based on verbosity
 		if s.config.Verbosity >= 1 {
 			if errMsg, ok := noticeData.Data["error"].(string); ok {
-				// -v: filter out noisy "limited" errors (normal when no clients available)
-				if s.config.Verbosity >= 2 || !isNoisyError(errMsg) {
-					fmt.Printf("[ERROR] %s\n", errMsg)
-				}
-			} else if s.config.Verbosity >= 2 {
-				fmt.Printf("[DEBUG] Error: %v\n", noticeData.Data)
+				logging.Printf("[ERROR] %s\n", errMsg)
+			} else {
+				logging.Printf("[DEBUG] Error: %v\n", noticeData.Data)
 			}
 		}
 
 	default:
-		// Only show debug output in debug mode (-vv)
-		if s.config.Verbosity >= 2 {
-			// Filter out noisy warnings that are expected in inproxy mode
-			if noticeData.NoticeType == "Warning" {
-				if msg, ok := noticeData.Data["message"].(string); ok {
-					if msg == "tactics request aborted: no capable servers" {
-						return
-					}
-				}
-			}
-			fmt.Printf("[DEBUG] %s: %v\n", noticeData.NoticeType, noticeData.Data)
+		// Only show debug output in verbose mode (-v)
+		if s.config.Verbosity >= 1 {
+			logging.Printf("[DEBUG] %s: %v\n", noticeData.NoticeType, noticeData.Data)
 		}
 	}
-}
-
-// isNoisyError returns true for errors that occur frequently during normal operation
-func isNoisyError(errMsg string) bool {
-	// These errors happen during normal operation and will auto-retry:
-	// "limited" - announcement timed out
-	// "no match" - no client was waiting
-	// "announcement" - general announcement-related errors
-	// "502" / "503" / "504" - transient broker/gateway errors
-	if strings.HasPrefix(errMsg, "inproxy") {
-		return strings.Contains(errMsg, "limited") ||
-			strings.Contains(errMsg, "no match") ||
-			strings.Contains(errMsg, "announcement") ||
-			strings.Contains(errMsg, "status code 502") ||
-			strings.Contains(errMsg, "status code 503") ||
-			strings.Contains(errMsg, "status code 504")
-	}
-	return false
 }
 
 // logStats logs the current proxy statistics (must be called with lock held)
@@ -428,6 +445,7 @@ func (s *Service) logStats() {
 	// Write stats to file if configured (copy data while locked, write async)
 	if s.config.StatsFile != "" {
 		statsJSON := StatsJSON{
+			Announcing:        s.stats.Announcing,
 			ConnectingClients: s.stats.ConnectingClients,
 			ConnectedClients:  s.stats.ConnectedClients,
 			TotalBytesUp:      s.stats.TotalBytesUp,
@@ -441,19 +459,54 @@ func (s *Service) logStats() {
 	}
 }
 
+// syncSnapshotLocked updates atomic snapshot fields. Must be called with lock held.
+func (s *Service) syncSnapshotLocked() {
+	s.connectingClients.Store(int64(s.stats.ConnectingClients))
+	s.connectedClients.Store(int64(s.stats.ConnectedClients))
+}
+
+func (s *Service) shouldLogInproxyActivity(now time.Time) (bool, int, int, int) {
+	announcing := s.stats.Announcing
+	connecting := s.stats.ConnectingClients
+	connected := s.stats.ConnectedClients
+
+	connectingChanged := connecting != s.lastLoggedConnecting
+	connectedChanged := connected != s.lastLoggedConnected
+	if connectingChanged || connectedChanged {
+		s.lastLoggedConnecting = connecting
+		s.lastLoggedConnected = connected
+		s.lastLoggedAnnouncing = announcing
+		s.lastActivityLogTime = now
+		return true, announcing, connecting, connected
+	}
+
+	// If connecting/connected is unchanged, log every minute with the current
+	// number of announcing workers. Note that the scrapeable /metrics updates
+	// immediately when new data is received, this log is just to indicate
+	// activity in the terminal.
+	const inproxyActivityLogInterval = time.Minute * 1
+	if s.lastActivityLogTime.IsZero() || now.Sub(s.lastActivityLogTime) >= inproxyActivityLogInterval {
+		s.lastLoggedAnnouncing = announcing
+		s.lastActivityLogTime = now
+		return true, announcing, connecting, connected
+	}
+
+	return false, announcing, connecting, connected
+}
+
 // writeStatsToFile writes stats to the configured JSON file asynchronously
 func (s *Service) writeStatsToFile(statsJSON StatsJSON) {
 	data, err := json.MarshalIndent(statsJSON, "", "  ")
 	if err != nil {
 		if s.config.Verbosity >= 1 {
-			fmt.Printf("[ERROR] Failed to marshal stats: %v\n", err)
+			logging.Printf("[ERROR] Failed to marshal stats: %v\n", err)
 		}
 		return
 	}
 
 	if err := os.WriteFile(s.config.StatsFile, data, 0644); err != nil {
 		if s.config.Verbosity >= 1 {
-			fmt.Printf("[ERROR] Failed to write stats file: %v\n", err)
+			logging.Printf("[ERROR] Failed to write stats file: %v\n", err)
 		}
 	}
 }

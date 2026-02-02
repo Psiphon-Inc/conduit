@@ -26,6 +26,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/Psiphon-Inc/conduit/cli/internal/logging"
 	"github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common/buildinfo"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -37,6 +38,7 @@ const namespace = "conduit"
 // Metrics holds all Prometheus metrics for the Conduit service
 type Metrics struct {
 	// Gauges
+	Announcing        prometheus.Gauge
 	ConnectingClients prometheus.Gauge
 	ConnectedClients  prometheus.Gauge
 	IsLive            prometheus.Gauge
@@ -67,6 +69,13 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 
 	m := &Metrics{
+		Announcing: prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "announcing",
+				Help:      "Number of inproxy announcement requests in flight",
+			},
+		),
 		ConnectingClients: prometheus.NewGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
@@ -146,6 +155,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 	)
 
 	// Register all metrics
+	registry.MustRegister(m.Announcing)
 	registry.MustRegister(m.ConnectingClients)
 	registry.MustRegister(m.ConnectedClients)
 	registry.MustRegister(m.IsLive)
@@ -169,6 +179,11 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 func (m *Metrics) SetConfig(maxClients int, bandwidthBytesPerSecond int) {
 	m.MaxClients.Set(float64(maxClients))
 	m.BandwidthLimit.Set(float64(bandwidthBytesPerSecond))
+}
+
+// SetAnnouncing updates the announcing gauge
+func (m *Metrics) SetAnnouncing(count int) {
+	m.Announcing.Set(float64(count))
 }
 
 // SetConnectingClients updates the connecting clients gauge
@@ -218,7 +233,7 @@ func (m *Metrics) StartServer(addr string) error {
 	// Start server in background with the pre-created listener
 	go func() {
 		if err := m.server.Serve(listener); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("[ERROR] Metrics server error: %v\n", err)
+			logging.Printf("[ERROR] Metrics server error: %v\n", err)
 		}
 	}()
 

@@ -10,6 +10,8 @@ Our official CLI releases include an embedded psiphon config.
 
 Contact Psiphon (conduit-oss@psiphon.ca) to discuss custom configuration values.
 
+Conduit deployment guide: [GUIDE.md](./GUIDE.md)
+
 ## Docker
 
 Use the official Docker image, which includes an embedded Psiphon config. Docker Compose is a convenient way to run Conduit if you prefer a declarative setup.
@@ -44,7 +46,7 @@ The Makefile will automatically install Go 1.24.12 if not present.
 
 ```bash
 # Start with default settings
-conduit start 
+conduit start
 
 # Customize limits
 conduit start --max-clients 20 --bandwidth 10
@@ -62,7 +64,7 @@ conduit start -v
 | `--bandwidth, -b`      | 40       | Bandwidth limit per peer in Mbps           |
 | `--data-dir, -d`       | `./data` | Directory for keys and state               |
 | `--metrics-addr`       | -        | Prometheus metrics listen address          |
-| `-v`                   | -        | Verbose output (use `-vv` for debug)       |
+| `-v`                   | -        | Verbose output                             |
 
 ## Data Directory
 
