@@ -44,13 +44,14 @@ type ProgressReport struct {
 
 // SetupOpts holds options for provisioning Conduit servers on Hetzner Cloud.
 type SetupOpts struct {
-	APIToken      string  // Hetzner Cloud API token (must be from the project where servers are created)
-	ServerCount   int     // Number of servers to create
-	ServerType    string  // Server type name (e.g. cx11, cpx11)
-	Location      string  // Location name (e.g. fsn1, nbg1)
-	MaxClients    int     // Conduit max-clients per server
-	BandwidthMbps float64 // Conduit bandwidth limit in Mbps (-1 = unlimited)
-	SSHPublicKey  string  // Optional SSH public key for server access
+	APIToken        string  // Hetzner Cloud API token (must be from the project where servers are created)
+	ServerCount     int     // Number of servers to create
+	ServerType      string  // Server type name (e.g. cx11, cpx11)
+	Location        string  // Location name (e.g. fsn1, nbg1)
+	MaxClients      int     // Conduit max-clients per server
+	BandwidthMbps   float64 // Conduit bandwidth limit in Mbps (-1 = unlimited)
+	SSHPublicKey    string  // Optional SSH public key for server access
+	MetricsPassword string  // Password for metrics endpoint authentication
 	// Progress is called during setup for each server (creating → waiting → ready). Optional.
 	Progress func(ProgressReport)
 }

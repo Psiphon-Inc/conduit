@@ -32,7 +32,8 @@ const (
 
 // waitForConduitReady polls the Conduit metrics endpoint on the server until it responds
 // or the context/timeout is exceeded. Progress is reported via report every poll.
-func waitForConduitReady(ctx context.Context, ip string, report ProgressReport, progress func(ProgressReport)) error {
+// Uses basic authentication if username and password are provided.
+func waitForConduitReady(ctx context.Context, ip string, username, password string, report ProgressReport, progress func(ProgressReport)) error {
 	url := "http://" + ip + ":9090/metrics"
 	deadline := time.Now().Add(conduitReadyTimeout)
 	client := &http.Client{Timeout: 5 * time.Second}
@@ -61,6 +62,11 @@ func waitForConduitReady(ctx context.Context, ip string, report ProgressReport, 
 			time.Sleep(conduitReadyPollInterval)
 			continue
 		}
+
+		if username != "" && password != "" {
+			req.SetBasicAuth(username, password)
+		}
+
 		resp, err := client.Do(req)
 		if err != nil {
 			elapsed := time.Since(start)

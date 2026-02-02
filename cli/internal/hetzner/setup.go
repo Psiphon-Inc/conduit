@@ -82,6 +82,11 @@ func (c *Client) Setup(ctx context.Context, opts SetupOpts) ([]ServerInfo, error
 		return nil, err
 	}
 
+	// Validate server type + location + architecture combination before creating servers
+	if err := c.ValidateServerTypeLocationArchitecture(ctx, opts.ServerType, location.Name, hcloud.ArchitectureX86); err != nil {
+		return nil, fmt.Errorf("invalid server type/location/architecture combination: %w\n\nTip: Try selecting a different location or server type.", err)
+	}
+
 	var sshKeys []*hcloud.SSHKey
 	if opts.SSHPublicKey != "" {
 		key, err := c.EnsureSSHKey(ctx, "conduit-setup", opts.SSHPublicKey)
@@ -179,11 +184,36 @@ func (c *Client) Setup(ctx context.Context, opts SetupOpts) ([]ServerInfo, error
 	}
 	createWg.Wait()
 	if firstCreateErr != nil {
+		// Best-effort cleanup: attempt to delete successfully created servers
+		var cleanupErrs []string
+		for i := range createdServers {
+			if createdServers[i] != nil {
+				if err := c.DeleteServer(ctx, createdServers[i].id); err != nil {
+					cleanupErrs = append(cleanupErrs, fmt.Sprintf("  - Server %s (ID: %d, IP: %s): %v", createdServers[i].name, createdServers[i].id, createdServers[i].ipv4, err))
+				}
+			}
+		}
+		if len(cleanupErrs) > 0 {
+			return nil, fmt.Errorf("%w\n\nCleanup attempted but some servers could not be deleted:\n%s\n\nPlease manually delete these servers in the Hetzner Console.", firstCreateErr, strings.Join(cleanupErrs, "\n"))
+		}
 		return nil, firstCreateErr
 	}
 	for i := range createdServers {
 		if createdServers[i] == nil {
-			return nil, fmt.Errorf("server conduit-%d: create result missing", i+1)
+			// Best-effort cleanup before returning error
+			var cleanupErrs []string
+			for j := range createdServers {
+				if createdServers[j] != nil {
+					if err := c.DeleteServer(ctx, createdServers[j].id); err != nil {
+						cleanupErrs = append(cleanupErrs, fmt.Sprintf("  - Server %s (ID: %d, IP: %s): %v", createdServers[j].name, createdServers[j].id, createdServers[j].ipv4, err))
+					}
+				}
+			}
+			errMsg := fmt.Sprintf("server conduit-%d: create result missing", i+1)
+			if len(cleanupErrs) > 0 {
+				errMsg += fmt.Sprintf("\n\nCleanup attempted but some servers could not be deleted:\n%s\n\nPlease manually delete these servers in the Hetzner Console.", strings.Join(cleanupErrs, "\n"))
+			}
+			return nil, fmt.Errorf(errMsg)
 		}
 	}
 
@@ -212,7 +242,7 @@ func (c *Client) Setup(ctx context.Context, opts SetupOpts) ([]ServerInfo, error
 				Phase:     ProgressWaiting,
 				Timeout:   conduitReadyTimeout,
 			}
-			err := waitForConduitReady(ctx, cre.ipv4, report, progress)
+			err := waitForConduitReady(ctx, cre.ipv4, "conduit", opts.MetricsPassword, report, progress)
 			if err != nil {
 				waitMu.Lock()
 				if firstWaitErr == nil {
@@ -232,6 +262,18 @@ func (c *Client) Setup(ctx context.Context, opts SetupOpts) ([]ServerInfo, error
 	}
 	waitWg.Wait()
 	if firstWaitErr != nil {
+		// Best-effort cleanup: attempt to delete all created servers
+		var cleanupErrs []string
+		for i := range createdServers {
+			if createdServers[i] != nil {
+				if err := c.DeleteServer(ctx, createdServers[i].id); err != nil {
+					cleanupErrs = append(cleanupErrs, fmt.Sprintf("  - Server %s (ID: %d, IP: %s): %v", createdServers[i].name, createdServers[i].id, createdServers[i].ipv4, err))
+				}
+			}
+		}
+		if len(cleanupErrs) > 0 {
+			return nil, fmt.Errorf("%w\n\nCleanup attempted but some servers could not be deleted:\n%s\n\nPlease manually delete these servers in the Hetzner Console.", firstWaitErr, strings.Join(cleanupErrs, "\n"))
+		}
 		return nil, firstWaitErr
 	}
 

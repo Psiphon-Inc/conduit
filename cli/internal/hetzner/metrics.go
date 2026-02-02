@@ -59,11 +59,23 @@ const metricsPath = ":9090/metrics"
 const metricsTimeout = 5 * time.Second
 
 // FetchMetrics fetches http://ip:9090/metrics and parses conduit_* gauges.
-func FetchMetrics(ip string) (ServerMetrics, error) {
+// If username and password are provided, uses basic authentication.
+func FetchMetrics(ip string, username, password string) (ServerMetrics, error) {
 	var m ServerMetrics
 	url := "http://" + ip + metricsPath
 	client := &http.Client{Timeout: metricsTimeout}
-	resp, err := client.Get(url)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		m.Err = err.Error()
+		return m, err
+	}
+
+	if username != "" && password != "" {
+		req.SetBasicAuth(username, password)
+	}
+
+	resp, err := client.Do(req)
 	if err != nil {
 		m.Err = err.Error()
 		return m, err

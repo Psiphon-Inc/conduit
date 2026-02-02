@@ -153,41 +153,68 @@ func runHetznerSetup(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	choiceStr, err := prompt(reader, "Select server type (number or name, e.g. cx11)", "cx11")
-	if err != nil {
-		return err
-	}
-	serverTypeName := resolveServerType(activeTypes, strings.TrimSpace(choiceStr))
-	if serverTypeName == "" {
-		return fmt.Errorf("invalid server type: %s", choiceStr)
+
+	// Interactive selection with validation loop
+	var serverTypeName string
+	var locName string
+	maxAttempts := 3
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		if attempt > 0 {
+			fmt.Println("\nPlease try again with a different server type or location.")
+		}
+
+		choiceStr, err := prompt(reader, "Select server type (number or name, e.g. cx11)", "cx11")
+		if err != nil {
+			return err
+		}
+		serverTypeName = resolveServerType(activeTypes, strings.TrimSpace(choiceStr))
+		if serverTypeName == "" {
+			fmt.Printf("Invalid server type: %s\n", choiceStr)
+			continue
+		}
+
+		// Location: show numbered list of locations that support the chosen server type
+		var locationNames []string
+		for _, st := range activeTypes {
+			if st.Name == serverTypeName && len(st.Pricings) > 0 {
+				for _, p := range st.Pricings {
+					if p.Location != nil {
+						locationNames = append(locationNames, p.Location.Name)
+					}
+				}
+				break
+			}
+		}
+		if len(locationNames) == 0 {
+			fmt.Printf("Server type %s has no available locations.\n", serverTypeName)
+			continue
+		}
+		fmt.Printf("\nLocations (for %s):\n", serverTypeName)
+		for i, name := range locationNames {
+			fmt.Printf("  %2d) %s\n", i+1, name)
+		}
+		locChoice, err := prompt(reader, "Select location (number or name)", locationNames[0])
+		if err != nil {
+			return err
+		}
+		locName = resolveLocation(locationNames, strings.TrimSpace(locChoice))
+		if locName == "" {
+			fmt.Printf("Invalid location: %s\n", locChoice)
+			continue
+		}
+
+		// Validate the combination before proceeding
+		if err := client.ValidateServerTypeLocationArchitecture(ctx, serverTypeName, locName, hcloud.ArchitectureX86); err != nil {
+			fmt.Printf("\n⚠️  Validation error: %v\n", err)
+			continue
+		}
+
+		// Success - break out of loop
+		break
 	}
 
-	// Location: show numbered list of locations that support the chosen server type
-	var locationNames []string
-	for _, st := range activeTypes {
-		if st.Name == serverTypeName && len(st.Pricings) > 0 {
-			for _, p := range st.Pricings {
-				if p.Location != nil {
-					locationNames = append(locationNames, p.Location.Name)
-				}
-			}
-			break
-		}
-	}
-	if len(locationNames) == 0 {
-		return fmt.Errorf("server type %s has no locations", serverTypeName)
-	}
-	fmt.Printf("\nLocations (for %s):\n", serverTypeName)
-	for i, name := range locationNames {
-		fmt.Printf("  %2d) %s\n", i+1, name)
-	}
-	locChoice, err := prompt(reader, "Select location (number or name)", locationNames[0])
-	if err != nil {
-		return err
-	}
-	locName := resolveLocation(locationNames, strings.TrimSpace(locChoice))
-	if locName == "" {
-		return fmt.Errorf("invalid location: %s", locChoice)
+	if serverTypeName == "" || locName == "" {
+		return fmt.Errorf("failed to select valid server type and location after %d attempts", maxAttempts)
 	}
 
 	// Conduit config
@@ -224,19 +251,32 @@ func runHetznerSetup(cmd *cobra.Command, args []string) error {
 		sshPub = strings.TrimSpace(string(data))
 	}
 
+	// Generate password for metrics authentication
+	metricsPassword, err := hetzner.GeneratePassword()
+	if err != nil {
+		return fmt.Errorf("generate metrics password: %w", err)
+	}
+
+	// Initialize credentials store
+	credStore, err := hetzner.NewCredentialsStore(GetDataDir())
+	if err != nil {
+		return fmt.Errorf("initialize credentials store: %w", err)
+	}
+
 	reports := make([]hetzner.ProgressReport, count)
 	printedCreating := make([]bool, count)
 	step1Printed := false
 	step2Printed := false
 	lastProgressLen := 0
 	opts := hetzner.SetupOpts{
-		APIToken:      token,
-		ServerCount:   count,
-		ServerType:    serverTypeName,
-		Location:      locName,
-		MaxClients:    maxClients,
-		BandwidthMbps: bandwidth,
-		SSHPublicKey:  sshPub,
+		APIToken:        token,
+		ServerCount:     count,
+		ServerType:      serverTypeName,
+		Location:        locName,
+		MaxClients:      maxClients,
+		BandwidthMbps:   bandwidth,
+		SSHPublicKey:    sshPub,
+		MetricsPassword: metricsPassword,
 		Progress: func(r hetzner.ProgressReport) {
 			reports[r.ServerNum-1] = r
 			switch r.Phase {
@@ -301,6 +341,14 @@ func runHetznerSetup(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("\n  Step 3/%d: All servers ready.\n\n", count)
+
+	// Save credentials for all servers
+	for _, s := range servers {
+		if err := credStore.SaveCredentials(s.IPv4, metricsPassword); err != nil {
+			fmt.Printf("Warning: Failed to save credentials for %s: %v\n", s.IPv4, err)
+		}
+	}
+
 	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(tw, "Name\tID\tIPv4\tStatus")
 	for _, s := range servers {
@@ -308,10 +356,11 @@ func runHetznerSetup(cmd *cobra.Command, args []string) error {
 	}
 	tw.Flush()
 	fmt.Println("\nAll servers are ready. Conduit is running on each.")
-	fmt.Println("\nMetrics URL for each server:")
+	fmt.Println("\nMetrics endpoints (protected with authentication):")
 	for _, s := range servers {
 		fmt.Printf("  %s (%s): http://%s:9090/metrics\n", s.Name, s.IPv4, s.IPv4)
 	}
+	fmt.Println("\nCredentials have been saved locally for use with 'conduit hetzner status'.")
 	return nil
 }
 
@@ -431,6 +480,12 @@ func runHetznerStatus(cmd *cobra.Command, args []string) error {
 	fmt.Println("Conduit servers on Hetzner — refreshing every 5s (Ctrl+C to exit)")
 	fmt.Println()
 
+	// Load credentials store
+	credStore, err := hetzner.NewCredentialsStore(GetDataDir())
+	if err != nil {
+		return fmt.Errorf("initialize credentials store: %w", err)
+	}
+
 	for {
 		// Fetch metrics for all servers in parallel (curl metrics in background)
 		rows := make([]statusRow, len(servers))
@@ -439,7 +494,8 @@ func runHetznerStatus(cmd *cobra.Command, args []string) error {
 			wg.Add(1)
 			go func(i int) {
 				defer wg.Done()
-				m, _ := hetzner.FetchMetrics(servers[i].IPv4)
+				cred, _ := credStore.GetCredentials(servers[i].IPv4)
+				m, _ := hetzner.FetchMetrics(servers[i].IPv4, cred.User, cred.Password)
 				rows[i] = statusRow{server: servers[i], metrics: m}
 			}(i)
 		}

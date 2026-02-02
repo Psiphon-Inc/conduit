@@ -123,3 +123,46 @@ const DefaultImage = "ubuntu-24.04"
 // MaxServersPerProject is the maximum number of servers to allow in one setup run.
 // Hetzner does not expose per-project server limit via API; this is a sensible upper bound.
 const MaxServersPerProject = 100
+
+// DeleteServer deletes a server by ID. Used for cleanup on partial failure.
+func (c *Client) DeleteServer(ctx context.Context, serverID int) error {
+	_, err := c.Server.Delete(ctx, &hcloud.Server{ID: serverID})
+	if err != nil {
+		return fmt.Errorf("delete server %d: %w", serverID, err)
+	}
+	return nil
+}
+
+// ValidateServerTypeLocationArchitecture validates that a server type, location, and architecture combination is valid.
+func (c *Client) ValidateServerTypeLocationArchitecture(ctx context.Context, serverTypeName, locationName string, arch hcloud.Architecture) error {
+	serverType, _, err := c.ServerType.GetByName(ctx, serverTypeName)
+	if err != nil || serverType == nil {
+		return fmt.Errorf("get server type %s: %w", serverTypeName, err)
+	}
+
+	// Check if location is available for this server type
+	location, err := resolveLocationForServerType(serverType, locationName)
+	if err != nil {
+		return err
+	}
+
+	// Check if image is available for this architecture in this location
+	image, _, err := c.Image.GetForArchitecture(ctx, DefaultImage, arch)
+	if err != nil || image == nil {
+		return fmt.Errorf("image %s not available for architecture %s: %w", DefaultImage, arch, err)
+	}
+
+	// Verify server type is available in this location (check pricing)
+	found := false
+	for _, p := range serverType.Pricings {
+		if p.Location != nil && p.Location.Name == location.Name {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("server type %s is not available in location %s", serverTypeName, locationName)
+	}
+
+	return nil
+}
