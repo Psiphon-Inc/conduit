@@ -169,7 +169,7 @@ jobs:
                       ./conduit hetzner setup
                       ```
 
-                      You will be prompted for a Hetzner API token (get one from [Hetzner Cloud Console](https://console.hetzner.cloud)), number of servers, server type (e.g. cx11), location, and Conduit options. Servers are created with Ubuntu, Docker, and Conduit; each runs Conduit automatically. Use this to run Conduit on one machine and set up more nodes from your desktop.
+                      You will be prompted for a Hetzner API token (get one from [Hetzner Cloud Console](https://console.hetzner.cloud)), number of servers, server type (e.g. cx11), location, and Conduit options. Servers are created with Ubuntu; the Conduit CLI binary is installed from GitHub releases and run under systemd (no Docker). Each server runs Conduit automatically. Use this to run Conduit on one machine and set up more nodes from your desktop.
 
                       ### Docker
 
