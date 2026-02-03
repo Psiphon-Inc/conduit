@@ -1,10 +1,26 @@
 services:
     conduit:
-        image: ghcr.io/psiphon-inc/conduit/cli:latest
+        image: conduit-local:latest
         container_name: conduit
         restart: unless-stopped
+        entrypoint: ["conduit-monitor"]
         command:
             [
+                "--traffic-limit",
+                "500",
+                "--traffic-period",
+                "30",
+                "--bandwidth-threshold",
+                "80",
+                "--min-connections",
+                "10",
+                "--min-bandwidth",
+                "10",
+                "--data-dir",
+                "/home/conduit/data",
+                "--metrics-addr",
+                "127.0.0.1:9090",
+                "--",
                 "start",
                 "--max-clients",
                 "50",
@@ -19,6 +35,5 @@ services:
         # To scrape from the host, publish the port (e.g., "9090:9090").
         volumes:
             - conduit-data:/home/conduit/data
-
 volumes:
     conduit-data:

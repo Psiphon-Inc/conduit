@@ -19,8 +19,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY dist/conduit-linux-${TARGETARCH} /usr/local/bin/conduit
+COPY dist/conduit-monitor-linux-${TARGETARCH} /usr/local/bin/conduit-monitor
 
-RUN chmod +x /usr/local/bin/conduit
+RUN chmod +x /usr/local/bin/conduit /usr/local/bin/conduit-monitor
 
 # Create non-root user with home directory
 RUN useradd -r -u 1000 -m conduit

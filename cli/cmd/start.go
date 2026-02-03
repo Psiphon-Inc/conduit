@@ -34,16 +34,11 @@ import (
 )
 
 var (
-	maxClients                int
-	bandwidthMbps             float64
-	psiphonConfigPath         string
-	statsFilePath             string
-	metricsAddr               string
-	trafficLimitGB            float64
-	trafficPeriodDays         int
-	bandwidthThresholdPercent int
-	minConnections            int
-	minBandwidthMbps          float64
+	maxClients        int
+	bandwidthMbps     float64
+	psiphonConfigPath string
+	statsFilePath     string
+	metricsAddr       string
 )
 
 var startCmd = &cobra.Command{
@@ -72,19 +67,6 @@ func init() {
 	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
 	startCmd.Flags().StringVar(&metricsAddr, "metrics-addr", "", "address for Prometheus metrics endpoint (e.g., :9090 or 127.0.0.1:9090)")
 	startCmd.Flags().StringVarP(&psiphonConfigPath, "psiphon-config", "c", "", "path to Psiphon network config file (JSON)")
-
-	// Traffic throttling flags
-	startCmd.Flags().Float64VarP(&trafficLimitGB, "traffic-limit", "t", 0,
-		fmt.Sprintf("total traffic limit in GB (minimum %d GB, 0 for unlimited)", config.MinTrafficLimitGB))
-	startCmd.Flags().IntVarP(&trafficPeriodDays, "traffic-period", "p", 0,
-		fmt.Sprintf("time period in days (minimum %d days, requires --traffic-limit)", config.MinTrafficPeriodDays))
-	startCmd.Flags().IntVar(&bandwidthThresholdPercent, "bandwidth-threshold", config.DefaultThresholdPercent,
-		fmt.Sprintf("throttle when this percentage of quota is used (%d-%d%%, default %d)",
-			config.MinThresholdPercent, config.MaxThresholdPercent, config.DefaultThresholdPercent))
-	startCmd.Flags().IntVar(&minConnections, "min-connections", config.DefaultMinConnections,
-		fmt.Sprintf("max clients when throttled (default %d)", config.DefaultMinConnections))
-	startCmd.Flags().Float64Var(&minBandwidthMbps, "min-bandwidth", config.DefaultMinBandwidthMbps,
-		fmt.Sprintf("bandwidth in Mbps when throttled (default %.0f)", config.DefaultMinBandwidthMbps))
 }
 
 func runStart(cmd *cobra.Command, args []string) error {
@@ -131,35 +113,18 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 	// Load or create configuration (auto-generates keys on first run)
 	cfg, err := config.LoadOrCreate(config.Options{
-		DataDir:                   GetDataDir(),
-		PsiphonConfigPath:         effectiveConfigPath,
-		UseEmbeddedConfig:         useEmbedded,
-		MaxClients:                maxClientsFromFlag,
-		BandwidthMbps:             bandwidthFromFlag,
-		BandwidthSet:              bandwidthFromFlagSet,
-		Verbosity:                 Verbosity(),
-		StatsFile:                 resolvedStatsFile,
-		MetricsAddr:               metricsAddr,
-		TrafficLimitGB:            trafficLimitGB,
-		TrafficPeriodDays:         trafficPeriodDays,
-		BandwidthThresholdPercent: bandwidthThresholdPercent,
-		MinConnections:            minConnections,
-		MinBandwidthMbps:          minBandwidthMbps,
+		DataDir:           GetDataDir(),
+		PsiphonConfigPath: effectiveConfigPath,
+		UseEmbeddedConfig: useEmbedded,
+		MaxClients:        maxClientsFromFlag,
+		BandwidthMbps:     bandwidthFromFlag,
+		BandwidthSet:      bandwidthFromFlagSet,
+		Verbosity:         Verbosity(),
+		StatsFile:         resolvedStatsFile,
+		MetricsAddr:       metricsAddr,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
-	}
-
-	// Display traffic throttling info if configured
-	if cfg.TrafficLimitBytes > 0 {
-		logging.Printf("Traffic Throttling Enabled:")
-		logging.Printf("  Limit: %.0f GB per %d days", trafficLimitGB, trafficPeriodDays)
-		logging.Printf("  Throttle at: %d%% (%.0f GB)", bandwidthThresholdPercent,
-			float64(cfg.BandwidthThresholdBytes)/(1024*1024*1024))
-		logging.Printf("  Throttled capacity: %d clients, %.0f Mbps",
-			cfg.MinConnections, minBandwidthMbps)
-		logging.Printf("  Normal capacity: %d clients, %.0f Mbps",
-			cfg.NormalMaxClients, float64(cfg.NormalBandwidthBytesPerSec)*8/(1000*1000))
 	}
 
 	// Create conduit service

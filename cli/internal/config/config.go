@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/crypto"
 	"github.com/Psiphon-Inc/conduit/cli/internal/logging"
@@ -39,58 +38,35 @@ const (
 	MaxClientsLimit      = 1000
 	UnlimitedBandwidth   = -1.0 // Special value for no bandwidth limit
 
-	// Traffic throttling minimums (to prevent reputation damage)
-	MinTrafficLimitGB       = 100 // Minimum 100 GB
-	MinTrafficPeriodDays    = 7   // Minimum 7 days
-	MinThresholdPercent     = 60  // Minimum 60%
-	MaxThresholdPercent     = 90  // Maximum 90%
-	DefaultThresholdPercent = 80  // Default 80%
-
-	// Default throttled values
-	DefaultMinConnections   = 10   // Default throttled max clients
-	DefaultMinBandwidthMbps = 10.0 // Default throttled bandwidth
-
 	// File names for persisted data
 	keyFileName = "conduit_key.json"
 )
 
 // Options represents CLI options passed to LoadOrCreate
 type Options struct {
-	DataDir                   string
-	PsiphonConfigPath         string
-	UseEmbeddedConfig         bool
-	MaxClients                int
-	BandwidthMbps             float64
-	BandwidthSet              bool
-	Verbosity                 int     // 0=normal, 1+=verbose
-	StatsFile                 string  // Path to write stats JSON file (empty = disabled)
-	MetricsAddr               string  // Address for Prometheus metrics endpoint (empty = disabled)
-	TrafficLimitGB            float64 // Total traffic limit in GB (0 = unlimited)
-	TrafficPeriodDays         int     // Time period in days for traffic limit
-	BandwidthThresholdPercent int     // Percentage at which to throttle (60-90%)
-	MinConnections            int     // Max clients when throttled
-	MinBandwidthMbps          float64 // Bandwidth in Mbps when throttled
+	DataDir           string
+	PsiphonConfigPath string
+	UseEmbeddedConfig bool
+	MaxClients        int
+	BandwidthMbps     float64
+	BandwidthSet      bool
+	Verbosity         int    // 0=normal, 1+=verbose
+	StatsFile         string // Path to write stats JSON file (empty = disabled)
+	MetricsAddr       string // Address for Prometheus metrics endpoint (empty = disabled)
 }
 
 // Config represents the validated configuration for the Conduit service
 type Config struct {
-	KeyPair                    *crypto.KeyPair
-	PrivateKeyBase64           string
-	MaxClients                 int
-	BandwidthBytesPerSecond    int
-	DataDir                    string
-	PsiphonConfigPath          string
-	PsiphonConfigData          []byte        // Embedded config data (if used)
-	Verbosity                  int           // 0=normal, 1+=verbose
-	StatsFile                  string        // Path to write stats JSON file (empty = disabled)
-	MetricsAddr                string        // Address for Prometheus metrics endpoint (empty = disabled)
-	TrafficLimitBytes          int64         // Total traffic limit in bytes (0 = unlimited)
-	TrafficPeriod              time.Duration // Time period for traffic limit
-	BandwidthThresholdBytes    int64         // Bytes at which to throttle
-	MinConnections             int           // Max clients when throttled
-	MinBandwidthBytesPerSec    int           // Bandwidth in bytes/sec when throttled
-	NormalMaxClients           int           // Original max clients (to restore after period)
-	NormalBandwidthBytesPerSec int           // Original bandwidth (to restore after period)
+	KeyPair                 *crypto.KeyPair
+	PrivateKeyBase64        string
+	MaxClients              int
+	BandwidthBytesPerSecond int
+	DataDir                 string
+	PsiphonConfigPath       string
+	PsiphonConfigData       []byte // Embedded config data (if used)
+	Verbosity               int    // 0=normal, 1+=verbose
+	StatsFile               string // Path to write stats JSON file (empty = disabled)
+	MetricsAddr             string // Address for Prometheus metrics endpoint (empty = disabled)
 }
 
 // persistedKey represents the key data saved to disk
@@ -192,91 +168,17 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		}
 	}
 
-	// Validate and convert traffic throttling parameters
-	var trafficLimitBytes int64
-	var trafficPeriod time.Duration
-	var bandwidthThresholdBytes int64
-	var minConnections int
-	var minBandwidthBytesPerSec int
-	var normalMaxClients int
-	var normalBandwidthBytesPerSec int
-
-	if opts.TrafficLimitGB > 0 {
-		// Require all throttling parameters together
-		if opts.TrafficPeriodDays <= 0 {
-			return nil, fmt.Errorf("traffic-period must be set when traffic-limit is specified")
-		}
-		if opts.BandwidthThresholdPercent <= 0 {
-			return nil, fmt.Errorf("bandwidth-threshold must be set when traffic-limit is specified")
-		}
-
-		// Validate minimums
-		if opts.TrafficLimitGB < MinTrafficLimitGB {
-			return nil, fmt.Errorf("traffic-limit must be at least %d GB", MinTrafficLimitGB)
-		}
-
-		if opts.TrafficPeriodDays < MinTrafficPeriodDays {
-			return nil, fmt.Errorf("traffic-period must be at least %d days", MinTrafficPeriodDays)
-		}
-
-		// Validate threshold range
-		if opts.BandwidthThresholdPercent < MinThresholdPercent || opts.BandwidthThresholdPercent > MaxThresholdPercent {
-			return nil, fmt.Errorf("bandwidth-threshold must be between %d-%d%%", MinThresholdPercent, MaxThresholdPercent)
-		}
-
-		// Validate min settings
-		if opts.MinConnections <= 0 {
-			return nil, fmt.Errorf("min-connections must be positive")
-		}
-
-		if opts.MinConnections >= maxClients {
-			return nil, fmt.Errorf("min-connections (%d) must be less than max-clients (%d)", opts.MinConnections, maxClients)
-		}
-
-		if opts.MinBandwidthMbps <= 0 {
-			return nil, fmt.Errorf("min-bandwidth must be positive")
-		}
-
-		// Calculate actual bandwidth for comparison
-		actualBandwidthMbps := float64(bandwidthBytesPerSecond) * 8 / (1000 * 1000)
-		if bandwidthBytesPerSecond > 0 && opts.MinBandwidthMbps >= actualBandwidthMbps {
-			return nil, fmt.Errorf("min-bandwidth (%.1f) must be less than normal bandwidth (%.1f)", opts.MinBandwidthMbps, actualBandwidthMbps)
-		}
-
-		// Convert GB to bytes (1 GB = 1024^3 bytes)
-		trafficLimitBytes = int64(opts.TrafficLimitGB * 1024 * 1024 * 1024)
-		trafficPeriod = time.Duration(opts.TrafficPeriodDays) * 24 * time.Hour
-
-		// Calculate threshold bytes
-		bandwidthThresholdBytes = int64(float64(trafficLimitBytes) * float64(opts.BandwidthThresholdPercent) / 100.0)
-
-		// Set throttled values
-		minConnections = opts.MinConnections
-		minBandwidthBytesPerSec = int(opts.MinBandwidthMbps * 1000 * 1000 / 8)
-
-		// Store normal values for restoration
-		normalMaxClients = maxClients
-		normalBandwidthBytesPerSec = bandwidthBytesPerSecond
-	}
-
 	return &Config{
-		KeyPair:                    keyPair,
-		PrivateKeyBase64:           privateKeyBase64,
-		MaxClients:                 maxClients,
-		BandwidthBytesPerSecond:    bandwidthBytesPerSecond,
-		DataDir:                    opts.DataDir,
-		PsiphonConfigPath:          opts.PsiphonConfigPath,
-		PsiphonConfigData:          psiphonConfigData,
-		Verbosity:                  opts.Verbosity,
-		StatsFile:                  opts.StatsFile,
-		MetricsAddr:                opts.MetricsAddr,
-		TrafficLimitBytes:          trafficLimitBytes,
-		TrafficPeriod:              trafficPeriod,
-		BandwidthThresholdBytes:    bandwidthThresholdBytes,
-		MinConnections:             minConnections,
-		MinBandwidthBytesPerSec:    minBandwidthBytesPerSec,
-		NormalMaxClients:           normalMaxClients,
-		NormalBandwidthBytesPerSec: normalBandwidthBytesPerSec,
+		KeyPair:                 keyPair,
+		PrivateKeyBase64:        privateKeyBase64,
+		MaxClients:              maxClients,
+		BandwidthBytesPerSecond: bandwidthBytesPerSecond,
+		DataDir:                 opts.DataDir,
+		PsiphonConfigPath:       opts.PsiphonConfigPath,
+		PsiphonConfigData:       psiphonConfigData,
+		Verbosity:               opts.Verbosity,
+		StatsFile:               opts.StatsFile,
+		MetricsAddr:             opts.MetricsAddr,
 	}, nil
 }
 

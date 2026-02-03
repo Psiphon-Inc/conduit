@@ -35,13 +35,6 @@ import (
 	"github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon"
 )
 
-// trafficState tracks traffic usage for throttling enforcement
-type trafficState struct {
-	PeriodStartTime time.Time `json:"periodStartTime"`
-	BytesUsed       int64     `json:"bytesUsed"`
-	IsThrottled     bool      `json:"isThrottled"`
-}
-
 // Service represents the Conduit inproxy service
 type Service struct {
 	config               *config.Config
@@ -58,13 +51,6 @@ type Service struct {
 	lastActiveUnixNano atomic.Int64
 	connectingClients  atomic.Int64
 	connectedClients   atomic.Int64
-
-	// Traffic throttling fields
-	trafficState      *trafficState
-	limitReached      bool
-	throttleMu        sync.RWMutex
-	currentMaxClients int
-	currentBandwidth  int
 }
 
 // Stats tracks proxy activity statistics
@@ -95,9 +81,7 @@ type StatsJSON struct {
 // New creates a new Conduit service
 func New(cfg *config.Config) (*Service, error) {
 	s := &Service{
-		config:            cfg,
-		currentMaxClients: cfg.MaxClients,
-		currentBandwidth:  cfg.BandwidthBytesPerSecond,
+		config: cfg,
 		stats: &Stats{
 			StartTime: time.Now(),
 		},
@@ -110,23 +94,6 @@ func New(cfg *config.Config) (*Service, error) {
 			GetIdleSeconds:   s.getIdleSecondsFloat,
 		})
 		s.metrics.SetConfig(cfg.MaxClients, cfg.BandwidthBytesPerSecond)
-	}
-
-	// Load traffic state if traffic limiting is enabled
-	if cfg.TrafficLimitBytes > 0 {
-		state, err := s.loadTrafficState()
-		if err != nil {
-			// If we can't load, start fresh
-			state = &trafficState{
-				PeriodStartTime: time.Now(),
-				BytesUsed:       0,
-				IsThrottled:     false,
-			}
-			logging.Printf("Starting new traffic period")
-		} else {
-			logging.Printf("Loaded traffic state: %.2f GB used", float64(state.BytesUsed)/(1024*1024*1024))
-		}
-		s.trafficState = state
 	}
 
 	return s, nil
@@ -161,11 +128,6 @@ func (s *Service) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to set notice writer: %w", err)
 	}
 
-	// Check if period needs to be reset before starting
-	if s.config.TrafficLimitBytes > 0 {
-		s.checkPeriodReset()
-	}
-
 	// Create Psiphon configuration
 	psiphonConfig, err := s.createPsiphonConfig()
 	if err != nil {
@@ -187,113 +149,16 @@ func (s *Service) Run(ctx context.Context) error {
 	}
 	defer psiphon.CloseDataStore()
 
-	// Main service loop - supports controller restart for throttling
-	for {
-		// Check if we need to reset period (every iteration)
-		if s.config.TrafficLimitBytes > 0 {
-			if s.checkPeriodReset() {
-				// Period was reset, need to recreate config with normal settings
-				psiphonConfig, err = s.createPsiphonConfig()
-				if err != nil {
-					return fmt.Errorf("failed to recreate psiphon config: %w", err)
-				}
-			}
-		}
-
-		// Check context before creating controller
-		if ctx.Err() != nil {
-			return nil
-		}
-
-		// Create and run controller
-		s.controller, err = psiphon.NewController(psiphonConfig)
-		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
-		}
-
-		// Use a sub-context for the controller so we can restart it for throttling
-		controllerCtx, controllerCancel := context.WithCancel(ctx)
-		controllerDone := make(chan struct{})
-
-		// Run controller in a goroutine
-		go func() {
-			s.controller.Run(controllerCtx)
-			close(controllerDone)
-		}()
-
-		// Monitor for throttle changes if throttling is enabled
-		if s.config.TrafficLimitBytes > 0 {
-			ticker := time.NewTicker(5 * time.Second)
-			defer ticker.Stop()
-
-		monitorLoop:
-			for {
-				select {
-				case <-ticker.C:
-					// Check if we need to restart due to throttling
-					s.throttleMu.RLock()
-					needsRestart := false
-					if s.trafficState != nil && s.trafficState.IsThrottled {
-						// If we just became throttled, we need to restart with new config
-						needsRestart = (s.currentMaxClients != s.config.MinConnections)
-					}
-					s.throttleMu.RUnlock()
-
-					if needsRestart {
-						logging.Printf("[THROTTLE] Restarting controller with reduced capacity...")
-						controllerCancel()
-						<-controllerDone
-						// Recreate config with throttled settings
-						psiphonConfig, err = s.createPsiphonConfig()
-						if err != nil {
-							return fmt.Errorf("failed to recreate psiphon config for throttling: %w", err)
-						}
-						break monitorLoop
-					}
-
-					// Check if period reset and needs restart with normal capacity
-					if s.checkPeriodReset() {
-						logging.Printf("[RESET] Restarting controller with normal capacity...")
-						controllerCancel()
-						<-controllerDone
-						// Recreate config with normal settings
-						psiphonConfig, err = s.createPsiphonConfig()
-						if err != nil {
-							return fmt.Errorf("failed to recreate psiphon config after reset: %w", err)
-						}
-						break monitorLoop
-					}
-
-				case <-controllerDone:
-					// Controller stopped, check if it was due to context cancellation
-					if ctx.Err() != nil {
-						return nil
-					}
-					// Controller stopped for another reason, restart
-					break monitorLoop
-
-				case <-ctx.Done():
-					controllerCancel()
-					<-controllerDone
-					return nil
-				}
-			}
-		} else {
-			// No throttling, just wait for controller to finish
-			select {
-			case <-controllerDone:
-				// Controller stopped, check if it was due to context cancellation
-				if ctx.Err() != nil {
-					return nil
-				}
-				// Controller stopped for another reason, restart
-			case <-ctx.Done():
-				controllerCancel()
-				<-controllerDone
-				return nil
-			}
-		}
+	// Create and run controller
+	s.controller, err = psiphon.NewController(psiphonConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create controller: %w", err)
 	}
+
+	// Run the controller (blocks until context is cancelled)
+	s.controller.Run(ctx)
+
+	return nil
 }
 
 // createPsiphonConfig creates the Psiphon tunnel-core configuration
@@ -326,18 +191,12 @@ func (s *Service) createPsiphonConfig() (*psiphon.Config, error) {
 	configJSON["ClientVersion"] = "1"
 
 	// Inproxy mode settings - these override any values in the base config
-	// Use current (possibly throttled) values instead of config defaults
-	s.throttleMu.RLock()
-	maxClients := s.currentMaxClients
-	bandwidth := s.currentBandwidth
-	s.throttleMu.RUnlock()
-
 	configJSON["InproxyEnableProxy"] = true
-	configJSON["InproxyMaxClients"] = maxClients
+	configJSON["InproxyMaxClients"] = s.config.MaxClients
 	// Only set bandwidth limits if not unlimited (0 means unlimited)
-	if bandwidth > 0 {
-		configJSON["InproxyLimitUpstreamBytesPerSecond"] = bandwidth
-		configJSON["InproxyLimitDownstreamBytesPerSecond"] = bandwidth
+	if s.config.BandwidthBytesPerSecond > 0 {
+		configJSON["InproxyLimitUpstreamBytesPerSecond"] = s.config.BandwidthBytesPerSecond
+		configJSON["InproxyLimitDownstreamBytesPerSecond"] = s.config.BandwidthBytesPerSecond
 	}
 	configJSON["InproxyProxySessionPrivateKey"] = s.config.PrivateKeyBase64
 
@@ -450,23 +309,11 @@ func (s *Service) handleNotice(notice []byte) {
 		if v, ok := noticeData.Data["connectedClients"].(float64); ok {
 			s.stats.ConnectedClients = int(v)
 		}
-
-		// Track traffic for throttling enforcement
-		var bytesAdded int64
 		if v, ok := noticeData.Data["bytesUp"].(float64); ok {
 			s.stats.TotalBytesUp += int64(v)
-			bytesAdded += int64(v)
 		}
 		if v, ok := noticeData.Data["bytesDown"].(float64); ok {
 			s.stats.TotalBytesDown += int64(v)
-			bytesAdded += int64(v)
-		}
-
-		// Update traffic state if limiting is enabled
-		if s.trafficState != nil && bytesAdded > 0 {
-			s.trafficState.BytesUsed += bytesAdded
-			go s.saveTrafficState() // Save asynchronously
-			go s.checkAndApplyThrottle(bytesAdded)
 		}
 
 		// Track last active time for idle calculation
@@ -510,9 +357,6 @@ func (s *Service) handleNotice(notice []byte) {
 		s.mu.Lock()
 		prevConnecting := s.stats.ConnectingClients
 		prevConnected := s.stats.ConnectedClients
-		prevBytesUp := s.stats.TotalBytesUp
-		prevBytesDown := s.stats.TotalBytesDown
-
 		if v, ok := noticeData.Data["announcing"].(float64); ok {
 			s.stats.Announcing = int(v)
 		}
@@ -527,16 +371,6 @@ func (s *Service) handleNotice(notice []byte) {
 		}
 		if v, ok := noticeData.Data["totalBytesDown"].(float64); ok {
 			s.stats.TotalBytesDown = int64(v)
-		}
-
-		// Update traffic state if limiting is enabled
-		if s.trafficState != nil {
-			bytesAdded := (s.stats.TotalBytesUp - prevBytesUp) + (s.stats.TotalBytesDown - prevBytesDown)
-			if bytesAdded > 0 {
-				s.trafficState.BytesUsed += bytesAdded
-				go s.saveTrafficState() // Save asynchronously
-				go s.checkAndApplyThrottle(bytesAdded)
-			}
 		}
 
 		// Track last active time for idle calculation
@@ -660,6 +494,20 @@ func (s *Service) shouldLogInproxyActivity(now time.Time) (bool, int, int, int) 
 	return false, announcing, connecting, connected
 }
 
+// formatBytes formats bytes as a human-readable string
+func formatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
 // writeStatsToFile writes stats to the configured JSON file asynchronously
 func (s *Service) writeStatsToFile(statsJSON StatsJSON) {
 	data, err := json.MarshalIndent(statsJSON, "", "  ")
@@ -696,139 +544,4 @@ func (s *Service) GetStats() Stats {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return *s.stats
-}
-
-// formatBytes formats bytes as a human-readable string
-func formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}
-
-// formatBandwidth formats bandwidth (bytes/sec) as a human-readable string
-func formatBandwidth(bytesPerSec int) string {
-	if bytesPerSec == 0 {
-		return "unlimited"
-	}
-	mbps := float64(bytesPerSec) * 8 / (1000 * 1000)
-	return fmt.Sprintf("%.1f Mbps", mbps)
-}
-
-// loadTrafficState loads the traffic state from disk
-func (s *Service) loadTrafficState() (*trafficState, error) {
-	stateFile := fmt.Sprintf("%s/traffic_state.json", s.config.DataDir)
-	data, err := os.ReadFile(stateFile)
-	if err != nil {
-		return nil, err
-	}
-
-	var state trafficState
-	if err := json.Unmarshal(data, &state); err != nil {
-		return nil, err
-	}
-
-	return &state, nil
-}
-
-// saveTrafficState saves the traffic state to disk
-func (s *Service) saveTrafficState() error {
-	if s.trafficState == nil {
-		return nil
-	}
-
-	stateFile := fmt.Sprintf("%s/traffic_state.json", s.config.DataDir)
-	data, err := json.MarshalIndent(s.trafficState, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(stateFile, data, 0644)
-}
-
-// checkAndApplyThrottle checks if throttling is needed and applies it
-func (s *Service) checkAndApplyThrottle(bytesAdded int64) {
-	if s.config.TrafficLimitBytes == 0 || s.trafficState == nil {
-		return
-	}
-
-	s.throttleMu.Lock()
-	defer s.throttleMu.Unlock()
-
-	// Check if we crossed the threshold
-	if !s.trafficState.IsThrottled && s.trafficState.BytesUsed >= s.config.BandwidthThresholdBytes {
-		logging.Printf("\n[THROTTLE] Bandwidth threshold reached: %s / %s (%.1f%%)",
-			formatBytes(s.trafficState.BytesUsed),
-			formatBytes(s.config.TrafficLimitBytes),
-			float64(s.trafficState.BytesUsed)*100.0/float64(s.config.TrafficLimitBytes))
-
-		logging.Printf("[THROTTLE] Reducing capacity to preserve bandwidth:")
-		logging.Printf("[THROTTLE]   Max Clients: %d → %d",
-			s.config.NormalMaxClients, s.config.MinConnections)
-		logging.Printf("[THROTTLE]   Bandwidth: %s → %s",
-			formatBandwidth(s.config.NormalBandwidthBytesPerSec),
-			formatBandwidth(s.config.MinBandwidthBytesPerSec))
-
-		// Mark as throttled
-		s.trafficState.IsThrottled = true
-		s.saveTrafficState()
-
-		// Update current settings
-		s.currentMaxClients = s.config.MinConnections
-		s.currentBandwidth = s.config.MinBandwidthBytesPerSec
-
-		// Note: Actual application of throttled config happens in the controller restart
-		// Existing connections will drain gracefully
-	}
-
-	// Check if quota exceeded even in throttled mode
-	if s.trafficState.BytesUsed >= s.config.TrafficLimitBytes {
-		if !s.limitReached {
-			s.limitReached = true
-			logging.Printf("\n[WARNING] Traffic quota exceeded: %s / %s",
-				formatBytes(s.trafficState.BytesUsed),
-				formatBytes(s.config.TrafficLimitBytes))
-			logging.Printf("[WARNING] Continuing at minimum capacity (overage allowed)")
-		}
-	}
-}
-
-// checkPeriodReset checks if the period has ended and resets if needed
-func (s *Service) checkPeriodReset() bool {
-	if s.trafficState == nil {
-		return false
-	}
-
-	now := time.Now()
-	periodEnd := s.trafficState.PeriodStartTime.Add(s.config.TrafficPeriod)
-
-	if now.After(periodEnd) {
-		logging.Printf("\n[RESET] Traffic period ended. Resetting to normal capacity:")
-		logging.Printf("[RESET]   Max Clients: %d", s.config.NormalMaxClients)
-		logging.Printf("[RESET]   Bandwidth: %s",
-			formatBandwidth(s.config.NormalBandwidthBytesPerSec))
-		logging.Printf("[RESET]   Usage: %s → 0 GB",
-			formatBytes(s.trafficState.BytesUsed))
-
-		s.throttleMu.Lock()
-		s.trafficState.PeriodStartTime = now
-		s.trafficState.BytesUsed = 0
-		s.trafficState.IsThrottled = false
-		s.limitReached = false
-		s.currentMaxClients = s.config.NormalMaxClients
-		s.currentBandwidth = s.config.NormalBandwidthBytesPerSec
-		s.throttleMu.Unlock()
-
-		s.saveTrafficState()
-
-		return true
-	}
-
-	return false
 }
