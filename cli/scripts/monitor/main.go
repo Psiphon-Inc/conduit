@@ -91,13 +91,6 @@ func parseFlags() *Config {
 		flag.PrintDefaults()
 	}
 
-	// Filter args: separated by -- or just pass everything if we recognize them
-	// This is a bit tricky since we want to pass through flags we don't handle.
-	// For simplicity in this supervisor, we'll assume the user passes monitor flags first,
-	// then the rest are passed to conduit.
-
-	// Actually, a better approach for this wrapper is to manually parse its own flags
-	// and collect the rest.
 	args := os.Args[1:]
 	monitorArgs := []string{}
 	conduitArgs := []string{"start"} // Default command
@@ -109,7 +102,7 @@ func parseFlags() *Config {
 			break
 		}
 
-		// Check if it's one of our flags
+		// Check if it's one of our monitor-only flags
 		if strings.HasPrefix(arg, "--traffic-limit") ||
 			strings.HasPrefix(arg, "--traffic-period") ||
 			strings.HasPrefix(arg, "--bandwidth-threshold") ||
@@ -128,15 +121,20 @@ func parseFlags() *Config {
 		// Check for flags we share/need to know about
 		if strings.HasPrefix(arg, "--data-dir") || strings.HasPrefix(arg, "-d") {
 			monitorArgs = append(monitorArgs, arg)
-			if !strings.Contains(arg, "=") && i+1 < len(args) {
+			if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 				monitorArgs = append(monitorArgs, args[i+1])
-				// Don't skip next arg here, we want to pass it to conduit too
+				conduitArgs = append(conduitArgs, arg, args[i+1])
+				i++
+				continue
 			}
 		}
 		if strings.HasPrefix(arg, "--metrics-addr") {
 			monitorArgs = append(monitorArgs, arg)
-			if !strings.Contains(arg, "=") && i+1 < len(args) {
+			if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 				monitorArgs = append(monitorArgs, args[i+1])
+				conduitArgs = append(conduitArgs, arg, args[i+1])
+				i++
+				continue
 			}
 		}
 
@@ -194,14 +192,15 @@ func runConduitDirectly(args []string) {
 }
 
 type Supervisor struct {
-	cfg         *Config
-	state       *TrafficState
-	stateFile   string
-	mu          sync.Mutex
-	child       *exec.Cmd
-	stopChan    chan struct{}
-	restartChan chan struct{}
-	metricsURL  string
+	cfg             *Config
+	state           *TrafficState
+	stateFile       string
+	mu              sync.Mutex
+	child           *exec.Cmd
+	stopChan        chan struct{}
+	restartChan     chan struct{}
+	metricsURL      string
+	lastScrapeTotal int64 // Track last scraped value to calculate delta
 }
 
 func NewSupervisor(cfg *Config) *Supervisor {
@@ -223,7 +222,9 @@ func (s *Supervisor) Run() error {
 			BytesUsed:       0,
 			IsThrottled:     false,
 		}
-		s.saveState()
+		if err := s.saveState(); err != nil {
+			log.Printf("[WARN] Failed to save initial state: %v", err)
+		}
 	}
 
 	// Handle signals
@@ -247,10 +248,14 @@ func (s *Supervisor) Run() error {
 			return nil
 		default:
 			// Prepare conduit arguments based on throttle state
+			s.mu.Lock()
+			isThrottled := s.state.IsThrottled
+			s.mu.Unlock()
+
 			args := make([]string, len(s.cfg.ConduitArgs))
 			copy(args, s.cfg.ConduitArgs)
 
-			if s.state.IsThrottled {
+			if isThrottled {
 				log.Println("[INFO] Starting Conduit in THROTTLED mode")
 				// Override flags for throttling
 				args = filterArgs(args, "--max-clients", "-m")
@@ -306,17 +311,20 @@ func (s *Supervisor) Run() error {
 
 func (s *Supervisor) stopChild() {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.child != nil && s.child.Process != nil {
-		// Try graceful shutdown first
-		s.child.Process.Signal(syscall.SIGTERM)
+	child := s.child
+	s.mu.Unlock()
 
-		// Wait a bit, then kill if needed (simple implementation)
-		// For robustness, we should use a timer here but simplistic for now
-		time.Sleep(5 * time.Second)
-		if s.child.ProcessState == nil || !s.child.ProcessState.Exited() {
-			s.child.Process.Kill()
-		}
+	if child != nil && child.Process != nil {
+		// Try graceful shutdown first
+		child.Process.Signal(syscall.SIGTERM)
+
+		// Wait in background with timeout, then kill if needed
+		go func() {
+			time.Sleep(5 * time.Second)
+			if child.ProcessState == nil || !child.ProcessState.Exited() {
+				child.Process.Kill()
+			}
+		}()
 	}
 }
 
@@ -341,15 +349,25 @@ func (s *Supervisor) checkTraffic() {
 	// 1. Check period expiration
 	now := time.Now()
 	periodDuration := time.Duration(s.cfg.TrafficPeriodDays) * 24 * time.Hour
+
+	s.mu.Lock()
 	periodEnd := s.state.PeriodStartTime.Add(periodDuration)
+	s.mu.Unlock()
 
 	if now.After(periodEnd) {
 		log.Println("[RESET] Traffic period ended. Resetting stats.")
+
+		s.mu.Lock()
 		s.state.PeriodStartTime = now
 		s.state.BytesUsed = 0
 		wasThrottled := s.state.IsThrottled
 		s.state.IsThrottled = false
-		s.saveState()
+		s.lastScrapeTotal = 0 // Reset scrape counter
+		s.mu.Unlock()
+
+		if err := s.saveState(); err != nil {
+			log.Printf("[WARN] Failed to save state after reset: %v", err)
+		}
 
 		if wasThrottled {
 			// Trigger restart to restore normal capacity
@@ -366,48 +384,25 @@ func (s *Supervisor) checkTraffic() {
 		return
 	}
 
-	// 3. Update total usage
-	// Note: The supervisor needs to track *incremental* usage because
-	// the conduit process resets its counters when it restarts.
-	// We need a way to track the "session" usage and add it to the state.
-	// BUT, we only persist the state.
-	// To do this correctly:
-	// - We need to keep track of the last scrape value for the current session.
-	// - If the scraped value drops (restart), we treat it as 0 baseline.
-
-	// Actually, the simplest way is:
-	// We persist `BytesUsed` in the JSON.
-	// In memory, we track `SessionBytesStart` (bytes at start of this conduit process).
-	// Wait, the conduit process resets to 0 on restart.
-	// So `CurrentSessionBytes = ScrapedTotalUp + ScrapedTotalDown`.
-	// `TotalBytesUsed = StoredBytesUsed + CurrentSessionBytes`?
-	// No, that double counts if we update StoredBytesUsed.
-
-	// Better approach:
-	// `State.BytesUsed` is the commited bytes from *previous* sessions.
-	// We read metrics `m`.
-	// If `m < last_m` (restart happened), we commit `last_m` to `State.BytesUsed` and reset `last_m = 0`.
-	// Actually, we can just update `State.BytesUsed` incrementally.
-	// `delta = m - last_m`. If `delta < 0` (restart), `delta = m`.
-	// `State.BytesUsed += delta`. `last_m = m`.
-
-	// I need a field in Supervisor for `lastScrapeTotal`.
 	s.updateUsage(bytesUsed)
 }
 
-var lastScrapeTotal int64 = 0
-
 func (s *Supervisor) updateUsage(currentSessionTotal int64) {
-	delta := currentSessionTotal - lastScrapeTotal
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delta := currentSessionTotal - s.lastScrapeTotal
 	if delta < 0 {
 		// Process restarted, so currentSessionTotal is the delta from 0
 		delta = currentSessionTotal
 	}
-	lastScrapeTotal = currentSessionTotal
+	s.lastScrapeTotal = currentSessionTotal
 
 	if delta > 0 {
 		s.state.BytesUsed += delta
-		s.saveState()
+		if err := s.saveState(); err != nil {
+			log.Printf("[WARN] Failed to save state: %v", err)
+		}
 	}
 
 	// 4. Check limits
@@ -417,10 +412,16 @@ func (s *Supervisor) updateUsage(currentSessionTotal int64) {
 	if !s.state.IsThrottled && s.state.BytesUsed >= thresholdBytes {
 		log.Printf("[THROTTLE] Threshold reached (%d%%). Throttling...", s.cfg.BandwidthThresholdPercent)
 		s.state.IsThrottled = true
-		s.saveState()
+		if err := s.saveState(); err != nil {
+			log.Printf("[WARN] Failed to save state: %v", err)
+		}
+		s.mu.Unlock() // Unlock before triggering restart to avoid deadlock
 		s.triggerRestart()
+		s.mu.Lock() // Re-lock for defer
 	}
 }
+
+// Remove the global variable that was here
 
 func (s *Supervisor) triggerRestart() {
 	select {
