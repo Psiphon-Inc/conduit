@@ -14,11 +14,44 @@ services:
                 "/home/conduit/data",
                 "--metrics-addr",
                 "0.0.0.0:9090",
+                # Smart traffic throttling - 500GB per 30 days
+                # Throttles at 80% (400GB) to preserve remaining bandwidth
+                "--traffic-limit",
+                "500",
+                "--traffic-period",
+                "30",
+                "--bandwidth-threshold",
+                "80",
+                "--min-connections",
+                "10",
+                "--min-bandwidth",
+                "10",
             ]
         # Metrics are exposed inside the container on :9090.
         # To scrape from the host, publish the port (e.g., "9090:9090").
         volumes:
             - conduit-data:/home/conduit/data
+
+    # Example: Conduit without traffic throttling
+    # Uncomment this service and comment the one above for unlimited operation
+    # conduit-unlimited:
+    #     image: ghcr.io/psiphon-inc/conduit/cli:latest
+    #     container_name: conduit
+    #     restart: unless-stopped
+    #     command:
+    #         [
+    #             "start",
+    #             "--max-clients",
+    #             "50",
+    #             "--bandwidth",
+    #             "50",
+    #             "--data-dir",
+    #             "/home/conduit/data",
+    #             "--metrics-addr",
+    #             "0.0.0.0:9090",
+    #         ]
+    #     volumes:
+    #         - conduit-data:/home/conduit/data
 
 volumes:
     conduit-data:
