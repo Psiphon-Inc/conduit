@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -28,7 +29,13 @@ const (
 
 	// State file
 	StateFileName = "traffic_state.json"
+
+	// HTTP client timeout for metrics scraping
+	httpTimeout = 5 * time.Second
 )
+
+// httpClient is used for metrics scraping with a timeout
+var httpClient = &http.Client{Timeout: httpTimeout}
 
 type TrafficState struct {
 	PeriodStartTime time.Time `json:"periodStartTime"`
@@ -72,6 +79,28 @@ func main() {
 	}
 }
 
+// looksLikeValue checks if a string looks like a flag value (not a flag itself)
+// This handles negative numbers like -5 which start with - but are values
+func looksLikeValue(s string) bool {
+	if !strings.HasPrefix(s, "-") {
+		return true
+	}
+	// Check if it's a negative number
+	_, err := strconv.ParseFloat(s, 64)
+	return err == nil
+}
+
+// isDataDirFlag checks if arg is specifically the --data-dir or -d flag
+func isDataDirFlag(arg string) bool {
+	return arg == "--data-dir" || arg == "-d" ||
+		strings.HasPrefix(arg, "--data-dir=") || strings.HasPrefix(arg, "-d=")
+}
+
+// isMetricsAddrFlag checks if arg is specifically the --metrics-addr flag
+func isMetricsAddrFlag(arg string) bool {
+	return arg == "--metrics-addr" || strings.HasPrefix(arg, "--metrics-addr=")
+}
+
 func parseFlags() *Config {
 	cfg := &Config{}
 
@@ -98,7 +127,13 @@ func parseFlags() *Config {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		if arg == "--" {
-			conduitArgs = append(conduitArgs, args[i+1:]...)
+			// Handle args after separator
+			rest := args[i+1:]
+			// Skip redundant "start" if present (we already have it in conduitArgs)
+			if len(rest) > 0 && rest[0] == "start" {
+				rest = rest[1:]
+			}
+			conduitArgs = append(conduitArgs, rest...)
 			break
 		}
 
@@ -111,7 +146,7 @@ func parseFlags() *Config {
 
 			// Add to monitor args to be parsed by flag set
 			monitorArgs = append(monitorArgs, arg)
-			if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+			if !strings.Contains(arg, "=") && i+1 < len(args) && looksLikeValue(args[i+1]) {
 				monitorArgs = append(monitorArgs, args[i+1])
 				i++
 			}
@@ -119,36 +154,43 @@ func parseFlags() *Config {
 		}
 
 		// Check for flags we share/need to know about (both monitor and conduit need these)
-		if strings.HasPrefix(arg, "--data-dir") || strings.HasPrefix(arg, "-d") {
+		// Use exact match to avoid matching -debug, -data, etc.
+		if isDataDirFlag(arg) {
 			if strings.Contains(arg, "=") {
-				// Format: --data-dir=/path
+				// Format: --data-dir=/path or -d=/path
 				monitorArgs = append(monitorArgs, arg)
 				conduitArgs = append(conduitArgs, arg)
-			} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-				// Format: --data-dir /path
+			} else if i+1 < len(args) && looksLikeValue(args[i+1]) {
+				// Format: --data-dir /path or -d /path
 				monitorArgs = append(monitorArgs, arg, args[i+1])
 				conduitArgs = append(conduitArgs, arg, args[i+1])
 				i++
+			} else {
+				// Flag without value - pass through to let conduit report error
+				conduitArgs = append(conduitArgs, arg)
 			}
 			continue
 		}
-		if strings.HasPrefix(arg, "--metrics-addr") {
+		if isMetricsAddrFlag(arg) {
 			if strings.Contains(arg, "=") {
 				// Format: --metrics-addr=host:port
 				monitorArgs = append(monitorArgs, arg)
 				conduitArgs = append(conduitArgs, arg)
-			} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+			} else if i+1 < len(args) && looksLikeValue(args[i+1]) {
 				// Format: --metrics-addr host:port
 				monitorArgs = append(monitorArgs, arg, args[i+1])
 				conduitArgs = append(conduitArgs, arg, args[i+1])
 				i++
+			} else {
+				// Flag without value - pass through to let conduit report error
+				conduitArgs = append(conduitArgs, arg)
 			}
 			continue
 		}
 
-		// Add to conduit args
+		// Add to conduit args (unknown flags pass through to conduit)
 		conduitArgs = append(conduitArgs, arg)
-		if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+		if !strings.Contains(arg, "=") && i+1 < len(args) && looksLikeValue(args[i+1]) {
 			conduitArgs = append(conduitArgs, args[i+1])
 			i++
 		}
@@ -251,104 +293,109 @@ func (s *Supervisor) Run() error {
 
 	// Main loop to manage child process
 	for {
+		// Check for stop/signal before starting child
 		select {
 		case <-s.stopChan:
 			return nil
 		case <-sigChan:
 			log.Println("[INFO] Received signal, shutting down...")
-			s.stopChild()
 			return nil
 		default:
-			// Prepare conduit arguments based on throttle state
-			s.mu.Lock()
-			isThrottled := s.state.IsThrottled
+		}
+
+		// Prepare conduit arguments based on throttle state
+		s.mu.Lock()
+		isThrottled := s.state.IsThrottled
+		s.mu.Unlock()
+
+		args := make([]string, len(s.cfg.ConduitArgs))
+		copy(args, s.cfg.ConduitArgs)
+
+		if isThrottled {
+			log.Println("[INFO] Starting Conduit in THROTTLED mode")
+			// Override flags for throttling
+			args = filterArgs(args, "--max-clients", "-m")
+			args = filterArgs(args, "--bandwidth", "-b")
+			args = append(args, "--max-clients", fmt.Sprintf("%d", s.cfg.MinConnections))
+			args = append(args, "--bandwidth", fmt.Sprintf("%.0f", s.cfg.MinBandwidthMbps))
+		} else {
+			log.Println("[INFO] Starting Conduit in NORMAL mode")
+		}
+
+		// Start child
+		s.mu.Lock()
+		s.child = exec.Command("conduit", args...)
+		s.child.Stdout = os.Stdout
+		s.child.Stderr = os.Stderr
+		if err := s.child.Start(); err != nil {
 			s.mu.Unlock()
+			return fmt.Errorf("failed to start conduit: %w", err)
+		}
+		s.mu.Unlock()
 
-			args := make([]string, len(s.cfg.ConduitArgs))
-			copy(args, s.cfg.ConduitArgs)
+		// Single goroutine calls Wait() - this is the ONLY place Wait() is called
+		waitErr := make(chan error, 1)
+		go func() {
+			waitErr <- s.child.Wait()
+		}()
 
-			if isThrottled {
-				log.Println("[INFO] Starting Conduit in THROTTLED mode")
-				// Override flags for throttling
-				args = filterArgs(args, "--max-clients", "-m")
-				args = filterArgs(args, "--bandwidth", "-b")
-				args = append(args, "--max-clients", fmt.Sprintf("%d", s.cfg.MinConnections))
-				args = append(args, "--bandwidth", fmt.Sprintf("%.0f", s.cfg.MinBandwidthMbps))
+		// Wait for child exit, restart signal, or shutdown signal
+		select {
+		case err := <-waitErr:
+			if err != nil {
+				log.Printf("[ERROR] Conduit exited with error: %v", err)
+				// Backoff before restart
+				time.Sleep(5 * time.Second)
 			} else {
-				log.Println("[INFO] Starting Conduit in NORMAL mode")
+				log.Println("[INFO] Conduit exited normally")
+				return nil // Exit if child exits cleanly
 			}
-
-			// Start child
-			s.mu.Lock()
-			s.child = exec.Command("conduit", args...)
-			s.child.Stdout = os.Stdout
-			s.child.Stderr = os.Stderr
-			if err := s.child.Start(); err != nil {
-				s.mu.Unlock()
-				return fmt.Errorf("failed to start conduit: %w", err)
-			}
-			s.mu.Unlock()
-
-			// Wait for child or restart signal
-			childDone := make(chan error, 1)
-			go func() {
-				childDone <- s.child.Wait()
-			}()
-
-			select {
-			case err := <-childDone:
-				if err != nil {
-					log.Printf("[ERROR] Conduit exited with error: %v", err)
-					// Backoff before restart
-					time.Sleep(5 * time.Second)
-				} else {
-					log.Println("[INFO] Conduit exited normally")
-					return nil // Exit if child exits cleanly
-				}
-			case <-s.restartChan:
-				log.Println("[INFO] Restarting Conduit to apply new settings...")
-				s.stopChild()
-				// Loop will continue and restart child
-			case <-sigChan:
-				log.Println("[INFO] Received signal, shutting down...")
-				s.stopChild()
-				return nil
-			case <-s.stopChan:
-				s.stopChild()
-				return nil
-			}
+		case <-s.restartChan:
+			log.Println("[INFO] Restarting Conduit to apply new settings...")
+			s.shutdownChild(waitErr)
+			// Loop will continue and restart child
+		case <-sigChan:
+			log.Println("[INFO] Received signal, shutting down...")
+			s.shutdownChild(waitErr)
+			return nil
+		case <-s.stopChan:
+			s.shutdownChild(waitErr)
+			return nil
 		}
 	}
 }
 
-func (s *Supervisor) stopChild() {
+// shutdownChild sends SIGTERM to the child process and waits for it to exit
+// using the provided wait channel. If the process doesn't exit within 5 seconds,
+// it sends SIGKILL. This function does NOT call Wait() - it uses the single
+// Wait() goroutine's result channel.
+func (s *Supervisor) shutdownChild(waitErr <-chan error) {
 	s.mu.Lock()
 	child := s.child
 	s.mu.Unlock()
 
 	if child == nil || child.Process == nil {
+		// Drain the wait channel if child never started properly
+		select {
+		case <-waitErr:
+		default:
+		}
 		return
 	}
 
 	// Try graceful shutdown first
 	child.Process.Signal(syscall.SIGTERM)
 
-	// Wait for process to exit with timeout
-	done := make(chan struct{})
-	go func() {
-		child.Wait() // This will return when process exits
-		close(done)
-	}()
-
+	// Wait for the single Wait() goroutine to return, with timeout
 	select {
-	case <-done:
+	case <-waitErr:
 		// Process exited gracefully
 		log.Println("[INFO] Child process stopped gracefully")
 	case <-time.After(5 * time.Second):
 		// Timeout - force kill
 		log.Println("[WARN] Child process did not exit gracefully, killing...")
 		child.Process.Kill()
-		<-done // Wait for the kill to complete
+		<-waitErr // Wait for the kill to complete
 	}
 }
 
@@ -412,9 +459,10 @@ func (s *Supervisor) checkTraffic() {
 }
 
 func (s *Supervisor) updateUsage(currentSessionTotal int64) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	var needsRestart bool
 
+	// All state access in a single locked block - no unlock/relock pattern
+	s.mu.Lock()
 	delta := currentSessionTotal - s.lastScrapeTotal
 	if delta < 0 {
 		// Process restarted, so currentSessionTotal is the delta from 0
@@ -429,7 +477,7 @@ func (s *Supervisor) updateUsage(currentSessionTotal int64) {
 		}
 	}
 
-	// 4. Check limits
+	// Check limits
 	limitBytes := int64(s.cfg.TrafficLimitGB * 1024 * 1024 * 1024)
 	thresholdBytes := int64(float64(limitBytes) * float64(s.cfg.BandwidthThresholdPercent) / 100.0)
 
@@ -439,9 +487,13 @@ func (s *Supervisor) updateUsage(currentSessionTotal int64) {
 		if err := s.saveState(); err != nil {
 			log.Printf("[WARN] Failed to save state: %v", err)
 		}
-		s.mu.Unlock() // Unlock before triggering restart to avoid deadlock
+		needsRestart = true
+	}
+	s.mu.Unlock()
+
+	// Trigger restart outside the lock to avoid deadlock
+	if needsRestart {
 		s.triggerRestart()
-		s.mu.Lock() // Re-lock for defer
 	}
 }
 
@@ -454,20 +506,24 @@ func (s *Supervisor) triggerRestart() {
 }
 
 func (s *Supervisor) scrapeBytesUsed() (int64, error) {
-	// Need to parse Prometheus text format
-	// Simple approach: look for `conduit_bytes_uploaded` and `conduit_bytes_downloaded`
-
-	resp, err := http.Get(s.metricsURL)
+	// Use client with timeout to prevent hanging
+	resp, err := httpClient.Get(s.metricsURL)
 	if err != nil {
 		return 0, err
 	}
 	defer resp.Body.Close()
+
+	// Check HTTP status code
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("metrics returned status %d", resp.StatusCode)
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return 0, err
 	}
 
+	// Parse Prometheus text format
 	lines := strings.Split(string(body), "\n")
 	var up, down int64
 
@@ -475,8 +531,9 @@ func (s *Supervisor) scrapeBytesUsed() (int64, error) {
 		if strings.HasPrefix(line, "#") {
 			continue
 		}
-		if strings.Contains(line, "conduit_bytes_uploaded") {
-			// Format: conduit_bytes_uploaded 1.23e+07 or 12345
+		// Use HasPrefix with space for exact metric name matching
+		// This prevents matching "conduit_bytes_uploaded_total" etc.
+		if strings.HasPrefix(line, "conduit_bytes_uploaded ") {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
 				var val float64
@@ -484,7 +541,7 @@ func (s *Supervisor) scrapeBytesUsed() (int64, error) {
 				up = int64(val)
 			}
 		}
-		if strings.Contains(line, "conduit_bytes_downloaded") {
+		if strings.HasPrefix(line, "conduit_bytes_downloaded ") {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
 				var val float64
@@ -526,8 +583,8 @@ func filterArgs(args []string, longFlag, shortFlag string) []string {
 
 		if arg == longFlag || arg == shortFlag {
 			// Flag found, skip it
-			// If it doesn't have =, skip next arg too (assuming value)
-			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+			// If next arg looks like a value (including negative numbers), skip it too
+			if i+1 < len(args) && looksLikeValue(args[i+1]) {
 				skipNext = true
 			}
 			continue

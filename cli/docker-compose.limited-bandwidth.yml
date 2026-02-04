@@ -21,7 +21,7 @@ services:
                 "--metrics-addr",
                 "127.0.0.1:9090",
                 "--",
-                "start",
+                # Note: "start" is added automatically by conduit-monitor
                 "--max-clients",
                 "50",
                 "--bandwidth",
