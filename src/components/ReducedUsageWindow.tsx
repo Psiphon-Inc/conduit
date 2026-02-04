@@ -33,11 +33,11 @@ import type { SharedValue } from "react-native-reanimated";
 import { bytesToMB } from "@/src/common/utils";
 import { AnimatedText } from "@/src/components/AnimatedText";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
-import { TIME_STEPS, formatTimeIndex } from "@/src/components/reducedUsageTime";
 import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_MBPS_PER_PEER_MAX,
 } from "@/src/constants";
+import { TIME_STEPS, formatTimeIndex } from "@/src/inproxy/reducedUsageTime";
 import type { InproxyParameters } from "@/src/inproxy/types";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 
@@ -84,8 +84,8 @@ function ReducedUsageWindowSelector({
     const endDisplayText = useDerivedValue(() => {
         return endTime.value.length > 0 ? endTime.value : "--:--";
     });
-    const trackHeight = 14;
-    const handleSize = 18;
+    const trackHeight = 20;
+    const handleSize = 20;
     const handleOffset = (handleSize - trackHeight) / 2;
     const reducedPrimaryStyle = useAnimatedStyle(() => {
         if (segmentWidth.value <= 0) {
@@ -235,7 +235,7 @@ function ReducedUsageWindowSelector({
                         overflow: "hidden",
                         borderWidth: 1,
                         borderColor: palette.midGrey,
-                        backgroundColor: palette.blueTint5,
+                        backgroundColor: palette.black,
                         position: "absolute",
                         top: handleOffset,
                     }}
@@ -270,7 +270,7 @@ function ReducedUsageWindowSelector({
                         style={[
                             {
                                 position: "absolute",
-                                top: handleOffset - 2,
+                                top: handleOffset,
                                 width: handleSize,
                                 height: handleSize,
                                 borderRadius: handleSize / 2,
@@ -287,7 +287,7 @@ function ReducedUsageWindowSelector({
                         style={[
                             {
                                 position: "absolute",
-                                top: handleOffset - 2,
+                                top: handleOffset,
                                 width: handleSize,
                                 height: handleSize,
                                 borderRadius: handleSize / 2,
@@ -334,14 +334,13 @@ export function ReducedUsageWindow({
     const { t } = useTranslation();
     const notConfiguredLabel = t("REDUCED_WINDOW_NOT_CONFIGURED_I18N.string");
     const summaryPrefix = t("REDUCED_WINDOW_SUMMARY_PREFIX_I18N.string");
-    const summarySuffix = t("REDUCED_WINDOW_SUMMARY_SUFFIX_I18N.string");
     const summaryText = useDerivedValue(() => {
         const startValue = modifiedReducedStartTime.value;
         const endValue = modifiedReducedEndTime.value;
         if (startValue.length === 0 || endValue.length === 0) {
             return notConfiguredLabel;
         }
-        return `${summaryPrefix} ${startValue} -> ${endValue} ${summarySuffix}`;
+        return `${summaryPrefix} ${startValue} -> ${endValue}`;
     });
     const reducedErrorText =
         reducedTimeError === "format"
@@ -377,18 +376,32 @@ export function ReducedUsageWindow({
                             ensureReducedWindowDefaults();
                             setReducedExpanded(true);
                         }}
-                        accessibilityLabel={t(
-                            "REDUCED_WINDOW_CONFIGURE_I18N.string",
-                        )}
+                        accessibilityLabel={t("EDIT_I18N.string")}
                     >
-                        <Text style={[ss.bodyFont, ss.blackText]}>...</Text>
+                        <View
+                            style={[
+                                ss.row,
+                                ss.alignCenter,
+                                ss.rounded5,
+                                ss.halfPadded,
+                                {
+                                    backgroundColor: palette.white,
+                                    borderWidth: 1,
+                                    borderColor: palette.purple,
+                                },
+                            ]}
+                        >
+                            <Text style={[ss.bodyFont, ss.purpleText]}>
+                                {t("EDIT_I18N.string")}
+                            </Text>
+                        </View>
                     </Pressable>
                 </View>
                 <AnimatedText
                     text={summaryText}
                     color={palette.midGrey}
                     fontFamily={ss.tinyFont.fontFamily}
-                    fontSize={ss.tinyFont.fontSize}
+                    fontSize={14}
                 />
             </View>
         );
@@ -407,9 +420,28 @@ export function ReducedUsageWindow({
                 <Text style={[ss.bodyFont, ss.blackText]}>
                     {t("REDUCED_USAGE_WINDOW_I18N.string")}
                 </Text>
-                <View style={[ss.column, ss.alignFlexEnd, ss.nogap]}>
-                    <Pressable onPress={disableReducedWindow}>
-                        <Text style={[ss.bodyFont, ss.purpleText]}>-</Text>
+                <View style={[ss.row, ss.alignCenter, ss.halfGap]}>
+                    <Pressable
+                        onPress={() => setReducedExpanded(false)}
+                        accessibilityLabel={t("HIDE_I18N.string")}
+                    >
+                        <View
+                            style={[
+                                ss.row,
+                                ss.alignCenter,
+                                ss.rounded5,
+                                ss.halfPadded,
+                                {
+                                    backgroundColor: palette.white,
+                                    borderWidth: 1,
+                                    borderColor: palette.purple,
+                                },
+                            ]}
+                        >
+                            <Text style={[ss.bodyFont, ss.purpleText]}>
+                                {t("HIDE_I18N.string")}
+                            </Text>
+                        </View>
                     </Pressable>
                 </View>
             </View>
@@ -428,13 +460,13 @@ export function ReducedUsageWindow({
             ) : (
                 <View style={[ss.fullWidth, ss.height100]} />
             )}
-            <View style={[ss.fullWidth, ss.halfPadded]}>
-                {reducedErrorText && (
+            {reducedErrorText && (
+                <View style={[ss.fullWidth, ss.halfPadded]}>
                     <Text style={[ss.tinyFont, { color: palette.peachyMauve }]}>
                         {reducedErrorText}
                     </Text>
-                )}
-            </View>
+                </View>
+            )}
             <View
                 style={{
                     gap: 0,
@@ -449,7 +481,12 @@ export function ReducedUsageWindow({
                     }
                     min={1}
                     max={INPROXY_MAX_CLIENTS_MAX}
-                    style={[...lineItemStyle, { borderBottomWidth: 0 }]}
+                    style={[
+                        ...lineItemStyle,
+                        ss.alignCenter,
+                        { paddingVertical: 6 },
+                        { borderBottomWidth: 0 },
+                    ]}
                     onChange={updateReducedMaxClients}
                     scrollRef={scrollRef}
                 />
@@ -461,10 +498,47 @@ export function ReducedUsageWindow({
                     )}
                     min={2}
                     max={INPROXY_MAX_MBPS_PER_PEER_MAX}
-                    style={[...lineItemStyle, { borderBottomWidth: 0 }]}
+                    style={[
+                        ...lineItemStyle,
+                        ss.alignCenter,
+                        { paddingVertical: 6 },
+                        { borderBottomWidth: 0 },
+                    ]}
                     onChange={updateReducedLimitBytesPerSecond}
                     scrollRef={scrollRef}
                 />
+            </View>
+            <View style={[ss.column, ss.halfGap, ss.fullWidth]}>
+                <View style={[ss.row, ss.fullWidth, ss.alignCenter]}>
+                    <AnimatedText
+                        text={summaryText}
+                        color={palette.black}
+                        fontFamily={ss.bodyFont.fontFamily}
+                        fontSize={14}
+                    />
+                    <Pressable
+                        style={[
+                            ss.flex,
+                            ss.row,
+                            ss.alignCenter,
+                            ss.justifyCenter,
+                            {
+                                borderRadius: 5,
+                                borderWidth: 1,
+                                borderColor: palette.purple,
+                                paddingVertical: 6,
+                            },
+                        ]}
+                        onPress={disableReducedWindow}
+                        accessibilityLabel={t(
+                            "REDUCED_WINDOW_CLEAR_I18N.string",
+                        )}
+                    >
+                        <Text style={[ss.purpleText, ss.bodyFont]}>
+                            {t("REDUCED_WINDOW_CLEAR_I18N.string")}
+                        </Text>
+                    </Pressable>
+                </View>
             </View>
         </View>
     );

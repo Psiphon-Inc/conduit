@@ -44,7 +44,7 @@ function RequestPermissionsPrompt({
                 <Text
                     adjustsFontSizeToFit
                     numberOfLines={1}
-                    style={[ss.bodyFont, ss.whiteText]}
+                    style={[ss.bodyFont, ss.blackText]}
                 >
                     {t("NOTIFICATIONS_I18N.string")}
                 </Text>
@@ -54,10 +54,14 @@ function RequestPermissionsPrompt({
                 style={[
                     ss.rounded5,
                     ss.halfPadded,
-                    { backgroundColor: palette.white },
+                    {
+                        backgroundColor: palette.white,
+                        borderWidth: 1,
+                        borderColor: palette.purple,
+                    },
                 ]}
             >
-                <Text style={[ss.bodyFont, ss.blackText]}>
+                <Text style={[ss.bodyFont, ss.purpleText]}>
                     {t("ENABLE_I18N.string")}
                 </Text>
             </Pressable>
@@ -70,7 +74,7 @@ function PermissionsGranted() {
 
     return (
         <View style={[ss.row, ss.justifySpaceBetween, ss.fullWidth]}>
-            <Text style={[ss.bodyFont, ss.whiteText]}>
+            <Text style={[ss.bodyFont, ss.blackText]}>
                 {t("NOTIFICATIONS_I18N.string")}
             </Text>
             <View style={[ss.row]}>

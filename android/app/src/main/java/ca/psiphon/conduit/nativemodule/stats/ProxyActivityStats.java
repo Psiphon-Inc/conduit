@@ -78,11 +78,11 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
     return getBucketCollection(bucketCollectionIndex).getSeries(1);
   }
 
-  public List<Long> getConnectingClientsSeries(int bucketCollectionIndex) {
+  public List<Long> getAnnouncingWorkersSeries(int bucketCollectionIndex) {
     return getBucketCollection(bucketCollectionIndex).getSeries(2);
   }
 
-  public List<Long> getAnnouncingWorkersSeries(int bucketCollectionIndex) {
+  public List<Long> getConnectingClientsSeries(int bucketCollectionIndex) {
     return getBucketCollection(bucketCollectionIndex).getSeries(3);
   }
 

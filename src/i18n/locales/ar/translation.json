@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "إظهار"
+    },
+    "EDIT_I18N": {
+        "string": "تعديل"
+    },
+    "HIDE_I18N": {
+        "string": "إخفاء"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "نافذة الاستخدام المخفّض"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "اضبط حدود استخدام أقل خلال نافذة يومية. على سبيل المثال، أثناء النهار عندما تحتاج إلى أن تدوم سعة النطاق والبطارية."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "الوقت المحلي"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "تهيئة نافذة الاستخدام"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "مسح"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "غير مُهيّأ"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "استخدام مخفّض بين"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "الوقت المحلي"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "وقت البدء"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "وقت الانتهاء"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "اختر وقتي البدء والانتهاء بخطوات 30 دقيقة."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "استخدم HH:MM"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "يجب أن يختلف وقتا البدء والانتهاء"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "الحد الأقصى المخفّض لعدد المستخدمين"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "الحد الأقصى المخفّض لـ MB/s لكل مستخدم"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "النطاق الترددي المطلوب المخفّض"
     }
 }

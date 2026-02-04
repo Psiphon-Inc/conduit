@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "نمایش"
+    },
+    "EDIT_I18N": {
+        "string": "ویرایش"
+    },
+    "HIDE_I18N": {
+        "string": "پنهان"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "بازه مصرف کاهش‌یافته"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "محدودیت‌های مصرف کمتر را در یک بازه روزانه تنظیم کنید. مثلاً در طول روز وقتی به پهنای باند و باتری‌تان نیاز دارید تا دوام بیاورند."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "زمان محلی"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "تنظیم بازه مصرف"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "پاک کردن"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "پیکربندی نشده"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "مصرف کاهش‌یافته بین"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "زمان محلی"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "زمان شروع"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "زمان پایان"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "زمان شروع و پایان را در گام‌های ۳۰ دقیقه‌ای انتخاب کنید."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "از HH:MM استفاده کنید"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "زمان شروع و پایان باید متفاوت باشند"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "بیشترین کاربران کاهش‌یافته"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "بیشترین مگابایت برای هر کاربر کاهش‌یافته"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "پهنای باند مورد نیاز کاهش‌یافته"
     }
 }

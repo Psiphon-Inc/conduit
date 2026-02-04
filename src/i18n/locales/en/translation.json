@@ -152,6 +152,12 @@
     "CLOSE_I18N": {
         "string": "Close"
     },
+    "EDIT_I18N": {
+        "string": "Edit"
+    },
+    "HIDE_I18N": {
+        "string": "Hide"
+    },
     "INVALID_QR_CODE_I18N": {
         "string": "invalid qr code"
     },
@@ -176,11 +182,14 @@
     "REDUCED_WINDOW_CONFIGURE_I18N": {
         "string": "Configure Usage Window"
     },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "Clear"
+    },
     "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
         "string": "Not configured"
     },
     "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
-        "string": "Reduced usage between"
+        "string": "Reduced usage active"
     },
     "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
         "string": "local time"

@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "Revelar"
+    },
+    "EDIT_I18N": {
+        "string": "Editar"
+    },
+    "HIDE_I18N": {
+        "string": "Ocultar"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "Janela de utilização reduzida"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "Configure limites de utilização mais baixos durante uma janela diária. Por exemplo, durante o dia quando precisa que a sua largura de banda e bateria durem."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "Hora local"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "Configurar janela de utilização"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "Limpar"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "Não configurado"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "Utilização reduzida entre"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "hora local"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "Hora de início"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "Hora de fim"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "Selecione as horas de início e fim em passos de 30 minutos."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "Use HH:MM"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "Início e fim devem ser diferentes"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "Pares máx. reduzidos"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "MB/s máx. por par reduzido"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "Largura de banda necessária reduzida"
     }
 }

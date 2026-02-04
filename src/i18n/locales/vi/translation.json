@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "Hiển thị"
+    },
+    "EDIT_I18N": {
+        "string": "Chỉnh sửa"
+    },
+    "HIDE_I18N": {
+        "string": "Ẩn"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "Cửa sổ sử dụng giảm"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "Cấu hình giới hạn sử dụng thấp hơn trong một khoảng thời gian hằng ngày. Ví dụ, vào ban ngày khi bạn cần băng thông và pin hoạt động lâu hơn."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "Giờ địa phương"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "Cấu hình cửa sổ sử dụng"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "Xóa"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "Chưa cấu hình"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "Giảm sử dụng trong khoảng"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "giờ địa phương"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "Giờ bắt đầu"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "Giờ kết thúc"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "Chọn giờ bắt đầu và kết thúc theo bước 30 phút."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "Dùng HH:MM"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "Giờ bắt đầu và kết thúc phải khác nhau"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "Số Mạng ngang hàng Tối đa Giảm"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "Số MB Tối đa Trên Một Trạm Ngang hàng Giảm"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "Băng thông theo Yêu cầu Giảm"
     }
 }

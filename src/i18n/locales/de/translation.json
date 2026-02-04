@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "Anzeigen"
+    },
+    "EDIT_I18N": {
+        "string": "Bearbeiten"
+    },
+    "HIDE_I18N": {
+        "string": "Ausblenden"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "Fenster für reduzierte Nutzung"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "Richten Sie niedrigere Nutzungsgrenzen für ein tägliches Zeitfenster ein. Zum Beispiel tagsüber, wenn Ihre Bandbreite und Ihr Akku reichen sollen."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "Ortszeit"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "Nutzungsfenster konfigurieren"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "Löschen"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "Nicht konfiguriert"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "Reduzierte Nutzung zwischen"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "Ortszeit"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "Startzeit"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "Endzeit"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "Start- und Endzeit in 30-Minuten-Schritten auswählen."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "HH:MM verwenden"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "Start und Ende müssen unterschiedlich sein"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "Reduzierte Max Peers"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "Reduzierte Max. MB/s pro Peer"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "Reduzierte erforderliche Bandbreite"
     }
 }

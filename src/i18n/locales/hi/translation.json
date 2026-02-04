@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "दिखाएँ"
+    },
+    "EDIT_I18N": {
+        "string": "संपादित करें"
+    },
+    "HIDE_I18N": {
+        "string": "छिपाएँ"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "कम उपयोग विंडो"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "दैनिक विंडो के दौरान कम उपयोग सीमाएँ सेट करें। उदाहरण के लिए, दिन के समय जब आपको बैंडविड्थ और बैटरी को चलाना हो।"
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "स्थानीय समय"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "उपयोग विंडो कॉन्फ़िगर करें"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "साफ़ करें"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "कॉन्फ़िगर नहीं"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "कम उपयोग के बीच"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "स्थानीय समय"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "आरंभ समय"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "समाप्ति समय"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "शुरुआत और अंत समय 30‑मिनट चरणों में चुनें।"
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "HH:MM उपयोग करें"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "आरंभ और अंत अलग होने चाहिए"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "कम अधिकतम साथी"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "कम अधिकतम MB/s प्रति साथी"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "कम आवश्यक बैंडविड्थ"
     }
 }

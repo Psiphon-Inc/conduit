@@ -273,6 +273,8 @@ public record ConduitServiceParameters(
         // - privateKey is not null or empty, empty is still theoretically valid for the tunnel core but not for the conduit
         boolean baseValid = maxClients > 0 && limitUpstreamBytes >= 0 && limitDownstreamBytes >= 0 && privateKey != null && !privateKey.isEmpty();
 
+        // Reduced usage settings are all-or-nothing. The JS layer (Zod schema) enforces this too;
+        // keep the native validation as defense-in-depth for persisted or external inputs.
         boolean hasAnyReduced = reducedStartTime != null || reducedEndTime != null || reducedMaxClients != null ||
                 reducedLimitUpstreamBytes != null || reducedLimitDownstreamBytes != null;
         boolean hasAllReduced = reducedStartTime != null && reducedEndTime != null && reducedMaxClients != null &&
@@ -291,6 +293,10 @@ public record ConduitServiceParameters(
         }
 
         if (!isTimeOfDay(reducedStartTime) || !isTimeOfDay(reducedEndTime)) {
+            return false;
+        }
+
+        if (reducedStartTime.equals(reducedEndTime)) {
             return false;
         }
 

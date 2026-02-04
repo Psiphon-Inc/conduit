@@ -160,5 +160,59 @@
     },
     "REVEAL_I18N": {
         "string": "Řḗḗṽḗḗȧȧŀ"
+    },
+    "EDIT_I18N": {
+        "string": "Ḗḗḓīīŧ"
+    },
+    "HIDE_I18N": {
+        "string": "Ḧīīḓḗḗ"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "Řḗḗḓŭŭƈḗḗḓ Ŭŭşȧȧǥḗḗ Ŵīīƞḓǿǿẇ"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "Ƈǿǿƞƒīīǥŭŭřḗḗ ŀǿǿẇḗḗř ŭŭşȧȧǥḗḗ ŀīīḿīīŧş ḓŭŭřīīƞǥ ȧȧ ḓȧȧīīŀẏ ẇīīƞḓǿǿẇ. Ƒǿǿř īīƞşŧȧȧƞƈḗḗ, ḓŭŭřīīƞǥ ŧħḗḗ ḓȧȧẏŧīīḿḗḗ ẇħḗḗƞ ẏǿǿŭŭ ƞḗḗḗḗḓ ẏǿǿŭŭř ƀȧȧƞḓẇīīḓŧħ ȧȧƞḓ ƀȧȧŧŧḗḗřẏ ŧǿǿ ŀȧȧşŧ."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "Ŀǿǿƈȧȧŀ ŧīīḿḗḗ"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "Ƈǿǿƞƒīīǥŭŭřḗḗ Ŭŭşȧȧǥḗḗ Ŵīīƞḓǿǿẇ"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "Ƈŀḗḗȧȧř"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "Ńǿǿŧ ƈǿǿƞƒīīǥŭŭřḗḗḓ"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "Řḗḗḓŭŭƈḗḗḓ ŭŭşȧȧǥḗḗ ƀḗḗŧẇḗḗḗḗƞ"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "ŀǿǿƈȧȧŀ ŧīīḿḗḗ"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "Şŧȧȧřŧ ŧīīḿḗḗ"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "Ḗḗƞḓ ŧīīḿḗḗ"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "Şḗḗŀḗḗƈŧ şŧȧȧřŧ ȧȧƞḓ ḗḗƞḓ ŧīīḿḗḗş īīƞ 30-ḿīīƞŭŭŧḗḗ şŧḗḗƥş."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "Ŭŭşḗḗ ḦḦ:ḾḾ"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "Şŧȧȧřŧ ȧȧƞḓ ḗḗƞḓ ḿŭŭşŧ ƀḗḗ ḓīīƒƒḗḗřḗḗƞŧ"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "Řḗḗḓŭŭƈḗḗḓ Ḿȧȧẋ Ṕḗḗḗḗřş"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "Řḗḗḓŭŭƈḗḗḓ Ḿȧȧẋ ḾƁ/ş Ṕḗḗř Ṕḗḗḗḗř"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "Řḗḗḓŭŭƈḗḗḓ Řḗḗɋŭŭīīřḗḗḓ Ɓȧȧƞḓẇīīḓŧħ"
     }
 }

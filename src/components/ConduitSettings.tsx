@@ -57,20 +57,20 @@ import { ReducedUsageWindow } from "@/src/components/ReducedUsageWindow";
 import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
 import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
 import {
-    DEFAULT_REDUCED_END_INDEX,
-    DEFAULT_REDUCED_START_INDEX,
-    convertLocalTimeToUtc,
-    convertUtcTimeToLocal,
-    formatTimeIndex,
-    parseTimeIndex,
-} from "@/src/components/reducedUsageTime";
-import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_MBPS_PER_PEER_MAX,
 } from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
+import {
+    DEFAULT_REDUCED_END_INDEX,
+    DEFAULT_REDUCED_START_INDEX,
+    convertLocalTimeToUtc,
+    convertUtcTimeToLocal,
+    formatTimeIndex,
+    parseTimeIndex,
+} from "@/src/inproxy/reducedUsageTime";
 import {
     InproxyParameters,
     InproxyParametersSchema,
