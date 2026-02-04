@@ -30,10 +30,13 @@ services:
                 "/home/conduit/data",
                 "--metrics-addr",
                 "0.0.0.0:9090",
+                "--psiphon-config",
+                "/home/conduit/psiphon_config.json",
             ]
         # Metrics are exposed inside the container on :9090.
         # To scrape from the host, publish the port (e.g., "9090:9090").
         volumes:
             - conduit-data:/home/conduit/data
+            - ./psiphon_config.json:/home/conduit/psiphon_config.json
 volumes:
     conduit-data:

@@ -118,24 +118,32 @@ func parseFlags() *Config {
 			continue
 		}
 
-		// Check for flags we share/need to know about
+		// Check for flags we share/need to know about (both monitor and conduit need these)
 		if strings.HasPrefix(arg, "--data-dir") || strings.HasPrefix(arg, "-d") {
-			monitorArgs = append(monitorArgs, arg)
-			if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-				monitorArgs = append(monitorArgs, args[i+1])
+			if strings.Contains(arg, "=") {
+				// Format: --data-dir=/path
+				monitorArgs = append(monitorArgs, arg)
+				conduitArgs = append(conduitArgs, arg)
+			} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+				// Format: --data-dir /path
+				monitorArgs = append(monitorArgs, arg, args[i+1])
 				conduitArgs = append(conduitArgs, arg, args[i+1])
 				i++
-				continue
 			}
+			continue
 		}
 		if strings.HasPrefix(arg, "--metrics-addr") {
-			monitorArgs = append(monitorArgs, arg)
-			if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-				monitorArgs = append(monitorArgs, args[i+1])
+			if strings.Contains(arg, "=") {
+				// Format: --metrics-addr=host:port
+				monitorArgs = append(monitorArgs, arg)
+				conduitArgs = append(conduitArgs, arg)
+			} else if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+				// Format: --metrics-addr host:port
+				monitorArgs = append(monitorArgs, arg, args[i+1])
 				conduitArgs = append(conduitArgs, arg, args[i+1])
 				i++
-				continue
 			}
+			continue
 		}
 
 		// Add to conduit args
@@ -216,7 +224,11 @@ func NewSupervisor(cfg *Config) *Supervisor {
 func (s *Supervisor) Run() error {
 	// Load or initialize state
 	if err := s.loadState(); err != nil {
-		log.Printf("[WARN] Failed to load state, starting fresh: %v", err)
+		if os.IsNotExist(err) {
+			log.Println("[INFO] No previous state found, starting fresh traffic period")
+		} else {
+			log.Printf("[WARN] Failed to load state, starting fresh: %v", err)
+		}
 		s.state = &TrafficState{
 			PeriodStartTime: time.Now(),
 			BytesUsed:       0,
@@ -314,17 +326,29 @@ func (s *Supervisor) stopChild() {
 	child := s.child
 	s.mu.Unlock()
 
-	if child != nil && child.Process != nil {
-		// Try graceful shutdown first
-		child.Process.Signal(syscall.SIGTERM)
+	if child == nil || child.Process == nil {
+		return
+	}
 
-		// Wait in background with timeout, then kill if needed
-		go func() {
-			time.Sleep(5 * time.Second)
-			if child.ProcessState == nil || !child.ProcessState.Exited() {
-				child.Process.Kill()
-			}
-		}()
+	// Try graceful shutdown first
+	child.Process.Signal(syscall.SIGTERM)
+
+	// Wait for process to exit with timeout
+	done := make(chan struct{})
+	go func() {
+		child.Wait() // This will return when process exits
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// Process exited gracefully
+		log.Println("[INFO] Child process stopped gracefully")
+	case <-time.After(5 * time.Second):
+		// Timeout - force kill
+		log.Println("[WARN] Child process did not exit gracefully, killing...")
+		child.Process.Kill()
+		<-done // Wait for the kill to complete
 	}
 }
 
@@ -420,8 +444,6 @@ func (s *Supervisor) updateUsage(currentSessionTotal int64) {
 		s.mu.Lock() // Re-lock for defer
 	}
 }
-
-// Remove the global variable that was here
 
 func (s *Supervisor) triggerRestart() {
 	select {
