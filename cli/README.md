@@ -124,6 +124,13 @@ make build-embedded PSIPHON_CONFIG=./psiphon_config.json
 
 # Build for all platforms
 make build-all
+
+# Individual platform builds
+make build-linux       # Linux amd64
+make build-linux-arm   # Linux arm64
+make build-darwin      # macOS Intel
+make build-darwin-arm  # macOS Apple Silicon
+make build-windows     # Windows amd64
 ```
 
 Binaries are output to `dist/`.
