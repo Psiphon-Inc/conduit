@@ -153,6 +153,13 @@ build-all-embedded: check-go check-setup check-psiphon-config
 	$(call GO_BUILD,dist/conduit-windows-amd64.exe,$(EMBED_TAG),windows,amd64)
 	$(call GO_BUILD,dist/conduit-freebsd-amd64,$(EMBED_TAG),freebsd,amd64)
 	@rm -f internal/config/psiphon_config.json
+	@echo "Building monitor for all platforms..."
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-amd64,linux,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-arm64,linux,arm64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-amd64,darwin,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-arm64,darwin,arm64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-windows-amd64.exe,windows,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-freebsd-amd64,freebsd,amd64)
 	@echo "Built all platforms with embedded config in dist/"
 
 # Development

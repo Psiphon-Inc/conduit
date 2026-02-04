@@ -206,7 +206,10 @@ func parseFlags() *Config {
 	fs.StringVar(&cfg.DataDir, "data-dir", "./data", "")
 	fs.StringVar(&cfg.DataDir, "d", "./data", "") // short flag alias
 	fs.StringVar(&cfg.MetricsAddr, "metrics-addr", "127.0.0.1:9090", "")
-	fs.Parse(monitorArgs)
+	if err := fs.Parse(monitorArgs); err != nil {
+		// Log but don't fatal - invalid flags will be caught by validation or conduit
+		log.Printf("[WARN] Failed to parse monitor flags: %v", err)
+	}
 
 	cfg.ConduitArgs = conduitArgs
 	return cfg
@@ -383,8 +386,8 @@ func (s *Supervisor) shutdownChild(waitErr <-chan error) {
 		return
 	}
 
-	// Try graceful shutdown first
-	child.Process.Signal(syscall.SIGTERM)
+	// Try graceful shutdown first (ignore error - process may have already exited)
+	_ = child.Process.Signal(syscall.SIGTERM)
 
 	// Wait for the single Wait() goroutine to return, with timeout
 	select {
@@ -392,9 +395,9 @@ func (s *Supervisor) shutdownChild(waitErr <-chan error) {
 		// Process exited gracefully
 		log.Println("[INFO] Child process stopped gracefully")
 	case <-time.After(5 * time.Second):
-		// Timeout - force kill
+		// Timeout - force kill (ignore error - process may have already exited)
 		log.Println("[WARN] Child process did not exit gracefully, killing...")
-		child.Process.Kill()
+		_ = child.Process.Kill()
 		<-waitErr // Wait for the kill to complete
 	}
 }
@@ -536,17 +539,17 @@ func (s *Supervisor) scrapeBytesUsed() (int64, error) {
 		if strings.HasPrefix(line, "conduit_bytes_uploaded ") {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
-				var val float64
-				fmt.Sscanf(parts[1], "%f", &val)
-				up = int64(val)
+				if val, err := strconv.ParseFloat(parts[1], 64); err == nil {
+					up = int64(val)
+				}
 			}
 		}
 		if strings.HasPrefix(line, "conduit_bytes_downloaded ") {
 			parts := strings.Fields(line)
 			if len(parts) >= 2 {
-				var val float64
-				fmt.Sscanf(parts[1], "%f", &val)
-				down = int64(val)
+				if val, err := strconv.ParseFloat(parts[1], 64); err == nil {
+					down = int64(val)
+				}
 			}
 		}
 	}
