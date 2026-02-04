@@ -226,6 +226,24 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
             psiphonConfig.put("InproxyLimitDownstreamBytesPerSecond", conduitServiceParameters.limitDownstreamBytes());
 
+            if (conduitServiceParameters.reducedStartTime() != null &&
+                    conduitServiceParameters.reducedEndTime() != null &&
+                    conduitServiceParameters.reducedMaxClients() != null &&
+                    conduitServiceParameters.reducedLimitUpstreamBytes() != null &&
+                    conduitServiceParameters.reducedLimitDownstreamBytes() != null) {
+                psiphonConfig.put("InproxyReducedStartTime", conduitServiceParameters.reducedStartTime());
+                psiphonConfig.put("InproxyReducedEndTime", conduitServiceParameters.reducedEndTime());
+                psiphonConfig.put("InproxyReducedMaxClients", conduitServiceParameters.reducedMaxClients());
+                psiphonConfig.put(
+                        "InproxyReducedLimitUpstreamBytesPerSecond",
+                        conduitServiceParameters.reducedLimitUpstreamBytes()
+                );
+                psiphonConfig.put(
+                        "InproxyReducedLimitDownstreamBytesPerSecond",
+                        conduitServiceParameters.reducedLimitDownstreamBytes()
+                );
+            }
+
             // Convert back to json string
             return psiphonConfig.toString();
         } catch (JSONException | PackageManager.NameNotFoundException e) {
@@ -235,10 +253,11 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
         }
     }
 
+
     @Override
-    public void onInproxyProxyActivity(int connectingClients, int connectedClients, long bytesUp, long bytesDown) {
+    public void onInproxyProxyActivity(int announcing, int connectingClients, int connectedClients, long bytesUp, long bytesDown) {
         handler.post(() -> {
-            proxyActivityStats.add(bytesUp, bytesDown, connectingClients, connectedClients);
+            proxyActivityStats.add(bytesUp, bytesDown, announcing, connectingClients, connectedClients);
             updateProxyActivityStats();
         });
     }

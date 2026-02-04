@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "Tampilkan"
+    },
+    "EDIT_I18N": {
+        "string": "Edit"
+    },
+    "HIDE_I18N": {
+        "string": "Sembunyikan"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "Jendela Penggunaan Rendah"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "Atur batas penggunaan yang lebih rendah selama jendela harian. Misalnya, pada siang hari saat Anda perlu agar bandwidth dan baterai tahan lama."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "Waktu lokal"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "Atur Jendela Penggunaan"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "Hapus"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "Belum dikonfigurasi"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "Penggunaan rendah antara"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "waktu lokal"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "Waktu mulai"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "Waktu akhir"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "Pilih waktu mulai dan akhir dengan langkah 30 menit."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "Gunakan HH:MM"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "Waktu mulai dan akhir harus berbeda"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "Maks Rekan Dikurangi"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "Maks MB/dtk Per Rekan Dikurangi"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "Bandwidth yang Diperlukan Dikurangi"
     }
 }

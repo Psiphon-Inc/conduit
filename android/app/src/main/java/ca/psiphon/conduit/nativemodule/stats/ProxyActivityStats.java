@@ -32,6 +32,7 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
 
   private long totalBytesUp = 0;
   private long totalBytesDown = 0;
+  private int currentAnnouncingWorkers = 0;
   private int currentConnectingClients = 0;
   private int currentConnectedClients = 0;
   private long startTime;
@@ -42,7 +43,7 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
 
     // Initialize the bucket collection with your data item prototype
     addBucketCollection(0, new BucketCollection(MAX_BUCKETS, BUCKET_PERIOD_MILLISECONDS, now,
-      new ProxyActivityDataItem(0, 0, 0, 0)));
+      new ProxyActivityDataItem(0, 0, 0, 0, 0)));
   }
 
   public long getTotalBytesUp() {
@@ -55,6 +56,10 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
 
   public int getCurrentConnectingClients() {
     return currentConnectingClients;
+  }
+
+  public int getCurrentAnnouncingWorkers() {
+    return currentAnnouncingWorkers;
   }
 
   public int getCurrentConnectedClients() {
@@ -73,18 +78,23 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
     return getBucketCollection(bucketCollectionIndex).getSeries(1);
   }
 
-  public List<Long> getConnectingClientsSeries(int bucketCollectionIndex) {
+  public List<Long> getAnnouncingWorkersSeries(int bucketCollectionIndex) {
     return getBucketCollection(bucketCollectionIndex).getSeries(2);
   }
 
-  public List<Long> getConnectedClientsSeries(int bucketCollectionIndex) {
+  public List<Long> getConnectingClientsSeries(int bucketCollectionIndex) {
     return getBucketCollection(bucketCollectionIndex).getSeries(3);
+  }
+
+  public List<Long> getConnectedClientsSeries(int bucketCollectionIndex) {
+    return getBucketCollection(bucketCollectionIndex).getSeries(4);
   }
 
   protected ProxyActivityStats(Parcel in) {
     startTime = in.readLong();
     totalBytesUp = in.readLong();
     totalBytesDown = in.readLong();
+    currentAnnouncingWorkers = in.readInt();
     currentConnectingClients = in.readInt();
     currentConnectedClients = in.readInt();
     int listSize = in.readInt();
@@ -100,6 +110,7 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
     dest.writeLong(startTime);
     dest.writeLong(totalBytesUp);
     dest.writeLong(totalBytesDown);
+    dest.writeInt(currentAnnouncingWorkers);
     dest.writeInt(currentConnectingClients);
     dest.writeInt(currentConnectedClients);
     dest.writeInt(bucketCollections.size());
@@ -125,12 +136,13 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
     return 0;
   }
 
-  public void add(long bytesUp, long bytesDown, int connectingClients, int connectedClients) {
+  public void add(long bytesUp, long bytesDown, int announcingWorkers, int connectingClients, int connectedClients) {
     totalBytesUp += bytesUp;
     totalBytesDown += bytesDown;
+    currentAnnouncingWorkers = announcingWorkers;
     currentConnectingClients = connectingClients;
     currentConnectedClients = connectedClients;
-    super.addData(new ProxyActivityDataItem(bytesUp, bytesDown, connectingClients,
+    super.addData(new ProxyActivityDataItem(bytesUp, bytesDown, announcingWorkers, connectingClients,
       connectedClients));
   }
 
@@ -150,12 +162,14 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
   static class ProxyActivityDataItem implements DataItem {
     private long bytesUp;
     private long bytesDown;
+    private int announcingWorkers;
     private int connectingClients;
     private int connectedClients;
 
-    public ProxyActivityDataItem(long bytesUp, long bytesDown, int connectingClients, int connectedClients) {
+    public ProxyActivityDataItem(long bytesUp, long bytesDown, int announcingWorkers, int connectingClients, int connectedClients) {
       this.bytesUp = bytesUp;
       this.bytesDown = bytesDown;
+      this.announcingWorkers = announcingWorkers;
       this.connectingClients = connectingClients;
       this.connectedClients = connectedClients;
     }
@@ -163,6 +177,7 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
     protected ProxyActivityDataItem(Parcel in) {
       bytesUp = in.readLong();
       bytesDown = in.readLong();
+      announcingWorkers = in.readInt();
       connectingClients = in.readInt();
       connectedClients = in.readInt();
     }
@@ -171,6 +186,7 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
       dest.writeLong(bytesUp);
       dest.writeLong(bytesDown);
+      dest.writeInt(announcingWorkers);
       dest.writeInt(connectingClients);
       dest.writeInt(connectedClients);
     }
@@ -185,6 +201,7 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
       this.bytesDown += o.bytesDown;
 
       // For the clients counts, take the maximum value
+      this.announcingWorkers = Math.max(this.announcingWorkers, o.announcingWorkers);
       this.connectingClients = Math.max(this.connectingClients, o.connectingClients);
       this.connectedClients = Math.max(this.connectedClients, o.connectedClients);
     }
@@ -193,6 +210,7 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
     public void reset() {
       bytesUp = 0;
       bytesDown = 0;
+      announcingWorkers = 0;
       connectingClients = 0;
       connectedClients = 0;
     }
@@ -202,15 +220,16 @@ public class ProxyActivityStats extends DataStats implements Parcelable {
       return switch (index) {
         case 0 -> bytesUp;
         case 1 -> bytesDown;
-        case 2 -> connectingClients;
-        case 3 -> connectedClients;
+        case 2 -> announcingWorkers;
+        case 3 -> connectingClients;
+        case 4 -> connectedClients;
         default -> throw new IllegalArgumentException("Invalid index");
       };
     }
 
     @Override
     public DataItem clone() {
-      return new ProxyActivityDataItem(bytesUp, bytesDown, connectingClients, connectedClients);
+      return new ProxyActivityDataItem(bytesUp, bytesDown, announcingWorkers, connectingClients, connectedClients);
     }
 
     @Override

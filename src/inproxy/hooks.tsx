@@ -20,6 +20,7 @@ import { DefinedUseQueryResult, useQuery } from "@tanstack/react-query";
 
 import {
     QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
+    QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS,
     QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
     QUERYKEY_INPROXY_MUST_UPGRADE,
@@ -59,6 +60,15 @@ export const useInproxyCurrentConnectedClients =
     (): DefinedUseQueryResult<number> =>
         useQuery({
             queryKey: [QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS],
+            queryFn: async () => 0,
+            initialData: 0,
+            enabled: false,
+        });
+
+export const useInproxyCurrentAnnouncingWorkers =
+    (): DefinedUseQueryResult<number> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS],
             queryFn: async () => 0,
             initialData: 0,
             enabled: false,

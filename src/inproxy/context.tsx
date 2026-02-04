@@ -28,9 +28,14 @@ import { timedLog } from "@/src/common/utils";
 import {
     ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
     ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+    ASYNCSTORAGE_INPROXY_REDUCED_END_TIME_KEY,
+    ASYNCSTORAGE_INPROXY_REDUCED_LIMIT_BYTES_PER_SECOND_KEY,
+    ASYNCSTORAGE_INPROXY_REDUCED_MAX_CLIENTS_KEY,
+    ASYNCSTORAGE_INPROXY_REDUCED_START_TIME_KEY,
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
     QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
+    QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS,
     QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
     QUERYKEY_INPROXY_MUST_UPGRADE,
@@ -166,6 +171,10 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         inproxyActivityStats: InproxyActivityStats,
     ): void {
         queryClient.setQueryData(
+            [QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS],
+            inproxyActivityStats.currentAnnouncingWorkers,
+        );
+        queryClient.setQueryData(
             [QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS],
             inproxyActivityStats.currentConnectedClients,
         );
@@ -204,6 +213,26 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             );
 
+            const storedInproxyReducedStartTime = await AsyncStorage.getItem(
+                ASYNCSTORAGE_INPROXY_REDUCED_START_TIME_KEY,
+            );
+            const storedInproxyReducedEndTime = await AsyncStorage.getItem(
+                ASYNCSTORAGE_INPROXY_REDUCED_END_TIME_KEY,
+            );
+            const storedInproxyReducedMaxClients = await AsyncStorage.getItem(
+                ASYNCSTORAGE_INPROXY_REDUCED_MAX_CLIENTS_KEY,
+            );
+            const storedInproxyReducedLimitBytesPerSecond =
+                await AsyncStorage.getItem(
+                    ASYNCSTORAGE_INPROXY_REDUCED_LIMIT_BYTES_PER_SECOND_KEY,
+                );
+
+            const hasReducedSettings =
+                storedInproxyReducedStartTime &&
+                storedInproxyReducedEndTime &&
+                storedInproxyReducedMaxClients &&
+                storedInproxyReducedLimitBytesPerSecond;
+
             // Prepare the stored/default parameters from the application layer
             const storedInproxyParameters = InproxyParametersSchema.parse({
                 privateKey: keyPairToBase64nopad(conduitKeyPair.data),
@@ -216,6 +245,21 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 limitDownstreamBytesPerSecond: storedInproxyLimitBytesPerSecond
                     ? parseInt(storedInproxyLimitBytesPerSecond)
                     : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
+                reducedStartTime: hasReducedSettings
+                    ? storedInproxyReducedStartTime
+                    : undefined,
+                reducedEndTime: hasReducedSettings
+                    ? storedInproxyReducedEndTime
+                    : undefined,
+                reducedMaxClients: hasReducedSettings
+                    ? parseInt(storedInproxyReducedMaxClients)
+                    : undefined,
+                reducedLimitUpstreamBytesPerSecond: hasReducedSettings
+                    ? parseInt(storedInproxyReducedLimitBytesPerSecond)
+                    : undefined,
+                reducedLimitDownstreamBytesPerSecond: hasReducedSettings
+                    ? parseInt(storedInproxyReducedLimitBytesPerSecond)
+                    : undefined,
             });
 
             // This call updates the context's state value for the parameters.
@@ -238,6 +282,22 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             params.limitUpstreamBytesPerSecond.toString(),
         );
+        await storeOptionalAsync(
+            ASYNCSTORAGE_INPROXY_REDUCED_START_TIME_KEY,
+            params.reducedStartTime,
+        );
+        await storeOptionalAsync(
+            ASYNCSTORAGE_INPROXY_REDUCED_END_TIME_KEY,
+            params.reducedEndTime,
+        );
+        await storeOptionalAsync(
+            ASYNCSTORAGE_INPROXY_REDUCED_MAX_CLIENTS_KEY,
+            params.reducedMaxClients?.toString(),
+        );
+        await storeOptionalAsync(
+            ASYNCSTORAGE_INPROXY_REDUCED_LIMIT_BYTES_PER_SECOND_KEY,
+            params.reducedLimitUpstreamBytesPerSecond?.toString(),
+        );
         setInproxyParameters(params);
         try {
             await ConduitModule.paramsChanged(params);
@@ -250,6 +310,17 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         timedLog(
             "Inproxy parameters selected successfully, ConduitModule.paramsChanged(...) invoked",
         );
+    }
+
+    async function storeOptionalAsync(
+        key: string,
+        value?: string,
+    ): Promise<void> {
+        if (value === undefined) {
+            await AsyncStorage.removeItem(key);
+            return;
+        }
+        await AsyncStorage.setItem(key, value);
     }
 
     // ConduitModule.toggleInProxy

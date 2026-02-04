@@ -160,5 +160,59 @@
     },
     "REVEAL_I18N": {
         "string": "‮ᴚǝʌǝɐʅ‬"
+    },
+    "EDIT_I18N": {
+        "string": "‮Ǝpıʇ‬"
+    },
+    "HIDE_I18N": {
+        "string": "‮Hıpǝ‬"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "‮ᴚǝpnɔǝp‬ ‮∩sɐƃǝ‬ ‮Mıupoʍ‬"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "‮Ↄouɟıƃnɹǝ‬ ‮ʅoʍǝɹ‬ ‮nsɐƃǝ‬ ‮ʅıɯıʇs‬ ‮pnɹıuƃ‬ ‮ɐ‬ ‮pɐıʅʎ‬ ‮ʍıupoʍ.‬ ‮Ⅎoɹ‬ ‮ıusʇɐuɔǝ,‬ ‮pnɹıuƃ‬ ‮ʇɥǝ‬ ‮pɐʎʇıɯǝ‬ ‮ʍɥǝu‬ ‮ʎon‬ ‮uǝǝp‬ ‮ʎonɹ‬ ‮qɐupʍıpʇɥ‬ ‮ɐup‬ ‮qɐʇʇǝɹʎ‬ ‮ʇo‬ ‮ʅɐsʇ.‬"
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "‮˥oɔɐʅ‬ ‮ʇıɯǝ‬"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "‮Ↄouɟıƃnɹǝ‬ ‮∩sɐƃǝ‬ ‮Mıupoʍ‬"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "‮Ↄʅǝɐɹ‬"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "‮Noʇ‬ ‮ɔouɟıƃnɹǝp‬"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "‮ᴚǝpnɔǝp‬ ‮nsɐƃǝ‬ ‮qǝʇʍǝǝu‬"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "‮ʅoɔɐʅ‬ ‮ʇıɯǝ‬"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "‮Sʇɐɹʇ‬ ‮ʇıɯǝ‬"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "‮Ǝup‬ ‮ʇıɯǝ‬"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "‮Sǝʅǝɔʇ‬ ‮sʇɐɹʇ‬ ‮ɐup‬ ‮ǝup‬ ‮ʇıɯǝs‬ ‮ıu‬ ‮30-ɯıunʇǝ‬ ‮sʇǝds.‬"
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "‮∩sǝ‬ ‮HH:WW‬"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "‮Sʇɐɹʇ‬ ‮ɐup‬ ‮ǝup‬ ‮ɯnsʇ‬ ‮qǝ‬ ‮pıɟɟǝɹǝuʇ‬"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "‮ᴚǝpnɔǝp‬ ‮Wɐx‬ ‮Ԁǝǝɹs‬"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "‮ᴚǝpnɔǝp‬ ‮Wɐx‬ ‮Wᗺ/s‬ ‮Ԁǝɹ‬ ‮Ԁǝǝɹ‬"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "‮ᴚǝpnɔǝp‬ ‮ᴚǝbnıɹǝp‬ ‮ᗺɐupʍıpʇɥ‬"
     }
 }

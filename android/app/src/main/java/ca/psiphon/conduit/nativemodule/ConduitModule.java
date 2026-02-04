@@ -439,6 +439,7 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
         proxyActivityStatsMap.putInt("elapsedTime", (int) stats.getElapsedTime());
         proxyActivityStatsMap.putDouble("totalBytesUp", stats.getTotalBytesUp());
         proxyActivityStatsMap.putDouble("totalBytesDown", stats.getTotalBytesDown());
+        proxyActivityStatsMap.putInt("currentAnnouncingWorkers", stats.getCurrentAnnouncingWorkers());
         proxyActivityStatsMap.putInt("currentConnectingClients", stats.getCurrentConnectingClients());
         proxyActivityStatsMap.putInt("currentConnectedClients", stats.getCurrentConnectedClients());
 
@@ -463,6 +464,12 @@ public class ConduitModule extends ReactContextBaseJavaModule implements Lifecyc
                 connectingClients.pushInt((int) value);
             }
             bucketMap.putArray("connectingClients", connectingClients);
+
+            WritableArray announcingWorkers = Arguments.createArray();
+            for (long value : stats.getAnnouncingWorkersSeries(i)) {
+                announcingWorkers.pushInt((int) value);
+            }
+            bucketMap.putArray("announcingWorkers", announcingWorkers);
 
             WritableArray connectedClients = Arguments.createArray();
             for (long value : stats.getConnectedClientsSeries(i)) {

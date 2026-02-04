@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "ظاہر کریں"
+    },
+    "EDIT_I18N": {
+        "string": "ترمیم کریں"
+    },
+    "HIDE_I18N": {
+        "string": "چھپائیں"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "کم استعمال کی ونڈو"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "روزانہ ونڈو کے دوران کم استعمال کی حدیں ترتیب دیں۔ مثلاً دن کے وقت جب آپ کو اپنی بینڈوڈتھ اور بیٹری چلانی ہو۔"
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "مقامی وقت"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "استعمال کی ونڈو ترتیب دیں"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "صاف کریں"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "ترتیب نہیں دیا گیا"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "کم استعمال کے اوقات"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "مقامی وقت"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "آغاز وقت"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "اختتام وقت"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "آغاز اور اختتام کے وقت 30 منٹ کے مراحل میں منتخب کریں۔"
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "HH:MM استعمال کریں"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "آغاز اور اختتام مختلف ہونے چاہئیں"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "کم ہم رتبہ ساتھیوں کی زیادہ سے زیادہ تعداد"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "فی ہم رتبہ ساتھی کم زیادہ سے زیادہ MB/s"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "کم مطلوبہ بینڈوِتھ"
     }
 }

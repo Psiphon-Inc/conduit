@@ -54,12 +54,14 @@ export function getZeroedInproxyActivityStats(): InproxyActivityStats {
         elapsedTime: 0,
         totalBytesUp: 0,
         totalBytesDown: 0,
+        currentAnnouncingWorkers: 0,
         currentConnectingClients: 0,
         currentConnectedClients: 0,
         dataByPeriod: {
             "1000ms": {
                 bytesUp: new Array(288).fill(0),
                 bytesDown: new Array(288).fill(0),
+                announcingWorkers: new Array(288).fill(0),
                 connectedClients: new Array(288).fill(0),
                 connectingClients: new Array(288).fill(0),
                 numBuckets: 288,

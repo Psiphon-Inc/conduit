@@ -42,6 +42,7 @@ export const ProxyErrorSchema = z.object({
 export const InproxyActivityDataByPeriodSchema = z.object({
     bytesUp: z.array(z.number()),
     bytesDown: z.array(z.number()),
+    announcingWorkers: z.array(z.number()),
     connectingClients: z.array(z.number()),
     connectedClients: z.array(z.number()),
     numBuckets: z.number(),
@@ -51,6 +52,7 @@ export const InproxyActivityStatsSchema = z.object({
     elapsedTime: z.number(),
     totalBytesUp: z.number(),
     totalBytesDown: z.number(),
+    currentAnnouncingWorkers: z.number(),
     currentConnectingClients: z.number(),
     currentConnectedClients: z.number(),
     dataByPeriod: z.object({
@@ -67,13 +69,61 @@ export const InproxyEventSchema = z.object({
     ]),
 });
 
+const InproxyTimeSchema = z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/);
+
 // These are the user-configurable parameters for the inproxy.
-export const InproxyParametersSchema = z.object({
-    privateKey: Base64Unpadded64Bytes,
-    maxClients: z.number().int().positive(),
-    limitUpstreamBytesPerSecond: z.number().int().positive(),
-    limitDownstreamBytesPerSecond: z.number().int().positive(),
-});
+export const InproxyParametersSchema = z
+    .object({
+        privateKey: Base64Unpadded64Bytes,
+        maxClients: z.number().int().positive(),
+        limitUpstreamBytesPerSecond: z.number().int().positive(),
+        limitDownstreamBytesPerSecond: z.number().int().positive(),
+        reducedStartTime: InproxyTimeSchema.optional(),
+        reducedEndTime: InproxyTimeSchema.optional(),
+        reducedMaxClients: z.number().int().positive().optional(),
+        reducedLimitUpstreamBytesPerSecond: z
+            .number()
+            .int()
+            .positive()
+            .optional(),
+        reducedLimitDownstreamBytesPerSecond: z
+            .number()
+            .int()
+            .positive()
+            .optional(),
+    })
+    .superRefine((params, context) => {
+        const reducedFields = [
+            params.reducedStartTime,
+            params.reducedEndTime,
+            params.reducedMaxClients,
+            params.reducedLimitUpstreamBytesPerSecond,
+            params.reducedLimitDownstreamBytesPerSecond,
+        ];
+        const hasAnyReduced = reducedFields.some(
+            (value) => value !== undefined,
+        );
+        const hasAllReduced = reducedFields.every(
+            (value) => value !== undefined,
+        );
+
+        if (hasAnyReduced && !hasAllReduced) {
+            context.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Reduced settings require all fields to be set",
+            });
+        }
+
+        if (
+            params.reducedMaxClients !== undefined &&
+            params.reducedMaxClients > params.maxClients
+        ) {
+            context.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Reduced max clients cannot exceed max clients",
+            });
+        }
+    });
 
 export type InproxyParameters = z.infer<typeof InproxyParametersSchema>;
 export type InproxyStatusEnum = z.infer<typeof InproxyStatusEnumSchema>;

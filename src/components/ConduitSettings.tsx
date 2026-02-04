@@ -36,6 +36,7 @@ import {
 } from "react-native-gesture-handler";
 import Animated, {
     useAnimatedReaction,
+    useAnimatedStyle,
     useDerivedValue,
     useSharedValue,
     withDelay,
@@ -52,6 +53,7 @@ import { Icon } from "@/src/components/Icon";
 import { NotificationsStatus } from "@/src/components/NotificationsStatus";
 import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { ProxyID } from "@/src/components/ProxyID";
+import { ReducedUsageWindow } from "@/src/components/ReducedUsageWindow";
 import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
 import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
 import {
@@ -61,6 +63,14 @@ import {
 import { useNotificationsPermissions } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
+import {
+    DEFAULT_REDUCED_END_INDEX,
+    DEFAULT_REDUCED_START_INDEX,
+    convertLocalTimeToUtc,
+    convertUtcTimeToLocal,
+    formatTimeIndex,
+    parseTimeIndex,
+} from "@/src/inproxy/reducedUsageTime";
 import {
     InproxyParameters,
     InproxyParametersSchema,
@@ -86,17 +96,93 @@ export function ConduitSettings({
     const [modalOpen, setModalOpen] = React.useState(false);
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
         React.useState(false);
+    const [showReducedSelector, setShowReducedSelector] = React.useState(false);
+
+    const storedReducedStart = inproxyParameters.reducedStartTime
+        ? convertUtcTimeToLocal(inproxyParameters.reducedStartTime)
+        : "";
+    const storedReducedEnd = inproxyParameters.reducedEndTime
+        ? convertUtcTimeToLocal(inproxyParameters.reducedEndTime)
+        : "";
+    const storedReducedEnabled =
+        storedReducedStart.length > 0 && storedReducedEnd.length > 0;
+
+    const [reducedExpanded, setReducedExpanded] = React.useState(false);
+    const reducedStartIndex = useSharedValue(
+        parseTimeIndex(storedReducedStart) ?? DEFAULT_REDUCED_START_INDEX,
+    );
+    const reducedEndIndex = useSharedValue(
+        parseTimeIndex(storedReducedEnd) ?? DEFAULT_REDUCED_END_INDEX,
+    );
+    const [reducedTimeError, setReducedTimeError] = React.useState<
+        null | "format" | "range"
+    >(null);
+    const reducedTimePattern = React.useMemo(
+        () => /^([01]\d|2[0-3]):([0-5]\d)$/,
+        [],
+    );
+
+    function getReducedTimeErrorKey(startTime: string, endTime: string) {
+        const startNormalized = startTime.trim();
+        const endNormalized = endTime.trim();
+        const reducedActive =
+            startNormalized.length > 0 || endNormalized.length > 0;
+        if (!reducedActive) {
+            return null;
+        }
+        if (
+            !reducedTimePattern.test(startNormalized) ||
+            !reducedTimePattern.test(endNormalized)
+        ) {
+            return "format";
+        }
+        const startIndex = parseTimeIndex(startNormalized);
+        const endIndex = parseTimeIndex(endNormalized);
+        if (startIndex === null || endIndex === null) {
+            return "format";
+        }
+        if (startIndex === endIndex) {
+            return "range";
+        }
+        return null;
+    }
 
     const modifiedMaxPeers = useSharedValue(inproxyParameters.maxClients);
     const modifiedMaxMBps = useSharedValue(
         bytesToMB(inproxyParameters.limitUpstreamBytesPerSecond),
     );
+    const modifiedReducedMaxPeers = useSharedValue(
+        inproxyParameters.reducedMaxClients ?? inproxyParameters.maxClients,
+    );
+    const modifiedReducedMaxMBps = useSharedValue(
+        bytesToMB(
+            inproxyParameters.reducedLimitUpstreamBytesPerSecond ??
+                inproxyParameters.limitUpstreamBytesPerSecond,
+        ),
+    );
+    const modifiedReducedStartTime = useSharedValue(storedReducedStart);
+    const modifiedReducedEndTime = useSharedValue(storedReducedEnd);
+    const reducedEnabled = useSharedValue(storedReducedEnabled);
     const displayTotalMBps = useDerivedValue(() => {
         return `${modifiedMaxPeers.value * modifiedMaxMBps.value} MB/s`;
     });
     const applyChangesNoteOpacity = useSharedValue(0);
     const changesPending = useDerivedValue(() => {
         let settingsChanged = false;
+        const reducedStartNormalized = modifiedReducedStartTime.value.trim();
+        const reducedEndNormalized = modifiedReducedEndTime.value.trim();
+        const storedReducedStart = inproxyParameters.reducedStartTime
+            ? convertUtcTimeToLocal(inproxyParameters.reducedStartTime)
+            : "";
+        const storedReducedEnd = inproxyParameters.reducedEndTime
+            ? convertUtcTimeToLocal(inproxyParameters.reducedEndTime)
+            : "";
+        const reducedActive =
+            reducedStartNormalized.length > 0 ||
+            reducedEndNormalized.length > 0 ||
+            storedReducedStart.length > 0 ||
+            storedReducedEnd.length > 0;
+
         if (modifiedMaxPeers.value !== inproxyParameters.maxClients) {
             settingsChanged = true;
         } else if (
@@ -104,14 +190,32 @@ export function ConduitSettings({
             inproxyParameters.limitUpstreamBytesPerSecond
         ) {
             settingsChanged = true;
+        } else if (
+            reducedStartNormalized !== storedReducedStart ||
+            reducedEndNormalized !== storedReducedEnd
+        ) {
+            settingsChanged = true;
+        } else if (reducedActive) {
+            const storedReducedMaxClients =
+                inproxyParameters.reducedMaxClients ??
+                inproxyParameters.maxClients;
+            const storedReducedLimit =
+                inproxyParameters.reducedLimitUpstreamBytesPerSecond ??
+                inproxyParameters.limitUpstreamBytesPerSecond;
+            if (modifiedReducedMaxPeers.value !== storedReducedMaxClients) {
+                settingsChanged = true;
+            } else if (
+                MBToBytes(modifiedReducedMaxMBps.value) !== storedReducedLimit
+            ) {
+                settingsChanged = true;
+            }
         }
         return settingsChanged;
     });
 
-    // Update opacity based on changes - separate from derived value to avoid writing during render
     useAnimatedReaction(
         () => changesPending.value,
-        (current) => {
+        (current: boolean) => {
             if (current) {
                 applyChangesNoteOpacity.value = withTiming(1, {
                     duration: 500,
@@ -122,15 +226,55 @@ export function ConduitSettings({
         },
     );
 
+    const applyChangesNoteStyle = useAnimatedStyle(() => {
+        return {
+            opacity: applyChangesNoteOpacity.value,
+        };
+    });
+
     function resetSettingsFromInproxyProvider() {
         modifiedMaxPeers.value = inproxyParameters.maxClients;
         modifiedMaxMBps.value = bytesToMB(
             inproxyParameters.limitUpstreamBytesPerSecond,
         );
+        modifiedReducedMaxPeers.value =
+            inproxyParameters.reducedMaxClients ?? inproxyParameters.maxClients;
+        modifiedReducedMaxMBps.value = bytesToMB(
+            inproxyParameters.reducedLimitUpstreamBytesPerSecond ??
+                inproxyParameters.limitUpstreamBytesPerSecond,
+        );
+        const startTime = inproxyParameters.reducedStartTime
+            ? convertUtcTimeToLocal(inproxyParameters.reducedStartTime)
+            : "";
+        const endTime = inproxyParameters.reducedEndTime
+            ? convertUtcTimeToLocal(inproxyParameters.reducedEndTime)
+            : "";
+        const startIndex =
+            parseTimeIndex(startTime) ?? DEFAULT_REDUCED_START_INDEX;
+        const endIndex = parseTimeIndex(endTime) ?? DEFAULT_REDUCED_END_INDEX;
+        modifiedReducedStartTime.value = startTime;
+        modifiedReducedEndTime.value = endTime;
+        reducedStartIndex.value = startIndex;
+        reducedEndIndex.value = endIndex;
+        reducedEnabled.value = startTime.length > 0 && endTime.length > 0;
+        setReducedExpanded(false);
+        setReducedTimeError(null);
     }
     React.useEffect(() => {
         resetSettingsFromInproxyProvider();
     }, [inproxyParameters]);
+
+    React.useEffect(() => {
+        if (!modalOpen) {
+            setShowReducedSelector(false);
+            return;
+        }
+        setShowReducedSelector(false);
+        const timer = setTimeout(() => {
+            setShowReducedSelector(true);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [modalOpen]);
 
     async function updateInproxyMaxClients(newValue: number) {
         modifiedMaxPeers.value = newValue;
@@ -141,12 +285,101 @@ export function ConduitSettings({
         modifiedMaxMBps.value = newValue;
     }
 
+    async function updateReducedMaxClients(newValue: number) {
+        modifiedReducedMaxPeers.value = newValue;
+    }
+
+    async function updateReducedLimitBytesPerSecond(newValue: number) {
+        modifiedReducedMaxMBps.value = newValue;
+    }
+
+    function ensureReducedWindowDefaults() {
+        let startLabel = modifiedReducedStartTime.value.trim();
+        let endLabel = modifiedReducedEndTime.value.trim();
+        let startIndex = reducedStartIndex.value;
+        let endIndex = reducedEndIndex.value;
+
+        if (startLabel.length === 0) {
+            startIndex = DEFAULT_REDUCED_START_INDEX;
+            startLabel = formatTimeIndex(startIndex);
+        } else {
+            const parsedStart = parseTimeIndex(startLabel);
+            if (parsedStart !== null) {
+                startIndex = parsedStart;
+            }
+        }
+
+        if (endLabel.length === 0) {
+            endIndex = DEFAULT_REDUCED_END_INDEX;
+            endLabel = formatTimeIndex(endIndex);
+        } else {
+            const parsedEnd = parseTimeIndex(endLabel);
+            if (parsedEnd !== null) {
+                endIndex = parsedEnd;
+            }
+        }
+
+        reducedStartIndex.value = startIndex;
+        reducedEndIndex.value = endIndex;
+        modifiedReducedStartTime.value = startLabel;
+        modifiedReducedEndTime.value = endLabel;
+        reducedEnabled.value = startLabel.length > 0 && endLabel.length > 0;
+    }
+
+    function disableReducedWindow() {
+        setReducedExpanded(false);
+        reducedStartIndex.value = DEFAULT_REDUCED_START_INDEX;
+        reducedEndIndex.value = DEFAULT_REDUCED_END_INDEX;
+        modifiedReducedStartTime.value = "";
+        modifiedReducedEndTime.value = "";
+        reducedEnabled.value = false;
+        setReducedTimeError(null);
+    }
+
     async function commitChanges() {
+        const reducedStartNormalized = modifiedReducedStartTime.value.trim();
+        const reducedEndNormalized = modifiedReducedEndTime.value.trim();
+        const reducedTimeErrorKey = getReducedTimeErrorKey(
+            reducedStartNormalized,
+            reducedEndNormalized,
+        );
+        if (reducedTimeErrorKey) {
+            setReducedTimeError(reducedTimeErrorKey);
+            return;
+        }
+        if (reducedTimeError) {
+            setReducedTimeError(null);
+        }
+        const reducedEnabledFlag =
+            reducedStartNormalized.length > 0 &&
+            reducedEndNormalized.length > 0;
+        const reducedStartUtc = reducedEnabledFlag
+            ? convertLocalTimeToUtc(reducedStartNormalized)
+            : undefined;
+        const reducedEndUtc = reducedEnabledFlag
+            ? convertLocalTimeToUtc(reducedEndNormalized)
+            : undefined;
+        const reducedMaxClients = Math.min(
+            modifiedReducedMaxPeers.value,
+            modifiedMaxPeers.value,
+        );
+        const reducedLimitBytes = MBToBytes(modifiedReducedMaxMBps.value);
         const newInproxyParameters = InproxyParametersSchema.safeParse({
             maxClients: modifiedMaxPeers.value,
             limitUpstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             limitDownstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             privateKey: inproxyParameters.privateKey,
+            reducedStartTime: reducedStartUtc,
+            reducedEndTime: reducedEndUtc,
+            reducedMaxClients: reducedEnabledFlag
+                ? reducedMaxClients
+                : undefined,
+            reducedLimitUpstreamBytesPerSecond: reducedEnabledFlag
+                ? reducedLimitBytes
+                : undefined,
+            reducedLimitDownstreamBytesPerSecond: reducedEnabledFlag
+                ? reducedLimitBytes
+                : undefined,
         } as InproxyParameters);
         if (newInproxyParameters.error) {
             logErrorToDiagnostic(
@@ -164,6 +397,16 @@ export function ConduitSettings({
     // pending changes to the settings, and if the inproxy is running or not.
     async function onSettingsClose() {
         applyChangesNoteOpacity.value = withTiming(0, { duration: 300 });
+        const reducedStartNormalized = modifiedReducedStartTime.value.trim();
+        const reducedEndNormalized = modifiedReducedEndTime.value.trim();
+        const reducedTimeErrorKey = getReducedTimeErrorKey(
+            reducedStartNormalized,
+            reducedEndNormalized,
+        );
+        if (reducedTimeErrorKey) {
+            setReducedTimeError(reducedTimeErrorKey);
+            return;
+        }
         if (changesPending.value) {
             if (inproxyStatus === "RUNNING") {
                 // Since applying changes restarts inproxy, connections will be
@@ -182,7 +425,7 @@ export function ConduitSettings({
 
     // Pass ref to ScrollView into the sliders so we don't start scrolling while
     // we're sliding.
-    const scrollRef = React.useRef<ScrollView | null>(null);
+    const scrollRef = React.useRef<any>(null);
 
     function Settings() {
         return (
@@ -215,9 +458,7 @@ export function ConduitSettings({
                                 ss.column,
                                 ss.alignCenter,
                                 ss.nogap,
-                                {
-                                    opacity: applyChangesNoteOpacity,
-                                },
+                                applyChangesNoteStyle,
                             ]}
                         >
                             <Text
@@ -287,6 +528,31 @@ export function ConduitSettings({
                                     fontSize={ss.bodyFont.fontSize}
                                 />
                             </View>
+                            <ReducedUsageWindow
+                                reducedExpanded={reducedExpanded}
+                                setReducedExpanded={setReducedExpanded}
+                                reducedTimeError={reducedTimeError}
+                                reducedStartIndex={reducedStartIndex}
+                                reducedEndIndex={reducedEndIndex}
+                                reducedEnabled={reducedEnabled}
+                                modifiedReducedStartTime={
+                                    modifiedReducedStartTime
+                                }
+                                modifiedReducedEndTime={modifiedReducedEndTime}
+                                inproxyParameters={inproxyParameters}
+                                updateReducedMaxClients={
+                                    updateReducedMaxClients
+                                }
+                                updateReducedLimitBytesPerSecond={
+                                    updateReducedLimitBytesPerSecond
+                                }
+                                scrollRef={scrollRef}
+                                ensureReducedWindowDefaults={
+                                    ensureReducedWindowDefaults
+                                }
+                                disableReducedWindow={disableReducedWindow}
+                                showSelector={showReducedSelector}
+                            />
                             <View
                                 style={[
                                     ss.greyBorderBottom,
@@ -575,11 +841,9 @@ export function ConduitSettings({
                     </View>
                 </View>
                 <View style={[ss.modalBottom90]}>
-                    {displayRestartConfirmation ? (
-                        <RestartConfirmation />
-                    ) : (
-                        <Settings />
-                    )}
+                    {displayRestartConfirmation
+                        ? RestartConfirmation()
+                        : Settings()}
                 </View>
             </Modal>
         </>

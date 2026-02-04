@@ -80,7 +80,7 @@ export function EditableNumberSlider({
     });
     const prevCircleCxPct = useSharedValue(0);
     const circleCxPct = useSharedValue(
-        ((value.value - min) / (max - min)) * 100,
+        ((originalValue - min) / (max - min)) * 100,
     );
     const circleCx = useDerivedValue(() => {
         // offset circleX by 2x circleR so that it fits nicely in the bar

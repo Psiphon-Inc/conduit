@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "Onyesha"
+    },
+    "EDIT_I18N": {
+        "string": "Hariri"
+    },
+    "HIDE_I18N": {
+        "string": "Ficha"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "Dirisha la Matumizi Yaliyopunguzwa"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "Sanidi vikomo vya matumizi ya chini katika dirisha la kila siku. Kwa mfano, wakati wa mchana unapohitaji bendi na betri yako zidumu."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "Saa za hapa"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "Sanidi dirisha la matumizi"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "Futa"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "Haijasanidiwa"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "Matumizi yaliyopunguzwa kati ya"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "saa za hapa"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "Saa ya kuanza"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "Saa ya kumaliza"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "Chagua saa za kuanza na kumaliza kwa hatua za dakika 30."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "Tumia HH:MM"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "Mwanzo na mwisho lazima zisiwe sawa"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "Upeo wa Peers Uliopunguzwa"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "Upeo MB/s Kwa Peer Uliopunguzwa"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "Kipimo Kinachohitajika Kilichopunguzwa"
     }
 }

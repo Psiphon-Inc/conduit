@@ -27,7 +27,16 @@ import com.facebook.react.bridge.ReadableMap;
 
 import ca.psiphon.conduit.nativemodule.logging.MyLog;
 
-public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey) {
+public record ConduitServiceParameters(
+        int maxClients,
+        int limitUpstreamBytes,
+        int limitDownstreamBytes,
+        String privateKey,
+        String reducedStartTime,
+        String reducedEndTime,
+        Integer reducedMaxClients,
+        Integer reducedLimitUpstreamBytes,
+        Integer reducedLimitDownstreamBytes) {
     public static String TAG = ConduitServiceParameters.class.getSimpleName();
 
     // Keys and preferences file name
@@ -36,6 +45,13 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
     public static final String LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY = "limitUpstreamBytesPerSecond";
     public static final String LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY = "limitDownstreamBytesPerSecond";
     public static final String PRIVATE_KEY_KEY = "privateKey";
+    public static final String REDUCED_START_TIME_KEY = "reducedStartTime";
+    public static final String REDUCED_END_TIME_KEY = "reducedEndTime";
+    public static final String REDUCED_MAX_CLIENTS_KEY = "reducedMaxClients";
+    public static final String REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY =
+            "reducedLimitUpstreamBytesPerSecond";
+    public static final String REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY =
+            "reducedLimitDownstreamBytesPerSecond";
     public static final String SCHEMA_VERSION_KEY = "schemaVersion";
 
     // Current storage schema version
@@ -55,10 +71,38 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         int limitUpstreamBytes = map.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY);
         int limitDownstreamBytes = map.getInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY);
         String proxyPrivateKey = map.getString(PRIVATE_KEY_KEY);
+        String reducedStartTime = map.hasKey(REDUCED_START_TIME_KEY)
+                ? map.getString(REDUCED_START_TIME_KEY)
+                : null;
+        String reducedEndTime = map.hasKey(REDUCED_END_TIME_KEY)
+                ? map.getString(REDUCED_END_TIME_KEY)
+                : null;
+        Integer reducedMaxClients = map.hasKey(REDUCED_MAX_CLIENTS_KEY)
+                ? map.getInt(REDUCED_MAX_CLIENTS_KEY)
+                : null;
+        Integer reducedLimitUpstreamBytes =
+                map.hasKey(REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY)
+                        ? map.getInt(REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY)
+                        : null;
+        Integer reducedLimitDownstreamBytes =
+                map.hasKey(REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY)
+                        ? map.getInt(REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY)
+                        : null;
 
         // Validate parsed values
-        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
-            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey,
+                reducedStartTime, reducedEndTime, reducedMaxClients,
+                reducedLimitUpstreamBytes, reducedLimitDownstreamBytes)) {
+            return new ConduitServiceParameters(
+                    maxClients,
+                    limitUpstreamBytes,
+                    limitDownstreamBytes,
+                    proxyPrivateKey,
+                    reducedStartTime,
+                    reducedEndTime,
+                    reducedMaxClients,
+                    reducedLimitUpstreamBytes,
+                    reducedLimitDownstreamBytes);
         }
 
         return null;
@@ -78,10 +122,36 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         int limitUpstreamBytes = intent.getIntExtra(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1);
         int limitDownstreamBytes = intent.getIntExtra(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1);
         String proxyPrivateKey = intent.getStringExtra(PRIVATE_KEY_KEY);
+        String reducedStartTime = intent.hasExtra(REDUCED_START_TIME_KEY)
+                ? intent.getStringExtra(REDUCED_START_TIME_KEY)
+                : null;
+        String reducedEndTime = intent.hasExtra(REDUCED_END_TIME_KEY)
+                ? intent.getStringExtra(REDUCED_END_TIME_KEY)
+                : null;
+        Integer reducedMaxClients = intent.hasExtra(REDUCED_MAX_CLIENTS_KEY)
+                ? intent.getIntExtra(REDUCED_MAX_CLIENTS_KEY, -1)
+                : null;
+        Integer reducedLimitUpstreamBytes = intent.hasExtra(REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY)
+                ? intent.getIntExtra(REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1)
+                : null;
+        Integer reducedLimitDownstreamBytes = intent.hasExtra(REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY)
+                ? intent.getIntExtra(REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1)
+                : null;
 
         // Validate parsed values
-        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
-            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey,
+                reducedStartTime, reducedEndTime, reducedMaxClients,
+                reducedLimitUpstreamBytes, reducedLimitDownstreamBytes)) {
+            return new ConduitServiceParameters(
+                    maxClients,
+                    limitUpstreamBytes,
+                    limitDownstreamBytes,
+                    proxyPrivateKey,
+                    reducedStartTime,
+                    reducedEndTime,
+                    reducedMaxClients,
+                    reducedLimitUpstreamBytes,
+                    reducedLimitDownstreamBytes);
         }
 
         return null;
@@ -116,6 +186,12 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
             changed = true;
         }
 
+        changed = storeOptionalString(preferences, editor, REDUCED_START_TIME_KEY, reducedStartTime) || changed;
+        changed = storeOptionalString(preferences, editor, REDUCED_END_TIME_KEY, reducedEndTime) || changed;
+        changed = storeOptionalInt(preferences, editor, REDUCED_MAX_CLIENTS_KEY, reducedMaxClients) || changed;
+        changed = storeOptionalInt(preferences, editor, REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, reducedLimitUpstreamBytes) || changed;
+        changed = storeOptionalInt(preferences, editor, REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, reducedLimitDownstreamBytes) || changed;
+
         if (changed) {
             editor.commit();
         }
@@ -133,10 +209,32 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         int limitUpstreamBytes = preferences.getInt(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1);
         int limitDownstreamBytes = preferences.getInt(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1);
         String proxyPrivateKey = preferences.getString(PRIVATE_KEY_KEY, null);
+        String reducedStartTime = preferences.getString(REDUCED_START_TIME_KEY, null);
+        String reducedEndTime = preferences.getString(REDUCED_END_TIME_KEY, null);
+        Integer reducedMaxClients = preferences.contains(REDUCED_MAX_CLIENTS_KEY)
+                ? preferences.getInt(REDUCED_MAX_CLIENTS_KEY, -1)
+                : null;
+        Integer reducedLimitUpstreamBytes = preferences.contains(REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY)
+                ? preferences.getInt(REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, -1)
+                : null;
+        Integer reducedLimitDownstreamBytes = preferences.contains(REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY)
+                ? preferences.getInt(REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, -1)
+                : null;
 
         // Validate the loaded parameters
-        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey)) {
-            return new ConduitServiceParameters(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey);
+        if (validate(maxClients, limitUpstreamBytes, limitDownstreamBytes, proxyPrivateKey,
+                reducedStartTime, reducedEndTime, reducedMaxClients,
+                reducedLimitUpstreamBytes, reducedLimitDownstreamBytes)) {
+            return new ConduitServiceParameters(
+                    maxClients,
+                    limitUpstreamBytes,
+                    limitDownstreamBytes,
+                    proxyPrivateKey,
+                    reducedStartTime,
+                    reducedEndTime,
+                    reducedMaxClients,
+                    reducedLimitUpstreamBytes,
+                    reducedLimitDownstreamBytes);
         }
 
         return null;
@@ -148,15 +246,96 @@ public record ConduitServiceParameters(int maxClients, int limitUpstreamBytes, i
         intent.putExtra(LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, limitUpstreamBytes);
         intent.putExtra(LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, limitDownstreamBytes);
         intent.putExtra(PRIVATE_KEY_KEY, privateKey);
+        if (reducedStartTime != null) {
+            intent.putExtra(REDUCED_START_TIME_KEY, reducedStartTime);
+        }
+        if (reducedEndTime != null) {
+            intent.putExtra(REDUCED_END_TIME_KEY, reducedEndTime);
+        }
+        if (reducedMaxClients != null) {
+            intent.putExtra(REDUCED_MAX_CLIENTS_KEY, reducedMaxClients);
+        }
+        if (reducedLimitUpstreamBytes != null) {
+            intent.putExtra(REDUCED_LIMIT_UPSTREAM_BYTES_PER_SECOND_KEY, reducedLimitUpstreamBytes);
+        }
+        if (reducedLimitDownstreamBytes != null) {
+            intent.putExtra(REDUCED_LIMIT_DOWNSTREAM_BYTES_PER_SECOND_KEY, reducedLimitDownstreamBytes);
+        }
     }
 
     // Helper to validate parameters
-    private static boolean validate(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey) {
+    private static boolean validate(int maxClients, int limitUpstreamBytes, int limitDownstreamBytes, String privateKey,
+                                    String reducedStartTime, String reducedEndTime, Integer reducedMaxClients,
+                                    Integer reducedLimitUpstreamBytes, Integer reducedLimitDownstreamBytes) {
         // validate that:
         // - maxClients is greater than 0
         // - limitUpstreamBytes and limitDownstreamBytes are greater than or equal to 0, with 0 being a valid value
         // - privateKey is not null or empty, empty is still theoretically valid for the tunnel core but not for the conduit
-        return maxClients > 0 && limitUpstreamBytes >= 0 && limitDownstreamBytes >= 0 && privateKey != null && !privateKey.isEmpty();
+        boolean baseValid = maxClients > 0 && limitUpstreamBytes >= 0 && limitDownstreamBytes >= 0 && privateKey != null && !privateKey.isEmpty();
+
+        // Reduced usage settings are all-or-nothing. The JS layer (Zod schema) enforces this too;
+        // keep the native validation as defense-in-depth for persisted or external inputs.
+        boolean hasAnyReduced = reducedStartTime != null || reducedEndTime != null || reducedMaxClients != null ||
+                reducedLimitUpstreamBytes != null || reducedLimitDownstreamBytes != null;
+        boolean hasAllReduced = reducedStartTime != null && reducedEndTime != null && reducedMaxClients != null &&
+                reducedLimitUpstreamBytes != null && reducedLimitDownstreamBytes != null;
+
+        if (!baseValid) {
+            return false;
+        }
+
+        if (!hasAnyReduced) {
+            return true;
+        }
+
+        if (!hasAllReduced) {
+            return false;
+        }
+
+        if (!isTimeOfDay(reducedStartTime) || !isTimeOfDay(reducedEndTime)) {
+            return false;
+        }
+
+        if (reducedStartTime.equals(reducedEndTime)) {
+            return false;
+        }
+
+        return reducedMaxClients > 0 && reducedLimitUpstreamBytes >= 0 && reducedLimitDownstreamBytes >= 0;
+    }
+
+    private static boolean isTimeOfDay(String value) {
+        return value != null && value.matches("^([01]\\d|2[0-3]):([0-5]\\d)$");
+    }
+
+    private static boolean storeOptionalString(SharedPreferences preferences, SharedPreferences.Editor editor, String key, String value) {
+        String storedValue = preferences.getString(key, null);
+        if (value == null) {
+            if (storedValue != null) {
+                editor.remove(key);
+                return true;
+            }
+            return false;
+        }
+        if (storedValue == null || !storedValue.equals(value)) {
+            editor.putString(key, value);
+            return true;
+        }
+        return false;
+    }
+
+    private static boolean storeOptionalInt(SharedPreferences preferences, SharedPreferences.Editor editor, String key, Integer value) {
+        if (value == null) {
+            if (preferences.contains(key)) {
+                editor.remove(key);
+                return true;
+            }
+            return false;
+        }
+        if (!preferences.contains(key) || preferences.getInt(key, -1) != value) {
+            editor.putInt(key, value);
+            return true;
+        }
+        return false;
     }
 
     // Helper to migrate preferences to the current schema

@@ -163,5 +163,59 @@
     },
     "REVEAL_I18N": {
         "string": "Göster"
+    },
+    "EDIT_I18N": {
+        "string": "Düzenle"
+    },
+    "HIDE_I18N": {
+        "string": "Gizle"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "Azaltılmış Kullanım Penceresi"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "Günlük bir zaman aralığında daha düşük kullanım sınırlarını yapılandırın. Örneğin, gündüzleri bant genişliği ve pilinizin dayanması gerektiğinde."
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "Yerel saat"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "Kullanım penceresini yapılandır"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "Temizle"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "Yapılandırılmadı"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "Azaltılmış kullanım şu saatler arasında"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "yerel saat"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "Başlangıç saati"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "Bitiş saati"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "Başlangıç ve bitiş saatlerini 30 dakikalık adımlarla seçin."
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "HH:MM kullanın"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "Başlangıç ve bitiş farklı olmalı"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "Azaltılmış en fazla eş"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "Her eş için azaltılmış en fazla MB/s"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "Azaltılmış gerekli bant genişliği"
     }
 }
