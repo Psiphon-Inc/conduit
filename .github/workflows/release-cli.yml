@@ -99,7 +99,7 @@ jobs:
             - name: Create checksums
               run: |
                   cd dist
-                  sha256sum conduit-* > checksums.txt
+                  sha256sum conduit-linux-* conduit-darwin-* conduit-windows-* conduit-freebsd-* > checksums.txt
                   cat checksums.txt
 
             - name: Upload release artifacts
@@ -109,6 +109,8 @@ jobs:
                   path: |
                       cli/dist/conduit-linux-amd64
                       cli/dist/conduit-linux-arm64
+                      cli/dist/conduit-monitor-linux-amd64
+                      cli/dist/conduit-monitor-linux-arm64
                       cli/dist/checksums.txt
 
             - name: Create Release
@@ -143,13 +145,12 @@ jobs:
                       This binary includes an embedded configuration file, so you do not need to provide one. 
 
                       This release is also available through a docker image, which also embeds a configuration file.
-                      
+
                       ```bash
                       docker pull ghcr.io/psiphon-inc/conduit/cli:latest
                       ```
 
                       Refer to https://github.com/Psiphon-Inc/conduit/blob/main/cli/README.md for more details.
-
 
     docker:
         runs-on: ubuntu-latest
