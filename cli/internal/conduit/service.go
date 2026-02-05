@@ -494,6 +494,20 @@ func (s *Service) shouldLogInproxyActivity(now time.Time) (bool, int, int, int) 
 	return false, announcing, connecting, connected
 }
 
+// formatBytes formats bytes as a human-readable string
+func formatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
 // writeStatsToFile writes stats to the configured JSON file asynchronously
 func (s *Service) writeStatsToFile(statsJSON StatsJSON) {
 	data, err := json.MarshalIndent(statsJSON, "", "  ")
@@ -530,18 +544,4 @@ func (s *Service) GetStats() Stats {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return *s.stats
-}
-
-// formatBytes formats bytes as a human-readable string
-func formatBytes(bytes int64) string {
-	const unit = 1024
-	if bytes < unit {
-		return fmt.Sprintf("%d B", bytes)
-	}
-	div, exp := int64(unit), 0
-	for n := bytes / unit; n >= unit; n /= unit {
-		div *= unit
-		exp++
-	}
-	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }

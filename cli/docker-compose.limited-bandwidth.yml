@@ -1,0 +1,42 @@
+services:
+    conduit:
+        image: conduit-local:latest
+        container_name: conduit
+        restart: unless-stopped
+        entrypoint: ["conduit-monitor"]
+        command:
+            [
+                "--traffic-limit",
+                "500",
+                "--traffic-period",
+                "30",
+                "--bandwidth-threshold",
+                "80",
+                "--min-connections",
+                "10",
+                "--min-bandwidth",
+                "10",
+                "--data-dir",
+                "/home/conduit/data",
+                "--metrics-addr",
+                "127.0.0.1:9090",
+                "--",
+                # Note: "start" is added automatically by conduit-monitor
+                "--max-clients",
+                "50",
+                "--bandwidth",
+                "50",
+                "--data-dir",
+                "/home/conduit/data",
+                "--metrics-addr",
+                "0.0.0.0:9090",
+                "--psiphon-config",
+                "/home/conduit/psiphon_config.json",
+            ]
+        # Metrics are exposed inside the container on :9090.
+        # To scrape from the host, publish the port (e.g., "9090:9090").
+        volumes:
+            - conduit-data:/home/conduit/data
+            - ./psiphon_config.json:/home/conduit/psiphon_config.json
+volumes:
+    conduit-data:

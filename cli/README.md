@@ -66,6 +66,42 @@ conduit start -v
 | `--metrics-addr`       | -        | Prometheus metrics listen address          |
 | `-v`                   | -        | Verbose output                             |
 
+## Traffic Throttling
+
+For bandwidth-constrained environments (e.g., VPS with monthly quotas), Conduit supports automatic throttling via a separate supervisor monitor.
+
+To use traffic throttling with Docker, use the `limited-bandwidth` compose file:
+
+```bash
+docker compose -f docker-compose.limited-bandwidth.yml up -d
+```
+
+### Configuration
+
+Edit `docker-compose.limited-bandwidth.yml` to set your limits:
+
+```yaml
+command:
+    [
+        "--traffic-limit", "500",       # Total quota in GB
+        "--traffic-period", "30",       # Time period in days
+        "--bandwidth-threshold", "80",  # Throttle at 80% usage
+        "--min-connections", "10",      # Reduced capacity when throttled
+        "--min-bandwidth", "10",        # Reduced bandwidth when throttled
+        "--",                           # Separator
+        "start",                        # Conduit command
+        ...                             # Conduit flags
+    ]
+```
+
+### How It Works
+
+The supervisor monitors bandwidth usage and:
+1. Runs Conduit at full capacity initially.
+2. When the threshold is reached (e.g., 400GB of 500GB), it restarts Conduit with reduced capacity.
+3. When the period ends, it resets usage and restarts Conduit at full capacity.
+4. Ensures minimum limits (100GB/7days) to protect reputation.
+
 ## Data Directory
 
 Keys and state are stored in the data directory (default: `./data`):
@@ -73,11 +109,15 @@ Keys and state are stored in the data directory (default: `./data`):
 - `conduit_key.json` - Node identity keypair
   The Psiphon broker tracks proxy reputation by key. Always use a persistent volume to preserve your key across container restarts, otherwise you'll start with zero reputation and may not receive client connections for some time.
 
+- `traffic_state.json` - Traffic usage tracking (when throttling is enabled)
+  Tracks current period start time, bytes used, and throttle state. Persists across restarts.
+
 ## Building
 
 ```bash
 # Build for current platform
 make build
+make build-monitor
 
 # Build with embedded config (single-binary distribution)
 make build-embedded PSIPHON_CONFIG=./psiphon_config.json

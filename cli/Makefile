@@ -44,6 +44,17 @@ define GO_BUILD
 	  -o $(1) .
 endef
 
+# Build monitor tool
+# $(1) = output path
+# $(2) = GOOS
+# $(3) = GOARCH
+define GO_BUILD_MONITOR
+	@echo "Building monitor $(2)/$(3) -> $(1)"
+	CGO_ENABLED=0 GOOS=$(2) GOARCH=$(3) $(GO) build \
+	  -ldflags "-s -w" \
+	  -o $(1) ./scripts/monitor
+endef
+
 # Check and install correct Go version
 check-go:
 	@if [ ! -x "$(GO)" ]; then \
@@ -91,6 +102,10 @@ check-setup:
 build: check-go check-setup
 	$(call GO_BUILD,dist/conduit,,$(shell go env GOOS),$(shell go env GOARCH))
 
+# Build monitor for current platform
+build-monitor: check-go
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor,$(shell go env GOOS),$(shell go env GOARCH))
+
 # Build with embedded psiphon config (single binary distribution)
 build-embedded: check-go check-setup check-psiphon-config
 	@echo "Building with embedded config: $(PSIPHON_CONFIG)"
@@ -102,21 +117,27 @@ build-embedded: check-go check-setup check-psiphon-config
 # Per-platform builds (non-embedded)
 build-linux: check-go check-setup
 	$(call GO_BUILD,dist/conduit-linux-amd64,,linux,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-amd64,linux,amd64)
 
 build-linux-arm: check-go check-setup
 	$(call GO_BUILD,dist/conduit-linux-arm64,,linux,arm64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-arm64,linux,arm64)
 
 build-darwin: check-go check-setup
 	$(call GO_BUILD,dist/conduit-darwin-amd64,,darwin,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-amd64,darwin,amd64)
 
 build-darwin-arm: check-go check-setup
 	$(call GO_BUILD,dist/conduit-darwin-arm64,,darwin,arm64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-arm64,darwin,arm64)
 
 build-windows: check-go check-setup
 	$(call GO_BUILD,dist/conduit-windows-amd64.exe,,windows,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-windows-amd64.exe,windows,amd64)
 
 build-freebsd: check-go check-setup
 	$(call GO_BUILD,dist/conduit-freebsd-amd64,,freebsd,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-freebsd-amd64,freebsd,amd64)
 
 # Build for all platforms
 build-all: check-go check-setup build-linux build-linux-arm build-darwin build-darwin-arm build-windows build-freebsd
@@ -132,6 +153,13 @@ build-all-embedded: check-go check-setup check-psiphon-config
 	$(call GO_BUILD,dist/conduit-windows-amd64.exe,$(EMBED_TAG),windows,amd64)
 	$(call GO_BUILD,dist/conduit-freebsd-amd64,$(EMBED_TAG),freebsd,amd64)
 	@rm -f internal/config/psiphon_config.json
+	@echo "Building monitor for all platforms..."
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-amd64,linux,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-arm64,linux,arm64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-amd64,darwin,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-arm64,darwin,arm64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-windows-amd64.exe,windows,amd64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-freebsd-amd64,freebsd,amd64)
 	@echo "Built all platforms with embedded config in dist/"
 
 # Development
