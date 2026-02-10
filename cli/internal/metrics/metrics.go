@@ -65,8 +65,8 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 	registry := prometheus.NewRegistry()
 
 	// Add standard Go metrics
-	registry.MustRegister(collectors.NewGoCollector())
-	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+	registerCollector(collectors.NewGoCollector())
+	registerCollector(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 
 	m := &Metrics{
 		Announcing: newGauge(
