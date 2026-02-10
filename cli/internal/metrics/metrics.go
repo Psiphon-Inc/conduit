@@ -22,6 +22,7 @@ package metrics
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -227,7 +228,7 @@ func (m *Metrics) StartServer(addr string) error {
 
 	// Start server in background with the pre-created listener
 	go func() {
-		if err := m.server.Serve(listener); err != nil && err != http.ErrServerClosed {
+		if err := m.server.Serve(listener); err != nil && errors.Is(err, http.ErrServerClosed) {
 			logging.Printf("[ERROR] Metrics server error: %v\n", err)
 		}
 	}()
