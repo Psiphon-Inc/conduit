@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/logging"
 	"github.com/Psiphon-Labs/psiphon-tunnel-core/psiphon/common/buildinfo"
@@ -209,7 +210,14 @@ func (m *Metrics) StartServer(addr string) error {
 		EnableOpenMetrics: true,
 	}))
 
-	m.server = &http.Server{Addr: addr, Handler: mux}
+	m.server = &http.Server{
+		Addr:         addr,
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  10 * time.Second,
+		TLSConfig:    nil,
+	}
 
 	// Create a listener to verify the port is available before starting the server
 	listener, err := net.Listen("tcp", addr)
