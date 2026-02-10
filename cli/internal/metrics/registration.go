@@ -65,3 +65,14 @@ func newGaugeFunc(gaugeOpts prometheus.GaugeOpts, function func() float64) prome
 
 	return ev
 }
+
+// registers or reuses a collector without crashing.
+func registerCollector(ct prometheus.Collector) {
+	if err := prometheus.Register(ct); err != nil {
+		var are prometheus.AlreadyRegisteredError
+		if errors.As(err, &are) {
+			return
+		}
+		panic(err)
+	}
+}
