@@ -69,63 +69,63 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 
 	m := &Metrics{
-		Announcing: prometheus.NewGauge(
+		Announcing: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "announcing",
 				Help:      "Number of inproxy announcement requests in flight",
 			},
 		),
-		ConnectingClients: prometheus.NewGauge(
+		ConnectingClients: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "connecting_clients",
 				Help:      "Number of clients currently connecting to the proxy",
 			},
 		),
-		ConnectedClients: prometheus.NewGauge(
+		ConnectedClients: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "connected_clients",
 				Help:      "Number of clients currently connected to the proxy",
 			},
 		),
-		IsLive: prometheus.NewGauge(
+		IsLive: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "is_live",
 				Help:      "Whether the service is connected to the Psiphon broker (1 = connected, 0 = disconnected)",
 			},
 		),
-		MaxClients: prometheus.NewGauge(
+		MaxClients: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "max_clients",
 				Help:      "Maximum number of proxy clients allowed",
 			},
 		),
-		BandwidthLimit: prometheus.NewGauge(
+		BandwidthLimit: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "bandwidth_limit_bytes_per_second",
 				Help:      "Configured bandwidth limit in bytes per second (0 = unlimited)",
 			},
 		),
-		BytesUploaded: prometheus.NewGauge(
+		BytesUploaded: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "bytes_uploaded",
 				Help:      "Total number of bytes uploaded through the proxy",
 			},
 		),
-		BytesDownloaded: prometheus.NewGauge(
+		BytesDownloaded: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "bytes_downloaded",
 				Help:      "Total number of bytes downloaded through the proxy",
 			},
 		),
-		BuildInfo: prometheus.NewGaugeVec(
+		BuildInfo: newGaugeVec(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
 				Name:      "build_info",
@@ -137,7 +137,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 	}
 
 	// Create GaugeFunc metrics (computed at scrape time)
-	uptimeSeconds := prometheus.NewGaugeFunc(
+	newGaugeFunc(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "uptime_seconds",
@@ -145,7 +145,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 		},
 		gaugeFuncs.GetUptimeSeconds,
 	)
-	idleSeconds := prometheus.NewGaugeFunc(
+	newGaugeFunc(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Name:      "idle_seconds",
@@ -153,19 +153,6 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 		},
 		gaugeFuncs.GetIdleSeconds,
 	)
-
-	// Register all metrics
-	registry.MustRegister(m.Announcing)
-	registry.MustRegister(m.ConnectingClients)
-	registry.MustRegister(m.ConnectedClients)
-	registry.MustRegister(m.IsLive)
-	registry.MustRegister(m.MaxClients)
-	registry.MustRegister(m.BandwidthLimit)
-	registry.MustRegister(uptimeSeconds)
-	registry.MustRegister(idleSeconds)
-	registry.MustRegister(m.BytesUploaded)
-	registry.MustRegister(m.BytesDownloaded)
-	registry.MustRegister(m.BuildInfo)
 
 	// Set build info
 
