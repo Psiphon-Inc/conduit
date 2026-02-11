@@ -7,10 +7,13 @@ import (
 )
 
 // build and register a new Prometheus gauge by accepting its options.
-func newGauge(gaugeOpts prometheus.GaugeOpts) prometheus.Gauge {
+func newGauge(
+	gaugeOpts prometheus.GaugeOpts,
+	registry *prometheus.Registry,
+) prometheus.Gauge {
 	ev := prometheus.NewGauge(gaugeOpts)
 
-	err := prometheus.Register(ev)
+	err := registry.Register(ev)
 	if err != nil {
 		var are prometheus.AlreadyRegisteredError
 		if ok := errors.As(err, &are); ok {
@@ -26,11 +29,16 @@ func newGauge(gaugeOpts prometheus.GaugeOpts) prometheus.Gauge {
 	return ev
 }
 
-// build and register a new Prometheus gauge vector by accepting its options and labels.
-func newGaugeVec(gaugeOpts prometheus.GaugeOpts, labels []string) *prometheus.GaugeVec {
+// build and register a new Prometheus gauge vector by accepting its
+// options and labels.
+func newGaugeVec(
+	gaugeOpts prometheus.GaugeOpts,
+	labels []string,
+	registry *prometheus.Registry,
+) *prometheus.GaugeVec {
 	ev := prometheus.NewGaugeVec(gaugeOpts, labels)
 
-	err := prometheus.Register(ev)
+	err := registry.Register(ev)
 	if err != nil {
 		var are prometheus.AlreadyRegisteredError
 		if ok := errors.As(err, &are); ok {
@@ -46,11 +54,16 @@ func newGaugeVec(gaugeOpts prometheus.GaugeOpts, labels []string) *prometheus.Ga
 	return ev
 }
 
-// build and register a new Prometheus gauge function by accepting its options and function.
-func newGaugeFunc(gaugeOpts prometheus.GaugeOpts, function func() float64) prometheus.GaugeFunc {
+// build and register a new Prometheus gauge function by accepting
+// its options and function.
+func newGaugeFunc(
+	gaugeOpts prometheus.GaugeOpts,
+	function func() float64,
+	registry *prometheus.Registry,
+) prometheus.GaugeFunc {
 	ev := prometheus.NewGaugeFunc(gaugeOpts, function)
 
-	err := prometheus.Register(ev)
+	err := registry.Register(ev)
 	if err != nil {
 		var are prometheus.AlreadyRegisteredError
 		if ok := errors.As(err, &are); ok {
@@ -67,8 +80,11 @@ func newGaugeFunc(gaugeOpts prometheus.GaugeOpts, function func() float64) prome
 }
 
 // registers or reuses a collector without crashing.
-func registerCollector(ct prometheus.Collector) {
-	if err := prometheus.Register(ct); err != nil {
+func registerCollector(
+	ct prometheus.Collector,
+	registry *prometheus.Registry,
+) {
+	if err := registry.Register(ct); err != nil {
 		var are prometheus.AlreadyRegisteredError
 		if errors.As(err, &are) {
 			return

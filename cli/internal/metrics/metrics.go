@@ -67,8 +67,11 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 	registry := prometheus.NewRegistry()
 
 	// Add standard Go metrics
-	registerCollector(collectors.NewGoCollector())
-	registerCollector(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
+	registerCollector(collectors.NewGoCollector(), registry)
+	registerCollector(
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+		registry,
+	)
 
 	m := &Metrics{
 		Announcing: newGauge(
@@ -77,6 +80,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "announcing",
 				Help:      "Number of inproxy announcement requests in flight",
 			},
+			registry,
 		),
 		ConnectingClients: newGauge(
 			prometheus.GaugeOpts{
@@ -84,6 +88,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "connecting_clients",
 				Help:      "Number of clients currently connecting to the proxy",
 			},
+			registry,
 		),
 		ConnectedClients: newGauge(
 			prometheus.GaugeOpts{
@@ -91,6 +96,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "connected_clients",
 				Help:      "Number of clients currently connected to the proxy",
 			},
+			registry,
 		),
 		IsLive: newGauge(
 			prometheus.GaugeOpts{
@@ -98,6 +104,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "is_live",
 				Help:      "Whether the service is connected to the Psiphon broker (1 = connected, 0 = disconnected)",
 			},
+			registry,
 		),
 		MaxClients: newGauge(
 			prometheus.GaugeOpts{
@@ -105,6 +112,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "max_clients",
 				Help:      "Maximum number of proxy clients allowed",
 			},
+			registry,
 		),
 		BandwidthLimit: newGauge(
 			prometheus.GaugeOpts{
@@ -112,6 +120,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "bandwidth_limit_bytes_per_second",
 				Help:      "Configured bandwidth limit in bytes per second (0 = unlimited)",
 			},
+			registry,
 		),
 		BytesUploaded: newGauge(
 			prometheus.GaugeOpts{
@@ -119,6 +128,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "bytes_uploaded",
 				Help:      "Total number of bytes uploaded through the proxy",
 			},
+			registry,
 		),
 		BytesDownloaded: newGauge(
 			prometheus.GaugeOpts{
@@ -126,6 +136,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "bytes_downloaded",
 				Help:      "Total number of bytes downloaded through the proxy",
 			},
+			registry,
 		),
 		BuildInfo: newGaugeVec(
 			prometheus.GaugeOpts{
@@ -134,6 +145,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Help:      "Build information about the Conduit service",
 			},
 			[]string{"build_repo", "build_rev", "go_version", "values_rev"},
+			registry,
 		),
 		registry: registry,
 	}
@@ -146,6 +158,7 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 			Help:      "Number of seconds since the service started",
 		},
 		gaugeFuncs.GetUptimeSeconds,
+		registry,
 	)
 	newGaugeFunc(
 		prometheus.GaugeOpts{
@@ -154,12 +167,19 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 			Help:      "Number of seconds the proxy has been idle (0 connecting and 0 connected clients)",
 		},
 		gaugeFuncs.GetIdleSeconds,
+		registry,
 	)
 
 	// Set build info
 
 	buildInfo := buildinfo.GetBuildInfo()
-	m.BuildInfo.WithLabelValues(buildInfo.BuildRepo, buildInfo.BuildRev, buildInfo.GoVersion, buildInfo.ValuesRev).Set(1)
+	m.BuildInfo.
+		WithLabelValues(
+			buildInfo.BuildRepo,
+			buildInfo.BuildRev,
+			buildInfo.GoVersion,
+			buildInfo.ValuesRev).
+		Set(1)
 
 	return m
 }
@@ -228,7 +248,7 @@ func (m *Metrics) StartServer(addr string) error {
 
 	// Start server in background with the pre-created listener
 	go func() {
-		if err := m.server.Serve(listener); err != nil && errors.Is(err, http.ErrServerClosed) {
+		if err := m.server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logging.Printf("[ERROR] Metrics server error: %v\n", err)
 		}
 	}()
