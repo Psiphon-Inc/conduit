@@ -50,7 +50,7 @@ endef
 # $(3) = GOARCH
 define GO_BUILD_MONITOR
 	@echo "Building monitor $(2)/$(3) -> $(1)"
-	CGO_ENABLED=0 GOOS=$(2) GOARCH=$(3) $(GO) build \
+	@CGO_ENABLED=0 GOOS=$(2) GOARCH=$(3) $(GO) build \
 	  -ldflags "-s -w" \
 	  -o $(1) ./scripts/monitor
 endef
