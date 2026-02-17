@@ -23,6 +23,7 @@ PSIPHON_REPO := https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
 # $(2) = extra build tag (optional, e.g. embed_config)
 # $(3) = GOOS
 # $(4) = GOARCH
+# $(5) = GOARM (optional)
 define GO_BUILD
 	@BUILDDATE=$$(date +%Y-%m-%dT%H:%M:%S%z) && \
 	BUILDREPO=$$(cd psiphon-tunnel-core && git config --get remote.origin.url) && \
@@ -31,7 +32,7 @@ define GO_BUILD
 	ALL_TAGS="$(BASE_TAGS)" && \
 	if [ -n "$(2)" ]; then ALL_TAGS="$$ALL_TAGS,$(2)"; fi && \
 	echo "Building $(3)/$(4) -> $(1) with tags: $$ALL_TAGS" && \
-	CGO_ENABLED=0 GOOS=$(3) GOARCH=$(4) $(GO) build \
+	CGO_ENABLED=0 GOOS=$(3) GOARCH=$(4) $(if $(5),GOARM=$(5)) $(GO) build \
 	  -tags "$$ALL_TAGS" \
 	  -ldflags "\
 	    -s -w \
@@ -48,9 +49,10 @@ endef
 # $(1) = output path
 # $(2) = GOOS
 # $(3) = GOARCH
+# $(4) = GOARM (optional)
 define GO_BUILD_MONITOR
 	@echo "Building monitor $(2)/$(3) -> $(1)"
-	@CGO_ENABLED=0 GOOS=$(2) GOARCH=$(3) $(GO) build \
+	@CGO_ENABLED=0 GOOS=$(2) GOARCH=$(3) $(if $(4),GOARM=$(4)) $(GO) build \
 	  -ldflags "-s -w" \
 	  -o $(1) ./scripts/monitor
 endef
@@ -123,6 +125,10 @@ build-linux-arm: check-go check-setup
 	$(call GO_BUILD,dist/conduit-linux-arm64,,linux,arm64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-arm64,linux,arm64)
 
+build-linux-armv7: check-go check-setup
+	$(call GO_BUILD,dist/conduit-linux-armv7,,linux,arm,7)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-armv7,linux,arm,7)
+
 build-darwin: check-go check-setup
 	$(call GO_BUILD,dist/conduit-darwin-amd64,,darwin,amd64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-amd64,darwin,amd64)
@@ -140,7 +146,7 @@ build-freebsd: check-go check-setup
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-freebsd-amd64,freebsd,amd64)
 
 # Build for all platforms
-build-all: check-go check-setup build-linux build-linux-arm build-darwin build-darwin-arm build-windows build-freebsd
+build-all: check-go check-setup build-linux build-linux-arm build-linux-armv7 build-darwin build-darwin-arm build-windows build-freebsd
 
 # Build for all platforms with embedded config
 build-all-embedded: check-go check-setup check-psiphon-config
@@ -148,6 +154,7 @@ build-all-embedded: check-go check-setup check-psiphon-config
 	@cp "$(PSIPHON_CONFIG)" internal/config/psiphon_config.json
 	$(call GO_BUILD,dist/conduit-linux-amd64,$(EMBED_TAG),linux,amd64)
 	$(call GO_BUILD,dist/conduit-linux-arm64,$(EMBED_TAG),linux,arm64)
+	$(call GO_BUILD,dist/conduit-linux-armv7,$(EMBED_TAG),linux,arm,7)
 	$(call GO_BUILD,dist/conduit-darwin-amd64,$(EMBED_TAG),darwin,amd64)
 	$(call GO_BUILD,dist/conduit-darwin-arm64,$(EMBED_TAG),darwin,arm64)
 	$(call GO_BUILD,dist/conduit-windows-amd64.exe,$(EMBED_TAG),windows,amd64)
@@ -156,6 +163,7 @@ build-all-embedded: check-go check-setup check-psiphon-config
 	@echo "Building monitor for all platforms..."
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-amd64,linux,amd64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-arm64,linux,arm64)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-armv7,linux,arm,7)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-amd64,darwin,amd64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-arm64,darwin,arm64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-windows-amd64.exe,windows,amd64)
