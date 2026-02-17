@@ -129,6 +129,10 @@ build-linux-armv7: check-go check-setup
 	$(call GO_BUILD,dist/conduit-linux-armv7,,linux,arm,7)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-armv7,linux,arm,7)
 
+build-linux-armv6: check-go check-setup
+	$(call GO_BUILD,dist/conduit-linux-armv6,,linux,arm,6)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-armv6,linux,arm,6)
+
 build-darwin: check-go check-setup
 	$(call GO_BUILD,dist/conduit-darwin-amd64,,darwin,amd64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-amd64,darwin,amd64)
@@ -146,7 +150,7 @@ build-freebsd: check-go check-setup
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-freebsd-amd64,freebsd,amd64)
 
 # Build for all platforms
-build-all: check-go check-setup build-linux build-linux-arm build-linux-armv7 build-darwin build-darwin-arm build-windows build-freebsd
+build-all: check-go check-setup build-linux build-linux-arm build-linux-armv7 build-linux-armv6 build-darwin build-darwin-arm build-windows build-freebsd
 
 # Build for all platforms with embedded config
 build-all-embedded: check-go check-setup check-psiphon-config
@@ -155,6 +159,7 @@ build-all-embedded: check-go check-setup check-psiphon-config
 	$(call GO_BUILD,dist/conduit-linux-amd64,$(EMBED_TAG),linux,amd64)
 	$(call GO_BUILD,dist/conduit-linux-arm64,$(EMBED_TAG),linux,arm64)
 	$(call GO_BUILD,dist/conduit-linux-armv7,$(EMBED_TAG),linux,arm,7)
+	$(call GO_BUILD,dist/conduit-linux-armv6,$(EMBED_TAG),linux,arm,6)
 	$(call GO_BUILD,dist/conduit-darwin-amd64,$(EMBED_TAG),darwin,amd64)
 	$(call GO_BUILD,dist/conduit-darwin-arm64,$(EMBED_TAG),darwin,arm64)
 	$(call GO_BUILD,dist/conduit-windows-amd64.exe,$(EMBED_TAG),windows,amd64)
@@ -164,6 +169,7 @@ build-all-embedded: check-go check-setup check-psiphon-config
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-amd64,linux,amd64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-arm64,linux,arm64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-armv7,linux,arm,7)
+	$(call GO_BUILD_MONITOR,dist/conduit-monitor-linux-armv6,linux,arm,6)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-amd64,darwin,amd64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-darwin-arm64,darwin,arm64)
 	$(call GO_BUILD_MONITOR,dist/conduit-monitor-windows-amd64.exe,windows,amd64)

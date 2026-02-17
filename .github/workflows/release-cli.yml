@@ -109,8 +109,12 @@ jobs:
                   path: |
                       cli/dist/conduit-linux-amd64
                       cli/dist/conduit-linux-arm64
+                      cli/dist/conduit-linux-armv7
+                      cli/dist/conduit-linux-armv6
                       cli/dist/conduit-monitor-linux-amd64
                       cli/dist/conduit-monitor-linux-arm64
+                      cli/dist/conduit-monitor-linux-armv7
+                      cli/dist/conduit-monitor-linux-armv6
                       cli/dist/checksums.txt
 
             - name: Create Release
@@ -124,6 +128,8 @@ jobs:
                   files: |
                       cli/dist/conduit-linux-amd64
                       cli/dist/conduit-linux-arm64
+                      cli/dist/conduit-linux-armv7
+                      cli/dist/conduit-linux-armv6
                       cli/dist/conduit-darwin-amd64
                       cli/dist/conduit-darwin-arm64
                       cli/dist/conduit-windows-amd64.exe
