@@ -129,6 +129,7 @@ make build-all
 make build-linux       # Linux amd64
 make build-linux-arm   # Linux arm64
 make build-linux-armv7 # Linux armv7 (32-bit)
+make build-linux-armv6 # Linux armv6 (32-bit)
 make build-darwin      # macOS Intel
 make build-darwin-arm  # macOS Apple Silicon
 make build-windows     # Windows amd64
