@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -40,17 +42,29 @@ type Service struct {
 	config               *config.Config
 	controller           *psiphon.Controller
 	stats                *Stats
+	regionActivityTotals map[string]map[string]RegionActivityTotals
 	metrics              *metrics.Metrics
 	mu                   sync.RWMutex
-	lastActivityLogTime  time.Time
-	lastLoggedAnnouncing int
-	lastLoggedConnecting int
-	lastLoggedConnected  int
 
 	startTimeUnixNano  int64
 	lastActiveUnixNano atomic.Int64
 	connectingClients  atomic.Int64
 	connectedClients   atomic.Int64
+}
+
+const (
+	regionScopePersonal      = "personal"
+	regionScopeCommon        = "common"
+	maxLoggedRegionsPerScope = 3
+)
+
+// RegionActivityTotals tracks accumulated per-region activity from
+// InproxyProxyActivity per-notice deltas.
+type RegionActivityTotals struct {
+	BytesUp           int64
+	BytesDown         int64
+	ConnectingClients int64
+	ConnectedClients  int64
 }
 
 // Stats tracks proxy activity statistics
@@ -85,6 +99,7 @@ func New(cfg *config.Config) (*Service, error) {
 		stats: &Stats{
 			StartTime: time.Now(),
 		},
+		regionActivityTotals: make(map[string]map[string]RegionActivityTotals),
 	}
 	s.startTimeUnixNano = s.stats.StartTime.UnixNano()
 
@@ -93,7 +108,7 @@ func New(cfg *config.Config) (*Service, error) {
 			GetUptimeSeconds: s.getUptimeSeconds,
 			GetIdleSeconds:   s.getIdleSecondsFloat,
 		})
-		s.metrics.SetConfig(cfg.MaxClients, cfg.BandwidthBytesPerSecond)
+		s.metrics.SetConfig(cfg.MaxCommonClients, cfg.MaxPersonalClients, cfg.BandwidthBytesPerSecond)
 	}
 
 	return s, nil
@@ -138,7 +153,7 @@ func (s *Service) Run(ctx context.Context) error {
 	if s.config.BandwidthBytesPerSecond > 0 {
 		bandwidthStr = fmt.Sprintf("%.0f Mbps", float64(s.config.BandwidthBytesPerSecond)*8/1000/1000)
 	}
-	logging.Printf("[OK] Starting Psiphon Conduit (Max Clients: %d, Bandwidth: %s)\n", s.config.MaxClients, bandwidthStr)
+	logging.Printf("[OK] Starting Psiphon Conduit (Max Common Clients: %d, Max Personal Clients: %d, Bandwidth: %s)\n", s.config.MaxCommonClients, s.config.MaxPersonalClients, bandwidthStr)
 
 	// Open the data store
 	err = psiphon.OpenDataStore(&psiphon.Config{
@@ -190,10 +205,23 @@ func (s *Service) createPsiphonConfig() (*psiphon.Config, error) {
 	// Client version - used by broker for compatibility
 	configJSON["ClientVersion"] = "1"
 
-	// Inproxy mode settings - these override any values in the base config
+	// Apply --set overrides first. These are the remaining keys from --set
+	// that were NOT consumed during config resolution (e.g. reduced-hour
+	// settings, diagnostic flags). Keys that the config layer resolved
+	// (InproxyMaxCommonClients, InproxyMaxPersonalClients, etc.) have
+	// already been stripped and are written explicitly below, so any --set
+	// values for those keys were already folded into the resolved config.
+	for key, value := range s.config.SetOverrides {
+		configJSON[key] = value
+	}
+
+	// Core inproxy mode settings
 	configJSON["InproxyEnableProxy"] = true
-	configJSON["InproxyMaxClients"] = s.config.MaxClients
-	// Only set bandwidth limits if not unlimited (0 means unlimited)
+	configJSON["InproxyMaxCommonClients"] = s.config.MaxCommonClients
+	configJSON["InproxyMaxPersonalClients"] = s.config.MaxPersonalClients
+	if s.config.CompartmentID != "" {
+		configJSON["InproxyProxyPersonalCompartmentID"] = s.config.CompartmentID
+	}
 	if s.config.BandwidthBytesPerSecond > 0 {
 		configJSON["InproxyLimitUpstreamBytesPerSecond"] = s.config.BandwidthBytesPerSecond
 		configJSON["InproxyLimitDownstreamBytesPerSecond"] = s.config.BandwidthBytesPerSecond
@@ -244,6 +272,19 @@ func (s *Service) updateMetrics() {
 	s.metrics.SetConnectedClients(s.stats.ConnectedClients)
 	s.metrics.SetBytesUploaded(float64(s.stats.TotalBytesUp))
 	s.metrics.SetBytesDownloaded(float64(s.stats.TotalBytesDown))
+
+	for scope, byRegion := range s.regionActivityTotals {
+		for region, totals := range byRegion {
+			s.metrics.SetRegionActivity(
+				scope,
+				region,
+				totals.BytesUp,
+				totals.BytesDown,
+				totals.ConnectingClients,
+				totals.ConnectedClients,
+			)
+		}
+	}
 }
 
 // getUptimeSeconds returns the uptime in seconds (thread-safe, for Prometheus scrape)
@@ -297,23 +338,30 @@ func (s *Service) handleNotice(notice []byte) {
 	switch noticeData.NoticeType {
 	case "InproxyProxyActivity":
 		s.mu.Lock()
+		prevAnnouncing := s.stats.Announcing
 		prevConnecting := s.stats.ConnectingClients
 		prevConnected := s.stats.ConnectedClients
 		now := time.Now()
-		if v, ok := noticeData.Data["announcing"].(float64); ok {
+		if v, ok := int64FromValue(noticeData.Data["announcing"]); ok {
 			s.stats.Announcing = int(v)
 		}
-		if v, ok := noticeData.Data["connectingClients"].(float64); ok {
+		if v, ok := int64FromValue(noticeData.Data["connectingClients"]); ok {
 			s.stats.ConnectingClients = int(v)
 		}
-		if v, ok := noticeData.Data["connectedClients"].(float64); ok {
+		if v, ok := int64FromValue(noticeData.Data["connectedClients"]); ok {
 			s.stats.ConnectedClients = int(v)
 		}
-		if v, ok := noticeData.Data["bytesUp"].(float64); ok {
-			s.stats.TotalBytesUp += int64(v)
+		if v, ok := int64FromValue(noticeData.Data["bytesUp"]); ok {
+			s.stats.TotalBytesUp += v
 		}
-		if v, ok := noticeData.Data["bytesDown"].(float64); ok {
-			s.stats.TotalBytesDown += int64(v)
+		if v, ok := int64FromValue(noticeData.Data["bytesDown"]); ok {
+			s.stats.TotalBytesDown += v
+		}
+		if values, ok := parseRegionActivity(noticeData.Data["personalRegionActivity"]); ok {
+			s.accumulateRegionActivityLocked(regionScopePersonal, values)
+		}
+		if values, ok := parseRegionActivity(noticeData.Data["commonRegionActivity"]); ok {
+			s.accumulateRegionActivityLocked(regionScopeCommon, values)
 		}
 
 		// Track last active time for idle calculation
@@ -322,55 +370,43 @@ func (s *Service) handleNotice(notice []byte) {
 			s.lastActiveUnixNano.Store(now.UnixNano())
 		}
 
-		becameLive := false
 		if !s.stats.IsLive && (s.stats.Announcing > 0 || s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0) {
 			s.stats.IsLive = true
 			if s.metrics != nil {
 				s.metrics.SetIsLive(true)
 			}
-			becameLive = true
 		}
 
-		// Log if client counts changed
-		if s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
+		// Log when announcing/connectivity state changes.
+		if s.stats.Announcing != prevAnnouncing || s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
 			s.logStats()
 		}
 
-		shouldLog, announcingCount, connectingCount, connectedCount := s.shouldLogInproxyActivity(now)
 		s.syncSnapshotLocked()
 		s.updateMetrics()
 
 		s.mu.Unlock()
-		if becameLive {
-			logging.Println("[OK] Announcing presence to Psiphon broker, you will see announcing=1 while bootstrapping is underway")
-		}
-		if shouldLog {
-			logging.Printf("[INFO] Inproxy activity: announcing=%d connecting=%d connected=%d\n",
-				announcingCount,
-				connectingCount,
-				connectedCount,
-			)
-		}
 
 	case "InproxyProxyTotalActivity":
 		// Update stats from total activity notices
 		s.mu.Lock()
+		prevAnnouncing := s.stats.Announcing
 		prevConnecting := s.stats.ConnectingClients
 		prevConnected := s.stats.ConnectedClients
-		if v, ok := noticeData.Data["announcing"].(float64); ok {
+		if v, ok := int64FromValue(noticeData.Data["announcing"]); ok {
 			s.stats.Announcing = int(v)
 		}
-		if v, ok := noticeData.Data["connectingClients"].(float64); ok {
+		if v, ok := int64FromValue(noticeData.Data["connectingClients"]); ok {
 			s.stats.ConnectingClients = int(v)
 		}
-		if v, ok := noticeData.Data["connectedClients"].(float64); ok {
+		if v, ok := int64FromValue(noticeData.Data["connectedClients"]); ok {
 			s.stats.ConnectedClients = int(v)
 		}
-		if v, ok := noticeData.Data["totalBytesUp"].(float64); ok {
-			s.stats.TotalBytesUp = int64(v)
+		if v, ok := int64FromValue(noticeData.Data["totalBytesUp"]); ok {
+			s.stats.TotalBytesUp = v
 		}
-		if v, ok := noticeData.Data["totalBytesDown"].(float64); ok {
-			s.stats.TotalBytesDown = int64(v)
+		if v, ok := int64FromValue(noticeData.Data["totalBytesDown"]); ok {
+			s.stats.TotalBytesDown = v
 		}
 
 		// Track last active time for idle calculation
@@ -380,17 +416,15 @@ func (s *Service) handleNotice(notice []byte) {
 			s.lastActiveUnixNano.Store(now.UnixNano())
 		}
 
-		becameLive := false
 		if !s.stats.IsLive && (s.stats.Announcing > 0 || s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0) {
 			s.stats.IsLive = true
 			if s.metrics != nil {
 				s.metrics.SetIsLive(true)
 			}
-			becameLive = true
 		}
 
-		// Log if client counts changed
-		if s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
+		// Log when announcing/connectivity state changes.
+		if s.stats.Announcing != prevAnnouncing || s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
 			s.logStats()
 		}
 
@@ -398,9 +432,6 @@ func (s *Service) handleNotice(notice []byte) {
 		s.updateMetrics()
 
 		s.mu.Unlock()
-		if becameLive {
-			logging.Println("[OK] Announcing to Psiphon broker")
-		}
 
 	case "Info":
 		if msg, ok := noticeData.Data["message"].(string); ok {
@@ -433,13 +464,16 @@ func (s *Service) handleNotice(notice []byte) {
 // logStats logs the current proxy statistics (must be called with lock held)
 func (s *Service) logStats() {
 	uptime := time.Since(s.stats.StartTime).Truncate(time.Second)
-	fmt.Printf("%s [STATS] Connecting: %d | Connected: %d | Up: %s | Down: %s | Uptime: %s\n",
+	regionSummary := s.formatRegionActivityTotalsLocked()
+	fmt.Printf("%s [STATS] Announcing: %d | Connecting: %d | Connected: %d | Up: %s | Down: %s | Uptime: %s | Regions: %s\n",
 		time.Now().Format("2006-01-02 15:04:05"),
+		s.stats.Announcing,
 		s.stats.ConnectingClients,
 		s.stats.ConnectedClients,
 		formatBytes(s.stats.TotalBytesUp),
 		formatBytes(s.stats.TotalBytesDown),
 		formatDuration(uptime),
+		regionSummary,
 	)
 
 	// Write stats to file if configured (copy data while locked, write async)
@@ -465,33 +499,168 @@ func (s *Service) syncSnapshotLocked() {
 	s.connectedClients.Store(int64(s.stats.ConnectedClients))
 }
 
-func (s *Service) shouldLogInproxyActivity(now time.Time) (bool, int, int, int) {
-	announcing := s.stats.Announcing
-	connecting := s.stats.ConnectingClients
-	connected := s.stats.ConnectedClients
+// formatRegionActivityTotalsLocked returns an aggregated region summary string.
+// Must be called with lock held.
+func (s *Service) formatRegionActivityTotalsLocked() string {
+	personalSummary := formatRegionScopeTotals(s.regionActivityTotals[regionScopePersonal])
+	commonSummary := formatRegionScopeTotals(s.regionActivityTotals[regionScopeCommon])
 
-	connectingChanged := connecting != s.lastLoggedConnecting
-	connectedChanged := connected != s.lastLoggedConnected
-	if connectingChanged || connectedChanged {
-		s.lastLoggedConnecting = connecting
-		s.lastLoggedConnected = connected
-		s.lastLoggedAnnouncing = announcing
-		s.lastActivityLogTime = now
-		return true, announcing, connecting, connected
+	parts := make([]string, 0, 2)
+	if personalSummary != "-" {
+		parts = append(parts, fmt.Sprintf("personal[%s]", personalSummary))
+	}
+	if commonSummary != "-" {
+		parts = append(parts, fmt.Sprintf("common[%s]", commonSummary))
 	}
 
-	// If connecting/connected is unchanged, log every minute with the current
-	// number of announcing workers. Note that the scrapeable /metrics updates
-	// immediately when new data is received, this log is just to indicate
-	// activity in the terminal.
-	const inproxyActivityLogInterval = time.Minute * 1
-	if s.lastActivityLogTime.IsZero() || now.Sub(s.lastActivityLogTime) >= inproxyActivityLogInterval {
-		s.lastLoggedAnnouncing = announcing
-		s.lastActivityLogTime = now
-		return true, announcing, connecting, connected
+	if len(parts) == 0 {
+		return "none"
 	}
 
-	return false, announcing, connecting, connected
+	return strings.Join(parts, " ")
+}
+
+func formatRegionScopeTotals(byRegion map[string]RegionActivityTotals) string {
+	if len(byRegion) == 0 {
+		return "-"
+	}
+
+	regions := make([]string, 0, len(byRegion))
+	for region := range byRegion {
+		regions = append(regions, region)
+	}
+	sort.Slice(regions, func(i, j int) bool {
+		left := byRegion[regions[i]].BytesUp + byRegion[regions[i]].BytesDown
+		right := byRegion[regions[j]].BytesUp + byRegion[regions[j]].BytesDown
+		if left == right {
+			return regions[i] < regions[j]
+		}
+		return left > right
+	})
+
+	limit := len(regions)
+	if limit > maxLoggedRegionsPerScope {
+		limit = maxLoggedRegionsPerScope
+	}
+
+	parts := make([]string, 0, limit+1)
+	for i := 0; i < limit; i++ {
+		region := regions[i]
+		totals := byRegion[region]
+		transferTotal := totals.BytesUp + totals.BytesDown
+		parts = append(parts, fmt.Sprintf(
+			"%s(conn:%d|traffic:%s)",
+			region,
+			totals.ConnectedClients,
+			formatBytes(transferTotal),
+		))
+	}
+
+	if len(regions) > limit {
+		parts = append(parts, fmt.Sprintf("(+%d more...)", len(regions)-limit))
+	}
+
+	return strings.Join(parts, ", ")
+}
+
+// accumulateRegionActivityLocked accumulates per-region byte deltas and
+// updates per-region client counts as latest values from the notice.
+// Must be called with lock held.
+func (s *Service) accumulateRegionActivityLocked(scope string, deltas map[string]RegionActivityTotals) {
+	if s.regionActivityTotals == nil {
+		s.regionActivityTotals = make(map[string]map[string]RegionActivityTotals)
+	}
+	if s.regionActivityTotals[scope] == nil {
+		s.regionActivityTotals[scope] = make(map[string]RegionActivityTotals)
+	}
+
+	// Connecting/connected are latest values, not accumulated totals.
+	for region, totals := range s.regionActivityTotals[scope] {
+		totals.ConnectingClients = 0
+		totals.ConnectedClients = 0
+		s.regionActivityTotals[scope][region] = totals
+	}
+
+	for region, delta := range deltas {
+		totals := s.regionActivityTotals[scope][region]
+		totals.BytesUp += delta.BytesUp
+		totals.BytesDown += delta.BytesDown
+		totals.ConnectingClients = delta.ConnectingClients
+		totals.ConnectedClients = delta.ConnectedClients
+		s.regionActivityTotals[scope][region] = totals
+	}
+}
+
+func parseRegionActivity(raw interface{}) (map[string]RegionActivityTotals, bool) {
+	activityByRegion, ok := raw.(map[string]interface{})
+	if !ok {
+		return nil, false
+	}
+
+	parsed := make(map[string]RegionActivityTotals, len(activityByRegion))
+	for region, value := range activityByRegion {
+		activityData, ok := value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var totals RegionActivityTotals
+		if v, ok := int64FromValue(activityData["bytesUp"]); ok {
+			totals.BytesUp = v
+		}
+		if v, ok := int64FromValue(activityData["bytesDown"]); ok {
+			totals.BytesDown = v
+		}
+		if v, ok := int64FromValue(activityData["connectingClients"]); ok {
+			totals.ConnectingClients = v
+		}
+		if v, ok := int64FromValue(activityData["connectedClients"]); ok {
+			totals.ConnectedClients = v
+		}
+
+		parsed[region] = totals
+	}
+
+	return parsed, true
+}
+
+func int64FromValue(value interface{}) (int64, bool) {
+	switch v := value.(type) {
+	case nil:
+		return 0, false
+	case int:
+		return int64(v), true
+	case int8:
+		return int64(v), true
+	case int16:
+		return int64(v), true
+	case int32:
+		return int64(v), true
+	case int64:
+		return v, true
+	case uint:
+		return int64(v), true
+	case uint8:
+		return int64(v), true
+	case uint16:
+		return int64(v), true
+	case uint32:
+		return int64(v), true
+	case uint64:
+		return int64(v), true
+	case float32:
+		return int64(v), true
+	case float64:
+		return int64(v), true
+	case json.Number:
+		parsed, err := v.Int64()
+		if err != nil {
+			return 0, false
+		}
+		return parsed, true
+	default:
+		return 0, false
+	}
 }
 
 // formatBytes formats bytes as a human-readable string

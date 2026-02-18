@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/crypto"
 	"github.com/Psiphon-Inc/conduit/cli/internal/logging"
@@ -39,27 +40,37 @@ const (
 	UnlimitedBandwidth   = -1.0 // Special value for no bandwidth limit
 
 	// File names for persisted data
-	keyFileName = "conduit_key.json"
+	keyFileName                 = "conduit_key.json"
+	personalCompartmentFileName = "personal_compartment.json"
 )
 
 // Options represents CLI options passed to LoadOrCreate
 type Options struct {
-	DataDir           string
-	PsiphonConfigPath string
-	UseEmbeddedConfig bool
-	MaxClients        int
-	BandwidthMbps     float64
-	BandwidthSet      bool
-	Verbosity         int    // 0=normal, 1+=verbose
-	StatsFile         string // Path to write stats JSON file (empty = disabled)
-	MetricsAddr       string // Address for Prometheus metrics endpoint (empty = disabled)
+	DataDir               string
+	PsiphonConfigPath     string
+	UseEmbeddedConfig     bool
+	MaxCommonClients      int
+	MaxCommonClientsSet   bool
+	MaxPersonalClients    int
+	MaxPersonalClientsSet bool
+	CompartmentID         string
+	CompartmentIDSet      bool
+	SetOverrides          map[string]interface{}
+	BandwidthMbps         float64
+	BandwidthSet          bool
+	Verbosity             int    // 0=normal, 1+=verbose
+	StatsFile             string // Path to write stats JSON file (empty = disabled)
+	MetricsAddr           string // Address for Prometheus metrics endpoint (empty = disabled)
 }
 
 // Config represents the validated configuration for the Conduit service
 type Config struct {
 	KeyPair                 *crypto.KeyPair
 	PrivateKeyBase64        string
-	MaxClients              int
+	MaxCommonClients        int
+	MaxPersonalClients      int
+	CompartmentID           string
+	SetOverrides            map[string]interface{}
 	BandwidthBytesPerSecond int
 	DataDir                 string
 	PsiphonConfigPath       string
@@ -107,9 +118,12 @@ func LoadOrCreate(opts Options) (*Config, error) {
 
 	// Parse inproxy settings from config if available
 	var inproxyConfig struct {
-		InproxyMaxClients                    *int `json:"InproxyMaxClients"`
-		InproxyLimitUpstreamBytesPerSecond   *int `json:"InproxyLimitUpstreamBytesPerSecond"`
-		InproxyLimitDownstreamBytesPerSecond *int `json:"InproxyLimitDownstreamBytesPerSecond"`
+		InproxyMaxClients                    *int   `json:"InproxyMaxClients"`
+		InproxyMaxCommonClients              *int   `json:"InproxyMaxCommonClients"`
+		InproxyMaxPersonalClients            *int   `json:"InproxyMaxPersonalClients"`
+		InproxyProxyPersonalCompartmentID    string `json:"InproxyProxyPersonalCompartmentID"`
+		InproxyLimitUpstreamBytesPerSecond   *int   `json:"InproxyLimitUpstreamBytesPerSecond"`
+		InproxyLimitDownstreamBytesPerSecond *int   `json:"InproxyLimitDownstreamBytesPerSecond"`
 	}
 	if len(psiphonConfigFileData) > 0 {
 		if err := json.Unmarshal(psiphonConfigFileData, &inproxyConfig); err != nil {
@@ -117,16 +131,98 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		}
 	}
 
-	// Resolve max clients: flag > config > default
-	maxClients := opts.MaxClients
-	if maxClients == 0 && inproxyConfig.InproxyMaxClients != nil {
-		maxClients = *inproxyConfig.InproxyMaxClients
+	setOverrides := copyOverrides(opts.SetOverrides)
+
+	setMaxCommonClients, hasSetMaxCommonClients, err := intOverrideValue(setOverrides, "InproxyMaxCommonClients")
+	if err != nil {
+		return nil, err
 	}
-	if maxClients == 0 {
-		maxClients = DefaultMaxClients
+	if !hasSetMaxCommonClients {
+		if v, ok, err := intOverrideValue(setOverrides, "InproxyMaxClients"); err != nil {
+			return nil, err
+		} else if ok {
+			setMaxCommonClients = v
+			hasSetMaxCommonClients = true
+		}
 	}
-	if maxClients < 1 || maxClients > MaxClientsLimit {
-		return nil, fmt.Errorf("max-clients must be between 1 and %d", MaxClientsLimit)
+
+	setMaxPersonalClients, hasSetMaxPersonalClients, err := intOverrideValue(setOverrides, "InproxyMaxPersonalClients")
+	if err != nil {
+		return nil, err
+	}
+
+	setCompartmentID, hasSetCompartmentID, err := stringOverrideValue(setOverrides, "InproxyProxyPersonalCompartmentID")
+	if err != nil {
+		return nil, err
+	}
+
+	// Resolve max common clients: flag > --set > config fields.
+	// When only personal clients are configured and no common limit is specified,
+	// preserve common=0 instead of defaulting to 50.
+	maxCommonClients := 0
+	if opts.MaxCommonClientsSet {
+		maxCommonClients = opts.MaxCommonClients
+	} else if hasSetMaxCommonClients {
+		maxCommonClients = setMaxCommonClients
+	} else {
+		switch {
+		case inproxyConfig.InproxyMaxCommonClients != nil:
+			maxCommonClients = *inproxyConfig.InproxyMaxCommonClients
+		case inproxyConfig.InproxyMaxClients != nil:
+			maxCommonClients = *inproxyConfig.InproxyMaxClients
+		case inproxyConfig.InproxyMaxPersonalClients != nil && *inproxyConfig.InproxyMaxPersonalClients > 0:
+			maxCommonClients = 0
+		}
+	}
+
+	maxPersonalClients := 0
+	if opts.MaxPersonalClientsSet {
+		maxPersonalClients = opts.MaxPersonalClients
+	} else if hasSetMaxPersonalClients {
+		maxPersonalClients = setMaxPersonalClients
+	} else if inproxyConfig.InproxyMaxPersonalClients != nil {
+		maxPersonalClients = *inproxyConfig.InproxyMaxPersonalClients
+	}
+
+	compartmentID := ""
+	if opts.CompartmentIDSet {
+		compartmentID = opts.CompartmentID
+	} else if hasSetCompartmentID {
+		compartmentID = setCompartmentID
+	} else {
+		persistedID, err := LoadPersonalCompartmentID(opts.DataDir)
+		if err == nil {
+			compartmentID = persistedID
+		} else if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("failed to load personal compartment: %w", err)
+		} else if strings.TrimSpace(inproxyConfig.InproxyProxyPersonalCompartmentID) != "" {
+			compartmentID = inproxyConfig.InproxyProxyPersonalCompartmentID
+		}
+	}
+	if strings.TrimSpace(compartmentID) != "" {
+		normalizedCompartmentID, err := NormalizePersonalCompartmentInput(compartmentID)
+		if err != nil {
+			return nil, err
+		}
+		compartmentID = normalizedCompartmentID
+	}
+
+	if maxCommonClients == 0 {
+		if maxPersonalClients == 0 {
+			maxCommonClients = DefaultMaxClients
+		}
+	}
+	if maxCommonClients < 0 || maxCommonClients > MaxClientsLimit {
+		return nil, fmt.Errorf("max-common-clients must be between 0 and %d", MaxClientsLimit)
+	}
+	if maxPersonalClients < 0 || maxPersonalClients > MaxClientsLimit {
+		return nil, fmt.Errorf("max-personal-clients must be between 0 and %d", MaxClientsLimit)
+	}
+	if maxCommonClients+maxPersonalClients <= 0 {
+		return nil, fmt.Errorf("configured max clients must be > 0")
+	}
+	if maxPersonalClients > 0 && strings.TrimSpace(compartmentID) == "" {
+		return nil, fmt.Errorf("create compartment first with new-compartment-id command")
 	}
 
 	// Resolve bandwidth: flag > config > default
@@ -171,7 +267,10 @@ func LoadOrCreate(opts Options) (*Config, error) {
 	return &Config{
 		KeyPair:                 keyPair,
 		PrivateKeyBase64:        privateKeyBase64,
-		MaxClients:              maxClients,
+		MaxCommonClients:        maxCommonClients,
+		MaxPersonalClients:      maxPersonalClients,
+		CompartmentID:           compartmentID,
+		SetOverrides:            stripResolvedOverrides(setOverrides),
 		BandwidthBytesPerSecond: bandwidthBytesPerSecond,
 		DataDir:                 opts.DataDir,
 		PsiphonConfigPath:       opts.PsiphonConfigPath,

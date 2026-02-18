@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -24,8 +25,11 @@ func TestLoadOrCreatePrecedence(t *testing.T) {
 		name                 string
 		configJSON           string
 		opts                 Options
-		expectedMaxClients   int
+		persistCompartment   bool
+		expectedMaxCommon    int
+		expectedMaxPersonal  int
 		expectedBandwidthBps int
+		expectedErrContains  string
 	}{
 		{
 			name: "flag_overrides_config",
@@ -35,11 +39,13 @@ func TestLoadOrCreatePrecedence(t *testing.T) {
   "InproxyLimitDownstreamBytesPerSecond": 900
 }`,
 			opts: Options{
-				MaxClients:    123,
-				BandwidthSet:  true,
-				BandwidthMbps: 10,
+				MaxCommonClients:    123,
+				MaxCommonClientsSet: true,
+				BandwidthSet:        true,
+				BandwidthMbps:       10,
 			},
-			expectedMaxClients:   123,
+			expectedMaxCommon:    123,
+			expectedMaxPersonal:  0,
 			expectedBandwidthBps: bandwidthBytes(10),
 		},
 		{
@@ -50,14 +56,47 @@ func TestLoadOrCreatePrecedence(t *testing.T) {
   "InproxyLimitDownstreamBytesPerSecond": 700
 }`,
 			opts:                 Options{},
-			expectedMaxClients:   88,
+			expectedMaxCommon:    88,
+			expectedMaxPersonal:  0,
 			expectedBandwidthBps: 700,
+		},
+		{
+			name: "new_common_and_personal_fields",
+			configJSON: `{
+  "InproxyMaxCommonClients": 12,
+  "InproxyMaxPersonalClients": 3
+}`,
+			persistCompartment:   true,
+			opts:                 Options{},
+			expectedMaxCommon:    12,
+			expectedMaxPersonal:  3,
+			expectedBandwidthBps: bandwidthBytes(DefaultBandwidthMbps),
+		},
+		{
+			name: "personal_only_keeps_common_zero",
+			configJSON: `{
+  "InproxyMaxPersonalClients": 7
+}`,
+			persistCompartment:   true,
+			opts:                 Options{},
+			expectedMaxCommon:    0,
+			expectedMaxPersonal:  7,
+			expectedBandwidthBps: bandwidthBytes(DefaultBandwidthMbps),
+		},
+		{
+			name: "personal_without_compartment_fails",
+			configJSON: `{
+  "InproxyMaxPersonalClients": 2
+}`,
+			opts:                Options{},
+			expectedErrContains: "create compartment first with new-compartment-id command",
 		},
 		{
 			name:                 "defaults_when_missing",
 			configJSON:           `{}`,
 			opts:                 Options{},
-			expectedMaxClients:   DefaultMaxClients,
+			expectedMaxCommon:    DefaultMaxClients,
+			expectedMaxPersonal:  0,
 			expectedBandwidthBps: bandwidthBytes(DefaultBandwidthMbps),
 		},
 	}
@@ -67,17 +106,38 @@ func TestLoadOrCreatePrecedence(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			dataDir := t.TempDir()
 			configPath := writeTempConfig(t, dataDir, test.configJSON)
+			if test.persistCompartment {
+				compartmentID, err := GeneratePersonalCompartmentID()
+				if err != nil {
+					t.Fatalf("GeneratePersonalCompartmentID: %v", err)
+				}
+				if err := SavePersonalCompartmentID(dataDir, compartmentID); err != nil {
+					t.Fatalf("SavePersonalCompartmentID: %v", err)
+				}
+			}
 			opts := test.opts
 			opts.DataDir = dataDir
 			opts.PsiphonConfigPath = configPath
 
 			cfg, err := LoadOrCreate(opts)
+			if test.expectedErrContains != "" {
+				if err == nil {
+					t.Fatalf("expected error containing %q", test.expectedErrContains)
+				}
+				if !strings.Contains(err.Error(), test.expectedErrContains) {
+					t.Fatalf("LoadOrCreate error = %q, expected to contain %q", err.Error(), test.expectedErrContains)
+				}
+				return
+			}
 			if err != nil {
 				t.Fatalf("LoadOrCreate: %v", err)
 			}
 
-			if cfg.MaxClients != test.expectedMaxClients {
-				t.Fatalf("MaxClients = %d, expected %d", cfg.MaxClients, test.expectedMaxClients)
+			if cfg.MaxCommonClients != test.expectedMaxCommon {
+				t.Fatalf("MaxCommonClients = %d, expected %d", cfg.MaxCommonClients, test.expectedMaxCommon)
+			}
+			if cfg.MaxPersonalClients != test.expectedMaxPersonal {
+				t.Fatalf("MaxPersonalClients = %d, expected %d", cfg.MaxPersonalClients, test.expectedMaxPersonal)
 			}
 			if cfg.BandwidthBytesPerSecond != test.expectedBandwidthBps {
 				t.Fatalf("BandwidthBytesPerSecond = %d, expected %d", cfg.BandwidthBytesPerSecond, test.expectedBandwidthBps)

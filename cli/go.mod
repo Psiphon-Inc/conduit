@@ -127,8 +127,8 @@ require (
 	tailscale.com v1.58.2 // indirect
 )
 
-// Use staging-client branch for inproxy support
-require github.com/Psiphon-Labs/psiphon-tunnel-core v0.0.0-20260202154140-a3384a551c62
+// Pin to psiphon-tunnel-core staging-client commit 85311186
+require github.com/Psiphon-Labs/psiphon-tunnel-core v1.0.11-0.20260218215855-85311186d6cc
 
 // Required for PSIPHON_ENABLE_INPROXY build tag - use Psiphon's forked pion libraries
 // These are automatically set up by 'make setup' which clones psiphon-tunnel-core

@@ -11,7 +11,7 @@ Our backend connection brokers have a reputation system that is used to make sur
 ## Guidance for Conduit station infrastructure:
 
 - Spread your Conduits out across data centers/locations, IP diversity is very important.
-- Don't overload your Conduit. Watch resource utilization, and reduce the --max-clients if you are seeing any signs of resource contention.
+- Don't overload your Conduit. Watch resource utilization, and reduce the --max-common-clients if you are seeing any signs of resource contention.
 - Keep your station online consistently so that it has a strong reputation with the tunnel connection broker.
 
 We have observed that Conduit can support around 150-350 concurrent users for every 1 CPU and 2GB RAM. Factors like the CPU clock speed and network speed will determine where in this range your Conduit will perform best. 

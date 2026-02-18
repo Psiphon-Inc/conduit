@@ -49,7 +49,7 @@ The Makefile will automatically install Go 1.24.12 if not present.
 conduit start
 
 # Customize limits
-conduit start --max-clients 20 --bandwidth 10
+conduit start --max-common-clients 20 --bandwidth 10
 
 # Verbose output (info messages)
 conduit start -v
@@ -60,7 +60,7 @@ conduit start -v
 | Flag                   | Default  | Description                                |
 | ---------------------- | -------- | ------------------------------------------ |
 | `--psiphon-config, -c` | -        | Path to Psiphon network configuration file |
-| `--max-clients, -m`    | 50       | Maximum concurrent clients                 |
+| `--max-common-clients, -m` | 50   | Maximum concurrent common clients          |
 | `--bandwidth, -b`      | 40       | Bandwidth limit per peer in Mbps           |
 | `--data-dir, -d`       | `./data` | Directory for keys and state               |
 | `--metrics-addr`       | -        | Prometheus metrics listen address          |

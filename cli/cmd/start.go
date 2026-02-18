@@ -34,11 +34,14 @@ import (
 )
 
 var (
-	maxClients        int
-	bandwidthMbps     float64
-	psiphonConfigPath string
-	statsFilePath     string
-	metricsAddr       string
+	maxCommonClients   int
+	maxPersonalClients int
+	compartmentID      string
+	setOverrides       []string
+	bandwidthMbps      float64
+	psiphonConfigPath  string
+	statsFilePath      string
+	metricsAddr        string
 )
 
 var startCmd = &cobra.Command{
@@ -61,7 +64,10 @@ PropagationChannelId, SponsorId, and broker specifications.`
 func init() {
 	rootCmd.AddCommand(startCmd)
 
-	startCmd.Flags().IntVarP(&maxClients, "max-clients", "m", config.DefaultMaxClients, "maximum number of proxy clients (1-1000)")
+	startCmd.Flags().IntVarP(&maxCommonClients, "max-common-clients", "m", config.DefaultMaxClients, "maximum number of common proxy clients (0-1000)")
+	startCmd.Flags().IntVar(&maxPersonalClients, "max-personal-clients", 0, "maximum number of personal proxy clients (0-1000)")
+	startCmd.Flags().StringVar(&compartmentID, "compartment-id", "", "personal compartment ID or share token")
+	startCmd.Flags().StringArrayVar(&setOverrides, "set", nil, "override allowed config values (key=value), repeatable")
 	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
 	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
 	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
@@ -93,12 +99,37 @@ func runStart(cmd *cobra.Command, args []string) error {
 		resolvedStatsFile = filepath.Join(GetDataDir(), resolvedStatsFile)
 	}
 
-	maxClientsFromFlag := 0
-	if cmd.Flags().Changed("max-clients") {
-		if maxClients < 1 {
-			return fmt.Errorf("max-clients must be between 1 and %d", config.MaxClientsLimit)
+	maxCommonClientsFromFlag := 0
+	maxCommonClientsFromFlagSet := cmd.Flags().Changed("max-common-clients")
+	if maxCommonClientsFromFlagSet {
+		if maxCommonClients < 0 || maxCommonClients > config.MaxClientsLimit {
+			return fmt.Errorf("max-common-clients must be between 0 and %d", config.MaxClientsLimit)
 		}
-		maxClientsFromFlag = maxClients
+		maxCommonClientsFromFlag = maxCommonClients
+	}
+
+	maxPersonalClientsFromFlag := 0
+	maxPersonalClientsFromFlagSet := cmd.Flags().Changed("max-personal-clients")
+	if maxPersonalClientsFromFlagSet {
+		if maxPersonalClients < 0 || maxPersonalClients > config.MaxClientsLimit {
+			return fmt.Errorf("max-personal-clients must be between 0 and %d", config.MaxClientsLimit)
+		}
+		maxPersonalClientsFromFlag = maxPersonalClients
+	}
+
+	parsedSetOverrides, err := config.ParseSetOverrides(setOverrides)
+	if err != nil {
+		return err
+	}
+
+	compartmentIDFromFlag := ""
+	compartmentIDFromFlagSet := cmd.Flags().Changed("compartment-id")
+	if compartmentIDFromFlagSet {
+		normalizedCompartmentID, err := config.NormalizePersonalCompartmentInput(compartmentID)
+		if err != nil {
+			return err
+		}
+		compartmentIDFromFlag = normalizedCompartmentID
 	}
 
 	bandwidthFromFlag := 0.0
@@ -113,15 +144,21 @@ func runStart(cmd *cobra.Command, args []string) error {
 
 	// Load or create configuration (auto-generates keys on first run)
 	cfg, err := config.LoadOrCreate(config.Options{
-		DataDir:           GetDataDir(),
-		PsiphonConfigPath: effectiveConfigPath,
-		UseEmbeddedConfig: useEmbedded,
-		MaxClients:        maxClientsFromFlag,
-		BandwidthMbps:     bandwidthFromFlag,
-		BandwidthSet:      bandwidthFromFlagSet,
-		Verbosity:         Verbosity(),
-		StatsFile:         resolvedStatsFile,
-		MetricsAddr:       metricsAddr,
+		DataDir:               GetDataDir(),
+		PsiphonConfigPath:     effectiveConfigPath,
+		UseEmbeddedConfig:     useEmbedded,
+		MaxCommonClients:      maxCommonClientsFromFlag,
+		MaxCommonClientsSet:   maxCommonClientsFromFlagSet,
+		MaxPersonalClients:    maxPersonalClientsFromFlag,
+		MaxPersonalClientsSet: maxPersonalClientsFromFlagSet,
+		CompartmentID:         compartmentIDFromFlag,
+		CompartmentIDSet:      compartmentIDFromFlagSet,
+		SetOverrides:          parsedSetOverrides,
+		BandwidthMbps:         bandwidthFromFlag,
+		BandwidthSet:          bandwidthFromFlagSet,
+		Verbosity:             Verbosity(),
+		StatsFile:             resolvedStatsFile,
+		MetricsAddr:           metricsAddr,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
