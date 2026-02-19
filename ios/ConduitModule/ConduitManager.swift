@@ -257,9 +257,10 @@ extension ConduitManager: PsiphonTunnelListener.Listener {
     }
     
     nonisolated func onInproxyProxyActivity(
-        _ connectingClients: Int, connectedClients: Int,
+        _ announcing: Int, connectingClients: Int, connectedClients: Int,
         bytesUp: Int, bytesDown: Int
     ) {
+        // announcing is accepted for compatibility but not used yet.
         Task {
             await self.updateActivityStats(
                 connectingClients: connectingClients, connectedClients: connectedClients,
@@ -321,7 +322,7 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
     protocol Listener {
         func onInternetReachabilityChanged(_ reachable: Bool)
         func onInproxyProxyActivity(
-            _ connectingClients: Int, connectedClients: Int,
+            _ announcing: Int, connectingClients: Int, connectedClients: Int,
             bytesUp: Int, bytesDown: Int)
         func onInproxyMustUpgrade()
     }
@@ -397,11 +398,12 @@ fileprivate final class PsiphonTunnelListener: NSObject, TunneledAppDelegate {
     }
     
     func onInproxyProxyActivity(
-        _ connectingClients: Int32, connectedClients: Int32,
+        _ announcing: Int32, connectingClients: Int32, connectedClients: Int32,
         bytesUp: Int, bytesDown: Int
     ) {
         listener.onInproxyProxyActivity(
-            Int(connectingClients), connectedClients: Int(connectedClients),
+            Int(announcing), connectingClients: Int(connectingClients),
+            connectedClients: Int(connectedClients),
             bytesUp: bytesUp, bytesDown: bytesDown)
     }
     
