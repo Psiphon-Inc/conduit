@@ -255,7 +255,7 @@ public class ConduitService extends Service implements PsiphonTunnel.HostService
 
 
     @Override
-    public void onInproxyProxyActivity(int announcing, int connectingClients, int connectedClients, long bytesUp, long bytesDown) {
+    public void onInproxyProxyActivity(int announcing, int connectingClients, int connectedClients, long bytesUp, long bytesDown, Map<String, PsiphonTunnel.RegionActivitySnapshot> connectingRegionActivitySnapshots, Map<String, PsiphonTunnel.RegionActivitySnapshot> connectedRegionActivitySnapshots) {
         handler.post(() -> {
             proxyActivityStats.add(bytesUp, bytesDown, announcing, connectingClients, connectedClients);
             updateProxyActivityStats();
