@@ -80,6 +80,8 @@ Use `conduit new-compartment-id` to:
 2. Save it to `personal_compartment.json` in your data directory.
 3. Print a v1 share token (for pairing).
 
+`--name` is limited to 32 characters.
+
 You can provide `--compartment-id` as either:
 
 - a raw compartment ID, or

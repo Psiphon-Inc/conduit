@@ -8,9 +8,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 )
 
-const personalCompartmentIDByteLength = 32
+const (
+	personalCompartmentIDByteLength = 32
+	// PersonalPairingNameMaxLength is the maximum allowed display name length
+	// in personal pairing tokens.
+	PersonalPairingNameMaxLength = 32
+)
 
 type personalPairingTokenData struct {
 	ID   string `json:"id"`
@@ -88,8 +94,12 @@ func BuildPersonalPairingToken(id, name string) (string, error) {
 	if err := ValidatePersonalCompartmentID(id); err != nil {
 		return "", err
 	}
-	if strings.TrimSpace(name) == "" {
+	name = strings.TrimSpace(name)
+	if name == "" {
 		return "", fmt.Errorf("name must be non-empty")
+	}
+	if utf8.RuneCountInString(name) > PersonalPairingNameMaxLength {
+		return "", fmt.Errorf("name must be at most %d characters", PersonalPairingNameMaxLength)
 	}
 
 	payload := personalPairingTokenPayload{

@@ -81,6 +81,21 @@ func TestNormalizePersonalCompartmentInputSupportsToken(t *testing.T) {
 	}
 }
 
+func TestBuildPersonalPairingTokenRejectsLongName(t *testing.T) {
+	id, err := GeneratePersonalCompartmentID()
+	if err != nil {
+		t.Fatalf("GeneratePersonalCompartmentID: %v", err)
+	}
+
+	_, err = BuildPersonalPairingToken(id, strings.Repeat("a", PersonalPairingNameMaxLength+1))
+	if err == nil {
+		t.Fatalf("expected error for long name")
+	}
+	if !strings.Contains(err.Error(), "at most") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestSaveAndLoadPersonalCompartmentID(t *testing.T) {
 	id, err := GeneratePersonalCompartmentID()
 	if err != nil {
