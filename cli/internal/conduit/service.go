@@ -301,17 +301,6 @@ func (s *Service) getIdleSecondsFloat() float64 {
 	return time.Since(time.Unix(0, lastActive)).Seconds()
 }
 
-// calcIdleSeconds calculates idle time. Must be called with lock held.
-func (s *Service) calcIdleSeconds() float64 {
-	if s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0 {
-		return 0
-	}
-	if s.stats.LastActiveTime.IsZero() {
-		return time.Since(s.stats.StartTime).Seconds()
-	}
-	return time.Since(s.stats.LastActiveTime).Seconds()
-}
-
 // handleNotice processes notices from psiphon-tunnel-core
 func (s *Service) handleNotice(notice []byte) {
 	var noticeData struct {
