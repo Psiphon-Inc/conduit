@@ -79,19 +79,6 @@ type Stats struct {
 	IsLive            bool      // Connected to broker and ready to accept clients
 }
 
-// StatsJSON represents the JSON structure for persisted stats
-type StatsJSON struct {
-	Announcing        int    `json:"announcing"`
-	ConnectingClients int    `json:"connectingClients"`
-	ConnectedClients  int    `json:"connectedClients"`
-	TotalBytesUp      int64  `json:"totalBytesUp"`
-	TotalBytesDown    int64  `json:"totalBytesDown"`
-	UptimeSeconds     int64  `json:"uptimeSeconds"`
-	IdleSeconds       int64  `json:"idleSeconds"`
-	IsLive            bool   `json:"isLive"`
-	Timestamp         string `json:"timestamp"`
-}
-
 // New creates a new Conduit service
 func New(cfg *config.Config) (*Service, error) {
 	s := &Service{
@@ -475,22 +462,6 @@ func (s *Service) logStats() {
 		formatDuration(uptime),
 		regionSummary,
 	)
-
-	// Write stats to file if configured (copy data while locked, write async)
-	if s.config.StatsFile != "" {
-		statsJSON := StatsJSON{
-			Announcing:        s.stats.Announcing,
-			ConnectingClients: s.stats.ConnectingClients,
-			ConnectedClients:  s.stats.ConnectedClients,
-			TotalBytesUp:      s.stats.TotalBytesUp,
-			TotalBytesDown:    s.stats.TotalBytesDown,
-			UptimeSeconds:     int64(time.Since(s.stats.StartTime).Seconds()),
-			IdleSeconds:       int64(s.calcIdleSeconds()),
-			IsLive:            s.stats.IsLive,
-			Timestamp:         time.Now().Format(time.RFC3339),
-		}
-		go s.writeStatsToFile(statsJSON)
-	}
 }
 
 // syncSnapshotLocked updates atomic snapshot fields. Must be called with lock held.
@@ -675,23 +646,6 @@ func formatBytes(bytes int64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
-}
-
-// writeStatsToFile writes stats to the configured JSON file asynchronously
-func (s *Service) writeStatsToFile(statsJSON StatsJSON) {
-	data, err := json.MarshalIndent(statsJSON, "", "  ")
-	if err != nil {
-		if s.config.Verbosity >= 1 {
-			logging.Printf("[ERROR] Failed to marshal stats: %v\n", err)
-		}
-		return
-	}
-
-	if err := os.WriteFile(s.config.StatsFile, data, 0644); err != nil {
-		if s.config.Verbosity >= 1 {
-			logging.Printf("[ERROR] Failed to write stats file: %v\n", err)
-		}
-	}
 }
 
 // formatDuration formats duration in a human-readable way

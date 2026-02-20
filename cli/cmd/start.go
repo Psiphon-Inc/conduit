@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 
 	"github.com/Psiphon-Inc/conduit/cli/internal/conduit"
@@ -40,7 +39,6 @@ var (
 	setOverrides       []string
 	bandwidthMbps      float64
 	psiphonConfigPath  string
-	statsFilePath      string
 	metricsAddr        string
 )
 
@@ -69,8 +67,6 @@ func init() {
 	startCmd.Flags().StringVar(&compartmentID, "compartment-id", "", "personal compartment ID or share token")
 	startCmd.Flags().StringArrayVar(&setOverrides, "set", nil, "override allowed config values (key=value), repeatable")
 	startCmd.Flags().Float64VarP(&bandwidthMbps, "bandwidth", "b", config.DefaultBandwidthMbps, "total bandwidth limit in Mbps (-1 for unlimited)")
-	startCmd.Flags().StringVarP(&statsFilePath, "stats-file", "s", "", "persist stats to JSON file (default: stats.json in data dir if flag used without value)")
-	startCmd.Flags().Lookup("stats-file").NoOptDefVal = "stats.json"
 	startCmd.Flags().StringVar(&metricsAddr, "metrics-addr", "", "address for Prometheus metrics endpoint (e.g., :9090 or 127.0.0.1:9090)")
 	startCmd.Flags().StringVarP(&psiphonConfigPath, "psiphon-config", "c", "", "path to Psiphon network config file (JSON)")
 }
@@ -91,12 +87,6 @@ func runStart(cmd *cobra.Command, args []string) error {
 	} else {
 		// No flag and no embedded config
 		return fmt.Errorf("psiphon config required: use --psiphon-config flag or build with embedded config")
-	}
-
-	// Resolve stats file path - if relative, place in data dir
-	resolvedStatsFile := statsFilePath
-	if resolvedStatsFile != "" && !filepath.IsAbs(resolvedStatsFile) {
-		resolvedStatsFile = filepath.Join(GetDataDir(), resolvedStatsFile)
 	}
 
 	maxCommonClientsFromFlag := 0
@@ -157,7 +147,6 @@ func runStart(cmd *cobra.Command, args []string) error {
 		BandwidthMbps:         bandwidthFromFlag,
 		BandwidthSet:          bandwidthFromFlagSet,
 		Verbosity:             Verbosity(),
-		StatsFile:             resolvedStatsFile,
 		MetricsAddr:           metricsAddr,
 	})
 	if err != nil {
