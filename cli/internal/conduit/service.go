@@ -42,6 +42,7 @@ type Service struct {
 	config               *config.Config
 	controller           *psiphon.Controller
 	stats                *Stats
+	lastStatsLogAt       time.Time
 	regionActivityTotals map[string]map[string]RegionActivityTotals
 	metrics              *metrics.Metrics
 	mu                   sync.RWMutex
@@ -56,6 +57,7 @@ const (
 	regionScopePersonal      = "personal"
 	regionScopeCommon        = "common"
 	maxLoggedRegionsPerScope = 3
+	bytesProgressLogInterval = 5 * time.Second
 )
 
 // RegionActivityTotals tracks accumulated per-region activity from
@@ -328,6 +330,8 @@ func (s *Service) handleNotice(notice []byte) {
 		prevAnnouncing := s.stats.Announcing
 		prevConnecting := s.stats.ConnectingClients
 		prevConnected := s.stats.ConnectedClients
+		prevBytesUp := s.stats.TotalBytesUp
+		prevBytesDown := s.stats.TotalBytesDown
 		now := time.Now()
 		if v, ok := int64FromValue(noticeData.Data["announcing"]); ok {
 			s.stats.Announcing = int(v)
@@ -364,9 +368,13 @@ func (s *Service) handleNotice(notice []byte) {
 			}
 		}
 
-		// Log when announcing/connectivity state changes.
-		if s.stats.Announcing != prevAnnouncing || s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
-			s.logStats()
+		stateChanged := s.stats.Announcing != prevAnnouncing || s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected
+		bytesChanged := s.stats.TotalBytesUp != prevBytesUp || s.stats.TotalBytesDown != prevBytesDown
+
+		// Log when announcing/connectivity changes, and periodically while
+		// bytes are changing so transfer progress stays visible.
+		if stateChanged || (bytesChanged && (s.lastStatsLogAt.IsZero() || now.Sub(s.lastStatsLogAt) >= bytesProgressLogInterval)) {
+			s.logStats(now)
 		}
 
 		s.syncSnapshotLocked()
@@ -380,6 +388,9 @@ func (s *Service) handleNotice(notice []byte) {
 		prevAnnouncing := s.stats.Announcing
 		prevConnecting := s.stats.ConnectingClients
 		prevConnected := s.stats.ConnectedClients
+		prevBytesUp := s.stats.TotalBytesUp
+		prevBytesDown := s.stats.TotalBytesDown
+		now := time.Now()
 		if v, ok := int64FromValue(noticeData.Data["announcing"]); ok {
 			s.stats.Announcing = int(v)
 		}
@@ -398,7 +409,6 @@ func (s *Service) handleNotice(notice []byte) {
 
 		// Track last active time for idle calculation
 		if s.stats.ConnectingClients > 0 || s.stats.ConnectedClients > 0 {
-			now := time.Now()
 			s.stats.LastActiveTime = now
 			s.lastActiveUnixNano.Store(now.UnixNano())
 		}
@@ -410,9 +420,11 @@ func (s *Service) handleNotice(notice []byte) {
 			}
 		}
 
-		// Log when announcing/connectivity state changes.
-		if s.stats.Announcing != prevAnnouncing || s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected {
-			s.logStats()
+		stateChanged := s.stats.Announcing != prevAnnouncing || s.stats.ConnectingClients != prevConnecting || s.stats.ConnectedClients != prevConnected
+		bytesChanged := s.stats.TotalBytesUp != prevBytesUp || s.stats.TotalBytesDown != prevBytesDown
+
+		if stateChanged || (bytesChanged && (s.lastStatsLogAt.IsZero() || now.Sub(s.lastStatsLogAt) >= bytesProgressLogInterval)) {
+			s.logStats(now)
 		}
 
 		s.syncSnapshotLocked()
@@ -449,11 +461,12 @@ func (s *Service) handleNotice(notice []byte) {
 }
 
 // logStats logs the current proxy statistics (must be called with lock held)
-func (s *Service) logStats() {
-	uptime := time.Since(s.stats.StartTime).Truncate(time.Second)
+func (s *Service) logStats(now time.Time) {
+	s.lastStatsLogAt = now
+	uptime := now.Sub(s.stats.StartTime).Truncate(time.Second)
 	regionSummary := s.formatRegionActivityTotalsLocked()
 	fmt.Printf("%s [STATS] Announcing: %d | Connecting: %d | Connected: %d | Up: %s | Down: %s | Uptime: %s | Regions: %s\n",
-		time.Now().Format("2006-01-02 15:04:05"),
+		now.Format("2006-01-02 15:04:05"),
 		s.stats.Announcing,
 		s.stats.ConnectingClients,
 		s.stats.ConnectedClients,
