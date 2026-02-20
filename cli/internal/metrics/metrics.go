@@ -40,14 +40,19 @@ const namespace = "conduit"
 // Metrics holds all Prometheus metrics for the Conduit service
 type Metrics struct {
 	// Gauges
-	Announcing        prometheus.Gauge
-	ConnectingClients prometheus.Gauge
-	ConnectedClients  prometheus.Gauge
-	IsLive            prometheus.Gauge
-	MaxClients        prometheus.Gauge
-	BandwidthLimit    prometheus.Gauge
-	BytesUploaded     prometheus.Gauge
-	BytesDownloaded   prometheus.Gauge
+	Announcing         prometheus.Gauge
+	ConnectingClients  prometheus.Gauge
+	ConnectedClients   prometheus.Gauge
+	IsLive             prometheus.Gauge
+	MaxCommonClients   prometheus.Gauge
+	MaxPersonalClients prometheus.Gauge
+	BandwidthLimit     prometheus.Gauge
+	BytesUploaded      prometheus.Gauge
+	BytesDownloaded    prometheus.Gauge
+	RegionBytesUp      *prometheus.GaugeVec
+	RegionBytesDown    *prometheus.GaugeVec
+	RegionConnecting   *prometheus.GaugeVec
+	RegionConnected    *prometheus.GaugeVec
 
 	// Info
 	BuildInfo *prometheus.GaugeVec
@@ -106,11 +111,19 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 			},
 			registry,
 		),
-		MaxClients: newGauge(
+		MaxCommonClients: newGauge(
 			prometheus.GaugeOpts{
 				Namespace: namespace,
-				Name:      "max_clients",
-				Help:      "Maximum number of proxy clients allowed",
+				Name:      "max_common_clients",
+				Help:      "Maximum number of common proxy clients allowed",
+			},
+			registry,
+		),
+		MaxPersonalClients: newGauge(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "max_personal_clients",
+				Help:      "Maximum number of personal proxy clients allowed",
 			},
 			registry,
 		),
@@ -136,6 +149,42 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 				Name:      "bytes_downloaded",
 				Help:      "Total number of bytes downloaded through the proxy",
 			},
+			registry,
+		),
+		RegionBytesUp: newGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "region_bytes_uploaded",
+				Help:      "Accumulated uploaded bytes by region and scope from InproxyProxyActivity deltas",
+			},
+			[]string{"scope", "region"},
+			registry,
+		),
+		RegionBytesDown: newGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "region_bytes_downloaded",
+				Help:      "Accumulated downloaded bytes by region and scope from InproxyProxyActivity deltas",
+			},
+			[]string{"scope", "region"},
+			registry,
+		),
+		RegionConnecting: newGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "region_connecting_clients",
+				Help:      "Latest connecting clients by region and scope from InproxyProxyActivity notices",
+			},
+			[]string{"scope", "region"},
+			registry,
+		),
+		RegionConnected: newGaugeVec(
+			prometheus.GaugeOpts{
+				Namespace: namespace,
+				Name:      "region_connected_clients",
+				Help:      "Latest connected clients by region and scope from InproxyProxyActivity notices",
+			},
+			[]string{"scope", "region"},
 			registry,
 		),
 		BuildInfo: newGaugeVec(
@@ -185,8 +234,9 @@ func New(gaugeFuncs GaugeFuncs) *Metrics {
 }
 
 // SetConfig sets the configuration-related metrics
-func (m *Metrics) SetConfig(maxClients int, bandwidthBytesPerSecond int) {
-	m.MaxClients.Set(float64(maxClients))
+func (m *Metrics) SetConfig(maxCommonClients int, maxPersonalClients int, bandwidthBytesPerSecond int) {
+	m.MaxCommonClients.Set(float64(maxCommonClients))
+	m.MaxPersonalClients.Set(float64(maxPersonalClients))
 	m.BandwidthLimit.Set(float64(bandwidthBytesPerSecond))
 }
 
@@ -222,6 +272,14 @@ func (m *Metrics) SetBytesUploaded(bytes float64) {
 // SetBytesDownloaded sets the bytes downloaded gauge
 func (m *Metrics) SetBytesDownloaded(bytes float64) {
 	m.BytesDownloaded.Set(bytes)
+}
+
+// SetRegionActivity sets accumulated per-region activity metrics.
+func (m *Metrics) SetRegionActivity(scope, region string, bytesUp, bytesDown, connectingClients, connectedClients int64) {
+	m.RegionBytesUp.WithLabelValues(scope, region).Set(float64(bytesUp))
+	m.RegionBytesDown.WithLabelValues(scope, region).Set(float64(bytesDown))
+	m.RegionConnecting.WithLabelValues(scope, region).Set(float64(connectingClients))
+	m.RegionConnected.WithLabelValues(scope, region).Set(float64(connectedClients))
 }
 
 // StartServer starts the HTTP server for Prometheus metrics

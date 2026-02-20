@@ -32,6 +32,7 @@ func TestRegistryWiring(t *testing.T) {
 		GetUptimeSeconds: func() float64 { return 123 },
 		GetIdleSeconds:   func() float64 { return 0 },
 	})
+	m.SetRegionActivity("personal", "US", 1, 2, 3, 4)
 
 	// gather registry metrics
 	mfs, err := m.registry.Gather()
@@ -56,10 +57,15 @@ func TestRegistryWiring(t *testing.T) {
 		"conduit_connecting_clients",
 		"conduit_connected_clients",
 		"conduit_is_live",
-		"conduit_max_clients",
+		"conduit_max_common_clients",
+		"conduit_max_personal_clients",
 		"conduit_bandwidth_limit_bytes_per_second",
 		"conduit_bytes_uploaded",
 		"conduit_bytes_downloaded",
+		"conduit_region_bytes_uploaded",
+		"conduit_region_bytes_downloaded",
+		"conduit_region_connecting_clients",
+		"conduit_region_connected_clients",
 		"conduit_build_info",
 		"conduit_uptime_seconds",
 		"conduit_idle_seconds",

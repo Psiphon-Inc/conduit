@@ -6,7 +6,7 @@ services:
         command:
             [
                 "start",
-                "--max-clients",
+                "--max-common-clients",
                 "50",
                 "--bandwidth",
                 "50",

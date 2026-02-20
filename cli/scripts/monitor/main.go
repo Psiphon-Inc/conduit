@@ -317,9 +317,9 @@ func (s *Supervisor) Run() error {
 		if isThrottled {
 			log.Println("[INFO] Starting Conduit in THROTTLED mode")
 			// Override flags for throttling
-			args = filterArgs(args, "--max-clients", "-m")
+			args = filterArgs(args, "--max-common-clients", "-m")
 			args = filterArgs(args, "--bandwidth", "-b")
-			args = append(args, "--max-clients", fmt.Sprintf("%d", s.cfg.MinConnections))
+			args = append(args, "--max-common-clients", fmt.Sprintf("%d", s.cfg.MinConnections))
 			args = append(args, "--bandwidth", fmt.Sprintf("%.0f", s.cfg.MinBandwidthMbps))
 		} else {
 			log.Println("[INFO] Starting Conduit in NORMAL mode")

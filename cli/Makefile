@@ -81,7 +81,7 @@ setup: check-go
 		git clone --depth 1 --branch $(PSIPHON_BRANCH) $(PSIPHON_REPO) psiphon-tunnel-core; \
 	else \
 		echo "psiphon-tunnel-core already exists, updating..."; \
-		cd psiphon-tunnel-core && git fetch origin $(PSIPHON_BRANCH) && git checkout $(PSIPHON_BRANCH) && git pull; \
+		cd psiphon-tunnel-core && git fetch origin $(PSIPHON_BRANCH) && git checkout -B $(PSIPHON_BRANCH) FETCH_HEAD; \
 	fi
 	$(GO) mod tidy
 
