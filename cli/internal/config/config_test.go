@@ -99,6 +99,24 @@ func TestLoadOrCreatePrecedence(t *testing.T) {
 			expectedMaxPersonal:  0,
 			expectedBandwidthBps: bandwidthBytes(DefaultBandwidthMbps),
 		},
+		{
+			name:       "explicit_zero_common_zero_personal_errors",
+			configJSON: `{}`,
+			opts: Options{
+				MaxCommonClients:    0,
+				MaxCommonClientsSet: true,
+			},
+			expectedErrContains: "at least one of --max-common-clients or --max-personal-clients must be greater than 0",
+		},
+		{
+			name: "config_both_zero_errors",
+			configJSON: `{
+  "InproxyMaxCommonClients": 0,
+  "InproxyMaxPersonalClients": 0
+}`,
+			opts:                Options{},
+			expectedErrContains: "at least one of --max-common-clients or --max-personal-clients must be greater than 0",
+		},
 	}
 
 	for _, test := range tests {

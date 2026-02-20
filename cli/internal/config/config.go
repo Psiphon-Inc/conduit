@@ -160,28 +160,38 @@ func LoadOrCreate(opts Options) (*Config, error) {
 	// When only personal clients are configured and no common limit is specified,
 	// preserve common=0 instead of defaulting to 50.
 	maxCommonClients := 0
+	commonClientsExplicit := false
 	if opts.MaxCommonClientsSet {
 		maxCommonClients = opts.MaxCommonClients
+		commonClientsExplicit = true
 	} else if hasSetMaxCommonClients {
 		maxCommonClients = setMaxCommonClients
+		commonClientsExplicit = true
 	} else {
 		switch {
 		case inproxyConfig.InproxyMaxCommonClients != nil:
 			maxCommonClients = *inproxyConfig.InproxyMaxCommonClients
+			commonClientsExplicit = true
 		case inproxyConfig.InproxyMaxClients != nil:
 			maxCommonClients = *inproxyConfig.InproxyMaxClients
+			commonClientsExplicit = true
 		case inproxyConfig.InproxyMaxPersonalClients != nil && *inproxyConfig.InproxyMaxPersonalClients > 0:
 			maxCommonClients = 0
+			commonClientsExplicit = true
 		}
 	}
 
 	maxPersonalClients := 0
+	personalClientsExplicit := false
 	if opts.MaxPersonalClientsSet {
 		maxPersonalClients = opts.MaxPersonalClients
+		personalClientsExplicit = true
 	} else if hasSetMaxPersonalClients {
 		maxPersonalClients = setMaxPersonalClients
+		personalClientsExplicit = true
 	} else if inproxyConfig.InproxyMaxPersonalClients != nil {
 		maxPersonalClients = *inproxyConfig.InproxyMaxPersonalClients
+		personalClientsExplicit = true
 	}
 
 	compartmentID := ""
@@ -207,11 +217,6 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		compartmentID = normalizedCompartmentID
 	}
 
-	if maxCommonClients == 0 {
-		if maxPersonalClients == 0 {
-			maxCommonClients = DefaultMaxClients
-		}
-	}
 	if maxCommonClients < 0 || maxCommonClients > MaxClientsLimit {
 		return nil, fmt.Errorf("max-common-clients must be between 0 and %d", MaxClientsLimit)
 	}
@@ -219,7 +224,11 @@ func LoadOrCreate(opts Options) (*Config, error) {
 		return nil, fmt.Errorf("max-personal-clients must be between 0 and %d", MaxClientsLimit)
 	}
 	if maxCommonClients+maxPersonalClients <= 0 {
-		return nil, fmt.Errorf("configured max clients must be > 0")
+		if commonClientsExplicit || personalClientsExplicit {
+			return nil, fmt.Errorf("at least one of --max-common-clients or --max-personal-clients must be greater than 0")
+		}
+		// Nothing was explicitly configured — apply the default.
+		maxCommonClients = DefaultMaxClients
 	}
 	if maxPersonalClients > 0 && strings.TrimSpace(compartmentID) == "" {
 		return nil, fmt.Errorf("create compartment first with new-compartment-id command")
