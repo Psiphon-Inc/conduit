@@ -51,9 +51,9 @@ var startCmd = &cobra.Command{
 
 func getStartLongHelp() string {
 	if config.HasEmbeddedConfig() {
-		return `Start the Conduit inproxy service to relay traffic for users in censored regions.`
+		return `Start the Conduit inproxy service to relay traffic for Psiphon users.`
 	}
-	return `Start the Conduit inproxy service to relay traffic for users in censored regions.
+	return `Start the Conduit inproxy service to relay traffic for Psiphon users.
 
 Requires a Psiphon network configuration file (JSON) containing the
 PropagationChannelId, SponsorId, and broker specifications.`
