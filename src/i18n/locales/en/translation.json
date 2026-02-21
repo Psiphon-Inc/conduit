@@ -96,7 +96,7 @@
         "string": "What is Conduit?"
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
-        "string": "Conduit is an open-source application that enables people in censored regions worldwide to bounce off your device and into the Psiphon Network.\n\nThe more Conduit Stations there are, the stronger Psiphon is and the more open the internet becomes."
+        "string": "Conduit is an open-source application that enables Psiphon users worldwide to bounce off your device and into the Psiphon Network.\n\nThe more Conduit Stations there are, the stronger Psiphon is and the more open the internet becomes."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Next"

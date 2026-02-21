@@ -1,6 +1,6 @@
 # Conduit CLI
 
-Command-line interface for running a Psiphon Conduit node, a volunteer-run proxy that relays traffic for users in censored regions.
+Command-line interface for running a Psiphon Conduit node, a volunteer-run proxy that relays traffic for Psiphon users.
 
 ## Quick Start
 
@@ -13,26 +13,12 @@ Contact Psiphon (`conduit-oss@psiphon.ca`) to discuss custom configuration value
 
 Conduit deployment guide: [GUIDE.md](./GUIDE.md)
 
-### Common-only mode
+### Usage
+
+Download a release binary, then :
 
 ```bash
 conduit start
-```
-
-### Personal compartment mode
-
-```bash
-# Generate and persist a personal compartment ID, and print a share token
-conduit new-compartment-id --name my-station
-
-# Enable personal clients (can be combined with common clients)
-conduit start --max-common-clients 50 --max-personal-clients 10
-```
-
-If you do not have `personal_compartment.json` in your data directory yet, you can also pass a compartment ID or share token directly:
-
-```bash
-conduit start --max-personal-clients 10 --compartment-id "<id-or-token>"
 ```
 
 ## Docker
@@ -48,7 +34,6 @@ The compose file enables Prometheus metrics on `:9090` inside the container. To 
 ## Commands
 
 - `conduit start` - start the Conduit inproxy service
-- `conduit new-compartment-id` - create and persist a personal compartment ID and output a share token
 - `conduit ryve-claim` - output Conduit claim data for Ryve
 
 ## Start Command Flags
@@ -57,8 +42,6 @@ The compose file enables Prometheus metrics on `:9090` inside the container. To 
 | -------------------------- | ------- | --------------------------------------------------------------------------------- |
 | `--psiphon-config, -c`     | -       | Path to Psiphon network config file (required when no embedded config is present) |
 | `--max-common-clients, -m` | `50`    | Maximum common proxy clients (`0-1000`)                                           |
-| `--max-personal-clients`   | `0`     | Maximum personal proxy clients (`0-1000`)                                         |
-| `--compartment-id`         | -       | Personal compartment ID or share token                                            |
 | `--bandwidth, -b`          | `40`    | Total bandwidth limit in Mbps (`-1` for unlimited)                                |
 | `--set`                    | -       | Override allowlisted config keys (`key=value`), repeatable                        |
 | `--metrics-addr`           | -       | Prometheus metrics listen address (for example, `:9090`)                          |
@@ -67,25 +50,6 @@ Global flags:
 
 - `--data-dir, -d` (default `./data`)
 - `--verbose, -v` (repeatable count flag)
-
-At least one of `--max-common-clients` or `--max-personal-clients` must be greater than `0`.
-
-## Personal Compartments
-
-When `--max-personal-clients` is greater than 0, Conduit needs a personal compartment ID.
-
-Use `conduit new-compartment-id` to:
-
-1. Generate a personal compartment ID.
-2. Save it to `personal_compartment.json` in your data directory.
-3. Print a v1 share token (for pairing).
-
-`--name` is limited to 32 characters.
-
-You can provide `--compartment-id` as either:
-
-- a raw compartment ID, or
-- a share token (the CLI extracts and validates the ID)
 
 ## `--set` Overrides
 
@@ -97,8 +61,6 @@ You can provide `--compartment-id` as either:
 - `InproxyLimitUpstreamBytesPerSecond`
 - `InproxyMaxClients`
 - `InproxyMaxCommonClients`
-- `InproxyMaxPersonalClients`
-- `InproxyProxyPersonalCompartmentID`
 - `InproxyReducedEndTime`
 - `InproxyReducedLimitDownstreamBytesPerSecond`
 - `InproxyReducedLimitUpstreamBytesPerSecond`
@@ -108,9 +70,7 @@ You can provide `--compartment-id` as either:
 Example:
 
 ```bash
-conduit start \
-  --set EmitInproxyProxyActivity=true \
-  --set InproxyReducedMaxCommonClients=10
+conduit start --set InproxyMaxCommonClients=25 
 ```
 
 ## Metrics
@@ -145,25 +105,7 @@ To use throttling with Docker:
 docker compose -f docker-compose.limited-bandwidth.yml up -d
 ```
 
-Edit `docker-compose.limited-bandwidth.yml` to set limits:
-
-```yaml
-command: [
-        "--traffic-limit",
-        "500", # Total quota in GB
-        "--traffic-period",
-        "30", # Time period in days
-        "--bandwidth-threshold",
-        "80", # Throttle at 80% usage
-        "--min-connections",
-        "10", # Reduced common clients when throttled
-        "--min-bandwidth",
-        "10", # Reduced bandwidth when throttled
-        "--", # Separator
-        "start", # Conduit command
-        ..., # Conduit flags
-    ]
-```
+Edit `docker-compose.limited-bandwidth.yml` to set limits.
 
 How it works:
 
@@ -177,7 +119,6 @@ How it works:
 Keys and state are stored in the data directory (default: `./data`):
 
 - `conduit_key.json` - node identity keypair
-- `personal_compartment.json` - persisted personal compartment ID
 - `traffic_state.json` - traffic usage state (when throttling is enabled)
 
 The Psiphon broker tracks proxy reputation by key. Always use persistent storage for your data directory so your key and reputation survive restarts.

@@ -138,7 +138,7 @@ jobs:
                   body: |
                       ## Conduit CLI ${{ steps.version.outputs.VERSION }}
 
-                      Conduit is a volunteer-run proxy node that helps relay traffic for users in censored regions.
+                      Conduit is a volunteer-run proxy node that helps relay traffic for Psiphon users.
 
                       ### Running the Conduit CLI 
 

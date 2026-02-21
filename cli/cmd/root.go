@@ -35,9 +35,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:   "conduit",
 	Short: "Conduit - A volunteer-run proxy relay for the Psiphon network",
-	Long: `Conduit is a Psiphon inproxy service that relays traffic for users
-in censored regions, helping them access the open internet.
-
+	Long: `Conduit is a Psiphon inproxy service that relays traffic for Psiphon users, helping them access the open internet.
 Run 'conduit start' to begin relaying traffic.`,
 	Version: version,
 }

@@ -18,7 +18,7 @@ We have observed that Conduit can support around 150-350 concurrent users for ev
 
 ## Expected usage patterns:
 
-Conduit is one tool of many in Psiphon's circumvention toolbox. On some networks, Conduit will not work as well as some of our other protocols, and on other networks Conduit may be the best way to get users connected. This changes constantly as network conditions change. Like everything, Conduit servers can be blocked, this is another reason why IP diversity is so important.
+Conduit is one tool of many in Psiphon's toolbox. On some networks, Conduit will not work as well as some of our other protocols, and on other networks Conduit may be the best way to get users connected. This changes constantly as network conditions change. Like everything, Conduit servers can be blocked, this is another reason why IP diversity is so important.
 
 Brand new Conduit stations will take time to build up a reputation with the tunnel connection broker. For this reason, it is not unexpected for freshly deployed Conduit stations to not see traffic for some hours or even days, depending on supply vs demand. If you can, keep your Conduit stations running even if they are not seeing high connection volumes; this latent capacity may become very useful when network conditions change.
 
