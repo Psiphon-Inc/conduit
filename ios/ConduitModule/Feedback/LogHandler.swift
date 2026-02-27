@@ -180,7 +180,7 @@ public struct PsiphonLogHandler: LogHandler {
     
 }
 
-extension Logging.Logger.MetadataValue : Encodable {
+extension Logging.Logger.MetadataValue : @retroactive Encodable {
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
