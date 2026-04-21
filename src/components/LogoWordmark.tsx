@@ -36,7 +36,6 @@ export function LogoWordmark({
                     width: width,
                     height: height,
                     justifyContent: "flex-end",
-                    paddingBottom: 20,
                 },
             ]}
         >

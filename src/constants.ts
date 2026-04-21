@@ -18,10 +18,12 @@
  */
 
 export const DEFAULT_INPROXY_MAX_CLIENTS = 2;
+export const DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS = 5;
 export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 2 * 1000 * 1000; // 2 MB
 
 // if these are maxed out, it means a potential of 8Gbps at full capacity
 export const INPROXY_MAX_CLIENTS_MAX = 25;
+export const INPROXY_MAX_CLIENTS_TOTAL_MAX = 30;
 export const INPROXY_MAX_MBPS_PER_PEER_MAX = 40;
 
 export const LEARN_MORE_URL = "https://conduit.psiphon.ca/en";
@@ -37,13 +39,15 @@ export const RYVE_CLAIM_DEEP_LINK = "network.ryve.app://(app)/conduits?claim=";
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;
 
 // Used to track storage migration success
-export const CURRENT_STORAGE_VERSION = 2;
+export const CURRENT_STORAGE_VERSION = 3;
 
 // AsyncStorage keys, centralized to prevent accidental collision
 export const ASYNCSTORAGE_STORAGE_VERSION_KEY = "storageVersion";
 export const ASYNCSTORAGE_HAS_ONBOARDED_KEY = "hasOnboarded";
 export const ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY = "MockInproxyRunning";
 export const ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY = "InproxyMaxClients";
+export const ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY =
+    "InproxyMaxPersonalClients";
 export const ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY =
     "InproxyLimitBytesPerSecond";
 export const ASYNCSTORAGE_INPROXY_REDUCED_START_TIME_KEY =
@@ -62,7 +66,12 @@ export const SECURESTORE_ACCOUNT_KEYPAIR_BASE64_KEY =
 export const SECURESTORE_DEVICE_NONCE_KEY = "deviceNonce";
 export const SECURESTORE_INPROXY_KEYPAIR_BASE64_KEY =
     "inproxyKeyPairBase64nopad";
+export const SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY =
+    "androidPersonalCompartmentId";
 export const SECURESTORE_CONDUIT_NAME_KEY = "conduitName";
+export const SECURESTORE_HOSTED_SESSION_KEY = "hostedSession";
+export const SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY =
+    "hostedLastAuthProvider";
 
 // useQuery query keys, centralized to prevent accidental collision
 // auth
@@ -71,8 +80,21 @@ export const QUERYKEY_INPROXY_KEYPAIR = "conduitKeyPair";
 // inproxy
 export const QUERYKEY_INPROXY_STATUS = "inproxyStatus";
 export const QUERYKEY_INPROXY_ACTIVITY_BY_1000MS = "inproxyActivityBy1000ms";
+export const QUERYKEY_INPROXY_ACTIVITY_BY_3600000MS =
+    "inproxyActivityBy3600000ms";
+export const QUERYKEY_INPROXY_ACTIVITY_SEGMENTS = "inproxyActivitySegments";
+export const QUERYKEY_INPROXY_REGIONAL_BREAKDOWN_BY_WINDOW =
+    "inproxyRegionalBreakdownByWindow";
+export const QUERYKEY_INPROXY_PERSONAL_REGION_ACTIVITY =
+    "inproxyPersonalRegionActivity";
+export const QUERYKEY_INPROXY_COMMON_REGION_ACTIVITY =
+    "inproxyCommonRegionActivity";
 export const QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS =
     "inproxyCurrentConnectedClients";
+export const QUERYKEY_INPROXY_CURRENT_PERSONAL_CONNECTED_CLIENTS =
+    "inproxyCurrentPersonalConnectedClients";
+export const QUERYKEY_INPROXY_CURRENT_COMMON_CONNECTED_CLIENTS =
+    "inproxyCurrentCommonConnectedClients";
 export const QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS =
     "inproxyCurrentConnectingClients";
 export const QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS =
@@ -80,9 +102,21 @@ export const QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS =
 export const QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED =
     "inproxyTotalBytesTransferred";
 export const QUERYKEY_INPROXY_MUST_UPGRADE = "inproxyMustUpgrade";
+export const QUERYKEY_INPROXY_IPC_EVENTS = "inproxyIpcEvents";
 export const QUERYKEY_CONDUIT_NAME = "conduitName";
+export const QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID =
+    "androidPersonalCompartmentId";
 export const QUERYKEY_NOTIFICATIONS_PERMISSIONS =
     "sync-notifications-permissions";
+export const QUERYKEY_HOSTED_STATION = "hostedStation";
+export const QUERYKEY_HOSTED_STATS_SUMMARY = "hostedStatsSummary";
+export const QUERYKEY_HOSTED_STATS_RECENT = "hostedStatsRecent";
+export const QUERYKEY_HOSTED_STATS_LIVE = "hostedStatsLive";
+
+export const ASYNCSTORAGE_DASHBOARD_RECENT_WINDOW_KEY = "DashboardRecentWindow";
+export const ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY = "DashboardStatusMode";
+export const ASYNCSTORAGE_DASHBOARD_STATION_MODE_KEY = "DashboardStationMode";
+export const ASYNCSTORAGE_PAIRING_LANGUAGE_KEY = "PairingLanguage";
 
 // Historical constants, used in migrations
 export const V1_DEFAULT_INPROXY_MAX_CLIENTS = 2;

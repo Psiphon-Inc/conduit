@@ -45,7 +45,9 @@ export function LearnMoreLink({
     return (
         <Pressable
             accessible={true}
-            accessibilityLabel={"Link to information website"}
+            accessibilityLabel={t(
+                "LINK_TO_INFO_WEBSITE_ACCESSIBILITY_I18N.string",
+            )}
             style={[
                 ss.absolute,
                 ss.row,

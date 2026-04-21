@@ -84,10 +84,10 @@ export function FlexibleOrb({
             if (previous === 1 && current === 0) {
                 radius.value = initialRadius;
             }
-            if (previous === 2) {
+            if (previous === 3) {
                 privacyPolicyOpacity.value = withTiming(0, { duration: 1000 });
             }
-            if (previous === 3) {
+            if (previous === 4) {
                 backgroundOpacity.value = withTiming(0);
             }
             if (current === 0) {
@@ -128,6 +128,22 @@ export function FlexibleOrb({
                     }),
                 );
             } else if (current === 2) {
+                // HOSTED CONDUIT: orb settles to medium size, centered
+                radius.value = withSpring(sceneHeight / 3, {
+                    mass: 3.2,
+                    damping: 15,
+                    stiffness: 100,
+                    restDisplacementThreshold: 0.01,
+                    restSpeedThreshold: 2,
+                });
+                cx.value = withSpring(sceneWidth * 0.5, {
+                    mass: 3.2,
+                    damping: 15,
+                    stiffness: 100,
+                    restDisplacementThreshold: 0.01,
+                    restSpeedThreshold: 2,
+                });
+            } else if (current === 3) {
                 privacyPolicyOpacity.value = withTiming(1, { duration: 1000 });
                 radius.value = withSpring(sceneHeight / 4.5, {
                     mass: 2.2,
@@ -143,7 +159,7 @@ export function FlexibleOrb({
                     restDisplacementThreshold: 0.01,
                     restSpeedThreshold: 2,
                 });
-            } else if (current === 3) {
+            } else if (current === 4) {
                 radius.value = withSpring(sceneHeight / 3.5, {
                     mass: 2.2,
                     damping: 20,

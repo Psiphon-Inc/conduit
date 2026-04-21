@@ -18,8 +18,8 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, useContext, useEffect, useState } from "react";
-import { NativeEventEmitter } from "react-native";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { AppState, Platform } from "react-native";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
@@ -28,29 +28,39 @@ import { timedLog } from "@/src/common/utils";
 import {
     ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
     ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+    ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
     ASYNCSTORAGE_INPROXY_REDUCED_END_TIME_KEY,
     ASYNCSTORAGE_INPROXY_REDUCED_LIMIT_BYTES_PER_SECOND_KEY,
     ASYNCSTORAGE_INPROXY_REDUCED_MAX_CLIENTS_KEY,
     ASYNCSTORAGE_INPROXY_REDUCED_START_TIME_KEY,
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
-    QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
+    DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS,
+    INPROXY_MAX_CLIENTS_MAX,
+    INPROXY_MAX_CLIENTS_TOTAL_MAX,
+    QUERYKEY_INPROXY_ACTIVITY_SEGMENTS,
     QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS,
+    QUERYKEY_INPROXY_CURRENT_COMMON_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
+    QUERYKEY_INPROXY_CURRENT_PERSONAL_CONNECTED_CLIENTS,
+    QUERYKEY_INPROXY_IPC_EVENTS,
     QUERYKEY_INPROXY_MUST_UPGRADE,
+    QUERYKEY_INPROXY_REGIONAL_BREAKDOWN_BY_WINDOW,
     QUERYKEY_INPROXY_STATUS,
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
 } from "@/src/constants";
+import { useAndroidPersonalCompartmentId } from "@/src/hooks";
 import { ConduitModule } from "@/src/inproxy/module";
 import {
     InproxyActivityStats,
-    InproxyActivityStatsSchema,
     InproxyContextValue,
     InproxyEvent,
     InproxyParameters,
     InproxyParametersSchema,
     InproxyStatusEnumSchema,
+    IpcEvent,
+    IpcEventSchema,
     ProxyError,
     ProxyErrorSchema,
     ProxyState,
@@ -63,6 +73,8 @@ import {
 } from "@/src/inproxy/utils";
 
 const InproxyContext = createContext<InproxyContextValue | null>(null);
+const DASHBOARD_STATS_THROTTLE_MS = 5_000;
+const MAX_IPC_EVENT_HISTORY = 20;
 
 export function useInproxyContext(): InproxyContextValue {
     const value = useContext(InproxyContext);
@@ -80,6 +92,10 @@ export function useInproxyContext(): InproxyContextValue {
  */
 export function InproxyProvider({ children }: { children: React.ReactNode }) {
     const conduitKeyPair = useConduitKeyPair();
+    const androidPersonalCompartmentIdQuery = useAndroidPersonalCompartmentId();
+    const androidPersonalCompartmentId = androidPersonalCompartmentIdQuery.data;
+    const isPersonalPairingReady =
+        Platform.OS !== "android" || androidPersonalCompartmentId != null;
 
     // This provider handles tracking the user-selected Inproxy parameters, and
     // persisting them in AsyncStorage.
@@ -91,14 +107,12 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // data for the corresponding useQuery cache. The hooks the app uses to read
     // these values are implemented in `hooks.ts`.
     const queryClient = useQueryClient();
+    const lastDashboardStatsUpdateAtMsRef = useRef(0);
 
     useEffect(() => {
         // this manages InproxyEvent subscription and connects it to the handler
-        const emitter = new NativeEventEmitter(ConduitModule);
-        const subscription = emitter.addListener(
-            "ConduitEvent",
-            handleInproxyEvent,
-        );
+        const subscription =
+            ConduitModule.addInproxyEventListener(handleInproxyEvent);
         timedLog("InproxyEvent subscription added");
 
         return () => {
@@ -107,11 +121,54 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
+    useEffect(() => {
+        const subscription = ConduitModule.addIpcEventListener(handleIpcEvent);
+        timedLog("IpcEvent subscription added");
+
+        return () => {
+            subscription.remove();
+            timedLog("IpcEvent subscription removed");
+        };
+    }, []);
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener(
+            "change",
+            (nextState) => {
+                if (nextState === "active") {
+                    ConduitModule.emitCurrentInproxyState();
+                }
+            },
+        );
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
     function handleInproxyEvent(inproxyEvent: InproxyEvent): void {
         switch (inproxyEvent.type) {
             case "proxyState":
                 try {
-                    handleProxyState(ProxyStateSchema.parse(inproxyEvent.data));
+                    const parsedProxyState = ProxyStateSchema.safeParse(
+                        inproxyEvent.data,
+                    );
+                    if (parsedProxyState.success) {
+                        handleProxyState(parsedProxyState.data);
+                        break;
+                    }
+
+                    const fallbackStatus = InproxyStatusEnumSchema.safeParse(
+                        (inproxyEvent.data as { status?: unknown })?.status,
+                    );
+                    if (fallbackStatus.success) {
+                        handleProxyState({
+                            status: fallbackStatus.data,
+                            networkState: null,
+                        });
+                        break;
+                    }
+
+                    throw parsedProxyState.error;
                 } catch (error) {
                     logErrorToDiagnostic(
                         wrapError(error, "Failed to handle proxyState"),
@@ -130,7 +187,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             case "inProxyActivityStats":
                 try {
                     handleInproxyActivityStats(
-                        InproxyActivityStatsSchema.parse(inproxyEvent.data),
+                        inproxyEvent.data as InproxyActivityStats,
                     );
                 } catch (error) {
                     logErrorToDiagnostic(
@@ -154,7 +211,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         // The module does not send an update for ActivityData when the Inproxy
         // is stopped, so reset it when we receive a non-running status.
         if (inproxyStatus !== "RUNNING") {
-            handleInproxyActivityStats(getZeroedInproxyActivityStats());
+            handleInproxyActivityStats(getZeroedInproxyActivityStats(), {
+                forceDashboardStatsUpdate: true,
+            });
         }
         // NOTE: proxyState.networkState is currently ignored
     }
@@ -167,8 +226,37 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         }
     }
 
+    function handleIpcEvent(ipcEvent: IpcEvent): void {
+        try {
+            const parsedIpcEvent = IpcEventSchema.parse(ipcEvent);
+            const details = [
+                parsedIpcEvent.data.caller,
+                parsedIpcEvent.data.activeClientCount != null
+                    ? `activeClients=${parsedIpcEvent.data.activeClientCount}`
+                    : null,
+                parsedIpcEvent.data.message ?? null,
+            ]
+                .filter((value) => value != null && value !== "")
+                .join(" | ");
+            timedLog(
+                `IPC: ${parsedIpcEvent.type} ${parsedIpcEvent.data.status}${details ? ` | ${details}` : ""}`,
+            );
+            queryClient.setQueryData(
+                [QUERYKEY_INPROXY_IPC_EVENTS],
+                (current: IpcEvent[] | undefined) =>
+                    [parsedIpcEvent, ...(current ?? [])].slice(
+                        0,
+                        MAX_IPC_EVENT_HISTORY,
+                    ),
+            );
+        } catch (error) {
+            logErrorToDiagnostic(wrapError(error, "Failed to handle ipcEvent"));
+        }
+    }
+
     function handleInproxyActivityStats(
         inproxyActivityStats: InproxyActivityStats,
+        options?: { forceDashboardStatsUpdate?: boolean },
     ): void {
         queryClient.setQueryData(
             [QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS],
@@ -179,6 +267,14 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             inproxyActivityStats.currentConnectedClients,
         );
         queryClient.setQueryData(
+            [QUERYKEY_INPROXY_CURRENT_PERSONAL_CONNECTED_CLIENTS],
+            inproxyActivityStats.segments.personal.currentConnectedClients,
+        );
+        queryClient.setQueryData(
+            [QUERYKEY_INPROXY_CURRENT_COMMON_CONNECTED_CLIENTS],
+            inproxyActivityStats.segments.common.currentConnectedClients,
+        );
+        queryClient.setQueryData(
             [QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS],
             inproxyActivityStats.currentConnectingClients,
         );
@@ -187,9 +283,24 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             inproxyActivityStats.totalBytesUp +
                 inproxyActivityStats.totalBytesDown,
         );
+
+        const nowMs = Date.now();
+        const shouldUpdateDashboardStats =
+            options?.forceDashboardStatsUpdate === true ||
+            nowMs - lastDashboardStatsUpdateAtMsRef.current >=
+                DASHBOARD_STATS_THROTTLE_MS;
+        if (!shouldUpdateDashboardStats) {
+            return;
+        }
+
+        lastDashboardStatsUpdateAtMsRef.current = nowMs;
         queryClient.setQueryData(
-            [QUERYKEY_INPROXY_ACTIVITY_BY_1000MS],
-            inproxyActivityStats.dataByPeriod["1000ms"],
+            [QUERYKEY_INPROXY_ACTIVITY_SEGMENTS],
+            inproxyActivityStats.segments,
+        );
+        queryClient.setQueryData(
+            [QUERYKEY_INPROXY_REGIONAL_BREAKDOWN_BY_WINDOW],
+            inproxyActivityStats.regionalBreakdownByWindow,
         );
     }
 
@@ -199,7 +310,11 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // the module/tunnel-core uses. The values stored in AsyncStorage will be
     // taken as the source of truth.
     async function loadInproxyParameters() {
-        if (!conduitKeyPair.data) {
+        if (
+            !conduitKeyPair.data ||
+            (Platform.OS === "android" &&
+                androidPersonalCompartmentId === undefined)
+        ) {
             // this shouldn't be possible as the key gets set before we render
             return;
         }
@@ -207,6 +322,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             // Retrieve stored inproxy parameters from the application layer
             const storedInproxyMaxClients = await AsyncStorage.getItem(
                 ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+            );
+            const storedInproxyMaxPersonalClients = await AsyncStorage.getItem(
+                ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
             );
 
             const storedInproxyLimitBytesPerSecond = await AsyncStorage.getItem(
@@ -232,13 +350,32 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 storedInproxyReducedEndTime &&
                 storedInproxyReducedMaxClients &&
                 storedInproxyReducedLimitBytesPerSecond;
+            const maxClients = Math.min(
+                storedInproxyMaxClients
+                    ? parseInt(storedInproxyMaxClients)
+                    : DEFAULT_INPROXY_MAX_CLIENTS,
+                INPROXY_MAX_CLIENTS_MAX,
+            );
+            const personalCompartmentId =
+                androidPersonalCompartmentId === undefined
+                    ? undefined
+                    : androidPersonalCompartmentId;
+            const maxPersonalClients = personalCompartmentId
+                ? Math.min(
+                      storedInproxyMaxPersonalClients
+                          ? parseInt(storedInproxyMaxPersonalClients)
+                          : DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS,
+                      INPROXY_MAX_CLIENTS_MAX,
+                      Math.max(0, INPROXY_MAX_CLIENTS_TOTAL_MAX - maxClients),
+                  )
+                : 0;
 
             // Prepare the stored/default parameters from the application layer
             const storedInproxyParameters = InproxyParametersSchema.parse({
                 privateKey: keyPairToBase64nopad(conduitKeyPair.data),
-                maxClients: storedInproxyMaxClients
-                    ? parseInt(storedInproxyMaxClients)
-                    : DEFAULT_INPROXY_MAX_CLIENTS,
+                maxClients,
+                maxPersonalClients,
+                personalCompartmentId,
                 limitUpstreamBytesPerSecond: storedInproxyLimitBytesPerSecond
                     ? parseInt(storedInproxyLimitBytesPerSecond)
                     : DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
@@ -252,7 +389,10 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                     ? storedInproxyReducedEndTime
                     : undefined,
                 reducedMaxClients: hasReducedSettings
-                    ? parseInt(storedInproxyReducedMaxClients)
+                    ? Math.min(
+                          parseInt(storedInproxyReducedMaxClients),
+                          maxClients,
+                      )
                     : undefined,
                 reducedLimitUpstreamBytesPerSecond: hasReducedSettings
                     ? parseInt(storedInproxyReducedLimitBytesPerSecond)
@@ -279,6 +419,10 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             params.maxClients.toString(),
         );
         await AsyncStorage.setItem(
+            ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
+            params.maxPersonalClients.toString(),
+        );
+        await AsyncStorage.setItem(
             ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
             params.limitUpstreamBytesPerSecond.toString(),
         );
@@ -302,8 +446,23 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
         try {
             await ConduitModule.paramsChanged(params);
         } catch (error) {
+            if (
+                error instanceof Error &&
+                error.name === "InproxyUnsupportedError"
+            ) {
+                timedLog(
+                    "ConduitModule.paramsChanged(...) unsupported on this platform; continuing",
+                );
+                return;
+            }
+            if (Platform.OS === "ios") {
+                timedLog(
+                    `ConduitModule.paramsChanged(...) ignored on iOS: ${error instanceof Error ? error.message : String(error)}`,
+                );
+                return;
+            }
             logErrorToDiagnostic(
-                new Error("ConduitModule.paramsChanged(...) failed"),
+                wrapError(error, "ConduitModule.paramsChanged(...) failed"),
             );
             return;
         }
@@ -329,8 +488,23 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             await ConduitModule.toggleInProxy(inproxyParameters);
             timedLog(`ConduitModule.toggleInProxy(...) invoked`);
         } catch (error) {
+            if (
+                error instanceof Error &&
+                error.name === "InproxyUnsupportedError"
+            ) {
+                timedLog(
+                    "ConduitModule.toggleInProxy(...) unsupported on this platform; ignoring",
+                );
+                return;
+            }
+            if (Platform.OS === "ios") {
+                timedLog(
+                    `ConduitModule.toggleInProxy(...) ignored on iOS: ${error instanceof Error ? error.message : String(error)}`,
+                );
+                return;
+            }
             logErrorToDiagnostic(
-                new Error("ConduitModule.toggleInProxy(...) failed"),
+                wrapError(error, "ConduitModule.toggleInProxy(...) failed"),
             );
         }
     }
@@ -356,6 +530,16 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 );
             }
         } catch (error) {
+            if (
+                Platform.OS === "ios" &&
+                error instanceof Error &&
+                error.name === "InproxyUnsupportedError"
+            ) {
+                timedLog(
+                    `ConduitModule.sendFeedback(...) ignored on iOS: ${error.message}`,
+                );
+                return;
+            }
             logErrorToDiagnostic(wrapError(error, "Failed to send feedback"));
         }
     }
@@ -369,12 +553,13 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         loadInproxyParameters();
-    }, [conduitKeyPair.data]);
+    }, [androidPersonalCompartmentId, conduitKeyPair.data]);
 
     const value = {
+        inproxyParameters,
+        isPersonalPairingReady,
         toggleInproxy,
         sendFeedback,
-        inproxyParameters,
         selectInproxyParameters,
         logErrorToDiagnostic,
     };

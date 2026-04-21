@@ -89,6 +89,9 @@
     "ONBOARDING_WELCOME_BODY_I18N": {
         "string": "حوّل جهازك إلى منارة لحرية الإنترنت!\n\nبإمكانك مساعدة الأشخاص حول العالم على اختراق الشبكات المقيّدة والوصول الآمن إلى الإنترنت العالمي من خلال شبكة Psiphon."
     },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "حوّل جهازك إلى منارة لحرية الإنترنت!\n\nبإمكانك مساعدة الأشخاص حول العالم على اختراق الشبكات المقيّدة والوصول الآمن إلى الإنترنت العالمي من خلال شبكة Psiphon."
+    },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "التالي"
     },
@@ -97,6 +100,9 @@
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
         "string": "Conduit هو تطبيق مفتوح يسمح للأشخاص في المناطق الخاضعة للرقابة في جميع أنحاء العالم استخدام جهازك كنقطة عبور إلى شبكة Psiphon.\n\nكلما زاد عدد Conduit Stations، كلما كان برنامج Psiphon أقوى وأصبح الوصول للإنترنت متاحًا أكثر دون قيود."
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "يتيح لك Conduit على iOS إنشاء وإدارة محطات Conduit مستضافة سحابياً تساعد مستخدمي Psiphon على الوصول إلى شبكة Psiphon.\n\nيُستخدم جهازك لإدارة محطتك، بينما تعمل المحطة نفسها في السحابة."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "التالي"
@@ -107,14 +113,35 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "توصي Conduit بتفعيل الإشعارات حتى نتمكن من تقديم تحديثات مهمة حول Conduit Station الخاصة بك.\n\nهل أنت مستعد للبدء؟"
     },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "يوصي Conduit بتفعيل الإشعارات حتى نتمكن من تزويدك بتحديثات مهمة حول حسابك واشتراكك ومحطة Conduit المستضافة.\n\nهل أنت مستعد للبدء؟"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "أبدأ"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "أبدأ"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "Conduit المستضاف"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "يقدم لك تطبيق Conduit خيار استضافة محطة تعمل دائمًا من خلال الاشتراك في الخدمة المستضافة.\n\nتعمل محطة Conduit المستضافة على السحابة، مما يبقيها نشطة على مدار الساعة طوال أيام الأسبوع، حتى عندما يكون جهازك غير متصل."
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "على iOS، تكون محطات Conduit مستضافة سحابياً.\n\nيحافظ الاشتراك على تشغيل محطتك في السحابة على مدار الساعة طوال أيام الأسبوع، حتى عندما يكون جهازك غير متصل."
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "التالي"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "سياسة الخصوصية"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
         "string": "لا نجمع معلومات تعريف شخصية من مستخدمي Conduit. يتم تشفير جميع البيانات المنقولة ولا يمكن لك أو لـ Psiphon الوصول إليها. لا يمكن للمستخدمين المتصلين الوصول إلى جهازك بأي شكل من الأشكال.\n\nعند استخدامك لـ Conduit، فإنك توافق على سياسة الخصوصية الخاصة بنا، المذكورة أدناه."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "نحن لا نجمع معلومات تعريف شخصية من مستخدمي Conduit. يتم تشفير البيانات التي يرسلها تطبيق iOS أثناء النقل، ولا يمكن للمستخدمين الآخرين الوصول إلى جهازك من خلال التطبيق.\n\nباستخدامك لـ Conduit، فإنك توافق على سياسة الخصوصية الخاصة بنا، المذكورة أدناه."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "قبول"

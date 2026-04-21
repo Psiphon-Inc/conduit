@@ -44,13 +44,12 @@ export function ProxyID({
         >
             <View
                 style={{
-                    width: 42,
-                    height: 42,
-                    borderWidth: 1,
+                    width: 34,
+                    height: 34,
                     borderRadius: 20,
                 }}
             >
-                <Identicon value={proxyId} size={40} />
+                <Identicon value={proxyId} size={34} />
             </View>
             <Text style={[ss.greyText, ss.bodyFont]}>
                 ({proxyId.substring(0, 4)}...)

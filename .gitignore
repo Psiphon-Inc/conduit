@@ -36,3 +36,14 @@ ios_embedded_server_entries
 .vscode/
 
 android/.kotlin
+
+# local env overrides
+.env.local
+.env*.local
+.env.production
+.env.local.true
+
+TODO/
+
+android/keystore.properties
+android/dev-trusted-signatures.local.json

@@ -21,12 +21,19 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
     ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
     ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+    ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
     ASYNCSTORAGE_STORAGE_VERSION_KEY,
     CURRENT_STORAGE_VERSION,
     DEFAULT_INPROXY_MAX_CLIENTS,
+    DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS,
     V1_DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
-import { applyMigrations, version0To1, version1To2 } from "@/src/migrations";
+import {
+    applyMigrations,
+    version0To1,
+    version1To2,
+    version2To3,
+} from "@/src/migrations";
 
 describe("migrations", () => {
     it("0->1", async () => {
@@ -75,6 +82,25 @@ describe("migrations", () => {
         (AsyncStorage.setItem as jest.Mock).mockClear();
 
         await version1To2();
+        expect(AsyncStorage.setItem).toHaveBeenCalledTimes(0);
+    });
+    it("2->3", async () => {
+        await version2To3();
+
+        expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+            ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
+            DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS.toString(),
+        );
+    });
+    it("2->3 existing personal max clients", async () => {
+        await AsyncStorage.setItem(
+            ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
+            "7",
+        );
+        (AsyncStorage.setItem as jest.Mock).mockClear();
+
+        await version2To3();
+
         expect(AsyncStorage.setItem).toHaveBeenCalledTimes(0);
     });
     it("applyMigrations", async () => {

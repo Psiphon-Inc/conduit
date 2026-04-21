@@ -89,6 +89,9 @@
     "ONBOARDING_WELCOME_BODY_I18N": {
         "string": "Badilisha kifaa chako kuwa mnara wa Uhuru wa Mtandao!\n\nUnaweza kuwasaidia watu duniani kote kupenya mitandao yenye vizuizi na kupata mtandao wa kimataifa kwa usalama kupitia Mtandao wa Psiphon."
     },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "Badilisha kifaa chako kuwa mnara wa Uhuru wa Mtandao!\n\nUnaweza kuwasaidia watu duniani kote kupenya mitandao yenye vizuizi na kupata mtandao wa kimataifa kwa usalama kupitia Mtandao wa Psiphon."
+    },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "Inayofuata"
     },
@@ -97,6 +100,9 @@
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
         "string": "Conduit ni programu huria inayowawezesha watu katika maeneo yaliyodhibitiwa duniani kote kuruka kifaa chako na kuingia kwenye Mtandao wa Psiphon.\n\nKadiri Stesheni za Conduit zinavyokuwa nyingi, ndivyo Psiphon inavyokuwa na nguvu zaidi na ndivyo mtandao unavyokuwa wazi zaidi."
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "Conduit kwenye iOS hukuwezesha kuunda na kusimamia Stesheni za Conduit zinazohifadhiwa kwenye wingu ambazo huwasaidia watumiaji wa Psiphon kufikia Mtandao wa Psiphon.\n\nKifaa chako hutumiwa kusimamia stesheni yako, huku stesheni yenyewe ikiendeshwa kwenye wingu."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Inayofuata"
@@ -107,14 +113,35 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "Conduit inakushauri uwashe arifa ili tuweze kutoa taarifa muhimu kuhusu Kituo chako cha Conduit.\n\nJe, uko tayari kuanza?"
     },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "Conduit inapendekeza uwashe arifa ili tukupe masasisho muhimu kuhusu akaunti yako, usajili wako, na Stesheni yako ya Conduit inayohifadhiwa.\n\nUko tayari kuanza?"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "Anza"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "Anza"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "Conduit Iliyohifadhiwa"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "Mbali na kuendesha Conduit moja kwa moja kwenye kifaa chako, unaweza kujisajili kwa stesheni inayohifadhiwa ili ipatikane kila wakati.\n\nConduit Iliyohifadhiwa huendesha stesheni yako kwenye wingu na kuifanya iendelee kuwa hai saa 24 kwa siku, siku 7 kwa wiki, hata kifaa chako kikiwa nje ya mtandao."
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "Kwenye iOS, Stesheni za Conduit huhifadhiwa kwenye wingu.\n\nUsajili huifanya stesheni yako iendelee kufanya kazi kwenye wingu saa 24 kwa siku, siku 7 kwa wiki, hata kifaa chako kikiwa nje ya mtandao."
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "Inayofuata"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Sera ya Faragha"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
         "string": "Hatukusanyi taarifa zinazoweza kumtambulisha mtu binafsi kutoka kwa watumiaji wa Conduit. Data zote zinazotumwa zimesimbwa kwa njia fiche na huwezi kuzipata wewe wala Psiphon. Watumiaji waliounganishwa hawawezi kupata kifaa chako kwa njia yoyote.\n\nKwa kutumia Conduit, unakubali sera yetu ya faragha, inayopatikana hapa chini."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "Hatukusanyi taarifa zinazoweza kumtambulisha mtu binafsi kutoka kwa watumiaji wa Conduit. Data inayotumwa na programu ya iOS husimbwa kwa njia fiche wakati wa usafirishaji, na watumiaji wengine hawawezi kufikia kifaa chako kupitia programu.\n\nKwa kutumia Conduit, unakubali sera yetu ya faragha, inayopatikana hapa chini."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Kubali"

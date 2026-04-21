@@ -1,0 +1,10 @@
+{
+  "extends": "expo-module-scripts/tsconfig.base",
+  "compilerOptions": {
+    "strict": true
+  },
+  "include": [
+    "index.ts",
+    "src/**/*.ts"
+  ]
+}

@@ -1,0 +1,11 @@
+<resources>
+  <string name="conduit_service_stop_label_text">Simama</string>
+  <string name="conduit_service_running_notification_short_text">%1$d/%2$d\u00B7%3$s</string>
+  <string name="conduit_service_running_notification_long_text">Wateja: %1$d waliounganishwa / %2$d wanaounganishwa\nData: %3$s iliyohamishwa</string>
+  <string name="conduit_service_no_internet_notification_text">Inasubiri upatikanaji wa mtandao</string>
+  <string name="conduit_service_channel_description">Taarifa ya huduma ya Conduit</string>
+  <string name="notification_conduit_inproxy_must_upgrade_text">Maboresho yanahitajika: Tafadhali pakua toleo jipya la programu ili kuendelea kuitumia.</string>
+  <string name="notification_conduit_failed_to_start_text">Huduma ya Conduit imeshindwa kuwaka. Gusa arifa kwa taarifa zaidi</string>
+  <string name="notification_conduit_failed_to_restart_text">Huduma ya Conduit ilishindwa kuwaka upya. Gusa arifa kwa taarifa zaidi.</string>
+  <string name="conduit_service_starting_notification_text">Huduma ya Conduit inawaka...</string>
+</resources>

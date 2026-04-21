@@ -18,27 +18,13 @@
  */
 import React from "react";
 import { View } from "react-native";
-import Animated, {
-    useSharedValue,
-    withDelay,
-    withTiming,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 
 // @ts-ignore (this file is gitignored)
 import { GIT_HASH } from "@/src/git-hash";
-import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function GitHash() {
-    const { data: inproxyStatus } = useInproxyStatus();
-
-    const opacity = useSharedValue(0);
-    React.useEffect(() => {
-        if (inproxyStatus !== "UNKNOWN") {
-            opacity.value = withDelay(0, withTiming(0.8, { duration: 2000 }));
-        }
-    }, [inproxyStatus]);
-
     return (
         <View
             style={{
@@ -50,7 +36,7 @@ export function GitHash() {
             <Animated.Text
                 style={[
                     ss.bodyFont,
-                    { color: palette.grey, opacity: opacity, fontSize: 14 },
+                    { color: palette.lightGrey, fontSize: 14 },
                 ]}
             >
                 v.{GIT_HASH.substring(0, 12)}

@@ -17,7 +17,7 @@
  *
  */
 import { ed25519 } from "@noble/curves/ed25519";
-import { sha256 } from "@noble/hashes/sha2";
+import { sha256 } from "@noble/hashes/sha2.js";
 import * as bip39 from "@scure/bip39";
 import { wordlist as englishWordlist } from "@scure/bip39/wordlists/english";
 
@@ -155,7 +155,7 @@ describe("cryptography", () => {
             if (derivedConduitKey instanceof Error) {
                 throw derivedConduitKey;
             }
-            const message = sha256("Hello, World!");
+            const message = sha256(new TextEncoder().encode("Hello, World!"));
             const signature = ed25519.sign(
                 message,
                 derivedConduitKey.privateKey,

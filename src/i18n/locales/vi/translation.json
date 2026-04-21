@@ -89,6 +89,9 @@
     "ONBOARDING_WELCOME_BODY_I18N": {
         "string": "Hãy để thiết bị của bạn dẫn lối cho sự Tự do Internet !\n\nBạn có thể giúp mọi người khắp thế giới vượt qua các mạng lưới hạn chế và tiếp cận với thế giới internet toàn cầu một cách bảo mật thông qua Mạng Psiphon."
     },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "Hãy để thiết bị của bạn dẫn lối cho sự Tự do Internet !\n\nBạn có thể giúp mọi người khắp thế giới vượt qua các mạng lưới hạn chế và tiếp cận với thế giới internet toàn cầu một cách bảo mật thông qua Mạng Psiphon."
+    },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "Tiếp theo"
     },
@@ -97,6 +100,9 @@
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
         "string": "Conduit là một ứng dụng mã nguồn mở cho phép người dùng ở những khu vực bị kiểm duyệt trên toàn thế giới nhảy từ máy của bạn vào Mạng Psiphon.\n\nCàng có nhiều Trạm Conduit thì Psiphon càng mạnh và Internet ngày càng cởi mở hơn."
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "Conduit trên iOS cho phép bạn tạo và quản lý các Trạm Conduit được lưu trữ trên đám mây, giúp người dùng Psiphon truy cập Mạng Psiphon.\n\nThiết bị của bạn được dùng để quản lý trạm, còn chính trạm đó chạy trên đám mây."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Tiếp theo"
@@ -107,14 +113,35 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "Conduit khuyến nghị bạn nên bật chức năng thông báo để chúng tôi có thể cung cấp những cập nhật quan trọng về Trạm Conduit của bạn.\n\nĐã sẵn sàng để bắt đầu?"
     },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "Conduit khuyên bạn nên bật thông báo để chúng tôi có thể gửi các cập nhật quan trọng về tài khoản, gói đăng ký và Trạm Conduit được lưu trữ của bạn.\n\nSẵn sàng bắt đầu chưa?"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "Bắt đầu"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "Bắt đầu"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "Conduit được lưu trữ"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "Ngoài việc chạy Conduit trực tiếp trên thiết bị của bạn, bạn có thể đăng ký một trạm được lưu trữ để luôn được hỗ trợ.\n\nConduit được lưu trữ chạy trạm của bạn trên đám mây, giữ cho trạm hoạt động 24/7, ngay cả khi thiết bị của bạn ngoại tuyến."
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "Trên iOS, các Trạm Conduit được lưu trữ trên đám mây.\n\nGói đăng ký sẽ giữ cho trạm của bạn hoạt động trên đám mây 24/7, ngay cả khi thiết bị của bạn ngoại tuyến."
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "Tiếp theo"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Chính sách về Quyền riêng tư"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
         "string": "Chúng tôi không thu thập thông tin cá nhân từ người dùng Conduit. Tất cả dữ liệu được truyền tải đều được mã hóa và không thể truy cập bởi bạn hay Psiphon. Những người dùng được kết nối không thể truy cập vào thiết bị của bạn theo bất kỳ cách nào.\n\nKhi sử dụng Conduit, bạn chấp nhận chính sách bảo mật của chúng tôi, có sẵn bên dưới."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "Chúng tôi không thu thập thông tin nhận dạng cá nhân từ người dùng Conduit. Dữ liệu do ứng dụng iOS gửi đi được mã hóa trong quá trình truyền và người dùng khác không thể truy cập thiết bị của bạn thông qua ứng dụng.\n\nKhi sử dụng Conduit, bạn chấp nhận chính sách bảo mật của chúng tôi, có sẵn bên dưới."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Chấp nhận"

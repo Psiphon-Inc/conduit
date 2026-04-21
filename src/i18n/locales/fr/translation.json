@@ -89,6 +89,9 @@
     "ONBOARDING_WELCOME_BODY_I18N": {
         "string": "Transformez votre appareil en une balise de la liberté d'Internet !\n\nVous pouvez aider des personnes du monde entier à passer outre les réseaux restrictifs et à accéder à l'Internet mondial en toute sécurité grâce au réseau Psiphon."
     },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "Transformez votre appareil en une balise de la liberté d'Internet !\n\nVous pouvez aider des personnes du monde entier à passer outre les réseaux restrictifs et à accéder à l'Internet mondial en toute sécurité grâce au réseau Psiphon."
+    },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "Suivant"
     },
@@ -97,6 +100,9 @@
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
         "string": "Conduit est une application open-source qui permet aux personnes vivant dans des régions censurées du monde entier de rebondir sur votre appareil et de rejoindre le réseau Psiphon.\n\nPlus il y a de Stations Conduit, plus Psiphon est puissant et plus l'Internet est ouvert."
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "Sur iOS, Conduit vous permet de créer et de gérer des Stations Conduit hébergées dans le cloud qui aident les utilisateurs de Psiphon à accéder au réseau Psiphon.\n\nVotre appareil sert à gérer votre station, tandis que la station elle-même fonctionne dans le cloud."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Suivant"
@@ -107,14 +113,35 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "Conduit vous recommande d'activer les notifications pour nous permettre de vous fournir des mises à jour critiques concernant votre Station Conduit.\n\nPrêt à commencer ?"
     },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "Conduit vous recommande d'activer les notifications afin que nous puissions vous fournir des mises à jour importantes sur votre compte, votre abonnement et votre Station Conduit hébergée.\n\nPrêt à commencer ?"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "Commencer"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "Commencer"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "Conduit hébergé"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "En plus d'exécuter un conduit directement sur votre appareil, vous pouvez vous abonner à une station hébergée pour une disponibilité permanente.\n\nConduit hébergé exécute votre station dans le cloud et la maintient active 24 h/24 et 7 j/7, même lorsque votre appareil est hors ligne."
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "Sur iOS, les Stations Conduit sont hébergées dans le cloud.\n\nUn abonnement permet à votre station de fonctionner dans le cloud 24 h/24 et 7 j/7, même lorsque votre appareil est hors ligne."
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "Suivant"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Politique de confidentialité"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
         "string": "Nous ne recueillons pas d'informations personnellement identifiables auprès des utilisateurs de Conduit. Toutes les données transmises sont chiffrées et ne sont accessibles ni à vous ni à Psiphon. Les utilisateurs connectés ne peuvent en aucun cas accéder à votre appareil.\n\nEn utilisant Conduit, vous acceptez notre Politique de confidentialité, disponible ci-dessous."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "Nous ne recueillons pas d'informations personnellement identifiables auprès des utilisateurs de Conduit. Les données envoyées par l'application iOS sont chiffrées en transit, et les autres utilisateurs n'accèdent pas à votre appareil via l'application.\n\nEn utilisant Conduit, vous acceptez notre politique de confidentialité, disponible ci-dessous."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Accepter"

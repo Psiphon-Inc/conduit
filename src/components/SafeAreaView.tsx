@@ -20,14 +20,20 @@ import { ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export function SafeAreaView({ children }: { children: ReactNode }) {
+export function SafeAreaView({
+    children,
+    includeBottomInset = true,
+}: {
+    children: ReactNode;
+    includeBottomInset?: boolean;
+}) {
     const insets = useSafeAreaInsets();
 
     return (
         <View
             style={{
                 paddingTop: insets.top,
-                paddingBottom: insets.bottom,
+                paddingBottom: includeBottomInset ? insets.bottom : 0,
                 paddingLeft: insets.left,
                 paddingRight: insets.right,
                 flex: 1,

@@ -18,14 +18,17 @@
  */
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
-import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { z } from "zod";
 
 import {
+    QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
     QUERYKEY_CONDUIT_NAME,
     QUERYKEY_NOTIFICATIONS_PERMISSIONS,
-    SECURESTORE_CONDUIT_NAME_KEY,
 } from "@/src/constants";
+import { loadCachedAlias } from "@/src/hosted/aliasCache";
+import { PersonalCompartmentId } from "@/src/hosted/contracts";
+import { loadAndroidPersonalCompartmentId } from "@/src/personalCompartmentId";
 
 const PermissionsStatusSchema = z.enum([
     "GRANTED",
@@ -53,17 +56,19 @@ export const useNotificationsPermissions =
             refetchInterval: 2000,
         });
 
-export const useConduitName = (): UseQueryResult<string> =>
-    useQuery({
+export const useAndroidPersonalCompartmentId =
+    (): UseQueryResult<PersonalCompartmentId | null> =>
+        useQuery({
+            queryKey: [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+            staleTime: Infinity,
+            gcTime: Infinity,
+            enabled: Platform.OS === "android",
+            queryFn: async () => loadAndroidPersonalCompartmentId(),
+        });
+
+export const useConduitName = (): UseQueryResult<string> => {
+    return useQuery({
         queryKey: [QUERYKEY_CONDUIT_NAME],
-        queryFn: async () => {
-            const storedConduitName = await SecureStore.getItemAsync(
-                SECURESTORE_CONDUIT_NAME_KEY,
-            );
-            if (storedConduitName == null) {
-                return "";
-            } else {
-                return storedConduitName;
-            }
-        },
+        queryFn: async () => loadCachedAlias(),
     });
+};

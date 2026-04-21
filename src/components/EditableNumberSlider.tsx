@@ -26,7 +26,7 @@ import {
 import * as Haptics from "expo-haptics";
 import React, { RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { LayoutChangeEvent, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     clamp,
@@ -70,6 +70,21 @@ export function EditableNumberSlider({
 
     const canvasSize = useSharedValue({ width: 0, height: 0 });
 
+    const onSliderLayout = React.useCallback(
+        (event: LayoutChangeEvent) => {
+            const { width, height } = event.nativeEvent.layout;
+            if (
+                width > 0 &&
+                height > 0 &&
+                (canvasSize.value.width !== width ||
+                    canvasSize.value.height !== height)
+            ) {
+                canvasSize.value = { width, height };
+            }
+        },
+        [canvasSize],
+    );
+
     // The Circle to slide
     const circleR = useDerivedValue(() => {
         return canvasSize.value.height / 4;
@@ -82,6 +97,22 @@ export function EditableNumberSlider({
     const circleCxPct = useSharedValue(
         ((originalValue - min) / (max - min)) * 100,
     );
+
+    React.useEffect(() => {
+        const range = max - min;
+        if (range <= 0) {
+            value.value = min;
+            circleCxPct.value = 0;
+            prevCircleCxPct.value = 0;
+            return;
+        }
+        const clampedOriginal = Math.min(max, Math.max(min, originalValue));
+        value.value = clampedOriginal;
+        const nextPct = ((clampedOriginal - min) / range) * 100;
+        circleCxPct.value = nextPct;
+        prevCircleCxPct.value = nextPct;
+    }, [circleCxPct, max, min, originalValue, prevCircleCxPct, value]);
+
     const circleCx = useDerivedValue(() => {
         // offset circleX by 2x circleR so that it fits nicely in the bar
         const effectiveUsableWidth = usableWidth.value - circleR.value * 2;
@@ -142,9 +173,10 @@ export function EditableNumberSlider({
             <Text style={[ss.bodyFont, ss.blackText]}>{label}</Text>
             <View style={[ss.row, ss.flex, { maxWidth: 180 }]}>
                 <View
+                    onLayout={onSliderLayout}
                     style={[ss.flex, isRTL ? { transform: "scaleX(-1)" } : {}]}
                 >
-                    <Canvas style={[ss.flex]} onSize={canvasSize}>
+                    <Canvas style={[ss.flex]}>
                         <RoundedRect
                             x={circleR}
                             y={trackY}

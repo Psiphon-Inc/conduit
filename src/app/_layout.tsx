@@ -21,11 +21,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { AuthProvider } from "@/src/auth/context";
+import { HostedAuthProvider } from "@/src/hosted/auth/provider";
 import i18nService from "@/src/i18n/i18n";
 import { fonts, palette } from "@/src/styles";
 
@@ -47,44 +49,50 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
-    const [loaded] = useFonts({
+    const [loaded, fontError] = useFonts({
         JuraRegular: fonts.JuraRegular,
         JuraBold: fonts.JuraBold,
         Rajdhani: fonts.Rajdhani,
     });
 
     useEffect(() => {
-        if (loaded) {
+        const fallbackTimer = setTimeout(() => {
+            SplashScreen.hideAsync();
+        }, 2000);
+
+        if (loaded || fontError) {
             SplashScreen.hideAsync();
         }
-    }, [loaded]);
+
+        return () => {
+            clearTimeout(fallbackTimer);
+        };
+    }, [loaded, fontError]);
 
     useEffect(() => {
         SystemUI.setBackgroundColorAsync(palette.black).then(() => {});
     }, []);
 
-    // Splash screens should be showing until we're done loading
-    if (!loaded) {
-        return null;
-    }
-
     return (
         <KeyboardProvider>
             <ThemeProvider value={DefaultTheme}>
                 <QueryClientProvider client={queryClient}>
-                    <AuthProvider>
-                        <Stack
-                            screenOptions={{
-                                headerShown: false,
-                                animation: "none",
-                                contentStyle: {
-                                    backgroundColor: palette.white,
-                                },
-                            }}
-                        >
-                            <Stack.Screen name="(app)" />
-                        </Stack>
-                    </AuthProvider>
+                    <HostedAuthProvider>
+                        <AuthProvider>
+                            <StatusBar style="dark" />
+                            <Stack
+                                screenOptions={{
+                                    headerShown: false,
+                                    animation: "none",
+                                    contentStyle: {
+                                        backgroundColor: palette.white,
+                                    },
+                                }}
+                            >
+                                <Stack.Screen name="(app)" />
+                            </Stack>
+                        </AuthProvider>
+                    </HostedAuthProvider>
                 </QueryClientProvider>
             </ThemeProvider>
         </KeyboardProvider>

@@ -22,23 +22,63 @@ import { initReactI18next } from "react-i18next";
 
 import translationXB from "@/src/i18n/locales/ar-xb/translation.json";
 import translationAR from "@/src/i18n/locales/ar/translation.json";
+import translationDE from "@/src/i18n/locales/de/translation.json";
 import translationXA from "@/src/i18n/locales/en-xa/translation.json";
 import translationEN from "@/src/i18n/locales/en/translation.json";
+import translationES from "@/src/i18n/locales/es/translation.json";
 import translationFA from "@/src/i18n/locales/fa/translation.json";
+import translationFR from "@/src/i18n/locales/fr/translation.json";
+import translationHI from "@/src/i18n/locales/hi/translation.json";
+import translationID from "@/src/i18n/locales/id/translation.json";
+import translationPTBR from "@/src/i18n/locales/pt_BR/translation.json";
+import translationPTPT from "@/src/i18n/locales/pt_PT/translation.json";
+import translationSW from "@/src/i18n/locales/sw/translation.json";
 import translationTR from "@/src/i18n/locales/tr/translation.json";
+import translationUR from "@/src/i18n/locales/ur/translation.json";
+import translationVI from "@/src/i18n/locales/vi/translation.json";
 
 const resources = {
     ar: {
         translation: translationAR,
     },
+    de: {
+        translation: translationDE,
+    },
     en: {
         translation: translationEN,
+    },
+    es: {
+        translation: translationES,
     },
     fa: {
         translation: translationFA,
     },
+    fr: {
+        translation: translationFR,
+    },
+    hi: {
+        translation: translationHI,
+    },
+    id: {
+        translation: translationID,
+    },
+    "pt-BR": {
+        translation: translationPTBR,
+    },
+    "pt-PT": {
+        translation: translationPTPT,
+    },
+    sw: {
+        translation: translationSW,
+    },
     tr: {
         translation: translationTR,
+    },
+    ur: {
+        translation: translationUR,
+    },
+    vi: {
+        translation: translationVI,
     },
     // en-XA and ar-XB are Pseudolocales for testing.
     "en-XA": {

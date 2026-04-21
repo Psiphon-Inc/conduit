@@ -16,306 +16,412 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { base64url } from "@scure/base";
+import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
+import * as Haptics from "expo-haptics";
 import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-    Modal,
-    Pressable,
-    Text,
-    View,
-    useWindowDimensions,
-} from "react-native";
-import { z } from "zod";
+import { Pressable, Text, View, useWindowDimensions } from "react-native";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
 import { Icon } from "@/src/components/Icon";
+import { useModal } from "@/src/components/ModalStore";
 import { QRDisplay } from "@/src/components/QRDisplay";
-import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
-import { RYVE_APP_LISTING_GOOGLE, RYVE_CLAIM_DEEP_LINK } from "@/src/constants";
+import {
+    RyveClaimMaterial,
+    buildRyveClaimDeepLink,
+    canOpenRyveClaimDeepLink,
+    getRyveInstallUrl,
+    resolvePreferredRyveName,
+} from "@/src/components/ryveClaim";
 import { useConduitName } from "@/src/hooks";
-import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
-export const conduitScanData = z.object({
-    version: z.number(),
-    data: z.object({
-        key: z.string().length(86, { message: "INVALID_QR_CODE_I18N.string" }),
-        name: z.string().optional(),
-    }),
-});
+const RYVE_GRADIENT_COLORS = ["#A475E3", "rgba(156, 129, 201, 0.69)"];
 
-export const conduitClaimDeepLink = z.string().startsWith(RYVE_CLAIM_DEEP_LINK);
-
-export function RyveCallToAction({
-    setBgBlur,
+function RyveModalShell({
+    children,
+    onClose,
 }: {
-    setBgBlur: React.Dispatch<React.SetStateAction<boolean>>;
+    children: React.ReactNode;
+    onClose?: () => void;
+}) {
+    const { t } = useTranslation();
+    const { closeModal } = useModal();
+    const handleClose = onClose ?? closeModal;
+
+    return (
+        <Pressable
+            onPress={handleClose}
+            style={{
+                flex: 1,
+                justifyContent: "flex-end",
+                backgroundColor: palette.modalBgOverlay,
+            }}
+        >
+            <Pressable
+                onPress={(event) => {
+                    event.stopPropagation();
+                }}
+                style={[
+                    ss.modalBottom90,
+                    {
+                        overflow: "hidden",
+                        height: "75%",
+                        backgroundColor: palette.white,
+                    },
+                ]}
+            >
+                <View
+                    style={{
+                        paddingTop: 12,
+                        paddingHorizontal: 16,
+                        paddingBottom: 4,
+                        alignItems: "flex-end",
+                    }}
+                >
+                    <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t(
+                            "CLOSE_RYVE_MODAL_ACCESSIBILITY_I18N.string",
+                        )}
+                        onPress={handleClose}
+                        hitSlop={10}
+                    >
+                        <Icon
+                            name="close"
+                            color={palette.lightGrey}
+                            size={22}
+                        />
+                    </Pressable>
+                </View>
+                <View style={{ flex: 1 }}>{children}</View>
+            </Pressable>
+        </Pressable>
+    );
+}
+
+function RyveCenteredMessage({ message }: { message: string }) {
+    return (
+        <View
+            style={{
+                width: "100%",
+                height: "100%",
+                alignItems: "center",
+                justifyContent: "center",
+                paddingHorizontal: 24,
+            }}
+        >
+            <Text style={[ss.bodyFont, ss.blackText, ss.centeredText]}>
+                {message}
+            </Text>
+        </View>
+    );
+}
+
+export function RyveClaimModalContent({
+    claim,
+    preferredName,
+    openToQr,
+    onClose,
+}: {
+    claim: RyveClaimMaterial;
+    preferredName?: string;
+    openToQr?: boolean;
+    onClose?: () => void;
 }) {
     const win = useWindowDimensions();
     const { t } = useTranslation();
-
-    const [modalOpen, setModalOpen] = React.useState(false);
-    const [qrRevealed, setQrRevealed] = React.useState(false);
-
-    const conduitKeyPair = useConduitKeyPair();
     const conduitName = useConduitName();
-    const inproxyStatus = useInproxyStatus();
+    const resolvedPreferredName = resolvePreferredRyveName(
+        preferredName,
+        conduitName.data,
+    );
+    const claimDeepLink = React.useMemo(() => {
+        const link = buildRyveClaimDeepLink(claim, resolvedPreferredName);
+        return link;
+    }, [claim, resolvedPreferredName]);
 
-    function onClose() {
-        setModalOpen(false);
-        setBgBlur(false);
-        setQrRevealed(false); // Reset reveal state when modal closes
-    }
+    const [qrRevealed, setQrRevealed] = React.useState(Boolean(openToQr));
+    const [buttonWidth, setButtonWidth] = React.useState(0);
+    const [canOpenInRyve, setCanOpenInRyve] = React.useState<boolean | null>(
+        null,
+    );
 
-    function ModalContent() {
-        if (!conduitKeyPair.data) {
-            return (
-                <View
-                    style={{
-                        width: "100%",
-                        height: "100%",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Text style={[ss.bodyFont, ss.whiteText]}>
-                        Loading conduit data...
-                    </Text>
-                </View>
-            );
+    const ryveInstallUrl = React.useMemo(() => getRyveInstallUrl(), []);
+
+    React.useEffect(() => {
+        let isMounted = true;
+
+        void canOpenRyveClaimDeepLink(claimDeepLink).then((canOpen) => {
+            if (!isMounted) {
+                return;
+            }
+            setCanOpenInRyve(canOpen);
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [claimDeepLink]);
+
+    const handlePrimaryAction = React.useCallback(async () => {
+        const installed = await canOpenRyveClaimDeepLink(claimDeepLink);
+        setCanOpenInRyve(installed);
+
+        if (installed) {
+            await Linking.openURL(claimDeepLink);
+            return;
         }
 
-        const keydata = keyPairToBase64nopad(conduitKeyPair.data);
-        if (keydata instanceof Error) {
-            return (
-                <View
-                    style={{
-                        width: "100%",
-                        height: "100%",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Text style={[ss.bodyFont, ss.whiteText]}>
-                        Error formatting keydata
-                    </Text>
-                </View>
-            );
-        }
-
-        const data = conduitScanData.parse({
-            version: 1,
-            data: {
-                key: keydata,
-                name: conduitName.data,
-            },
-        } as z.infer<typeof conduitScanData>);
-
-        const qrDeepLink = conduitClaimDeepLink.parse(
-            `${RYVE_CLAIM_DEEP_LINK}${base64url.encode(new TextEncoder().encode(JSON.stringify(data)))}`,
+        console.log(
+            "[RyveClaim] Ryve not installed, opening install URL:",
+            ryveInstallUrl,
         );
+        await Linking.openURL(ryveInstallUrl);
+    }, [claimDeepLink, ryveInstallUrl]);
 
-        return (
+    const primaryActionLabel =
+        canOpenInRyve === false
+            ? t("GET_RYVE_I18N.string")
+            : t("OPEN_IN_RYVE_I18N.string");
+
+    return (
+        <RyveModalShell onClose={onClose}>
             <View
                 style={[
                     ss.flex,
                     ss.column,
                     ss.alignCenter,
-                    ss.justifySpaceBetween,
-                    ss.doublePadded,
                     {
-                        paddingTop: 60,
-                        paddingBottom: 40,
+                        flexDirection: "column",
+                        gap: 20,
+                        paddingHorizontal: 24,
+                        paddingBottom: 24,
                     },
                 ]}
             >
-                <View
+                <Text
                     style={[
-                        ss.fullWidth,
-                        ss.column,
-                        ss.alignCenter,
-                        ss.flex,
-                        ss.justifyCenter,
-                        { gap: 20 },
+                        ss.bodyFont,
+                        ss.blackText,
+                        ss.centeredText,
+                        { fontSize: 22 },
                     ]}
                 >
-                    <View
-                        style={[
-                            ss.padded,
-                            {
-                                borderRadius: 20,
-                                borderWidth: 2,
-                                borderColor: qrRevealed
-                                    ? palette.black
-                                    : palette.purple,
-                                backgroundColor: qrRevealed
-                                    ? palette.white
-                                    : palette.transparent,
-                            },
-                        ]}
-                    >
-                        {qrRevealed ? (
-                            <QRDisplay
-                                backgroundColor={palette.white}
-                                foregroundColor={palette.black}
-                                size={win.width * 0.8}
-                                data={qrDeepLink}
-                            />
-                        ) : (
-                            <View
-                                style={{
-                                    width: win.width * 0.8,
-                                    height: win.width * 0.8,
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <Text
-                                    style={[
-                                        ss.blackText,
-                                        ss.bodyFont,
-                                        ss.centeredText,
-                                        { marginBottom: 20 },
-                                    ]}
-                                >
-                                    {t("SCAN_THIS_FROM_RYVE_APP_I18N.string")}
-                                </Text>
-                                <Pressable
-                                    style={[
-                                        ss.alignCenter,
-                                        ss.justifyCenter,
-                                        {
-                                            backgroundColor: palette.white,
-                                            borderRadius: 100,
-                                            borderWidth: 1,
-                                            borderColor: palette.purple,
-                                            paddingVertical: 12,
-                                            paddingHorizontal: 24,
-                                        },
-                                    ]}
-                                    onPress={() => setQrRevealed(true)}
-                                >
-                                    <Text style={[ss.purpleText, ss.bodyFont]}>
-                                        {t("REVEAL_I18N.string")}
-                                    </Text>
-                                </Pressable>
-                            </View>
-                        )}
-                    </View>
-                    <Pressable
-                        style={[
-                            ss.row,
-                            ss.fullWidth,
-                            ss.alignCenter,
-                            ss.justifyCenter,
-                            {
-                                backgroundColor: palette.white,
-                                borderRadius: 100,
-                                borderWidth: 1,
-                                borderColor: palette.purple,
-                                paddingVertical: 10,
-                            },
-                        ]}
-                        onPress={() => {
-                            Linking.openURL(RYVE_APP_LISTING_GOOGLE);
-                        }}
-                    >
-                        <Text
-                            style={[
-                                ss.purpleText,
-                                ss.bodyFont,
-                                ss.centeredText,
-                                { maxWidth: "80%" },
-                            ]}
-                        >
-                            {t("GET_RYVE_I18N.string")}
-                        </Text>
-                        <Icon
-                            name={"external-link"}
-                            size={28}
-                            color={palette.purple}
-                        />
-                    </Pressable>
-                </View>
-            </View>
-        );
-    }
+                    {t("CLAIM_REWARDS_I18N.string")}
+                </Text>
 
-    return (
-        <>
-            <Pressable
-                onPress={() => {
-                    setModalOpen(true);
-                    setBgBlur(true);
-                }}
-            >
+                <Pressable
+                    onPress={() => {
+                        void handlePrimaryAction();
+                    }}
+                    onLayout={(event) => {
+                        setButtonWidth(event.nativeEvent.layout.width);
+                    }}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 12,
+                        height: 52,
+                        overflow: "hidden",
+                        gap: 10,
+                        alignSelf: "stretch",
+                    }}
+                >
+                    <View
+                        style={{
+                            position: "absolute",
+                            left: 0,
+                            top: 0,
+                            width: "100%",
+                            height: "100%",
+                        }}
+                        pointerEvents="none"
+                    >
+                        <Canvas style={{ flex: 1 }}>
+                            <Rect
+                                x={0}
+                                y={0}
+                                width={Math.max(1, buttonWidth)}
+                                height={52}
+                            >
+                                <LinearGradient
+                                    start={vec(0, 26)}
+                                    end={vec(Math.max(1, buttonWidth), 26)}
+                                    colors={RYVE_GRADIENT_COLORS}
+                                />
+                            </Rect>
+                        </Canvas>
+                    </View>
+                    <Text style={[ss.whiteText, ss.bodyFont, { fontSize: 24 }]}>
+                        {primaryActionLabel}
+                    </Text>
+                    <Icon name="right-arrow" color={palette.white} size={20} />
+                </Pressable>
                 <View
                     style={{
                         flexDirection: "row",
                         alignItems: "center",
-                        justifyContent: "flex-start",
-                        borderRadius: 100,
-                        width: "100%",
-                        paddingHorizontal: 35,
-                        paddingVertical: 10,
-                        backgroundColor: palette.white,
-                        borderColor: palette.purple,
-                        borderWidth: 1,
+                        justifyContent: "center",
+                        gap: 10,
                     }}
                 >
-                    <Text style={[ss.purpleText, ss.bodyFont]}>
-                        {t("CLAIM_REWARDS_IN_RYVE_I18N.string")}
+                    <View
+                        style={{
+                            width: 20,
+                            borderBottomWidth: 1,
+                            borderBottomColor: palette.midGrey,
+                        }}
+                    />
+                    <Text style={[ss.tinyFont, ss.greyText, ss.centeredText]}>
+                        {t("OR_I18N.string")}
                     </Text>
+                    <View
+                        style={{
+                            width: 20,
+                            borderBottomWidth: 1,
+                            borderBottomColor: palette.midGrey,
+                        }}
+                    />
                 </View>
-            </Pressable>
-            <Modal
-                animationType="fade"
-                visible={modalOpen}
-                transparent={true}
-                onRequestClose={onClose}
-            >
-                <View
+
+                <Text
                     style={[
-                        ss.modalBottom90,
-                        {
-                            overflow: "hidden",
-                        },
+                        ss.blackText,
+                        ss.centeredText,
+                        { fontSize: 18, fontFamily: "JuraRegular" },
                     ]}
                 >
-                    <InproxyStatusColorCanvas
-                        width={win.width}
-                        height={win.height}
-                        faderInitial={
-                            inproxyStatus.data &&
-                            inproxyStatus.data === "RUNNING"
-                                ? 1
-                                : 0
-                        }
-                    />
-                    <Pressable
-                        style={[ss.row, ss.padded]}
-                        onPress={() => {
-                            setModalOpen(false);
-                            setBgBlur(false);
-                            setQrRevealed(false);
+                    {t("SCAN_THIS_FROM_RYVE_APP_I18N.string")}
+                </Text>
+
+                {qrRevealed ? (
+                    <Pressable onPress={() => setQrRevealed(false)}>
+                        <QRDisplay
+                            data={claimDeepLink}
+                            size={Math.min(win.width * 0.8, 300)}
+                        />
+                    </Pressable>
+                ) : (
+                    <View
+                        style={{
+                            width: Math.min(win.width * 0.8, 300),
+                            height: Math.min(win.width * 0.8, 300),
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderRadius: 15,
+                            overflow: "hidden",
+                            borderWidth: 1,
                         }}
                     >
-                        <View
-                            style={[ss.rounded20, ss.alignFlexStart, ss.padded]}
+                        <Pressable
+                            onPress={() => setQrRevealed(true)}
+                            style={{
+                                paddingVertical: 12,
+                                paddingHorizontal: 24,
+                                borderColor: palette.purple,
+                                borderWidth: 1,
+                                borderRadius: 12,
+                            }}
                         >
-                            <Icon
-                                name={"chevron-down"}
-                                color={palette.black}
-                                size={30}
-                            />
-                        </View>
-                    </Pressable>
-                    <ModalContent />
-                </View>
-            </Modal>
-        </>
+                            <Text
+                                style={[
+                                    ss.bodyFont,
+                                    {
+                                        color: palette.purple,
+                                        fontSize: 14,
+                                    },
+                                ]}
+                            >
+                                {t("REVEAL_QR_I18N.string")}
+                            </Text>
+                        </Pressable>
+                    </View>
+                )}
+            </View>
+        </RyveModalShell>
+    );
+}
+
+function RyveModalContent({ openToQr }: { openToQr?: boolean }) {
+    const { t } = useTranslation();
+    const conduitKeyPair = useConduitKeyPair();
+
+    if (!conduitKeyPair.data) {
+        return (
+            <RyveModalShell>
+                <RyveCenteredMessage
+                    message={t("LOADING_CONDUIT_DATA_I18N.string")}
+                />
+            </RyveModalShell>
+        );
+    }
+
+    const keydata = keyPairToBase64nopad(conduitKeyPair.data);
+    if (keydata instanceof Error) {
+        return (
+            <RyveModalShell>
+                <RyveCenteredMessage
+                    message={t("ERROR_FORMATTING_KEYDATA_I18N.string")}
+                />
+            </RyveModalShell>
+        );
+    }
+
+    return (
+        <RyveClaimModalContent
+            claim={{ version: 1, key: keydata }}
+            openToQr={openToQr}
+        />
+    );
+}
+
+export function RyveCallToAction({
+    triggerLabel,
+    compact,
+    openToQr,
+    renderTrigger,
+}: {
+    triggerLabel?: string;
+    compact?: boolean;
+    openToQr?: boolean;
+    renderTrigger?: (onPress: () => void) => React.ReactNode;
+}) {
+    const { t } = useTranslation();
+    const { openModal } = useModal();
+
+    const handleOpen = React.useCallback(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        openModal(<RyveModalContent openToQr={openToQr} />);
+    }, [openModal, openToQr]);
+
+    if (renderTrigger) {
+        return <>{renderTrigger(handleOpen)}</>;
+    }
+
+    return (
+        <Pressable onPress={handleOpen}>
+            <View
+                style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    borderRadius: 100,
+                    width: compact ? undefined : "100%",
+                    paddingHorizontal: compact ? 16 : 35,
+                    paddingVertical: 10,
+                    backgroundColor: palette.white,
+                    borderColor: palette.purple,
+                    borderWidth: 1,
+                }}
+            >
+                <Text style={[ss.purpleText, ss.bodyFont]}>
+                    {triggerLabel ?? t("CLAIM_REWARDS_IN_RYVE_I18N.string")}
+                </Text>
+            </View>
+        </Pressable>
     );
 }

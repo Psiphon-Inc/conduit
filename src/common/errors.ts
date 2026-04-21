@@ -17,6 +17,17 @@
  *
  */
 
+/**
+ * Converts an unknown error value to a string. Returns error.message
+ * if the value is an Error, otherwise returns "Unknown error".
+ */
+export function toErrorString(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return "Unknown error";
+}
+
 export function wrapError(value: unknown, message: string): Error {
     if (value instanceof Error) {
         return new Error(message, { cause: value });

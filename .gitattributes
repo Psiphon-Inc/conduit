@@ -1,3 +1,7 @@
 android/app/libs/*.* filter=lfs diff=lfs merge=lfs -text
 ios/*.xcframework/**/* filter=lfs diff=lfs merge=lfs -text
 ios/*.framework/**/* filter=lfs diff=lfs merge=lfs -text
+modules/expo-psiphon-tunnel-core/ios/Frameworks/PsiphonTunnel.xcframework/** filter=lfs diff=lfs merge=lfs -text
+modules/expo-psiphon-tunnel-core/android/libs filter=lfs diff=lfs merge=lfs -text
+modules/expo-psiphon-tunnel-core/android/build filter=lfs diff=lfs merge=lfs -text
+modules/expo-psiphon-tunnel-core/android/libs/ca.psiphon.aar filter=lfs diff=lfs merge=lfs -text

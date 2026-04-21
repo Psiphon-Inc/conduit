@@ -24,23 +24,25 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import React from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import {
     useDerivedValue,
     useSharedValue,
-    withDelay,
     withTiming,
 } from "react-native-reanimated";
-import {
-    useSafeAreaFrame,
-    useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
-export function SkyBox() {
-    const frame = useSafeAreaFrame();
+export type SkyBoxGradientState = 0 | 1 | 2 | 3;
+
+export function SkyBox({
+    gradientState = 0,
+}: {
+    gradientState?: SkyBoxGradientState;
+}) {
+    const frame = useWindowDimensions();
 
     const width = frame.width;
     const height = frame.height;
@@ -51,13 +53,18 @@ export function SkyBox() {
                 {
                     position: "absolute",
                     top: 0,
+                    left: 0,
                     width: width,
                     height: height,
-                    backgroundColor: palette.white,
+                    backgroundColor: "transparent",
                 },
             ]}
         >
-            <InproxyStatusColorCanvas width={width} height={height} />
+            <InproxyStatusColorCanvas
+                width={width}
+                height={height}
+                gradientState={gradientState}
+            />
         </View>
     );
 }
@@ -65,53 +72,94 @@ export function SkyBox() {
 export function InproxyStatusColorCanvas({
     width,
     height,
-    faderInitial = 0,
+    faderInitial,
+    gradientState,
 }: {
     width: number;
     height: number;
     faderInitial?: number;
+    gradientState?: SkyBoxGradientState;
 }) {
     const insets = useSafeAreaInsets();
-
     const { data: inproxyStatus } = useInproxyStatus();
 
-    const fadeIn = useSharedValue(faderInitial);
-    const fader = useSharedValue(faderInitial);
-    const shouldAnimateIn = React.useRef(true);
-    const shouldAnimateOut = React.useRef(true);
+    const initialValue = React.useMemo(() => {
+        if (typeof gradientState === "number") {
+            return gradientState;
+        }
+        if (typeof faderInitial === "number") {
+            return faderInitial;
+        }
+        return 0;
+    }, [faderInitial, gradientState]);
+    const fader = useSharedValue(initialValue);
+
+    const targetGradientState: SkyBoxGradientState = React.useMemo(() => {
+        if (typeof gradientState === "number") {
+            return gradientState;
+        }
+        return inproxyStatus === "RUNNING" ? 1 : 0;
+    }, [gradientState, inproxyStatus]);
 
     React.useEffect(() => {
-        if (inproxyStatus !== "UNKNOWN") {
-            fadeIn.value = withDelay(0, withTiming(1, { duration: 2000 }));
-        }
-        if (inproxyStatus === "RUNNING") {
-            if (shouldAnimateIn.current) {
-                fader.value = withTiming(1, { duration: 1000 });
-                shouldAnimateIn.current = false;
-                shouldAnimateOut.current = true;
-            }
-        } else if (inproxyStatus === "STOPPED") {
-            if (shouldAnimateOut.current) {
-                fader.value = withTiming(0, { duration: 1000 });
-                shouldAnimateIn.current = true;
-                shouldAnimateOut.current = false;
-            }
-        }
-    }, [inproxyStatus]);
+        fader.value = withTiming(targetGradientState, { duration: 900 });
+    }, [fader, targetGradientState]);
 
-    // make gradient taller with fader
-    const gradientPairs = [
-        ["rgba(255,255,255,0)", "rgba(255,255,255,0)"],
-        [palette.white, palette.fadedMauve],
-        [palette.fadedMauve, palette.mauve],
-        [palette.mauve, palette.peach],
+    const gradientStates = [
+        {
+            start: palette.mauve,
+            middle: palette.fadedMauve,
+            end: palette.white,
+        },
+        {
+            start: palette.peach,
+            middle: palette.mauve,
+            end: palette.fadedMauve,
+        },
+        {
+            start: "#F59F86",
+            middle: "#BB89AD",
+            end: "#B3D4FF",
+        },
+        {
+            start: "#F59F86",
+            middle: "#BB89AD",
+            end: "#9C81C9",
+        },
     ];
+
     const backgroundGradientColors = useDerivedValue(() => {
         return [
-            interpolateColors(fader.value, [0, 1], gradientPairs[0]),
-            interpolateColors(fader.value, [0, 1], gradientPairs[1]),
-            interpolateColors(fader.value, [0, 1], gradientPairs[2]),
-            interpolateColors(fader.value, [0, 1], gradientPairs[3]),
+            interpolateColors(
+                fader.value,
+                [0, 1, 2, 3],
+                [
+                    gradientStates[0].start,
+                    gradientStates[1].start,
+                    gradientStates[2].start,
+                    gradientStates[3].start,
+                ],
+            ),
+            interpolateColors(
+                fader.value,
+                [0, 1, 2, 3],
+                [
+                    gradientStates[0].middle,
+                    gradientStates[1].middle,
+                    gradientStates[2].middle,
+                    gradientStates[3].middle,
+                ],
+            ),
+            interpolateColors(
+                fader.value,
+                [0, 1, 2, 3],
+                [
+                    gradientStates[0].end,
+                    gradientStates[1].end,
+                    gradientStates[2].end,
+                    gradientStates[3].end,
+                ],
+            ),
         ];
     });
 
@@ -129,8 +177,8 @@ export function InproxyStatusColorCanvas({
             <Canvas style={[ss.flex]}>
                 <Rect x={0} y={0} width={width} height={height}>
                     <LinearGradient
-                        start={vec(width / 2, 0)}
-                        end={vec(width / 2, height)}
+                        start={vec(width / 2, height)}
+                        end={vec(width / 2, 0)}
                         colors={backgroundGradientColors}
                     />
                 </Rect>

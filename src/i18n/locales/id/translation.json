@@ -89,6 +89,9 @@
     "ONBOARDING_WELCOME_BODY_I18N": {
         "string": "Ubah perangkat Anda menjadi suar Kebebasan Internet!\n\nAnda dapat membantu orang-orang di seluruh dunia menembus jaringan yang membatasi dan mengakses Internet global dengan aman melalui Jaringan Psiphon."
     },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "Ubah perangkat Anda menjadi suar Kebebasan Internet!\n\nAnda dapat membantu orang-orang di seluruh dunia menembus jaringan yang membatasi dan mengakses Internet global dengan aman melalui Jaringan Psiphon."
+    },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "Berikutnya"
     },
@@ -97,6 +100,9 @@
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
         "string": "Conduit adalah aplikasi open source yang memungkinkan orang-orang di wilayah yang disensor di seluruh dunia untuk keluar dari perangkat dan masuk ke Jaringan Psiphon.\n\nSemakin banyak Conduit Station, semakin kuat Psiphon dan semakin terbuka akses Internetnya."
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "Di iOS, Conduit memungkinkan Anda membuat dan mengelola Conduit Station yang dihosting di cloud, yang membantu pengguna Psiphon menjangkau Jaringan Psiphon.\n\nPerangkat Anda digunakan untuk mengelola station Anda, sementara station itu sendiri berjalan di cloud."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Berikutnya"
@@ -107,14 +113,35 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "Conduit menyarankan Anda mengaktifkan notifikasi sehingga kami dapat memberikan pembaruan penting tentang Conduit Station Anda.\n\nSiap untuk memulai?"
     },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "Conduit menyarankan Anda mengaktifkan notifikasi sehingga kami dapat memberikan pembaruan penting tentang akun, langganan, dan Conduit Station yang dihosting milik Anda.\n\nSiap untuk memulai?"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "Mulai"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "Mulai"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "Conduit yang Dihosting"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "Selain menjalankan Conduit langsung di perangkat Anda, Anda dapat berlangganan station yang dihosting untuk dukungan yang selalu aktif.\n\nConduit yang Dihosting menjalankan station Anda di cloud, membuatnya tetap aktif 24/7, bahkan saat perangkat Anda offline."
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "Di iOS, Conduit Station dihosting di cloud.\n\nLangganan membuat station Anda tetap berjalan di cloud 24/7, bahkan saat perangkat Anda offline."
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "Berikutnya"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Kebijakan Privasi"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
         "string": "Kami tidak mengumpulkan informasi identitas pribadi dari pengguna Conduit. Semua data yang dikirimkan dienkripsi dan tidak dapat diakses oleh Anda atau Psiphon. Pengguna yang terhubung tidak dapat mengakses perangkat Anda dengan cara apa pun.\n\nDengan menggunakan Conduit, Anda menyetujui kebijakan privasi kami, yang tersedia di bawah."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "Kami tidak mengumpulkan informasi pengenal pribadi dari pengguna Conduit. Data yang dikirim oleh aplikasi iOS dienkripsi saat transit, dan pengguna lain tidak dapat mengakses perangkat Anda melalui aplikasi ini.\n\nDengan menggunakan Conduit, Anda menyetujui kebijakan privasi kami, yang tersedia di bawah."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Setuju"

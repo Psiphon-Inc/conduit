@@ -16,51 +16,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { BlendMode, Skia } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { Image as ExpoImage } from "expo-image";
+import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-    ActivityIndicator,
-    Modal,
-    Platform,
-    Pressable,
-    Text,
-    View,
-    useWindowDimensions,
-} from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import {
     GestureHandlerRootView,
     ScrollView,
 } from "react-native-gesture-handler";
-import Animated, {
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import {
+    SharedValue,
+    runOnJS,
     useAnimatedReaction,
-    useAnimatedStyle,
     useDerivedValue,
     useSharedValue,
-    withDelay,
     withTiming,
 } from "react-native-reanimated";
 
-import { useConduitKeyPair } from "@/src/auth/hooks";
 import { wrapError } from "@/src/common/errors";
 import { MBToBytes, bytesToMB } from "@/src/common/utils";
 import { AnimatedText } from "@/src/components/AnimatedText";
-import { ConduitName } from "@/src/components/ConduitName";
+import { useConduitActions } from "@/src/components/ConduitActionsContext";
+import { DropdownSection } from "@/src/components/DropdownSection";
+import { EditableConduitAlias } from "@/src/components/EditableConduitAlias";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
+import { GitHash } from "@/src/components/GitHash";
+import { HostedConduitSettingsCard } from "@/src/components/HostedConduitSettingsCard";
 import { Icon } from "@/src/components/Icon";
-import { NotificationsStatus } from "@/src/components/NotificationsStatus";
-import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
-import { ProxyID } from "@/src/components/ProxyID";
 import { ReducedUsageWindow } from "@/src/components/ReducedUsageWindow";
-import { SendDiagnosticButton } from "@/src/components/SendDiagnosticButton";
-import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
+import { RyveCallToAction } from "@/src/components/RyveCallToAction";
 import {
     INPROXY_MAX_CLIENTS_MAX,
+    INPROXY_MAX_CLIENTS_TOTAL_MAX,
     INPROXY_MAX_MBPS_PER_PEER_MAX,
+    PRIVACY_POLICY_URL,
 } from "@/src/constants";
-import { useNotificationsPermissions } from "@/src/hooks";
+import { useConduitName } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import {
@@ -75,28 +69,306 @@ import {
     InproxyParameters,
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
-import { getProxyId } from "@/src/inproxy/utils";
 import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
 
-export function ConduitSettings({
-    setBgBlur,
+// ---------------------------------------------------------------------------
+// LocalConduitSettingsCard — expandable card for phone-hosted conduit (Android)
+// ---------------------------------------------------------------------------
+
+const SETTINGS_HORIZONTAL_PADDING = 16;
+
+function LocalConduitSettingsCard({
+    expanded,
+    setExpanded,
+    isRunning,
+    inproxyParameters,
+    displayTotalMBps,
+    reducedExpanded,
+    setReducedExpanded,
+    reducedTimeError,
+    reducedStartIndex,
+    reducedEndIndex,
+    reducedEnabled,
+    modifiedReducedStartTime,
+    modifiedReducedEndTime,
+    combinedPeersLimitExceeded,
+    updateMaxClients,
+    updateMaxPersonalClients,
+    updateLimitBytesPerSecond,
+    updateReducedMaxClients,
+    updateReducedLimitBytesPerSecond,
+    scrollRef,
+    ensureReducedWindowDefaults,
+    disableReducedWindow,
+    showReducedSelector,
 }: {
-    setBgBlur: React.Dispatch<React.SetStateAction<boolean>>;
+    expanded: boolean;
+    setExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+    isRunning: boolean;
+    inproxyParameters: InproxyParameters;
+    displayTotalMBps: SharedValue<string>;
+    reducedExpanded: boolean;
+    setReducedExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+    reducedTimeError: null | "format" | "range";
+    reducedStartIndex: SharedValue<number>;
+    reducedEndIndex: SharedValue<number>;
+    reducedEnabled: SharedValue<boolean>;
+    modifiedReducedStartTime: SharedValue<string>;
+    modifiedReducedEndTime: SharedValue<string>;
+    combinedPeersLimitExceeded: boolean;
+    updateMaxClients: (v: number) => Promise<void>;
+    updateMaxPersonalClients: (v: number) => Promise<void>;
+    updateLimitBytesPerSecond: (v: number) => Promise<void>;
+    updateReducedMaxClients: (v: number) => Promise<void>;
+    updateReducedLimitBytesPerSecond: (v: number) => Promise<void>;
+    scrollRef: React.RefObject<any>;
+    ensureReducedWindowDefaults: () => void;
+    disableReducedWindow: () => void;
+    showReducedSelector: boolean;
 }) {
     const { t } = useTranslation();
-    const win = useWindowDimensions();
-    const router = useRouter();
 
-    const { data: conduitKeyPair } = useConduitKeyPair();
-    const { inproxyParameters, selectInproxyParameters, logErrorToDiagnostic } =
-        useInproxyContext();
+    const statusLabel = isRunning ? "ON" : "OFF";
+    const statusColor = isRunning ? palette.peach : palette.black;
+    const expandedLineItemStyle = [
+        ss.paddedHorizontal,
+        ss.row,
+        ss.height60,
+        ss.greyBorderBottom,
+    ];
+
+    return (
+        <View
+            style={[
+                ss.greyBorderBottom,
+                ss.padded,
+                {
+                    minHeight: 60,
+                    paddingHorizontal: SETTINGS_HORIZONTAL_PADDING,
+                },
+            ]}
+        >
+            <View style={[ss.column, { gap: 2 }]}>
+                <Pressable
+                    onPress={() => setExpanded((v) => !v)}
+                    style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        minHeight: 40,
+                    }}
+                >
+                    <Text style={[ss.bodyFont, ss.blackText]}>
+                        Local Station
+                    </Text>
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 6,
+                        }}
+                    >
+                        <Text
+                            style={[
+                                ss.bodyFont,
+                                {
+                                    color: statusColor,
+                                    textShadowColor: isRunning
+                                        ? palette.peach
+                                        : "transparent",
+                                    textShadowOffset: { width: 0, height: 0 },
+                                    textShadowRadius: isRunning ? 8 : 0,
+                                },
+                            ]}
+                        >
+                            {statusLabel}
+                        </Text>
+                        <View
+                            style={{
+                                transform: [
+                                    { rotate: expanded ? "180deg" : "0deg" },
+                                ],
+                            }}
+                        >
+                            <Icon
+                                name="chevron-down"
+                                color={palette.black}
+                                size={16}
+                            />
+                        </View>
+                    </View>
+                </Pressable>
+
+                {expanded ? (
+                    <DropdownSection>
+                        <EditableNumberSlider
+                            label={t("MAX_PUBLIC_PEERS_I18N.string")}
+                            originalValue={inproxyParameters.maxClients}
+                            min={1}
+                            max={INPROXY_MAX_CLIENTS_MAX}
+                            style={[...expandedLineItemStyle, ss.alignCenter]}
+                            onChange={updateMaxClients}
+                            scrollRef={scrollRef}
+                        />
+                        <EditableNumberSlider
+                            label={t("MAX_PERSONAL_PEERS_I18N.string")}
+                            originalValue={inproxyParameters.maxPersonalClients}
+                            min={0}
+                            max={INPROXY_MAX_CLIENTS_MAX}
+                            style={[...expandedLineItemStyle, ss.alignCenter]}
+                            onChange={updateMaxPersonalClients}
+                            scrollRef={scrollRef}
+                        />
+                        <Text
+                            style={[
+                                ss.bodyFont,
+                                ss.blackText,
+                                {
+                                    opacity: 0.7,
+                                    marginTop: 4,
+                                    marginBottom: 2,
+                                    paddingHorizontal: 10,
+                                    fontSize: 12,
+                                },
+                            ]}
+                        >
+                            {t("MAX_TOTAL_PEERS_NOTE_I18N.string", {
+                                max: INPROXY_MAX_CLIENTS_TOTAL_MAX,
+                            })}
+                        </Text>
+                        {combinedPeersLimitExceeded ? (
+                            <Text
+                                style={[
+                                    ss.bodyFont,
+                                    {
+                                        color: palette.red,
+                                        marginTop: 4,
+                                        marginBottom: 6,
+                                        paddingHorizontal: 10,
+                                        fontSize: 12,
+                                    },
+                                ]}
+                            >
+                                {t("MAX_TOTAL_PEERS_ERROR_I18N.string", {
+                                    max: INPROXY_MAX_CLIENTS_TOTAL_MAX,
+                                })}
+                            </Text>
+                        ) : null}
+                        <EditableNumberSlider
+                            label={t("MAX_MBPS_PER_PEER_I18N.string")}
+                            originalValue={bytesToMB(
+                                inproxyParameters.limitUpstreamBytesPerSecond,
+                            )}
+                            min={2}
+                            max={INPROXY_MAX_MBPS_PER_PEER_MAX}
+                            style={[...expandedLineItemStyle, ss.alignCenter]}
+                            onChange={updateLimitBytesPerSecond}
+                            scrollRef={scrollRef}
+                        />
+                        <View
+                            style={[
+                                ...expandedLineItemStyle,
+                                ss.flex,
+                                ss.alignCenter,
+                                ss.justifySpaceBetween,
+                            ]}
+                        >
+                            <Text style={[ss.bodyFont, ss.blackText]}>
+                                {t("REQUIRED_BANDWIDTH_I18N.string")}
+                            </Text>
+                            <AnimatedText
+                                text={displayTotalMBps}
+                                color={palette.black}
+                                fontFamily={ss.bodyFont.fontFamily}
+                                fontSize={ss.bodyFont.fontSize}
+                            />
+                        </View>
+                        <ReducedUsageWindow
+                            reducedExpanded={reducedExpanded}
+                            setReducedExpanded={setReducedExpanded}
+                            reducedTimeError={reducedTimeError}
+                            reducedStartIndex={reducedStartIndex}
+                            reducedEndIndex={reducedEndIndex}
+                            reducedEnabled={reducedEnabled}
+                            modifiedReducedStartTime={modifiedReducedStartTime}
+                            modifiedReducedEndTime={modifiedReducedEndTime}
+                            inproxyParameters={inproxyParameters}
+                            updateReducedMaxClients={updateReducedMaxClients}
+                            updateReducedLimitBytesPerSecond={
+                                updateReducedLimitBytesPerSecond
+                            }
+                            scrollRef={scrollRef}
+                            ensureReducedWindowDefaults={
+                                ensureReducedWindowDefaults
+                            }
+                            disableReducedWindow={disableReducedWindow}
+                            showSelector={showReducedSelector}
+                        />
+                    </DropdownSection>
+                ) : null}
+            </View>
+        </View>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// ConduitSettings — main settings screen
+// ---------------------------------------------------------------------------
+
+export function ConduitSettings({ inline = false }: { inline?: boolean }) {
+    const { t } = useTranslation();
+
+    const {
+        inproxyParameters,
+        isPersonalPairingReady,
+        selectInproxyParameters,
+        logErrorToDiagnostic,
+        sendFeedback,
+    } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
-    const { data: notificationsPermission } = useNotificationsPermissions();
+    const { data: conduitName } = useConduitName();
+    const showLocalConduitSettings = Platform.OS !== "ios";
+    const {
+        openPersonalPairingModal,
+        openRyveClaimModal,
+        personalCompartmentId,
+        isPersonalPairingPreparing,
+        hostedRyveClaim,
+    } = useConduitActions();
+    const disablePersonalPairingOnIos =
+        Platform.OS === "ios" && personalCompartmentId == null;
 
-    const [modalOpen, setModalOpen] = React.useState(false);
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
         React.useState(false);
+    const [hasStagedChanges, setHasStagedChanges] = React.useState(false);
+    const [localSettingsExpanded, setLocalSettingsExpanded] =
+        React.useState(false);
     const [showReducedSelector, setShowReducedSelector] = React.useState(false);
+    const [showDiagnosticThanks, setShowDiagnosticThanks] =
+        React.useState(false);
+    const localStationIsRunning = inproxyStatus === "RUNNING";
+    const settingsPaddedStyle = [
+        ss.padded,
+        { paddingHorizontal: SETTINGS_HORIZONTAL_PADDING },
+    ];
+    const settingsLineItemStyle = [
+        ...lineItemStyle,
+        { paddingHorizontal: SETTINGS_HORIZONTAL_PADDING },
+    ];
+
+    React.useEffect(() => {
+        if (!showDiagnosticThanks) {
+            return;
+        }
+
+        const timeoutId = setTimeout(() => {
+            setShowDiagnosticThanks(false);
+        }, 5000);
+
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [showDiagnosticThanks]);
 
     const storedReducedStart = inproxyParameters.reducedStartTime
         ? convertUtcTimeToLocal(inproxyParameters.reducedStartTime)
@@ -108,6 +380,8 @@ export function ConduitSettings({
         storedReducedStart.length > 0 && storedReducedEnd.length > 0;
 
     const [reducedExpanded, setReducedExpanded] = React.useState(false);
+    const [combinedPeersLimitExceeded, setCombinedPeersLimitExceeded] =
+        React.useState(false);
     const reducedStartIndex = useSharedValue(
         parseTimeIndex(storedReducedStart) ?? DEFAULT_REDUCED_START_INDEX,
     );
@@ -148,6 +422,9 @@ export function ConduitSettings({
     }
 
     const modifiedMaxPeers = useSharedValue(inproxyParameters.maxClients);
+    const modifiedMaxPersonalPeers = useSharedValue(
+        inproxyParameters.maxPersonalClients,
+    );
     const modifiedMaxMBps = useSharedValue(
         bytesToMB(inproxyParameters.limitUpstreamBytesPerSecond),
     );
@@ -163,49 +440,59 @@ export function ConduitSettings({
     const modifiedReducedStartTime = useSharedValue(storedReducedStart);
     const modifiedReducedEndTime = useSharedValue(storedReducedEnd);
     const reducedEnabled = useSharedValue(storedReducedEnabled);
+    const savedMaxPeers = useSharedValue(inproxyParameters.maxClients);
+    const savedMaxPersonalPeers = useSharedValue(
+        inproxyParameters.maxPersonalClients,
+    );
+    const savedLimitBytesPerSecond = useSharedValue(
+        inproxyParameters.limitUpstreamBytesPerSecond,
+    );
+    const savedReducedStartTime = useSharedValue(storedReducedStart);
+    const savedReducedEndTime = useSharedValue(storedReducedEnd);
+    const savedReducedMaxPeers = useSharedValue(
+        inproxyParameters.reducedMaxClients ?? inproxyParameters.maxClients,
+    );
+    const savedReducedLimitBytesPerSecond = useSharedValue(
+        inproxyParameters.reducedLimitUpstreamBytesPerSecond ??
+            inproxyParameters.limitUpstreamBytesPerSecond,
+    );
     const displayTotalMBps = useDerivedValue(() => {
-        return `${modifiedMaxPeers.value * modifiedMaxMBps.value} MB/s`;
+        return `${(modifiedMaxPeers.value + modifiedMaxPersonalPeers.value) * modifiedMaxMBps.value} MB/s`;
     });
     const applyChangesNoteOpacity = useSharedValue(0);
     const changesPending = useDerivedValue(() => {
         let settingsChanged = false;
         const reducedStartNormalized = modifiedReducedStartTime.value.trim();
         const reducedEndNormalized = modifiedReducedEndTime.value.trim();
-        const storedReducedStart = inproxyParameters.reducedStartTime
-            ? convertUtcTimeToLocal(inproxyParameters.reducedStartTime)
-            : "";
-        const storedReducedEnd = inproxyParameters.reducedEndTime
-            ? convertUtcTimeToLocal(inproxyParameters.reducedEndTime)
-            : "";
+        const currentReducedStart = savedReducedStartTime.value;
+        const currentReducedEnd = savedReducedEndTime.value;
         const reducedActive =
             reducedStartNormalized.length > 0 ||
             reducedEndNormalized.length > 0 ||
-            storedReducedStart.length > 0 ||
-            storedReducedEnd.length > 0;
+            currentReducedStart.length > 0 ||
+            currentReducedEnd.length > 0;
 
-        if (modifiedMaxPeers.value !== inproxyParameters.maxClients) {
+        if (modifiedMaxPeers.value !== savedMaxPeers.value) {
             settingsChanged = true;
         } else if (
-            MBToBytes(modifiedMaxMBps.value) !==
-            inproxyParameters.limitUpstreamBytesPerSecond
+            modifiedMaxPersonalPeers.value !== savedMaxPersonalPeers.value
         ) {
             settingsChanged = true;
         } else if (
-            reducedStartNormalized !== storedReducedStart ||
-            reducedEndNormalized !== storedReducedEnd
+            MBToBytes(modifiedMaxMBps.value) !== savedLimitBytesPerSecond.value
+        ) {
+            settingsChanged = true;
+        } else if (
+            reducedStartNormalized !== currentReducedStart ||
+            reducedEndNormalized !== currentReducedEnd
         ) {
             settingsChanged = true;
         } else if (reducedActive) {
-            const storedReducedMaxClients =
-                inproxyParameters.reducedMaxClients ??
-                inproxyParameters.maxClients;
-            const storedReducedLimit =
-                inproxyParameters.reducedLimitUpstreamBytesPerSecond ??
-                inproxyParameters.limitUpstreamBytesPerSecond;
-            if (modifiedReducedMaxPeers.value !== storedReducedMaxClients) {
+            if (modifiedReducedMaxPeers.value !== savedReducedMaxPeers.value) {
                 settingsChanged = true;
             } else if (
-                MBToBytes(modifiedReducedMaxMBps.value) !== storedReducedLimit
+                MBToBytes(modifiedReducedMaxMBps.value) !==
+                savedReducedLimitBytesPerSecond.value
             ) {
                 settingsChanged = true;
             }
@@ -215,7 +502,10 @@ export function ConduitSettings({
 
     useAnimatedReaction(
         () => changesPending.value,
-        (current: boolean) => {
+        (current: boolean, previous: boolean | null) => {
+            if (current !== previous) {
+                runOnJS(setHasStagedChanges)(current);
+            }
             if (current) {
                 applyChangesNoteOpacity.value = withTiming(1, {
                     duration: 500,
@@ -234,6 +524,12 @@ export function ConduitSettings({
 
     function resetSettingsFromInproxyProvider() {
         modifiedMaxPeers.value = inproxyParameters.maxClients;
+        modifiedMaxPersonalPeers.value = inproxyParameters.maxPersonalClients;
+        setCombinedPeersLimitExceeded(
+            inproxyParameters.maxClients +
+                inproxyParameters.maxPersonalClients >
+                INPROXY_MAX_CLIENTS_TOTAL_MAX,
+        );
         modifiedMaxMBps.value = bytesToMB(
             inproxyParameters.limitUpstreamBytesPerSecond,
         );
@@ -254,6 +550,17 @@ export function ConduitSettings({
         const endIndex = parseTimeIndex(endTime) ?? DEFAULT_REDUCED_END_INDEX;
         modifiedReducedStartTime.value = startTime;
         modifiedReducedEndTime.value = endTime;
+        savedMaxPeers.value = inproxyParameters.maxClients;
+        savedMaxPersonalPeers.value = inproxyParameters.maxPersonalClients;
+        savedLimitBytesPerSecond.value =
+            inproxyParameters.limitUpstreamBytesPerSecond;
+        savedReducedStartTime.value = startTime;
+        savedReducedEndTime.value = endTime;
+        savedReducedMaxPeers.value =
+            inproxyParameters.reducedMaxClients ?? inproxyParameters.maxClients;
+        savedReducedLimitBytesPerSecond.value =
+            inproxyParameters.reducedLimitUpstreamBytesPerSecond ??
+            inproxyParameters.limitUpstreamBytesPerSecond;
         reducedStartIndex.value = startIndex;
         reducedEndIndex.value = endIndex;
         reducedEnabled.value = startTime.length > 0 && endTime.length > 0;
@@ -264,8 +571,10 @@ export function ConduitSettings({
         resetSettingsFromInproxyProvider();
     }, [inproxyParameters]);
 
+    const settingsVisible = inline;
+
     React.useEffect(() => {
-        if (!modalOpen) {
+        if (!settingsVisible) {
             setShowReducedSelector(false);
             return;
         }
@@ -274,14 +583,24 @@ export function ConduitSettings({
             setShowReducedSelector(true);
         }, 300);
         return () => clearTimeout(timer);
-    }, [modalOpen]);
+    }, [settingsVisible]);
 
     async function updateInproxyMaxClients(newValue: number) {
         modifiedMaxPeers.value = newValue;
+        setCombinedPeersLimitExceeded(
+            newValue + modifiedMaxPersonalPeers.value >
+                INPROXY_MAX_CLIENTS_TOTAL_MAX,
+        );
+    }
+
+    async function updateInproxyMaxPersonalClients(newValue: number) {
+        modifiedMaxPersonalPeers.value = newValue;
+        setCombinedPeersLimitExceeded(
+            modifiedMaxPeers.value + newValue > INPROXY_MAX_CLIENTS_TOTAL_MAX,
+        );
     }
 
     async function updateInproxyLimitBytesPerSecond(newValue: number) {
-        // This value is configured as MBps in UI, so multiply out to raw bytes
         modifiedMaxMBps.value = newValue;
     }
 
@@ -296,31 +615,31 @@ export function ConduitSettings({
     function ensureReducedWindowDefaults() {
         let startLabel = modifiedReducedStartTime.value.trim();
         let endLabel = modifiedReducedEndTime.value.trim();
-        let startIndex = reducedStartIndex.value;
-        let endIndex = reducedEndIndex.value;
+        let startValue = reducedStartIndex.value;
+        let endValue = reducedEndIndex.value;
 
         if (startLabel.length === 0) {
-            startIndex = DEFAULT_REDUCED_START_INDEX;
-            startLabel = formatTimeIndex(startIndex);
+            startValue = DEFAULT_REDUCED_START_INDEX;
+            startLabel = formatTimeIndex(startValue);
         } else {
             const parsedStart = parseTimeIndex(startLabel);
             if (parsedStart !== null) {
-                startIndex = parsedStart;
+                startValue = parsedStart;
             }
         }
 
         if (endLabel.length === 0) {
-            endIndex = DEFAULT_REDUCED_END_INDEX;
-            endLabel = formatTimeIndex(endIndex);
+            endValue = DEFAULT_REDUCED_END_INDEX;
+            endLabel = formatTimeIndex(endValue);
         } else {
             const parsedEnd = parseTimeIndex(endLabel);
             if (parsedEnd !== null) {
-                endIndex = parsedEnd;
+                endValue = parsedEnd;
             }
         }
 
-        reducedStartIndex.value = startIndex;
-        reducedEndIndex.value = endIndex;
+        reducedStartIndex.value = startValue;
+        reducedEndIndex.value = endValue;
         modifiedReducedStartTime.value = startLabel;
         modifiedReducedEndTime.value = endLabel;
         reducedEnabled.value = startLabel.length > 0 && endLabel.length > 0;
@@ -350,9 +669,14 @@ export function ConduitSettings({
         if (reducedTimeError) {
             setReducedTimeError(null);
         }
+        if (combinedPeersLimitExceeded) {
+            return;
+        }
         const reducedEnabledFlag =
             reducedStartNormalized.length > 0 &&
             reducedEndNormalized.length > 0;
+        const maxClients = modifiedMaxPeers.value;
+        const maxPersonalClients = modifiedMaxPersonalPeers.value;
         const reducedStartUtc = reducedEnabledFlag
             ? convertLocalTimeToUtc(reducedStartNormalized)
             : undefined;
@@ -361,11 +685,13 @@ export function ConduitSettings({
             : undefined;
         const reducedMaxClients = Math.min(
             modifiedReducedMaxPeers.value,
-            modifiedMaxPeers.value,
+            maxClients,
         );
         const reducedLimitBytes = MBToBytes(modifiedReducedMaxMBps.value);
         const newInproxyParameters = InproxyParametersSchema.safeParse({
-            maxClients: modifiedMaxPeers.value,
+            maxClients,
+            maxPersonalClients,
+            personalCompartmentId: inproxyParameters.personalCompartmentId,
             limitUpstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             limitDownstreamBytesPerSecond: MBToBytes(modifiedMaxMBps.value),
             privateKey: inproxyParameters.privateKey,
@@ -393,459 +719,484 @@ export function ConduitSettings({
         selectInproxyParameters(newInproxyParameters.data);
     }
 
-    // onSettingsClose has different behaviour depending on whether there are
-    // pending changes to the settings, and if the inproxy is running or not.
-    async function onSettingsClose() {
-        applyChangesNoteOpacity.value = withTiming(0, { duration: 300 });
+    async function onSavePress() {
+        if (!changesPending.value) {
+            return;
+        }
         const reducedStartNormalized = modifiedReducedStartTime.value.trim();
         const reducedEndNormalized = modifiedReducedEndTime.value.trim();
         const reducedTimeErrorKey = getReducedTimeErrorKey(
             reducedStartNormalized,
             reducedEndNormalized,
         );
+
         if (reducedTimeErrorKey) {
             setReducedTimeError(reducedTimeErrorKey);
             return;
         }
+
+        if (combinedPeersLimitExceeded) {
+            return;
+        }
+
         if (changesPending.value) {
-            if (inproxyStatus === "RUNNING") {
-                // Since applying changes restarts inproxy, connections will be
-                // lost, so we ask the user for confirmation about this.
+            if (showLocalConduitSettings && inproxyStatus === "RUNNING") {
                 setDisplayRestartConfirmation(true);
-            } else {
-                await commitChanges();
-                setModalOpen(false);
-                setBgBlur(false);
+                return;
             }
-        } else {
-            setModalOpen(false);
-            setBgBlur(false);
+            await commitChanges();
         }
     }
 
-    // Pass ref to ScrollView into the sliders so we don't start scrolling while
-    // we're sliding.
-    const scrollRef = React.useRef<any>(null);
+    function onSendDiagnosticPress() {
+        void sendFeedback();
+        setShowDiagnosticThanks(true);
+    }
 
-    function Settings() {
+    function renderRyveSettingsAction(label: string, onPress: () => void) {
         return (
-            <View style={[ss.flex]}>
-                <View
+            <Pressable
+                onPress={onPress}
+                style={[
+                    ...settingsLineItemStyle,
+                    ss.flex,
+                    ss.justifySpaceBetween,
+                    {
+                        flexDirection: "row",
+                        alignItems: "center",
+                    },
+                ]}
+            >
+                <View style={[ss.row, ss.alignCenter, ss.flex, { gap: 10 }]}>
+                    <ExpoImage
+                        source={require("@/assets/images/icons/ryve.svg")}
+                        tintColor={palette.black}
+                        style={{ width: 20, height: 20 }}
+                        contentFit="contain"
+                    />
+                    <Text style={[ss.bodyFont, ss.blackText]}>{label}</Text>
+                </View>
+                <Icon name="chevron-right" color={palette.black} size={16} />
+            </Pressable>
+        );
+    }
+
+    const scrollRef = React.useRef<any>(null);
+    const canSaveChanges =
+        hasStagedChanges &&
+        !combinedPeersLimitExceeded &&
+        isPersonalPairingReady;
+
+    if (displayRestartConfirmation) {
+        return (
+            <RestartConfirmation
+                onConfirm={async () => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    await commitChanges();
+                    setDisplayRestartConfirmation(false);
+                }}
+                onCancel={() => {
+                    setDisplayRestartConfirmation(false);
+                }}
+            />
+        );
+    }
+
+    return (
+        <View style={[ss.flex]}>
+            {/* Header */}
+            <View
+                style={[
+                    ...settingsPaddedStyle,
+                    ss.greyBorderBottom,
+                    ss.row,
+                    ss.alignCenter,
+                    ss.justifySpaceBetween,
+                ]}
+            >
+                <Text
                     style={[
-                        ss.padded,
-                        ss.row,
-                        ss.alignCenter,
-                        ss.greyBorderBottom,
+                        ss.blackText,
+                        ss.extraLargeFont,
+                        { fontFamily: "JuraBold" },
                     ]}
                 >
-                    <Pressable style={[ss.row]} onPress={onSettingsClose}>
-                        <View
-                            style={[ss.rounded20, ss.alignFlexStart, ss.padded]}
-                        >
-                            <Icon
-                                name={"chevron-down"}
-                                color={palette.black}
-                                size={30}
-                            />
-                        </View>
-                        <Text style={[ss.blackText, ss.extraLargeFont]}>
-                            {t("SETTINGS_I18N.string")}
-                        </Text>
-                    </Pressable>
-                    <View style={[ss.row, ss.flex, ss.justifyFlexEnd]}>
+                    {t("SETTINGS_I18N.string")}
+                </Text>
+
+                <View style={[ss.row, ss.alignCenter, { gap: 12 }]}>
+                    {showLocalConduitSettings ? (
                         <Animated.View
                             style={[
-                                ss.column,
+                                ss.row,
                                 ss.alignCenter,
-                                ss.nogap,
                                 applyChangesNoteStyle,
                             ]}
                         >
-                            <Text
-                                style={[
-                                    ss.bodyFont,
-                                    ss.blackText,
-                                    { fontSize: 12 },
+                            <Pressable
+                                onPress={() => void onSavePress()}
+                                disabled={!canSaveChanges}
+                                style={({ pressed }) => [
+                                    ss.rounded10,
+                                    {
+                                        backgroundColor: hasStagedChanges
+                                            ? palette.black
+                                            : "transparent",
+                                        opacity:
+                                            canSaveChanges && pressed
+                                                ? 0.85
+                                                : hasStagedChanges &&
+                                                    combinedPeersLimitExceeded
+                                                  ? 0.4
+                                                  : 1,
+                                        paddingHorizontal: hasStagedChanges
+                                            ? 12
+                                            : 0,
+                                        paddingVertical: hasStagedChanges
+                                            ? 7
+                                            : 0,
+                                    },
                                 ]}
                             >
-                                {t("CHANGES_PENDING_I18N.string")}
-                            </Text>
-                            <Text
-                                style={[
-                                    ss.bodyFont,
-                                    ss.blackText,
-                                    { fontSize: 12 },
-                                ]}
-                            >
-                                {t("CLOSE_TO_APPLY_I18N.string")}
-                            </Text>
-                        </Animated.View>
-                    </View>
-                </View>
-                <GestureHandlerRootView>
-                    <ScrollView
-                        contentContainerStyle={{
-                            width: "100%",
-                        }}
-                        ref={scrollRef}
-                    >
-                        <View>
-                            <EditableNumberSlider
-                                label={t("MAX_PEERS_I18N.string")}
-                                originalValue={inproxyParameters.maxClients}
-                                min={1}
-                                max={INPROXY_MAX_CLIENTS_MAX}
-                                style={[...lineItemStyle, ss.alignCenter]}
-                                onChange={updateInproxyMaxClients}
-                                scrollRef={scrollRef}
-                            />
-                            <EditableNumberSlider
-                                label={t("MAX_MBPS_PER_PEER_I18N.string")}
-                                originalValue={bytesToMB(
-                                    inproxyParameters.limitUpstreamBytesPerSecond,
-                                )}
-                                min={2}
-                                max={INPROXY_MAX_MBPS_PER_PEER_MAX}
-                                style={[...lineItemStyle, ss.alignCenter]}
-                                onChange={updateInproxyLimitBytesPerSecond}
-                                scrollRef={scrollRef}
-                            />
-                            <View
-                                style={[
-                                    ...lineItemStyle,
-                                    ss.flex,
-                                    ss.alignCenter,
-                                    ss.justifySpaceBetween,
-                                ]}
-                            >
-                                <Text style={[ss.bodyFont, ss.blackText]}>
-                                    {t("REQUIRED_BANDWIDTH_I18N.string")}
-                                </Text>
-                                <AnimatedText
-                                    text={displayTotalMBps}
-                                    color={palette.black}
-                                    fontFamily={ss.bodyFont.fontFamily}
-                                    fontSize={ss.bodyFont.fontSize}
-                                />
-                            </View>
-                            <ReducedUsageWindow
-                                reducedExpanded={reducedExpanded}
-                                setReducedExpanded={setReducedExpanded}
-                                reducedTimeError={reducedTimeError}
-                                reducedStartIndex={reducedStartIndex}
-                                reducedEndIndex={reducedEndIndex}
-                                reducedEnabled={reducedEnabled}
-                                modifiedReducedStartTime={
-                                    modifiedReducedStartTime
-                                }
-                                modifiedReducedEndTime={modifiedReducedEndTime}
-                                inproxyParameters={inproxyParameters}
-                                updateReducedMaxClients={
-                                    updateReducedMaxClients
-                                }
-                                updateReducedLimitBytesPerSecond={
-                                    updateReducedLimitBytesPerSecond
-                                }
-                                scrollRef={scrollRef}
-                                ensureReducedWindowDefaults={
-                                    ensureReducedWindowDefaults
-                                }
-                                disableReducedWindow={disableReducedWindow}
-                                showSelector={showReducedSelector}
-                            />
-                            <View
-                                style={[
-                                    ss.greyBorderBottom,
-                                    ss.flex,
-                                    ss.alignCenter,
-                                    ss.column,
-                                    ss.padded,
-                                ]}
-                            >
-                                <View
-                                    style={[
-                                        ss.row,
-                                        ss.fullWidth,
-                                        ss.justifySpaceBetween,
-                                        ss.alignCenter,
-                                    ]}
-                                >
-                                    <Text style={[ss.bodyFont, ss.blackText]}>
-                                        {t("YOUR_CONDUIT_ID_I18N.string")}
-                                    </Text>
-                                    {conduitKeyPair ? (
-                                        <ProxyID
-                                            proxyId={getProxyId(conduitKeyPair)}
-                                            copyable={true}
-                                        />
-                                    ) : (
-                                        <ActivityIndicator
-                                            size={"small"}
-                                            color={palette.white}
-                                        />
-                                    )}
-                                </View>
-                                <View style={[ss.row, ss.flex, ss.alignCenter]}>
-                                    <Text style={[ss.blackText, ss.bodyFont]}>
-                                        {t("ALIAS_I18N.string")}:
-                                    </Text>
-                                    <ConduitName />
-                                </View>
-                            </View>
-                            <View
-                                style={[
-                                    ...lineItemStyle,
-                                    ss.flex,
-                                    ss.alignCenter,
-                                    ss.justifySpaceBetween,
-                                ]}
-                            >
-                                <Text style={[ss.bodyFont, ss.blackText]}>
-                                    {t("SEND_DIAGNOSTIC_I18N.string")}
-                                </Text>
-                                <SendDiagnosticButton />
-                            </View>
-                            {!["macos", "ios"].includes(Platform.OS) &&
-                                notificationsPermission &&
-                                notificationsPermission != "GRANTED" && (
-                                    <View
+                                {hasStagedChanges ? (
+                                    <Text
                                         style={[
-                                            ...lineItemStyle,
-                                            ss.flex,
-                                            ss.alignCenter,
-                                            ss.justifySpaceBetween,
-                                        ]}
-                                    >
-                                        <NotificationsStatus />
-                                    </View>
-                                )}
-                            <View
-                                style={[
-                                    ...lineItemStyle,
-                                    ss.flex,
-                                    ss.alignCenter,
-                                    ss.justifySpaceBetween,
-                                ]}
-                            >
-                                <Text style={[ss.bodyFont, ss.blackText]}>
-                                    {t("LEARN_MORE_I18N.string")}
-                                </Text>
-                                <Pressable
-                                    onPress={() => {
-                                        setModalOpen(false);
-                                        setBgBlur(false);
-                                        router.push("/(app)/onboarding");
-                                    }}
-                                >
-                                    <View
-                                        style={[
-                                            ss.row,
-                                            ss.alignCenter,
-                                            ss.rounded5,
-                                            ss.halfPadded,
+                                            ss.bodyFont,
                                             {
-                                                backgroundColor: palette.white,
-                                                borderWidth: 1,
-                                                borderColor: palette.purple,
+                                                color: palette.white,
                                             },
                                         ]}
                                     >
-                                        <Text
-                                            style={[ss.bodyFont, ss.purpleText]}
-                                        >
-                                            {t("REPLAY_INTRO_I18N.string")}
-                                        </Text>
-                                    </View>
-                                </Pressable>
-                            </View>
-                            <View
-                                style={[
-                                    ss.height60,
-                                    ss.flex,
-                                    ss.alignCenter,
-                                    ss.justifyCenter,
-                                ]}
-                            >
-                                <PrivacyPolicyLink
-                                    textStyle={{ ...ss.greyText }}
-                                    containerHeight={60}
-                                />
-                            </View>
-                        </View>
-                    </ScrollView>
-                </GestureHandlerRootView>
-            </View>
-        );
-    }
+                                        {t("SAVE_I18N.string")}
+                                    </Text>
+                                ) : null}
+                            </Pressable>
+                        </Animated.View>
+                    ) : null}
 
-    function RestartConfirmation() {
-        return (
-            <View style={[ss.flex]}>
-                <View
-                    style={[
-                        ss.flex,
-                        ss.column,
-                        ss.alignCenter,
-                        ss.justifyCenter,
-                        ss.doubleGap,
-                        ss.doublePadded,
-                    ]}
-                >
-                    <Text style={[ss.blackText, ss.bodyFont]}>
-                        {t(
-                            "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N.string",
-                        )}
-                    </Text>
-                    <Text style={[ss.blackText, ss.bodyFont]}>
-                        {t("CONFIRM_CHANGES_I18N.string")}
-                    </Text>
-                    <View style={[ss.row]}>
-                        <Pressable
-                            style={[
-                                ss.padded,
-                                ss.rounded10,
-                                { backgroundColor: palette.white },
-                            ]}
-                            onPress={async () => {
-                                Haptics.impactAsync(
-                                    Haptics.ImpactFeedbackStyle.Medium,
-                                );
-                                await commitChanges();
-                                setModalOpen(false);
-                                setBgBlur(false);
-                                setDisplayRestartConfirmation(false);
-                            }}
-                        >
-                            <Text style={[ss.blackText, ss.bodyFont]}>
-                                {t("CONFIRM_I18N.string")}
-                            </Text>
-                        </Pressable>
-                        <Pressable
-                            style={[
-                                ss.padded,
-                                ss.rounded10,
-                                { backgroundColor: palette.grey },
-                            ]}
-                            onPress={() => {
-                                resetSettingsFromInproxyProvider();
-                                setDisplayRestartConfirmation(false);
-                                setModalOpen(false);
-                                setBgBlur(false);
-                            }}
-                        >
-                            <Text
-                                style={[ss.bodyFont, { color: palette.white }]}
-                            >
-                                {t("CANCEL_I18N.string")}
-                            </Text>
-                        </Pressable>
-                    </View>
+                    {/* Close button removed — use bottom navigation */}
                 </View>
             </View>
-        );
-    }
 
-    // fadeIn on first load
-    const fadeIn = useSharedValue(0);
-    React.useEffect(() => {
-        if (inproxyStatus !== "UNKNOWN") {
-            fadeIn.value = withDelay(0, withTiming(0.8, { duration: 2000 }));
-        }
-    }, [inproxyStatus]);
-
-    const settingsIconSize = win.width * 0.2;
-    const paint = React.useMemo(() => Skia.Paint(), []);
-    paint.setColorFilter(
-        Skia.ColorFilter.MakeBlend(Skia.Color(palette.blue), BlendMode.SrcIn),
-    );
-
-    return (
-        <>
-            <View
-                style={[
-                    {
-                        padding: 7,
-                        bottom: 0,
-                        right: 0,
-                    },
-                ]}
-            >
-                <Pressable
-                    accessible={true}
-                    accessibilityLabel={t("SETTINGS_I18N.string")}
-                    accessibilityRole={"button"}
-                    onPress={() => {
-                        setModalOpen(true);
-                        setBgBlur(true);
-                    }}
-                    style={{
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "100%",
-                    }}
+            {/* Scrollable body */}
+            <GestureHandlerRootView>
+                <ScrollView
+                    contentContainerStyle={{ width: "100%" }}
+                    ref={scrollRef}
                 >
-                    <Icon
-                        name="settings"
-                        size={30}
-                        color={palette.black}
-                        opacity={fadeIn}
-                        label={t("SETTINGS_I18N.string")}
-                    />
-                </Pressable>
-            </View>
-            <View
-                style={[
-                    ss.absolute,
-                    ss.doublePadded,
-                    {
-                        bottom: 0,
-                        right: settingsIconSize,
-                        width: settingsIconSize,
-                        height: settingsIconSize,
-                    },
-                ]}
-            ></View>
-            <Modal
-                animationType="fade"
-                visible={modalOpen}
-                transparent={true}
-                onRequestClose={onSettingsClose}
-            >
-                <View style={{ ...ss.modalBottom90, overflow: "hidden" }}>
+                    {/* Editable name */}
                     <View
-                        style={{
-                            position: "absolute",
-                            bottom: 0,
-                            left: 0,
-                            height: "100%",
-                            width: "100%",
-                            backgroundColor: "#FEFEFE",
-                            opacity: 0.5,
-                        }}
-                    />
-
-                    <View
-                        style={{
-                            position: "absolute",
-                            bottom: 0,
-                            left: 0,
-                            height: "80%",
-                            width: "100%",
-                        }}
+                        style={[
+                            ss.greyBorderBottom,
+                            ...settingsPaddedStyle,
+                            { minHeight: 60, justifyContent: "center" },
+                        ]}
                     >
-                        <InproxyStatusColorCanvas
-                            width={win.width}
-                            height={win.height * 0.8}
-                            faderInitial={inproxyStatus === "RUNNING" ? 1 : 0}
+                        <EditableConduitAlias
+                            fallbackName={t("CONDUIT_STATION_I18N.string")}
+                            fontSize={18}
+                            labelBackground="#FFFFFF"
                         />
                     </View>
+
+                    {/* Local conduit settings (Android only) */}
+                    {showLocalConduitSettings ? (
+                        <LocalConduitSettingsCard
+                            expanded={localSettingsExpanded}
+                            setExpanded={setLocalSettingsExpanded}
+                            isRunning={localStationIsRunning}
+                            inproxyParameters={inproxyParameters}
+                            displayTotalMBps={displayTotalMBps}
+                            reducedExpanded={reducedExpanded}
+                            setReducedExpanded={setReducedExpanded}
+                            reducedTimeError={reducedTimeError}
+                            reducedStartIndex={reducedStartIndex}
+                            reducedEndIndex={reducedEndIndex}
+                            reducedEnabled={reducedEnabled}
+                            modifiedReducedStartTime={modifiedReducedStartTime}
+                            modifiedReducedEndTime={modifiedReducedEndTime}
+                            combinedPeersLimitExceeded={
+                                combinedPeersLimitExceeded
+                            }
+                            updateMaxClients={updateInproxyMaxClients}
+                            updateMaxPersonalClients={
+                                updateInproxyMaxPersonalClients
+                            }
+                            updateLimitBytesPerSecond={
+                                updateInproxyLimitBytesPerSecond
+                            }
+                            updateReducedMaxClients={updateReducedMaxClients}
+                            updateReducedLimitBytesPerSecond={
+                                updateReducedLimitBytesPerSecond
+                            }
+                            scrollRef={scrollRef}
+                            ensureReducedWindowDefaults={
+                                ensureReducedWindowDefaults
+                            }
+                            disableReducedWindow={disableReducedWindow}
+                            showReducedSelector={showReducedSelector}
+                        />
+                    ) : null}
+
+                    {/* Share Personal Pairing */}
+                    <Pressable
+                        onPress={() => openPersonalPairingModal()}
+                        disabled={disablePersonalPairingOnIos}
+                        style={[
+                            ...settingsLineItemStyle,
+                            ss.flex,
+                            ss.justifySpaceBetween,
+                            {
+                                flexDirection: "row",
+                                alignItems: "center",
+                                opacity: disablePersonalPairingOnIos ? 0.65 : 1,
+                            },
+                        ]}
+                    >
+                        <View
+                            style={[
+                                ss.row,
+                                ss.alignCenter,
+                                ss.flex,
+                                { gap: 10 },
+                            ]}
+                        >
+                            <ExpoImage
+                                source={require("@/assets/images/icons/p2p_24px.svg")}
+                                tintColor={palette.black}
+                                style={{ width: 20, height: 20 }}
+                                contentFit="contain"
+                            />
+                            <View style={[ss.column, ss.flex, { gap: 4 }]}>
+                                <Text style={[ss.bodyFont, ss.blackText]}>
+                                    {t("SHARE_PERSONAL_PAIRING_I18N.string")}
+                                </Text>
+                                <Text
+                                    style={[
+                                        ss.tinyFont,
+                                        ss.blackText,
+                                        { opacity: 0.7 },
+                                    ]}
+                                >
+                                    {isPersonalPairingPreparing
+                                        ? t(
+                                              "PREPARING_PERSONAL_PAIRING_I18N.string",
+                                              {
+                                                  defaultValue:
+                                                      "Preparing personal pairing...",
+                                              },
+                                          )
+                                        : t(
+                                              "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N.string",
+                                          )}
+                                </Text>
+                            </View>
+                        </View>
+                        <Icon
+                            name="chevron-right"
+                            color={
+                                disablePersonalPairingOnIos
+                                    ? palette.lightGrey
+                                    : palette.black
+                            }
+                            size={16}
+                        />
+                    </Pressable>
+
+                    {/* Claim hosted rewards */}
+                    {hostedRyveClaim
+                        ? renderRyveSettingsAction(
+                              t("CLAIM_HOSTED_REWARDS_I18N.string"),
+                              () =>
+                                  openRyveClaimModal(
+                                      hostedRyveClaim,
+                                      conduitName,
+                                  ),
+                          )
+                        : null}
+
+                    {/* Claim local rewards (Android only) */}
+                    {Platform.OS === "android" ? (
+                        <RyveCallToAction
+                            triggerLabel={t("CLAIM_LOCAL_REWARDS_I18N.string")}
+                            renderTrigger={(onPress) =>
+                                renderRyveSettingsAction(
+                                    t("CLAIM_LOCAL_REWARDS_I18N.string"),
+                                    onPress,
+                                )
+                            }
+                        />
+                    ) : null}
+
+                    {/* Account */}
+                    <View
+                        style={[
+                            ss.greyBorderBottom,
+                            ...settingsPaddedStyle,
+                            { minHeight: 60 },
+                        ]}
+                    >
+                        <HostedConduitSettingsCard />
+                    </View>
+
+                    {/* Padding between last setting entry and bottom area stuff */}
+                    <View
+                        style={{
+                            height: 30,
+                        }}
+                    />
+                    {/* Send Diagnostic + Privacy Policy (shared row) */}
+                    <View
+                        style={[
+                            ...settingsPaddedStyle,
+                            ss.row,
+                            ss.alignCenter,
+                            Platform.OS !== "ios"
+                                ? { justifyContent: "space-between" }
+                                : ss.justifyCenter,
+                        ]}
+                    >
+                        {Platform.OS !== "ios" ? (
+                            <Pressable
+                                onPress={onSendDiagnosticPress}
+                                disabled={showDiagnosticThanks}
+                                style={{
+                                    flex: 1,
+                                    alignItems: "flex-end",
+                                    paddingRight: 12,
+                                }}
+                            >
+                                <Text
+                                    style={[
+                                        ss.bodyFont,
+                                        ss.lightGreyText,
+                                        {
+                                            textDecorationLine:
+                                                showDiagnosticThanks
+                                                    ? "none"
+                                                    : "underline",
+                                        },
+                                    ]}
+                                >
+                                    {showDiagnosticThanks
+                                        ? t("SENT_THANK_YOU_I18N.string")
+                                        : t("SEND_DIAGNOSTIC_I18N.string")}
+                                </Text>
+                            </Pressable>
+                        ) : null}
+                        {Platform.OS !== "ios" ? (
+                            <Text
+                                style={[
+                                    ss.lightGreyText,
+                                    ss.largeFont,
+                                    { width: 12, textAlign: "center" },
+                                ]}
+                            >
+                                |
+                            </Text>
+                        ) : null}
+                        <Pressable
+                            onPress={() =>
+                                void Linking.openURL(PRIVACY_POLICY_URL)
+                            }
+                            style={
+                                Platform.OS !== "ios"
+                                    ? {
+                                          flex: 1,
+                                          alignItems: "flex-start",
+                                          paddingLeft: 12,
+                                      }
+                                    : undefined
+                            }
+                        >
+                            <Text
+                                style={[
+                                    ss.bodyFont,
+                                    ss.lightGreyText,
+                                    { textDecorationLine: "underline" },
+                                ]}
+                            >
+                                {t("PRIVACY_POLICY_I18N.string")}
+                            </Text>
+                        </Pressable>
+                    </View>
+
+                    {/* App version */}
+                    <View
+                        style={[
+                            ...settingsPaddedStyle,
+                            ss.alignCenter,
+                            ss.justifyCenter,
+                        ]}
+                    >
+                        <GitHash />
+                    </View>
+                </ScrollView>
+            </GestureHandlerRootView>
+        </View>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// RestartConfirmation — shown when local conduit is running and settings changed
+// ---------------------------------------------------------------------------
+
+function RestartConfirmation({
+    onConfirm,
+    onCancel,
+}: {
+    onConfirm: () => void;
+    onCancel: () => void;
+}) {
+    const { t } = useTranslation();
+
+    return (
+        <View style={[ss.flex]}>
+            <View
+                style={[
+                    ss.flex,
+                    ss.column,
+                    ss.alignCenter,
+                    ss.justifyCenter,
+                    ss.doubleGap,
+                    ss.doublePadded,
+                ]}
+            >
+                <Text style={[ss.blackText, ss.bodyFont]}>
+                    {t(
+                        "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N.string",
+                    )}
+                </Text>
+                <Text style={[ss.blackText, ss.bodyFont]}>
+                    {t("CONFIRM_CHANGES_I18N.string")}
+                </Text>
+                <View style={[ss.row]}>
+                    <Pressable
+                        style={[
+                            ss.padded,
+                            ss.rounded10,
+                            { backgroundColor: palette.white },
+                        ]}
+                        onPress={onConfirm}
+                    >
+                        <Text style={[ss.blackText, ss.bodyFont]}>
+                            {t("CONFIRM_I18N.string")}
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        style={[
+                            ss.padded,
+                            ss.rounded10,
+                            { backgroundColor: palette.grey },
+                        ]}
+                        onPress={onCancel}
+                    >
+                        <Text style={[ss.bodyFont, { color: palette.white }]}>
+                            {t("CANCEL_I18N.string")}
+                        </Text>
+                    </Pressable>
                 </View>
-                <View style={[ss.modalBottom90]}>
-                    {displayRestartConfirmation
-                        ? RestartConfirmation()
-                        : Settings()}
-                </View>
-            </Modal>
-        </>
+            </View>
+        </View>
     );
 }

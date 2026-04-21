@@ -89,6 +89,9 @@
     "ONBOARDING_WELCOME_BODY_I18N": {
         "string": "Aygıtınızı bir internet özgürlüğü kaynağına dönüştürün!\n\nDünya çapında insanlara kısıtlayıcı ağları aşmaları ve Psiphon ağı ile küresel internete güvenle bağlanmaları için yardımcı olabilirsiniz."
     },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "Aygıtınızı bir internet özgürlüğü kaynağına dönüştürün!\n\nDünya çapında insanlara kısıtlayıcı ağları aşmaları ve Psiphon ağı ile küresel internete güvenle bağlanmaları için yardımcı olabilirsiniz."
+    },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "İleri"
     },
@@ -97,6 +100,9 @@
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
         "string": "Conduit, dünyada sansür uygulanan bölgelerdeki insanların aygıtınız aracılığıyla Psiphon ağına erişmesini sağlayan açık kaynaklı bir uygulamadır.\n\nDaha fazla Conduit istasyonu, daha güçlü bir Psiphon ve daha açık bir internet sağlar."
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "Conduit, iOS'ta Psiphon kullanıcılarının Psiphon ağına ulaşmasına yardımcı olan bulutta barındırılan Conduit istasyonları oluşturmanıza ve yönetmenize olanak tanır.\n\nAygıtınız istasyonunuzu yönetmek için kullanılır; istasyonun kendisi ise bulutta çalışır."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "İleri"
@@ -107,14 +113,35 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "Conduit bildirimleri açmanızı öneriyor, böylece Conduit istasyonunuz hakkındaki önemli güncellemeleri size bildirebiliriz.\n\nBaşlamaya hazır mısınız?"
     },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "Conduit, hesabınız, aboneliğiniz ve barındırılan Conduit istasyonunuz hakkında önemli güncellemeler sağlayabilmemiz için bildirimleri etkinleştirmenizi önerir.\n\nBaşlamaya hazır mısınız?"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "Başla"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "Başla"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "Barındırılan Conduit"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "Conduit uygulamasını doğrudan aygıtınızda çalıştırmaya ek olarak, sürekli destek için barındırılan bir istasyona abone olabilirsiniz.\n\nBarındırılan Conduit, istasyonunuzu bulutta çalıştırır ve aygıtınız çevrimdışıyken bile 7/24 etkin kalmasını sağlar."
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "iOS'ta Conduit istasyonları bulutta barındırılır.\n\nBir abonelik, aygıtınız çevrimdışı olduğunda bile istasyonunuzun bulutta 7/24 çalışmasını sağlar."
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "İleri"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Gizlilik ilkesi"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
         "string": "Conduit kullanıcıları hakkında kendilerini tanımlayabilecek kişisel bilgiler toplamıyoruz. Toplanan tüm veriler şifrelenmiştir ve bu verilere siz veya Psiphon tarafından erişilemez. Bağlı kullanıcılar hiçbir şekilde sizin aygıtınıza erişemez.\n\nConduit kullanarak, aşağıda paylaştığımız gizlilik ilkemizi kabul etmiş olursunuz."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "Conduit kullanıcılarından kişisel olarak tanımlanabilir bilgi toplamıyoruz. iOS uygulamasının gönderdiği veriler aktarım sırasında şifrelenir ve diğer kullanıcılar uygulama üzerinden aygıtınıza erişemez.\n\nConduit kullanarak, aşağıda paylaştığımız gizlilik ilkemizi kabul etmiş olursunuz."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Kabul et"

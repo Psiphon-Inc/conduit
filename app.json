@@ -2,20 +2,25 @@
     "expo": {
         "name": "conduit",
         "slug": "conduit",
-        "version": "1.9.1",
+        "version": "2.0.0",
         "orientation": "portrait",
-        "scheme": "conduit",
+        "scheme": "ca.psiphon.conduit",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "ca.psiphon.conduit",
-            "buildNumber": "5",
-            "icon": "./assets/images/ios-icon.png"
+            "buildNumber": "19",
+            "deploymentTarget": "15.1",
+            "icon": "./assets/images/conduit-launcher.png",
+            "infoPlist": {
+                "LSApplicationQueriesSchemes": ["network.ryve.app"]
+            }
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 61,
+            "versionCode": 62,
+            "permissions": ["com.android.vending.BILLING"],
             "adaptiveIcon": {
                 "foregroundImage": "./assets/images/android-icon-foreground.png",
                 "backgroundImage": "./assets/images/android-icon-background.png"
@@ -26,7 +31,12 @@
             "supportsRTL": true
         },
         "plugins": [
-            "expo-router",
+            [
+                "expo-router",
+                {
+                    "root": "./src/app"
+                }
+            ],
             "expo-localization",
             "expo-font",
             "expo-secure-store",

@@ -351,15 +351,7 @@ export function ReducedUsageWindow({
 
     if (!reducedExpanded) {
         return (
-            <View
-                style={[
-                    ss.greyBorderBottom,
-                    ss.column,
-                    ss.padded,
-                    ss.fullWidth,
-                    ss.halfGap,
-                ]}
-            >
+            <View style={[ss.column, ss.padded, ss.fullWidth, ss.halfGap]}>
                 <View
                     style={[
                         ss.row,
@@ -408,7 +400,7 @@ export function ReducedUsageWindow({
     }
 
     return (
-        <View style={[ss.greyBorderBottom, ss.column, ss.padded, ss.fullWidth]}>
+        <View style={[ss.column, ss.padded, ss.fullWidth]}>
             <View
                 style={[
                     ss.row,
@@ -474,7 +466,7 @@ export function ReducedUsageWindow({
                 }}
             >
                 <EditableNumberSlider
-                    label={t("MAX_PEERS_I18N.string")}
+                    label={t("MAX_PUBLIC_PEERS_I18N.string")}
                     originalValue={
                         inproxyParameters.reducedMaxClients ??
                         inproxyParameters.maxClients

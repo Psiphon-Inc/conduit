@@ -40,6 +40,7 @@ import { useTranslation } from "react-i18next";
 import {
     BackHandler,
     LayoutChangeEvent,
+    Platform,
     View,
     useWindowDimensions,
 } from "react-native";
@@ -76,6 +77,8 @@ export default function OnboardingScreen() {
     const notificationPermissions = useNotificationsPermissions();
     const router = useRouter();
 
+    const isIOS = Platform.OS === "ios";
+
     const [shouldAskForNotifications, setShouldAskForNotifications] =
         useState(false);
 
@@ -107,29 +110,48 @@ export default function OnboardingScreen() {
         {
             // WELCOME
             headerText: t("ONBOARDING_WELCOME_HEADER_I18N.string"),
-            bodyText: t("ONBOARDING_WELCOME_BODY_I18N.string"),
+            bodyText: isIOS
+                ? t("ONBOARDING_WELCOME_BODY_IOS_I18N.string")
+                : t("ONBOARDING_WELCOME_BODY_I18N.string"),
             buttonText: t("ONBOARDING_WELCOME_BUTTON_I18N.string"),
             beforeNext: undefined,
         },
         {
             // INFO_1
             headerText: t("ONBOARDING_INFO_1_HEADER_I18N.string"),
-            bodyText: t("ONBOARDING_INFO_1_BODY_I18N.string"),
+            bodyText: isIOS
+                ? t("ONBOARDING_INFO_1_BODY_IOS_I18N.string")
+                : t("ONBOARDING_INFO_1_BODY_I18N.string"),
             buttonText: t("ONBOARDING_INFO_1_BUTTON_I18N.string"),
+            beforeNext: undefined,
+        },
+        {
+            // HOSTED CONDUIT
+            headerText: t("ONBOARDING_HOSTED_HEADER_I18N.string"),
+            bodyText: isIOS
+                ? t("ONBOARDING_HOSTED_BODY_IOS_I18N.string")
+                : t("ONBOARDING_HOSTED_BODY_I18N.string"),
+            buttonText: t("ONBOARDING_HOSTED_BUTTON_I18N.string"),
             beforeNext: undefined,
         },
         {
             // PRIVACY POLICY
             headerText: t("ONBOARDING_PRIVACY_POLICY_HEADER_I18N.string"),
-            bodyText: t("ONBOARDING_PRIVACY_POLICY_BODY_I18N.string"),
+            bodyText: isIOS
+                ? t("ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N.string")
+                : t("ONBOARDING_PRIVACY_POLICY_BODY_I18N.string"),
             buttonText: t("ONBOARDING_PRIVACY_POLICY_BUTTON_I18N.string"),
             beforeNext: undefined,
         },
         {
             // PERMISSIONS
             headerText: t("ONBOARDING_PERMISSIONS_HEADER_I18N.string"),
-            bodyText: t("ONBOARDING_PERMISSIONS_BODY_I18N.string"),
-            buttonText: t("ONBOARDING_PERMISSIONS_BUTTON_I18N.string"),
+            bodyText: isIOS
+                ? t("ONBOARDING_PERMISSIONS_BODY_IOS_I18N.string")
+                : t("ONBOARDING_PERMISSIONS_BODY_I18N.string"),
+            buttonText: isIOS
+                ? t("ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N.string")
+                : t("ONBOARDING_PERMISSIONS_BUTTON_I18N.string"),
             beforeNext: async () => {
                 if (shouldAskForNotifications) {
                     await Notifications.requestPermissionsAsync();
@@ -154,7 +176,7 @@ export default function OnboardingScreen() {
               };
     });
     const privacyPolicyLinkStyle = useAnimatedStyle(() => {
-        return currentView.value === 2
+        return currentView.value === 3
             ? {
                   display: "flex",
               }
@@ -490,7 +512,9 @@ export default function OnboardingScreen() {
                 <GestureDetector gesture={anywhereGesture}>
                     <Animated.View
                         accessible={true}
-                        accessibilityLabel={"Onboarding Info, will update"}
+                        accessibilityLabel={t(
+                            "ONBOARDING_INFO_ACCESSIBILITY_I18N.string",
+                        )}
                         accessibilityRole={"text"}
                         aria-valuetext={currentBodyText}
                         style={{
@@ -556,6 +580,9 @@ function ProgressDots({
     const dot3Fill = useDerivedValue(() => {
         return currentView.value >= 3 ? palette.purple : palette.transparent;
     });
+    const dot4Fill = useDerivedValue(() => {
+        return currentView.value >= 4 ? palette.purple : palette.transparent;
+    });
 
     return (
         <Group>
@@ -610,6 +637,19 @@ function ProgressDots({
                 r={dotWidth / 4}
                 style={"fill"}
                 color={dot3Fill}
+            />
+            <Circle
+                c={vec(dotWidth * 4, 0)}
+                r={dotWidth / 4}
+                style={"stroke"}
+                strokeWidth={1}
+                color={palette.purple}
+            />
+            <Circle
+                c={vec(dotWidth * 4, 0)}
+                r={dotWidth / 4}
+                style={"fill"}
+                color={dot4Fill}
             />
         </Group>
     );

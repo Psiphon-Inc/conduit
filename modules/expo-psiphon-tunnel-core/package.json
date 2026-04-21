@@ -1,0 +1,15 @@
+{
+    "name": "expo-psiphon-tunnel-core",
+    "version": "0.1.0",
+    "description": "Expo module for Android in-proxy station mode (iOS stub)",
+    "main": "index.ts",
+    "types": "index.ts",
+    "sideEffects": false,
+    "peerDependencies": {
+        "expo": "*",
+        "expo-modules-core": "*",
+        "react-native": "*"
+    },
+    "license": "UNLICENSED",
+    "private": true
+}

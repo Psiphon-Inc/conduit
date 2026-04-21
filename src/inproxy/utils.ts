@@ -44,12 +44,35 @@ export function getDefaultInproxyParameters(): InproxyParameters {
     return InproxyParametersSchema.parse({
         privateKey: keyPairToBase64nopad(ephemeralKey),
         maxClients: DEFAULT_INPROXY_MAX_CLIENTS,
+        maxPersonalClients: 0,
         limitUpstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
         limitDownstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     });
 }
 
 export function getZeroedInproxyActivityStats(): InproxyActivityStats {
+    const makeZeroedPeriod = (numBuckets: number) => ({
+        bytesUp: new Array(numBuckets).fill(0),
+        bytesDown: new Array(numBuckets).fill(0),
+        announcingWorkers: new Array(numBuckets).fill(0),
+        connectedClients: new Array(numBuckets).fill(0),
+        connectingClients: new Array(numBuckets).fill(0),
+        numBuckets,
+    });
+    const zeroed1000ms = makeZeroedPeriod(288);
+    const zeroed3600000ms = makeZeroedPeriod(720);
+    const makeZeroedSegment = () => ({
+        totalBytesUp: 0,
+        totalBytesDown: 0,
+        currentAnnouncingWorkers: 0,
+        currentConnectingClients: 0,
+        currentConnectedClients: 0,
+        dataByPeriod: {
+            "1000ms": makeZeroedPeriod(288),
+            "3600000ms": makeZeroedPeriod(720),
+        },
+    });
+
     return InproxyActivityStatsSchema.parse({
         elapsedTime: 0,
         totalBytesUp: 0,
@@ -58,14 +81,20 @@ export function getZeroedInproxyActivityStats(): InproxyActivityStats {
         currentConnectingClients: 0,
         currentConnectedClients: 0,
         dataByPeriod: {
-            "1000ms": {
-                bytesUp: new Array(288).fill(0),
-                bytesDown: new Array(288).fill(0),
-                announcingWorkers: new Array(288).fill(0),
-                connectedClients: new Array(288).fill(0),
-                connectingClients: new Array(288).fill(0),
-                numBuckets: 288,
-            },
+            "1000ms": zeroed1000ms,
+            "3600000ms": zeroed3600000ms,
+        },
+        segments: {
+            personal: makeZeroedSegment(),
+            common: makeZeroedSegment(),
+            total: makeZeroedSegment(),
+        },
+        personalRegionActivity: [],
+        commonRegionActivity: [],
+        regionalBreakdownByWindow: {
+            "48h": { personal: [], common: [] },
+            "7d": { personal: [], common: [] },
+            "30d": { personal: [], common: [] },
         },
     });
 }

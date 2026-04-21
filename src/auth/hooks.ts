@@ -20,23 +20,7 @@ import { UseQueryResult, useQuery } from "@tanstack/react-query";
 
 import { createOrLoadAccount } from "@/src/auth/account";
 import { Ed25519KeyPair } from "@/src/common/cryptography";
-import {
-    QUERYKEY_ACCOUNT_KEYPAIR,
-    QUERYKEY_INPROXY_KEYPAIR,
-} from "@/src/constants";
-
-export const useAccountKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
-    useQuery({
-        queryKey: [QUERYKEY_ACCOUNT_KEYPAIR],
-        queryFn: async () => {
-            const account = await createOrLoadAccount();
-            if (account instanceof Error) {
-                return {} as Ed25519KeyPair;
-            }
-            return account.accountKey;
-        },
-        enabled: true,
-    });
+import { QUERYKEY_INPROXY_KEYPAIR } from "@/src/constants";
 
 export const useConduitKeyPair = (): UseQueryResult<Ed25519KeyPair> =>
     useQuery({

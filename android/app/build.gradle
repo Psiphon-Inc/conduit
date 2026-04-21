@@ -14,6 +14,7 @@ react {
     hermesCommand = new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim()).getParentFile().getAbsolutePath() + "/sdks/hermesc/%OS-BIN%/hermesc"
     codegenDir = new File(["node", "--print", "require.resolve('@react-native/codegen/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile().getAbsoluteFile()
 
+    enableBundleCompression = (findProperty('android.enableBundleCompression') ?: false).toBoolean()
     // Use Expo CLI to bundle the app, this ensures the Metro config
     // works correctly with Expo projects.
     cliFile = new File(["node", "--print", "require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })"].execute(null, rootDir).text.trim())
@@ -78,11 +79,16 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  * give correct results when using with locales other than en-US. Note that
  * this variant is about 6MiB larger per architecture than default.
  */
-def jscFlavor = 'org.webkit:android-jsc:+'
+def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
 def keystorePropertiesFile = rootProject.file("keystore.properties")
 def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+def hasCustomKeystoreProperties = keystorePropertiesFile.exists()
+if (hasCustomKeystoreProperties) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} else {
+    logger.lifecycle("keystore.properties not found; using default debug signing for debug builds")
+}
 
 android {
     ndkVersion rootProject.ext.ndkVersion
@@ -95,25 +101,31 @@ android {
         applicationId 'ca.psiphon.conduit'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 61
-        versionName "1.9.1"
+        versionCode 67
+        versionName "2.0.0"
     }
     signingConfigs {
-        config {
-            keyAlias keystoreProperties['keyAlias']            
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
+        if (hasCustomKeystoreProperties) {
+            config {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
         }
     }
     buildTypes {
         debug {
-            signingConfig signingConfigs.config
+            if (hasCustomKeystoreProperties) {
+                signingConfig signingConfigs.config
+            }
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.config
+            if (hasCustomKeystoreProperties) {
+                signingConfig signingConfigs.config
+            }
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
@@ -124,13 +136,6 @@ android {
         jniLibs {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
         }
-    }
-    buildFeatures {
-        aidl true
-    }
-    lintOptions {
-        // Make translation issues fatal
-        fatal 'StringFormatInvalid', 'StringFormatMatches'
     }
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
@@ -157,44 +162,10 @@ android {
     }
 }
 
-// Configure a flatDir repository to resolve Psiphon tunnel-core library
-repositories {
-    flatDir {
-        dirs "libs"
-    }
-}
-
 dependencies {
-    // start Conduit module dependencies
-    // Psiphon lib
-    implementation (name: 'ca.psiphon', ext: 'aar')
-
-    // Guava (need for ListenableFuture in the Worker related code)
-    implementation 'com.google.guava:guava:33.0.0-android'
-
-    // Autovalue
-    compileOnly "com.google.auto.value:auto-value-annotations:1.10.4"
-    annotationProcessor "com.google.auto.value:auto-value:1.10.4"
-    annotationProcessor 'com.ryanharter.auto.value:auto-value-parcel:0.2.9'
-
-    // RxJava
-    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-    implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
-    implementation 'com.jakewharton.rxrelay2:rxrelay:2.1.1'
-
-    // Worker API
-    implementation 'androidx.work:work-runtime:2.9.1'
-    implementation 'androidx.work:work-rxjava2:2.9.1'
-
-    // Tests dependencies
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.mockito:mockito-inline:3.9.0'
-    testImplementation 'org.robolectric:robolectric:4.11.1'
-
-    // end Psiphon dependencies
-
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation files(rootProject.file("../modules/expo-psiphon-tunnel-core/android/libs/ca.psiphon.aar"))
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
@@ -202,15 +173,15 @@ dependencies {
 
     if (isGifEnabled) {
         // For animated gif support
-        implementation("com.facebook.fresco:animated-gif:${reactAndroidLibs.versions.fresco.get()}")
+        implementation("com.facebook.fresco:animated-gif:${expoLibs.versions.fresco.get()}")
     }
 
     if (isWebpEnabled) {
         // For webp support
-        implementation("com.facebook.fresco:webpsupport:${reactAndroidLibs.versions.fresco.get()}")
+        implementation("com.facebook.fresco:webpsupport:${expoLibs.versions.fresco.get()}")
         if (isWebpAnimatedEnabled) {
             // Animated webp support
-            implementation("com.facebook.fresco:animated-webp:${reactAndroidLibs.versions.fresco.get()}")
+            implementation("com.facebook.fresco:animated-webp:${expoLibs.versions.fresco.get()}")
         }
     }
 

@@ -1,0 +1,11 @@
+<resources>
+  <string name="conduit_service_stop_label_text">Durdur</string>
+  <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
+  <string name="conduit_service_running_notification_long_text">İstemciler: %1$d bağlı / %2$d bağlanıyor\nVeri: %3$s aktarıldı</string>
+  <string name="conduit_service_no_internet_notification_text">Ağ bağlantısı bekleniyor</string>
+  <string name="conduit_service_channel_description">Conduit hizmeti bildirimi</string>
+  <string name="notification_conduit_inproxy_must_upgrade_text">Güncelleme gerekli: Kullanmayı sürdürmek için lütfen uygulamanın son sürümünü indirin.</string>
+  <string name="notification_conduit_failed_to_start_text">Conduit hizmeti başlatılamadı. Ayrıntılı bilgi almak için bildirime tıklayın.</string>
+  <string name="notification_conduit_failed_to_restart_text">Conduit hizmeti yeniden başlatılamadı. Ayrıntılı bilgi almak için bildirime tıklayın.</string>
+  <string name="conduit_service_starting_notification_text">Conduit hizmeti başlatılıyor…</string>
+</resources>

@@ -19,7 +19,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React from "react";
-import { View, useWindowDimensions } from "react-native";
+import { Text, View, useWindowDimensions } from "react-native";
 import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
 
 import { useAuthContext } from "@/src/auth/context";
@@ -37,34 +37,34 @@ export default function Index() {
     const { signIn } = useAuthContext();
     const win = useWindowDimensions();
     const router = useRouter();
+    const [startupError, setStartupError] = React.useState<string | null>(null);
 
     const loadingIndicatorCanvasSize = win.width / 2;
 
     const opacity = useSharedValue(0);
 
     async function loadApp() {
-        // Apply any storage migrations
-        const appliedStorageVersion = await applyMigrations();
-        if (appliedStorageVersion instanceof Error) {
-            // This will crash the app.
-            throw wrapError(
-                appliedStorageVersion,
-                "Could not apply migrations",
-            );
-        }
-        if (appliedStorageVersion !== CURRENT_STORAGE_VERSION) {
-            // This will crash the app.
-            throw Error(
-                `Storage version ${appliedStorageVersion} did not match expected value ${CURRENT_STORAGE_VERSION}`,
-            );
-        }
+        try {
+            // Apply any storage migrations
+            const appliedStorageVersion = await applyMigrations();
+            if (appliedStorageVersion instanceof Error) {
+                throw wrapError(
+                    appliedStorageVersion,
+                    "Could not apply migrations",
+                );
+            }
+            if (appliedStorageVersion !== CURRENT_STORAGE_VERSION) {
+                throw Error(
+                    `Storage version ${appliedStorageVersion} did not match expected value ${CURRENT_STORAGE_VERSION}`,
+                );
+            }
 
-        // Prepare account material and route to main view
-        const signInResult = await signIn();
-        if (signInResult instanceof Error) {
-            // This will crash the app.
-            throw signInResult;
-        } else {
+            // Prepare account material and route to main view
+            const signInResult = await signIn();
+            if (signInResult instanceof Error) {
+                throw signInResult;
+            }
+
             const hasOnboarded = await AsyncStorage.getItem(
                 ASYNCSTORAGE_HAS_ONBOARDED_KEY,
             );
@@ -75,6 +75,10 @@ export default function Index() {
                     runOnJS(router.replace)("/(app)/onboarding");
                 }
             });
+        } catch (error) {
+            const message = String(error);
+            setStartupError(message);
+            console.error("App startup failed", error);
         }
     }
 
@@ -104,6 +108,18 @@ export default function Index() {
                 >
                     <PsiphonConduitLoading />
                 </View>
+                {startupError ? (
+                    <Text
+                        style={{
+                            marginTop: 24,
+                            marginHorizontal: 24,
+                            color: "#ffffff",
+                            textAlign: "center",
+                        }}
+                    >
+                        {startupError}
+                    </Text>
+                ) : null}
             </View>
         </SafeAreaView>
     );

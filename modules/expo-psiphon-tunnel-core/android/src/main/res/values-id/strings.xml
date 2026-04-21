@@ -1,0 +1,11 @@
+<resources>
+  <string name="conduit_service_stop_label_text">Hentikan</string>
+  <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
+  <string name="conduit_service_running_notification_long_text">Klien: %1$d telah terhubung/ %2$d menghubungkan\nData: %3$s telah ditransfer</string>
+  <string name="conduit_service_no_internet_notification_text">Menunggu konektivitas jaringan</string>
+  <string name="conduit_service_channel_description">Notifikasi untuk layanan Conduit</string>
+  <string name="notification_conduit_inproxy_must_upgrade_text">Diperlukan pembaruan: Silakan unduh aplikasi versi terbaru untuk terus menggunakannya.</string>
+  <string name="notification_conduit_failed_to_start_text">Layanan Conduit gagal dimulai. Ketuk notifikasi untuk informasi lebih lanjut</string>
+  <string name="notification_conduit_failed_to_restart_text">Layanan Conduit gagal dimulai ulang. Ketuk notifikasi untuk informasi lebih lanjut</string>
+  <string name="conduit_service_starting_notification_text">Layanan Conduit dimulaiâ€¦</string>
+</resources>

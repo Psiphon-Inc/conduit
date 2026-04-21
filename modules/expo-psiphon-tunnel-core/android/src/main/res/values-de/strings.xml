@@ -1,0 +1,11 @@
+<resources>
+  <string name="conduit_service_stop_label_text">Stopp</string>
+  <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
+  <string name="conduit_service_running_notification_long_text">Klienten: %1$d verbunden/ %2$dKontaktaufnahme \nDaten: %3$s übertragen</string>
+  <string name="conduit_service_no_internet_notification_text">Warten auf Netzwerkverbindung</string>
+  <string name="conduit_service_channel_description">Benachrichtigung für den Conduit-Dienst</string>
+  <string name="notification_conduit_inproxy_must_upgrade_text">Update erforderlich: Bitte laden Sie die neueste Version der App herunter, um sie weiterhin verwenden zu können.</string>
+  <string name="notification_conduit_failed_to_start_text">Conduit-Dienst konnte nicht gestartet werden. Tippen Sie auf die Benachrichtigung, um weitere Informationen zu erhalten</string>
+  <string name="notification_conduit_failed_to_restart_text">Conduit-Dienst konnte nicht neu gestartet werden. Tippen Sie auf die Benachrichtigung, um weitere Informationen zu erhalten</string>
+  <string name="conduit_service_starting_notification_text">Der Conduit-Dienst beginnt …</string>
+</resources>

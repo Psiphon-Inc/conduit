@@ -26,6 +26,7 @@ import {
     rect,
     useSVG,
 } from "@shopify/react-native-skia";
+import type { DataSourceParam } from "@shopify/react-native-skia";
 import React from "react";
 import { Text, View } from "react-native";
 import { SharedValue } from "react-native-reanimated";
@@ -33,28 +34,97 @@ import { SharedValue } from "react-native-reanimated";
 import { FaderGroup } from "@/src/components/canvas/FaderGroup";
 import { sharedStyles as ss } from "@/src/styles";
 
-const ICONS = {
-    check: require("@/assets/images/icons/check.svg"),
-    "chevron-down": require("@/assets/images/icons/chevron-down.svg"),
-    copy: require("@/assets/images/icons/copy.svg"),
-    edit: require("@/assets/images/icons/edit.svg"),
-    send: require("@/assets/images/icons/send.svg"),
-    settings: require("@/assets/images/icons/settings.svg"),
-    question: require("@/assets/images/icons/question.svg"),
-    "external-link": require("@/assets/images/icons/external-link.svg"),
-    analytics: require("@/assets/images/icons/analytics.svg"),
+type IconAsset = {
+    source: DataSourceParam;
+    // Intrinsic viewBox dimensions — used to build the src rect for fitbox
+    // so we never have to call .width()/.height() on the JSI host object at
+    // runtime, which can SIGSEGV if the underlying SkSVGDOM is null/disposed.
+    viewWidth: number;
+    viewHeight: number;
+};
+
+const ICONS: Record<IconName, IconAsset> = {
+    check: {
+        source: require("@/assets/images/icons/check.svg"),
+        viewWidth: 24,
+        viewHeight: 24,
+    },
+    close: {
+        source: require("@/assets/images/icons/close.svg"),
+        viewWidth: 24,
+        viewHeight: 24,
+    },
+    "chevron-down": {
+        source: require("@/assets/images/icons/chevron-down.svg"),
+        viewWidth: 32,
+        viewHeight: 20,
+    },
+    "chevron-right": {
+        source: require("@/assets/images/icons/chevron-right.svg"),
+        viewWidth: 8,
+        viewHeight: 12,
+    },
+    copy: {
+        source: require("@/assets/images/icons/copy.svg"),
+        viewWidth: 21,
+        viewHeight: 21,
+    },
+    edit: {
+        source: require("@/assets/images/icons/edit.svg"),
+        viewWidth: 32,
+        viewHeight: 31,
+    },
+    send: {
+        source: require("@/assets/images/icons/send.svg"),
+        viewWidth: 32,
+        viewHeight: 32,
+    },
+    home: {
+        source: require("@/assets/images/icons/home.svg"),
+        viewWidth: 24,
+        viewHeight: 24,
+    },
+    settings: {
+        source: require("@/assets/images/icons/settings.svg"),
+        viewWidth: 24,
+        viewHeight: 24,
+    },
+    question: {
+        source: require("@/assets/images/icons/question.svg"),
+        viewWidth: 36,
+        viewHeight: 36,
+    },
+    "external-link": {
+        source: require("@/assets/images/icons/external-link.svg"),
+        viewWidth: 19,
+        viewHeight: 19,
+    },
+    analytics: {
+        source: require("@/assets/images/icons/analytics.svg"),
+        viewWidth: 76,
+        viewHeight: 76,
+    },
+    "right-arrow": {
+        source: require("@/assets/images/icons/right-arrow.svg"),
+        viewWidth: 13,
+        viewHeight: 5,
+    },
 };
 
 type IconName =
     | "check"
+    | "close"
     | "chevron-down"
+    | "chevron-right"
     | "copy"
     | "edit"
     | "send"
+    | "home"
     | "settings"
     | "question"
     | "external-link"
-    | "analytics";
+    | "analytics"
+    | "right-arrow";
 
 export function Icon({
     name,
@@ -69,7 +139,8 @@ export function Icon({
     opacity?: SharedValue<number> | undefined;
     label?: string | undefined;
 }) {
-    const iconSvg = useSVG(ICONS[name]);
+    const { source, viewWidth, viewHeight } = ICONS[name];
+    const iconSvg = useSVG(source);
     const paintColor = React.useMemo(() => Skia.Paint(), []);
     paintColor.setColorFilter(
         Skia.ColorFilter.MakeBlend(Skia.Color(color), BlendMode.SrcIn),
@@ -79,7 +150,11 @@ export function Icon({
         return null;
     }
 
-    const src = rect(0, 0, iconSvg.width(), iconSvg.height());
+    // Use static viewBox dimensions rather than calling iconSvg.width() /
+    // iconSvg.height() on the JSI host object.  Calling those methods when
+    // the underlying SkSVGDOM pointer is null/disposed causes a SIGSEGV
+    // (EXC_BAD_ACCESS at 0x40) that crashes the JS thread.
+    const src = rect(0, 0, viewWidth, viewHeight);
     const dst = rect(0, 0, size, size);
 
     return (

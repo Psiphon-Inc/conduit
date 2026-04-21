@@ -1,0 +1,11 @@
+<resources>
+  <string name="conduit_service_stop_label_text">روکنے</string>
+  <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
+  <string name="conduit_service_running_notification_long_text">  کلائنٹس: %1$d کنیکٹڈ ہو گئے ہیں/ %2$d کنیکڈ ہو رہے ہیں  ڈیٹا %3$s ٹرانسفر ہو گیا ہے</string>
+  <string name="conduit_service_no_internet_notification_text">نیٹ ورک کنیکٹیویٹی کا انتظار ہے</string>
+  <string name="conduit_service_channel_description">Conduit سروس کے لیے نوٹیفکیشن</string>
+  <string name="notification_conduit_inproxy_must_upgrade_text">اپڈیٹ لازمی ہے: براہ کرم ایپ کا جدید ترین ورژن ڈاؤن لوڈ کریں تاکہ آپ اس کا استعمال جاری رکھ سکیں۔</string>
+  <string name="notification_conduit_failed_to_start_text">Conduit سروس شروع ہونے میں ناکام۔ مزید معلومات کے لیے نوٹیفکیشن کو ٹیپ کریں</string>
+  <string name="notification_conduit_failed_to_restart_text">Conduit سروس شروع ہونے میں ناکام۔ مزید معلومات کے لیے نوٹیفکیشن کو ٹیپ کریں</string>
+  <string name="conduit_service_starting_notification_text">Conduit سروس شروع ہو رہی ہے...</string>
+</resources>

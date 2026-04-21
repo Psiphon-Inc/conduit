@@ -1,0 +1,11 @@
+<resources>
+  <string name="conduit_service_stop_label_text">Parar</string>
+  <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
+  <string name="conduit_service_running_notification_long_text">Clientes: %1$d ligados / %2$d a ligar\nDados: %3$s transferidos</string>
+  <string name="conduit_service_no_internet_notification_text">A aguardar conetividade da rede</string>
+  <string name="conduit_service_channel_description">Notificação para o serviço Conduit</string>
+  <string name="notification_conduit_inproxy_must_upgrade_text">Atualização necessária: Descarregue a versão mais recente da aplicação para que a possa continuar a utilizar.</string>
+  <string name="notification_conduit_failed_to_start_text">Falha no arranque do serviço Conduit. Toque na notificação para obter mais informações </string>
+  <string name="notification_conduit_failed_to_restart_text">Falha ao reiniciar o serviço. Toque na notificação para obter mais informações</string>
+  <string name="conduit_service_starting_notification_text">O serviço Conduit está a iniciar...</string>
+</resources>

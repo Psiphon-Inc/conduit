@@ -48,6 +48,7 @@ export const palette = {
     purpleTint2: "#7d6783",
     purpleTint1: "#6d5473",
     purple: "#4E3677",
+    selectedPurple: "#7E5CB8",
     purpleShade1: "#533b5a",
     purpleShade2: "#412e46",
     purpleShade3: "#2e2132",
@@ -55,6 +56,7 @@ export const palette = {
     purpleShade5: "#09060a",
     maroon: "#513241",
     white: "#E0E0E0",
+    lightGrey: "#A0A0A0",
     midGrey: "#191224",
     grey: "#342F2F",
     transparent: "rgba(0,0,0,0)",
@@ -68,6 +70,7 @@ export const palette = {
     peachyMauve: "#755484",
     thinPurple: "rgba(156, 129, 201, 0.6)",
     whiteHighlight: "rgba(255, 255, 255, 0.6)",
+    modalBgOverlay: "rgba(0, 0, 0, 0.56)",
 };
 
 export const sharedStyles = StyleSheet.create({
@@ -273,6 +276,9 @@ export const sharedStyles = StyleSheet.create({
     greyText: {
         color: palette.midGrey,
     },
+    lightGreyText: {
+        color: palette.lightGrey,
+    },
     blackText: {
         color: palette.black,
     },
@@ -292,11 +298,11 @@ export const sharedStyles = StyleSheet.create({
     },
     greyBorderBottom: {
         borderBottomWidth: 1,
-        borderColor: palette.midGrey,
+        borderColor: "rgba(0, 0, 0, 0.12)",
     },
     greyBorderTop: {
         borderBottomWidth: 1,
-        borderColor: palette.midGrey,
+        borderColor: "rgba(0, 0, 0, 0.12)",
     },
     blackBg: {
         backgroundColor: palette.black,
@@ -336,29 +342,8 @@ export const sharedStyles = StyleSheet.create({
         bottom: 0,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        borderWidth: 2,
-        borderBottomWidth: 0,
+        borderTopWidth: 0,
         borderColor: palette.black,
-    },
-    modalCenter: {
-        flex: 1,
-        height: "50%",
-        width: "80%",
-        backgroundColor: palette.grey,
-        borderRadius: 18,
-        position: "absolute",
-        left: "10%",
-        top: "25%",
-    },
-    modalCenterSmall: {
-        flex: 1,
-        height: "35%",
-        width: "80%",
-        backgroundColor: palette.grey,
-        borderRadius: 18,
-        position: "absolute",
-        left: "10%",
-        top: "25%",
     },
     textInput: {
         borderWidth: 1,

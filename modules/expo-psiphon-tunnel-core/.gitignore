@@ -1,0 +1,6 @@
+module.properties
+
+ios/ios_embedded_server_entries
+ios/ios_psiphon_config
+
+android/build

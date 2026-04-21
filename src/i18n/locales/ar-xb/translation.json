@@ -86,6 +86,9 @@
     "ONBOARDING_WELCOME_BODY_I18N": {
         "string": "‮⊥nɹu‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ıuʇo‬ ‮ɐu‬ ‮Iuʇǝɹuǝʇ‬ ‮ɟɹǝǝpoɯ‬ ‮qǝɐɔou‬!\n\n‮ʎon‬ ‮ɔɐu‬ ‮ɥǝʅd‬ ‮dǝodʅǝ‬ ‮ɐɹonup‬ ‮ʇɥǝ‬ ‮ʍoɹʅp‬ ‮qɹǝɐʞ‬ ‮ʇɥɹonƃɥ‬ ‮ɹǝsʇɹıɔʇıʌǝ‬ ‮uǝʇʍoɹʞs‬ ‮ɐup‬ ‮ɐɔɔǝss‬ ‮ʇɥǝ‬ ‮ƃʅoqɐʅ‬ ‮ıuʇǝɹuǝʇ‬ ‮sǝɔnɹǝʅʎ‬ ‮ʇɥɹonƃɥ‬ ‮ʇɥǝ‬ ‮Ԁsıdɥou‬ ‮Nǝʇʍoɹʞ‬."
     },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "‮⊥nɹu‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ıuʇo‬ ‮ɐu‬ ‮Iuʇǝɹuǝʇ‬ ‮ɟɹǝǝpoɯ‬ ‮qǝɐɔou‬!\n\n‮ʎon‬ ‮ɔɐu‬ ‮ɥǝʅd‬ ‮dǝodʅǝ‬ ‮ɐɹonup‬ ‮ʇɥǝ‬ ‮ʍoɹʅp‬ ‮qɹǝɐʞ‬ ‮ʇɥɹonƃɥ‬ ‮ɹǝsʇɹıɔʇıʌǝ‬ ‮uǝʇʍoɹʞs‬ ‮ɐup‬ ‮ɐɔɔǝss‬ ‮ʇɥǝ‬ ‮ƃʅoqɐʅ‬ ‮ıuʇǝɹuǝʇ‬ ‮sǝɔnɹǝʅʎ‬ ‮ʇɥɹonƃɥ‬ ‮ʇɥǝ‬ ‮Ԁsıdɥou‬ ‮Nǝʇʍoɹʞ‬."
+    },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "‮Nǝxʇ‬"
     },
@@ -94,6 +97,9 @@
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
         "string": "‮Ↄoupnıʇ‬ ‮ıs‬ ‮ɐu‬ ‮odǝu‬-‮sonɹɔǝ‬ ‮ɐddʅıɔɐʇıou‬ ‮ʇɥɐʇ‬ ‮ǝuɐqʅǝs‬ ‮dǝodʅǝ‬ ‮ıu‬ ‮ɔǝusoɹǝp‬ ‮ɹǝƃıous‬ ‮ʍoɹʅpʍıpǝ‬ ‮ʇo‬ ‮qonuɔǝ‬ ‮oɟɟ‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ɐup‬ ‮ıuʇo‬ ‮ʇɥǝ‬ ‮Ԁsıdɥou‬ ‮Nǝʇʍoɹʞ‬.\n\n‮⊥ɥǝ‬ ‮ɯoɹǝ‬ ‮Ↄoupnıʇ‬ ‮Sʇɐʇıous‬ ‮ʇɥǝɹǝ‬ ‮ɐɹǝ‬, ‮ʇɥǝ‬ ‮sʇɹouƃǝɹ‬ ‮Ԁsıdɥou‬ ‮ıs‬ ‮ɐup‬ ‮ʇɥǝ‬ ‮ɯoɹǝ‬ ‮odǝu‬ ‮ʇɥǝ‬ ‮ıuʇǝɹuǝʇ‬ ‮qǝɔoɯǝs‬."
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "‮Ↄoupnıʇ‬ ‮ou‬ ‮ıOS‬ ‮ʅǝʇs‬ ‮ʎon‬ ‮ɔɹǝɐʇǝ‬ ‮ɐup‬ ‮ɯɐuɐƃǝ‬ ‮ɔʅoup‬-‮ɥosʇǝp‬ ‮Ↄoupnıʇ‬ ‮Sʇɐʇıous‬ ‮ʇɥɐʇ‬ ‮ɥǝʅd‬ ‮Ԁsıdɥou‬ ‮nsǝɹs‬ ‮ɹǝɐɔɥ‬ ‮ʇɥǝ‬ ‮Ԁsıdɥou‬ ‮Nǝʇʍoɹʞ‬.\n\n‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ıs‬ ‮nsǝp‬ ‮ʇo‬ ‮ɯɐuɐƃǝ‬ ‮ʎonɹ‬ ‮sʇɐʇıou‬, ‮ʍɥıʅǝ‬ ‮ʇɥǝ‬ ‮sʇɐʇıou‬ ‮ıʇsǝʅɟ‬ ‮ɹnus‬ ‮ıu‬ ‮ʇɥǝ‬ ‮ɔʅoup‬."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "‮Nǝxʇ‬"
@@ -104,14 +110,35 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "‮Ↄoupnıʇ‬ ‮ɹǝɔoɯɯǝups‬ ‮ʎon‬ ‮ǝuɐqʅǝ‬ ‮uoʇıɟıɔɐʇıous‬ ‮so‬ ‮ʍǝ‬ ‮ɔɐu‬ ‮dɹoʌıpǝ‬ ‮ɔɹıʇıɔɐʅ‬ ‮ndpɐʇǝs‬ ‮ɐqonʇ‬ ‮ʎonɹ‬ ‮Ↄoupnıʇ‬ ‮Sʇɐʇıou‬.\n\n‮ᴚǝɐpʎ‬ ‮ʇo‬ ‮qǝƃıu‬?"
     },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "‮Ↄoupnıʇ‬ ‮ɹǝɔoɯɯǝups‬ ‮ʎon‬ ‮ǝuɐqʅǝ‬ ‮uoʇıɟıɔɐʇıous‬ ‮so‬ ‮ʍǝ‬ ‮ɔɐu‬ ‮dɹoʌıpǝ‬ ‮ıɯdoɹʇɐuʇ‬ ‮ndpɐʇǝs‬ ‮ɐqonʇ‬ ‮ʎonɹ‬ ‮ɐɔɔonuʇ‬, ‮snqsoɹıdʇıou‬, ‮ɐup‬ ‮ɥosʇǝp‬ ‮Ↄoupnıʇ‬ ‮Sʇɐʇıou‬.\n\n‮ᴚǝɐpʎ‬ ‮ʇo‬ ‮qǝƃıu‬?"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "‮Ԑǝƃıu‬"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "‮Ԑǝƃıu‬"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "‮Hoşʇǝp‬ ‮Ↄoupnıʇ‬"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "‮Iu‬ ‮ɐppıʇıou‬ ‮ʇo‬ ‮ɹnuuıuƃ‬ ‮ɐ‬ ‮ɔoupnıʇ‬ ‮pıɹǝɔʇʅʎ‬ ‮ou‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬, ‮ʎon‬ ‮ɔɐu‬ ‮snqsoɹıqǝ‬ ‮ʇo‬ ‮ɐ‬ ‮ɥosʇǝp‬ ‮sʇɐʇıou‬ ‮ɟoɹ‬ ‮ɐʅʍɐʎs‬-‮ou‬ ‮snddoɹʇ‬.\n\n‮Hoşʇǝp‬ ‮Ↄoupnıʇ‬ ‮ɹnus‬ ‮ʎonɹ‬ ‮sʇɐʇıou‬ ‮ıu‬ ‮ʇɥǝ‬ ‮ɔʅoup‬, ‮ʞǝǝdıuƃ‬ ‮ıʇ‬ ‮ɐɔʇıʌǝ‬ 24/7, ‮ǝʌǝu‬ ‮ʍɥǝu‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ıs‬ ‮oɟɟʅıuǝ‬."
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "‮Ou‬ ‮ıOS‬, ‮Ↄoupnıʇ‬ ‮Sʇɐʇıous‬ ‮ɐɹǝ‬ ‮ɔʅoup‬-‮ɥosʇǝp‬.\n\n‮∀‬ ‮snqsoɹıdʇıou‬ ‮ʞǝǝds‬ ‮ʎonɹ‬ ‮sʇɐʇıou‬ ‮ɹnuuıuƃ‬ ‮ıu‬ ‮ʇɥǝ‬ ‮ɔʅoup‬ 24/7, ‮ǝʌǝu‬ ‮ʍɥǝu‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ıs‬ ‮oɟɟʅıuǝ‬."
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "‮Nǝxʇ‬"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "‮Ԁɹıʌɐɔʎ‬ ‮Ԁoʅıɔʎ‬"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
         "string": "‮Ｍǝ‬ ‮po‬ ‮uoʇ‬ ‮ɔoʅʅǝɔʇ‬ ‮dǝɹsouɐʅʅʎ‬ ‮ıpǝuʇıɟıɐqʅǝ‬ ‮ıuɟoɹɯɐʇıou‬ ‮ɟɹoɯ‬ ‮Ↄoupnıʇ‬ ‮nsǝɹs‬. ‮∀ʅʅ‬ ‮ʇɹɐusɯıʇʇǝp‬ ‮pɐʇɐ‬ ‮ıs‬ ‮ǝuɔɹʎdʇǝp‬ ‮ɐup‬ ‮ɔɐuuoʇ‬ ‮qǝ‬ ‮ɐɔɔǝssǝp‬ ‮qʎ‬ ‮ʎon‬ ‮oɹ‬ ‮Ԁsıdɥou‬. ‮Ↄouuǝɔʇǝp‬ ‮nsǝɹs‬ ‮ɐɹǝ‬ ‮uoʇ‬ ‮ɐqʅǝ‬ ‮ʇo‬ ‮ɐɔɔǝss‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ıu‬ ‮ɐuʎ‬ ‮ʍɐʎ‬.\n\n‮Ԑʎ‬ ‮nsıuƃ‬ ‮Ↄoupnıʇ‬, ‮ʎon‬ ‮ɐɔɔǝdʇ‬ ‮onɹ‬ ‮dɹıʌɐɔʎ‬ ‮doʅıɔʎ‬, ‮ɐʌɐıʅɐqʅǝ‬ ‮qǝʅoʍ‬."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "‮Ｍǝ‬ ‮po‬ ‮uoʇ‬ ‮ɔoʅʅǝɔʇ‬ ‮dǝɹsouɐʅʅʎ‬ ‮ıpǝuʇıɟıɐqʅǝ‬ ‮ıuɟoɹɯɐʇıou‬ ‮ɟɹoɯ‬ ‮Ↄoupnıʇ‬ ‮nsǝɹs‬. ‮pɐʇɐ‬ ‮sǝuʇ‬ ‮qʎ‬ ‮ʇɥǝ‬ ‮ıOS‬ ‮ɐdd‬ ‮ıs‬ ‮ǝuɔɹʎdʇǝp‬ ‮ıu‬ ‮ʇɹɐusıʇ‬, ‮ɐup‬ ‮oʇɥǝɹ‬ ‮nsǝɹs‬ ‮po‬ ‮uoʇ‬ ‮ɐɔɔǝss‬ ‮ʎonɹ‬ ‮pǝʌıɔǝ‬ ‮ʇɥɹonƃɥ‬ ‮ʇɥǝ‬ ‮ɐdd‬.\n\n‮Ԑʎ‬ ‮nsıuƃ‬ ‮Ↄoupnıʇ‬, ‮ʎon‬ ‮ɐɔɔǝdʇ‬ ‮onɹ‬ ‮dɹıʌɐɔʎ‬ ‮doʅıɔʎ‬, ‮ɐʌɐıʅɐqʅǝ‬ ‮qǝʅoʍ‬."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "‮∀ɔɔǝdʇ‬"
@@ -214,5 +241,8 @@
     },
     "REDUCED_REQUIRED_BANDWIDTH_I18N": {
         "string": "‮ᴚǝpnɔǝp‬ ‮ᴚǝbnıɹǝp‬ ‮ᗺɐupʍıpʇɥ‬"
+    },
+    "PREPARING_PERSONAL_PAIRING_I18N": {
+        "string": "‮Ԁɹǝdɐɹıuƃ‬ ‮dǝɹsouɐʅ‬ ‮dɐıɹıuƃ‬..."
     }
 }

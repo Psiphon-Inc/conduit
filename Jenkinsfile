@@ -20,6 +20,11 @@ pipeline {
                 ANDROID_EMBEDDED_SERVER_ENTRIES = 'op://Jenkins/Conduit Psiphon Config/android_embedded_server_entries'
                 ANDROID_UPLOAD_KEYSTORE = 'op://Jenkins/Conduit Upload Signing Key/upload-keystore.jks.base64'
                 ANDROID_UPLOAD_KEYSTORE_PROPERTIES = 'op://Jenkins/Conduit Upload Signing Key/keystore.properties'
+                HOSTED_BASE_URL = 'op://Jenkins/Conduit Hosted Config/hosted_base_url'
+                CLERK_PUBLISHABLE_KEY = 'op://Jenkins/Conduit Hosted Config/clerk_publishable_key'
+                CLERK_HCB_JWT_TEMPLATE = 'op://Jenkins/Conduit Hosted Config/clerk_hcb_jwt_template'
+                REVENUECAT_IOS_PUBLIC_KEY = 'op://Jenkins/Conduit Hosted Config/revenuecat_ios_public_key'
+                REVENUECAT_ANDROID_PUBLIC_KEY = 'op://Jenkins/Conduit Hosted Config/revenuecat_android_public_key'
             }
             
             steps {
@@ -31,6 +36,18 @@ pipeline {
                 }
 
                 writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${releaseName}';"
+
+                withSecrets() {
+                    writeFile file: '.env.production', text: [
+                        "EXPO_PUBLIC_HOSTED_BASE_URL=${env.HOSTED_BASE_URL}",
+                        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=${env.CLERK_PUBLISHABLE_KEY}",
+                        "EXPO_PUBLIC_CLERK_HCB_JWT_TEMPLATE=${env.CLERK_HCB_JWT_TEMPLATE}",
+                        "EXPO_PUBLIC_REVENUECAT_IOS_PUBLIC_KEY=${env.REVENUECAT_IOS_PUBLIC_KEY}",
+                        "EXPO_PUBLIC_REVENUECAT_ANDROID_PUBLIC_KEY=${env.REVENUECAT_ANDROID_PUBLIC_KEY}",
+                        "EXPO_PUBLIC_DEV_SIMULATED_DATA=0",
+                        "DEV_SIMULATED_DATA=0",
+                    ].join('\n')
+                }
 
                 dir('android') {
 

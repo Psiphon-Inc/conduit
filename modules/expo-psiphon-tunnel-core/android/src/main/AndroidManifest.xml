@@ -1,0 +1,38 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION" />
+
+  <permission
+    android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION"
+    android:protectionLevel="signature" />
+
+  <application>
+    <service
+      android:name="expo.modules.psiphontunnelcore.InproxyForegroundService"
+      android:exported="false"
+      android:foregroundServiceType="specialUse"
+      android:process=":ConduitService">
+      <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="P2P proxy for Psiphon station mode" />
+    </service>
+
+    <service
+      android:name="expo.modules.psiphontunnelcore.ConduitStateService"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="ca.psiphon.conduit.ACTION_BIND_CONDUIT_STATE" />
+      </intent-filter>
+    </service>
+
+    <receiver
+      android:name="expo.modules.psiphontunnelcore.InproxyRestartReceiver"
+      android:exported="false">
+      <intent-filter>
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+      </intent-filter>
+    </receiver>
+  </application>
+</manifest>

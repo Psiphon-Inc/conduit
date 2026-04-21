@@ -3,186 +3,87 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		293BD6822CB6FA3C006B04D3 /* Feedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293BD6812CB6FA3C006B04D3 /* Feedback.swift */; };
-		293BD69A2CB84246006B04D3 /* FeedbackLogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */; };
-		294484BD2CACF05C00451B61 /* Resources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294484BC2CACF05C00451B61 /* Resources.swift */; };
-		2974F3652CD95382000E8D3F /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = 2974F3642CD95382000E8D3F /* Logging */; };
-		2974F3682CDAA7F6000E8D3F /* LogHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2974F3672CDAA7F6000E8D3F /* LogHandler.swift */; };
-		2974F36A2CDAC4CB000E8D3F /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2974F3692CDAC4CB000E8D3F /* AppLogger.swift */; };
-		29A9C9FD2CA5FFDD0054431A /* ConduitModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */; };
-		29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = 29A9C9FE2CA600220054431A /* ConduitModule.mm */; };
-		29A9CA032CA715720054431A /* PsiphonTunnel.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29A9CA012CA715410054431A /* PsiphonTunnel.xcframework */; };
-		29A9CA042CA715720054431A /* PsiphonTunnel.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 29A9CA012CA715410054431A /* PsiphonTunnel.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		29A9CA072CA715DF0054431A /* ConduitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29A9CA062CA715DF0054431A /* ConduitManager.swift */; };
-		29E303452CDBE42500B64552 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29E303442CDBE42500B64552 /* Utils.swift */; };
-		29EB55312CA726790042B1B4 /* ios_embedded_server_entries in Resources */ = {isa = PBXBuildFile; fileRef = 29EB552F2CA726790042B1B4 /* ios_embedded_server_entries */; };
-		29EB55322CA726790042B1B4 /* ios_psiphon_config in Resources */ = {isa = PBXBuildFile; fileRef = 29EB55302CA726790042B1B4 /* ios_psiphon_config */; };
-		2E4E3424C6DC79C53DC7662D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0217DF74F798985AC7720692 /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		6773BCF42CD2C7B800CF4ADE /* Puppy in Frameworks */ = {isa = PBXBuildFile; productRef = 6773BCF32CD2C7B800CF4ADE /* Puppy */; };
-		67A1F0232CC027D600AE7C39 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 67A1F0222CC027D600AE7C39 /* Collections */; };
-		96905EF65AED1B983A6B3ABC /* libPods-conduit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-conduit.a */; };
-		A86CEE5837C5BBF9CD8BB436 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 23B8187366DE26611566EC73 /* PrivacyInfo.xcprivacy */; };
-		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
-		B6284DFC165F4DE784DD6821 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45F8AD2E2FE04BEE88DB4018 /* noop-file.swift */; };
+		906EA3A2E38F3BCA92A4DA42 /* libPods-conduit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F72F38D15C74A84E27546626 /* libPods-conduit.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C50C68017D18BAF46E659CA7 /* libPods-conduitTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 65F6CF7FF595D640005ECCD1 /* libPods-conduitTests.a */; };
+		E75E9F32B776F89EFCF55C2E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = F6F07FDCAAD6B41C9D1CEA94 /* PrivacyInfo.xcprivacy */; };
+		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		F536BFDF2F6D9E040086E37A /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F536BFDE2F6D9E040086E37A /* StoreKit.framework */; };
+		F549348725D51BA346BA5185 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2122A669985B410E22E5EE3C /* ExpoModulesProvider.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		67B7196D2D35C574006BE288 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
-			remoteInfo = conduit;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		29A9CA052CA715720054431A /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				29A9CA042CA715720054431A /* PsiphonTunnel.xcframework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
-		01B4D45ED50F41AFBD63B464 /* conduit-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "conduit-Bridging-Header.h"; path = "conduit/conduit-Bridging-Header.h"; sourceTree = "<group>"; };
-		0217DF74F798985AC7720692 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-conduitTests/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* Conduit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Conduit.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = conduit/AppDelegate.h; sourceTree = "<group>"; };
-		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = conduit/AppDelegate.mm; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* conduit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = conduit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = conduit/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = conduit/Info.plist; sourceTree = "<group>"; };
-		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = conduit/main.m; sourceTree = "<group>"; };
-		23B8187366DE26611566EC73 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = conduit/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		293BD6812CB6FA3C006B04D3 /* Feedback.swift */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Feedback.swift; sourceTree = "<group>"; tabWidth = 4; };
-		293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackLogReader.swift; sourceTree = "<group>"; };
-		294484BC2CACF05C00451B61 /* Resources.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = Resources.swift; sourceTree = "<group>"; tabWidth = 4; };
-		2974F3672CDAA7F6000E8D3F /* LogHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogHandler.swift; sourceTree = "<group>"; };
-		2974F3692CDAC4CB000E8D3F /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
-		29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = ConduitModule.swift; sourceTree = "<group>"; tabWidth = 4; };
-		29A9C9FE2CA600220054431A /* ConduitModule.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ConduitModule.mm; sourceTree = "<group>"; };
-		29A9CA002CA602340054431A /* ConduitModule-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ConduitModule-Bridging-Header.h"; sourceTree = "<group>"; };
-		29A9CA012CA715410054431A /* PsiphonTunnel.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = PsiphonTunnel.xcframework; sourceTree = "<group>"; };
-		29A9CA062CA715DF0054431A /* ConduitManager.swift */ = {isa = PBXFileReference; indentWidth = 4; lastKnownFileType = sourcecode.swift; path = ConduitManager.swift; sourceTree = "<group>"; tabWidth = 4; };
-		29E303442CDBE42500B64552 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
-		29EB552F2CA726790042B1B4 /* ios_embedded_server_entries */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ios_embedded_server_entries; sourceTree = "<group>"; };
-		29EB55302CA726790042B1B4 /* ios_psiphon_config */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ios_psiphon_config; sourceTree = "<group>"; };
-		3C5EAAFE32D2F4659B7C9F65 /* Pods-conduitTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-conduitTests.debug.xcconfig"; path = "Target Support Files/Pods-conduitTests/Pods-conduitTests.debug.xcconfig"; sourceTree = "<group>"; };
-		45F8AD2E2FE04BEE88DB4018 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "conduit/noop-file.swift"; sourceTree = "<group>"; };
-		58EEBF8E8E6FB1BC6CAF49B5 /* libPods-conduit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-conduit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		65F6CF7FF595D640005ECCD1 /* libPods-conduitTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-conduitTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		67B719692D35C574006BE288 /* conduitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = conduitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		6C2E3173556A471DD304B334 /* Pods-conduit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-conduit.debug.xcconfig"; path = "Target Support Files/Pods-conduit/Pods-conduit.debug.xcconfig"; sourceTree = "<group>"; };
-		7A4D352CD337FB3A3BF06240 /* Pods-conduit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-conduit.release.xcconfig"; path = "Target Support Files/Pods-conduit/Pods-conduit.release.xcconfig"; sourceTree = "<group>"; };
+		2122A669985B410E22E5EE3C /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-conduit/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		45D872300EB5626B4671F279 /* Pods-conduit.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-conduit.release.xcconfig"; path = "Target Support Files/Pods-conduit/Pods-conduit.release.xcconfig"; sourceTree = "<group>"; };
+		96EEC3EC46524ADD2A2DAE31 /* Pods-conduit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-conduit.debug.xcconfig"; path = "Target Support Files/Pods-conduit/Pods-conduit.debug.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = conduit/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F248BE1BB247FFFA9CCABEE7 /* Pods-conduitTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-conduitTests.release.xcconfig"; path = "Target Support Files/Pods-conduitTests/Pods-conduitTests.release.xcconfig"; sourceTree = "<group>"; };
-		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-conduit/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = conduit/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* conduit-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "conduit-Bridging-Header.h"; path = "conduit/conduit-Bridging-Header.h"; sourceTree = "<group>"; };
+		F536BFDE2F6D9E040086E37A /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		F6F07FDCAAD6B41C9D1CEA94 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = conduit/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F72F38D15C74A84E27546626 /* libPods-conduit.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-conduit.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		67B7196A2D35C574006BE288 /* conduitTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
-			path = conduitTests;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				67A1F0232CC027D600AE7C39 /* Collections in Frameworks */,
-				96905EF65AED1B983A6B3ABC /* libPods-conduit.a in Frameworks */,
-				29A9CA032CA715720054431A /* PsiphonTunnel.xcframework in Frameworks */,
-				6773BCF42CD2C7B800CF4ADE /* Puppy in Frameworks */,
-				2974F3652CD95382000E8D3F /* Logging in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		67B719662D35C574006BE288 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C50C68017D18BAF46E659CA7 /* libPods-conduitTests.a in Frameworks */,
+				906EA3A2E38F3BCA92A4DA42 /* libPods-conduit.a in Frameworks */,
+				F536BFDF2F6D9E040086E37A /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		01B31A4B2D9D1D082F3C7DFF /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				96EEC3EC46524ADD2A2DAE31 /* Pods-conduit.debug.xcconfig */,
+				45D872300EB5626B4671F279 /* Pods-conduit.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* conduit */ = {
 			isa = PBXGroup;
 			children = (
-				29EB552F2CA726790042B1B4 /* ios_embedded_server_entries */,
-				29EB55302CA726790042B1B4 /* ios_psiphon_config */,
-				29A9CA012CA715410054431A /* PsiphonTunnel.xcframework */,
-				29A9C9FB2CA5FF1C0054431A /* ConduitModule */,
+				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
+				F11748442D0722820044C1D9 /* conduit-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
-				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
-				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
-				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				45F8AD2E2FE04BEE88DB4018 /* noop-file.swift */,
-				01B4D45ED50F41AFBD63B464 /* conduit-Bridging-Header.h */,
-				23B8187366DE26611566EC73 /* PrivacyInfo.xcprivacy */,
+				F6F07FDCAAD6B41C9D1CEA94 /* PrivacyInfo.xcprivacy */,
 			);
 			name = conduit;
 			sourceTree = "<group>";
 		};
-		2974F3662CDAA7DE000E8D3F /* Feedback */ = {
+		2AF2E1768E42F990AA6390C5 /* conduit */ = {
 			isa = PBXGroup;
 			children = (
-				293BD6812CB6FA3C006B04D3 /* Feedback.swift */,
-				293BD6992CB84246006B04D3 /* FeedbackLogReader.swift */,
-				2974F3672CDAA7F6000E8D3F /* LogHandler.swift */,
-				29E303442CDBE42500B64552 /* Utils.swift */,
+				2122A669985B410E22E5EE3C /* ExpoModulesProvider.swift */,
 			);
-			path = Feedback;
-			sourceTree = "<group>";
-		};
-		29A9C9FB2CA5FF1C0054431A /* ConduitModule */ = {
-			isa = PBXGroup;
-			children = (
-				2974F3662CDAA7DE000E8D3F /* Feedback */,
-				29A9C9FC2CA5FFDD0054431A /* ConduitModule.swift */,
-				2974F3692CDAC4CB000E8D3F /* AppLogger.swift */,
-				29A9C9FE2CA600220054431A /* ConduitModule.mm */,
-				29A9CA002CA602340054431A /* ConduitModule-Bridging-Header.h */,
-				29A9CA062CA715DF0054431A /* ConduitManager.swift */,
-				294484BC2CACF05C00451B61 /* Resources.swift */,
-			);
-			path = ConduitModule;
+			name = conduit;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F536BFDE2F6D9E040086E37A /* StoreKit.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				58EEBF8E8E6FB1BC6CAF49B5 /* libPods-conduit.a */,
-				65F6CF7FF595D640005ECCD1 /* libPods-conduitTests.a */,
+				F72F38D15C74A84E27546626 /* libPods-conduit.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -199,32 +100,22 @@
 			children = (
 				13B07FAE1A68108700A75B9A /* conduit */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
-				67B7196A2D35C574006BE288 /* conduitTests */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				D65327D7A22EEC0BE12398D9 /* Pods */,
-				D7E4C46ADA2E9064B798F356 /* ExpoModulesProviders */,
+				01B31A4B2D9D1D082F3C7DFF /* Pods */,
+				D3B4BAF561FB13DD9B954C79 /* ExpoModulesProviders */,
 			);
-			indentWidth = 4;
+			indentWidth = 2;
 			sourceTree = "<group>";
-			tabWidth = 4;
+			tabWidth = 2;
 			usesTabs = 0;
 		};
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* Conduit.app */,
-				67B719692D35C574006BE288 /* conduitTests.xctest */,
+				13B07F961A680F5B00A75B9A /* conduit.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		92DBD88DE9BF7D494EA9DA96 /* conduit */ = {
-			isa = PBXGroup;
-			children = (
-				FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */,
-			);
-			name = conduit;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -236,30 +127,10 @@
 			path = conduit/Supporting;
 			sourceTree = "<group>";
 		};
-		D016C929A7AC444FEBFC8A67 /* conduitTests */ = {
+		D3B4BAF561FB13DD9B954C79 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				0217DF74F798985AC7720692 /* ExpoModulesProvider.swift */,
-			);
-			name = conduitTests;
-			sourceTree = "<group>";
-		};
-		D65327D7A22EEC0BE12398D9 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				6C2E3173556A471DD304B334 /* Pods-conduit.debug.xcconfig */,
-				7A4D352CD337FB3A3BF06240 /* Pods-conduit.release.xcconfig */,
-				3C5EAAFE32D2F4659B7C9F65 /* Pods-conduitTests.debug.xcconfig */,
-				F248BE1BB247FFFA9CCABEE7 /* Pods-conduitTests.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
-		D7E4C46ADA2E9064B798F356 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				92DBD88DE9BF7D494EA9DA96 /* conduit */,
-				D016C929A7AC444FEBFC8A67 /* conduitTests */,
+				2AF2E1768E42F990AA6390C5 /* conduit */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -272,51 +143,23 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "conduit" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				DA61D764F0859B73E63FE8D3 /* [Expo] Configure project */,
+				D898A495527B00B82B2D9EEB /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				68F30BE7B0F7F802812E9707 /* [CP] Embed Pods Frameworks */,
-				29A9CA052CA715720054431A /* Embed Frameworks */,
+				85AAA1D55507397FC444142A /* [CP] Embed Pods Frameworks */,
+				F536BFE02F7721620086E37A /* Copy Hermes dSYM */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = conduit;
-			packageProductDependencies = (
-				67A1F0222CC027D600AE7C39 /* Collections */,
-				6773BCF32CD2C7B800CF4ADE /* Puppy */,
-				2974F3642CD95382000E8D3F /* Logging */,
-			);
 			productName = conduit;
-			productReference = 13B07F961A680F5B00A75B9A /* Conduit.app */;
+			productReference = 13B07F961A680F5B00A75B9A /* conduit.app */;
 			productType = "com.apple.product-type.application";
-		};
-		67B719682D35C574006BE288 /* conduitTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 67B719712D35C574006BE288 /* Build configuration list for PBXNativeTarget "conduitTests" */;
-			buildPhases = (
-				BBD3C635550B20602649373D /* [CP] Check Pods Manifest.lock */,
-				379522A36845D26E68823143 /* [Expo] Configure project */,
-				67B719652D35C574006BE288 /* Sources */,
-				67B719662D35C574006BE288 /* Frameworks */,
-				67B719672D35C574006BE288 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				67B7196E2D35C574006BE288 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				67B7196A2D35C574006BE288 /* conduitTests */,
-			);
-			name = conduitTests;
-			productName = conduitTests;
-			productReference = 67B719692D35C574006BE288 /* conduitTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -324,19 +167,15 @@
 		83CBB9F71A601CBA00E9B192 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1610;
 				LastUpgradeCheck = 1130;
 				TargetAttributes = {
 					13B07F861A680F5B00A75B9A = {
 						LastSwiftMigration = 1250;
 					};
-					67B719682D35C574006BE288 = {
-						CreatedOnToolsVersion = 16.1;
-						TestTargetID = 13B07F861A680F5B00A75B9A;
-					};
 				};
 			};
 			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "conduit" */;
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -344,18 +183,11 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
-			packageReferences = (
-				673EB98A2CC01E25003A3E39 /* XCRemoteSwiftPackageReference "swift-collections" */,
-				6773BCF22CD2C7B800CF4ADE /* XCRemoteSwiftPackageReference "Puppy" */,
-				2974F3632CD95382000E8D3F /* XCRemoteSwiftPackageReference "swift-log" */,
-			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* conduit */,
-				67B719682D35C574006BE288 /* conduitTests */,
 			);
 		};
 /* End PBXProject section */
@@ -368,16 +200,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				A86CEE5837C5BBF9CD8BB436 /* PrivacyInfo.xcprivacy in Resources */,
-				29EB55322CA726790042B1B4 /* ios_psiphon_config in Resources */,
-				29EB55312CA726790042B1B4 /* ios_embedded_server_entries in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		67B719672D35C574006BE288 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				E75E9F32B776F89EFCF55C2E /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -421,82 +244,75 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		379522A36845D26E68823143 /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-conduitTests/expo-configure-project.sh\"\n";
-		};
-		68F30BE7B0F7F802812E9707 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-resources-${CONFIGURATION}-input-files.xcfilelist",
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/EXNotifications/ExpoNotifications_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoLocalization/ExpoLocalization_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoSystemUI/ExpoSystemUI_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/PurchasesHybridCommon/PurchasesHybridCommon.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RCT-Folly/RCT-Folly_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RNCAsyncStorage/RNCAsyncStorage_resources.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RNSVG/RNSVGFilters.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RevenueCat/RevenueCat.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/SDWebImage/SDWebImage.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/boost/boost_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/glog/glog_privacy.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-resources-${CONFIGURATION}-output-files.xcfilelist",
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoApplication_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoNotifications_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoLocalization_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoSystemUI_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/PurchasesHybridCommon.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RCT-Folly_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNCAsyncStorage_resources.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RNSVGFilters.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RevenueCat.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SDWebImage.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/boost_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/glog_privacy.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		BBD3C635550B20602649373D /* [CP] Check Pods Manifest.lock */ = {
+		85AAA1D55507397FC444142A /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
+				"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-conduitTests-checkManifestLockResult.txt",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-conduit/Pods-conduit-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		DA61D764F0859B73E63FE8D3 /* [Expo] Configure project */ = {
+		D898A495527B00B82B2D9EEB /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -515,6 +331,24 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-conduit/expo-configure-project.sh\"\n";
 		};
+		F536BFE02F7721620086E37A /* Copy Hermes dSYM */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Hermes dSYM";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "if [[ \"$CONFIGURATION\" == \"Release\" && -n \"$ARCHIVE_DSYMS_DIR\" ]]; then\n  HERMES_DSYM=\"$PODS_XCFRAMEWORKS_BUILD_DIR/hermes-engine/Pre-built/hermes.framework.dSYM\"\n  if [[ -d \"$HERMES_DSYM\" ]]; then\n    echo \"Copying Hermes dSYM to archive...\"\n    cp -R \"$HERMES_DSYM\" \"$ARCHIVE_DSYMS_DIR/\"\n  else\n    echo \"warning: Hermes dSYM not found at $HERMES_DSYM\"\n  fi\nfi\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -522,58 +356,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				29A9C9FF2CA601D20054431A /* ConduitModule.mm in Sources */,
-				2974F3682CDAA7F6000E8D3F /* LogHandler.swift in Sources */,
-				293BD6822CB6FA3C006B04D3 /* Feedback.swift in Sources */,
-				2974F36A2CDAC4CB000E8D3F /* AppLogger.swift in Sources */,
-				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
-				29E303452CDBE42500B64552 /* Utils.swift in Sources */,
-				13B07FC11A68108700A75B9A /* main.m in Sources */,
-				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				293BD69A2CB84246006B04D3 /* FeedbackLogReader.swift in Sources */,
-				29A9CA072CA715DF0054431A /* ConduitManager.swift in Sources */,
-				294484BD2CACF05C00451B61 /* Resources.swift in Sources */,
-				29A9C9FD2CA5FFDD0054431A /* ConduitModule.swift in Sources */,
-				B6284DFC165F4DE784DD6821 /* noop-file.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		67B719652D35C574006BE288 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				2E4E3424C6DC79C53DC7662D /* ExpoModulesProvider.swift in Sources */,
+				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
+				F549348725D51BA346BA5185 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXTargetDependency section */
-		67B7196E2D35C574006BE288 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 13B07F861A680F5B00A75B9A /* conduit */;
-			targetProxy = 67B7196D2D35C574006BE288 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6C2E3173556A471DD304B334 /* Pods-conduit.debug.xcconfig */;
+			baseConfigurationReference = 96EEC3EC46524ADD2A2DAE31 /* Pods-conduit.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = conduit/conduit.entitlements;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q6HLNEX92A;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				GCC_PREPROCESSOR_DEFINITIONS_NOT_USED_IN_PRECOMPS = "";
 				INFOPLIST_FILE = conduit/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -586,8 +392,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = ca.psiphon.conduit;
-				PRODUCT_NAME = "conduit";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				PRODUCT_NAME = conduit;
 				SWIFT_OBJC_BRIDGING_HEADER = "conduit/conduit-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -598,19 +403,15 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 7A4D352CD337FB3A3BF06240 /* Pods-conduit.release.xcconfig */;
+			baseConfigurationReference = 45D872300EB5626B4671F279 /* Pods-conduit.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = conduit/conduit.entitlements;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q6HLNEX92A;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"$(inherited)",
-					"COCOAPODS=1",
-				);
 				INFOPLIST_FILE = conduit/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -623,7 +424,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = ca.psiphon.conduit;
-				PRODUCT_NAME = "conduit";
+				PRODUCT_NAME = conduit;
 				SWIFT_OBJC_BRIDGING_HEADER = "conduit/conduit-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -631,84 +432,10 @@
 			};
 			name = Release;
 		};
-		67B7196F2D35C574006BE288 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = 3C5EAAFE32D2F4659B7C9F65 /* Pods-conduitTests.debug.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = "$(inherited)";
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = Q6HLNEX92A;
-				ENABLE_USER_SCRIPT_SANDBOXING = "$(inherited)";
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
-				MTL_FAST_MATH = YES;
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = ca.psiphon.conduitTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Conduit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Conduit";
-			};
-			name = Debug;
-		};
-		67B719702D35C574006BE288 /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = F248BE1BB247FFFA9CCABEE7 /* Pods-conduitTests.release.xcconfig */;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = "$(inherited)";
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_STYLE = Automatic;
-				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = Q6HLNEX92A;
-				ENABLE_USER_SCRIPT_SANDBOXING = "$(inherited)";
-				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
-				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0;
-				MTL_FAST_MATH = YES;
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = ca.psiphon.conduitTests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Conduit.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Conduit";
-			};
-			name = Release;
-		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CC = "";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -735,7 +462,6 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				CXX = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -753,9 +479,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD = "";
-				LDPLUSPLUS = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
@@ -763,9 +487,13 @@
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
 				USE_HERMES = true;
 			};
 			name = Debug;
@@ -774,7 +502,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CC = "";
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -801,7 +528,6 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				CXX = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -812,16 +538,17 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				LD = "";
-				LDPLUSPLUS = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					/usr/lib/swift,
 					"$(inherited)",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SDKROOT)/usr/lib/swift\"$(inherited)\"";
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -841,15 +568,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		67B719712D35C574006BE288 /* Build configuration list for PBXNativeTarget "conduitTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				67B7196F2D35C574006BE288 /* Debug */,
-				67B719702D35C574006BE288 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "conduit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -860,51 +578,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		2974F3632CD95382000E8D3F /* XCRemoteSwiftPackageReference "swift-log" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-log/";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.5.2;
-			};
-		};
-		673EB98A2CC01E25003A3E39 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-collections.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.4;
-			};
-		};
-		6773BCF22CD2C7B800CF4ADE /* XCRemoteSwiftPackageReference "Puppy" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sushichop/Puppy";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.7.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		2974F3642CD95382000E8D3F /* Logging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2974F3632CD95382000E8D3F /* XCRemoteSwiftPackageReference "swift-log" */;
-			productName = Logging;
-		};
-		6773BCF32CD2C7B800CF4ADE /* Puppy */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6773BCF22CD2C7B800CF4ADE /* XCRemoteSwiftPackageReference "Puppy" */;
-			productName = Puppy;
-		};
-		67A1F0222CC027D600AE7C39 /* Collections */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 673EB98A2CC01E25003A3E39 /* XCRemoteSwiftPackageReference "swift-collections" */;
-			productName = Collections;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

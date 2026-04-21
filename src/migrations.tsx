@@ -23,8 +23,10 @@ import { timedLog } from "@/src/common/utils";
 import {
     ASYNCSTORAGE_INPROXY_LIMIT_BYTES_PER_SECOND_KEY,
     ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
+    ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
     ASYNCSTORAGE_STORAGE_VERSION_KEY,
     DEFAULT_INPROXY_MAX_CLIENTS,
+    DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS,
     V1_DEFAULT_INPROXY_MAX_CLIENTS,
 } from "@/src/constants";
 
@@ -70,6 +72,16 @@ export async function applyMigrations(): Promise<Error | number> {
             return wrapError(error, "Unable to apply storage migration 1->2");
         }
         storageVersion = 2;
+    }
+
+    // apply version 2 -> 3 migrations
+    if (storageVersion == 2) {
+        try {
+            await version2To3();
+        } catch (error) {
+            return wrapError(error, "Unable to apply storage migration 2->3");
+        }
+        storageVersion = 3;
     }
 
     await AsyncStorage.setItem(
@@ -122,6 +134,19 @@ export async function version1To2(): Promise<void> {
         await AsyncStorage.setItem(
             ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
             DEFAULT_INPROXY_MAX_CLIENTS.toString(),
+        );
+    }
+}
+
+export async function version2To3(): Promise<void> {
+    timedLog("Applying storage migrations 2->3");
+    const storedInproxyMaxPersonalClients = await AsyncStorage.getItem(
+        ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
+    );
+    if (storedInproxyMaxPersonalClients === null) {
+        await AsyncStorage.setItem(
+            ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY,
+            DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS.toString(),
         );
     }
 }

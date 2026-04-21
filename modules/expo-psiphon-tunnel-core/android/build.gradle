@@ -1,0 +1,72 @@
+apply plugin: 'com.android.library'
+
+group = 'expo.modules.psiphontunnelcore'
+version = '0.1.0'
+
+def expoModulesCorePlugin = new File(project(":expo-modules-core").projectDir.absolutePath, "ExpoModulesCorePlugin.gradle")
+apply from: expoModulesCorePlugin
+applyKotlinExpoModulesCorePlugin()
+useCoreDependencies()
+useExpoPublishing()
+
+def devTrustedSignaturesJson = (
+  project.findProperty("psiphonConduitDevTrustedSignaturesJson")
+    ?: System.getenv("PSIPHON_CONDUIT_DEV_TRUSTED_SIGNATURES_JSON")
+    ?: ""
+).toString()
+
+def escapeForBuildConfig = { value ->
+  return "\"" + value
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
+    .replace("\n", "\\n")
+    .replace("\r", "\\r") + "\""
+}
+
+def useManagedAndroidSdkVersions = false
+if (useManagedAndroidSdkVersions) {
+  useDefaultAndroidSdkVersions()
+} else {
+  buildscript {
+    ext.safeExtGet = { prop, fallback ->
+      rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+    }
+  }
+  project.android {
+    compileSdkVersion safeExtGet("compileSdkVersion", 35)
+    defaultConfig {
+      minSdkVersion safeExtGet("minSdkVersion", 21)
+      targetSdkVersion safeExtGet("targetSdkVersion", 35)
+    }
+  }
+}
+
+android {
+  namespace "expo.modules.psiphontunnelcore"
+  buildFeatures {
+    aidl true
+    buildConfig true
+  }
+  defaultConfig {
+    versionCode 1
+    versionName "0.1.0"
+  }
+  buildTypes {
+    debug {
+      buildConfigField "String", "DEV_TRUSTED_SIGNATURES_JSON", escapeForBuildConfig(devTrustedSignaturesJson)
+    }
+    release {
+      buildConfigField "String", "DEV_TRUSTED_SIGNATURES_JSON", escapeForBuildConfig("")
+    }
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  compileOnly files("${project.projectDir}/libs/ca.psiphon.aar")
+  implementation 'com.facebook.react:react-native:+'
+  implementation 'androidx.core:core-ktx:1.13.1'
+  implementation 'androidx.work:work-runtime-ktx:2.9.1'
+}

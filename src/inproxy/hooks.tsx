@@ -20,16 +20,28 @@ import { DefinedUseQueryResult, useQuery } from "@tanstack/react-query";
 
 import {
     QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
+    QUERYKEY_INPROXY_ACTIVITY_BY_3600000MS,
+    QUERYKEY_INPROXY_ACTIVITY_SEGMENTS,
+    QUERYKEY_INPROXY_COMMON_REGION_ACTIVITY,
     QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS,
+    QUERYKEY_INPROXY_CURRENT_COMMON_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTING_CLIENTS,
+    QUERYKEY_INPROXY_CURRENT_PERSONAL_CONNECTED_CLIENTS,
+    QUERYKEY_INPROXY_IPC_EVENTS,
     QUERYKEY_INPROXY_MUST_UPGRADE,
+    QUERYKEY_INPROXY_PERSONAL_REGION_ACTIVITY,
+    QUERYKEY_INPROXY_REGIONAL_BREAKDOWN_BY_WINDOW,
     QUERYKEY_INPROXY_STATUS,
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
 } from "@/src/constants";
 import {
     InproxyActivityByPeriod,
+    InproxyActivityRegion,
+    InproxyActivitySegments,
+    InproxyRegionalBreakdownByWindow,
     InproxyStatusEnum,
+    IpcEvent,
 } from "@/src/inproxy/types";
 import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
 
@@ -74,6 +86,24 @@ export const useInproxyCurrentAnnouncingWorkers =
             enabled: false,
         });
 
+export const useInproxyCurrentPersonalConnectedClients =
+    (): DefinedUseQueryResult<number> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_CURRENT_PERSONAL_CONNECTED_CLIENTS],
+            queryFn: async () => 0,
+            initialData: 0,
+            enabled: false,
+        });
+
+export const useInproxyCurrentCommonConnectedClients =
+    (): DefinedUseQueryResult<number> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_CURRENT_COMMON_CONNECTED_CLIENTS],
+            queryFn: async () => 0,
+            initialData: 0,
+            enabled: false,
+        });
+
 export const useInproxyCurrentConnectingClients =
     (): DefinedUseQueryResult<number> =>
         useQuery({
@@ -99,3 +129,64 @@ export const useInproxyMustUpgrade = (): DefinedUseQueryResult<boolean> =>
         initialData: false,
         enabled: false,
     });
+
+export const useInproxyIpcEvents = (): DefinedUseQueryResult<IpcEvent[]> =>
+    useQuery({
+        queryKey: [QUERYKEY_INPROXY_IPC_EVENTS],
+        queryFn: async () => [],
+        initialData: [],
+        enabled: false,
+    });
+
+export const useInproxyActivityBy3600000ms =
+    (): DefinedUseQueryResult<InproxyActivityByPeriod> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_ACTIVITY_BY_3600000MS],
+            queryFn: async () =>
+                getZeroedInproxyActivityStats().dataByPeriod["3600000ms"],
+            initialData:
+                getZeroedInproxyActivityStats().dataByPeriod["3600000ms"],
+            enabled: false,
+        });
+
+export const useInproxyActivitySegments =
+    (): DefinedUseQueryResult<InproxyActivitySegments> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_ACTIVITY_SEGMENTS],
+            queryFn: async () => getZeroedInproxyActivityStats().segments,
+            initialData: getZeroedInproxyActivityStats().segments,
+            enabled: false,
+        });
+
+export const useInproxyPersonalRegionActivity = (): DefinedUseQueryResult<
+    InproxyActivityRegion[]
+> =>
+    useQuery({
+        queryKey: [QUERYKEY_INPROXY_PERSONAL_REGION_ACTIVITY],
+        queryFn: async () =>
+            getZeroedInproxyActivityStats().personalRegionActivity,
+        initialData: getZeroedInproxyActivityStats().personalRegionActivity,
+        enabled: false,
+    });
+
+export const useInproxyCommonRegionActivity = (): DefinedUseQueryResult<
+    InproxyActivityRegion[]
+> =>
+    useQuery({
+        queryKey: [QUERYKEY_INPROXY_COMMON_REGION_ACTIVITY],
+        queryFn: async () =>
+            getZeroedInproxyActivityStats().commonRegionActivity,
+        initialData: getZeroedInproxyActivityStats().commonRegionActivity,
+        enabled: false,
+    });
+
+export const useInproxyRegionalBreakdownByWindow =
+    (): DefinedUseQueryResult<InproxyRegionalBreakdownByWindow> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_REGIONAL_BREAKDOWN_BY_WINDOW],
+            queryFn: async () =>
+                getZeroedInproxyActivityStats().regionalBreakdownByWindow,
+            initialData:
+                getZeroedInproxyActivityStats().regionalBreakdownByWindow,
+            enabled: false,
+        });

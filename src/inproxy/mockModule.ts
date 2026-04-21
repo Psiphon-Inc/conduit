@@ -17,12 +17,17 @@
  *
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NativeEventEmitter } from "react-native";
+import { EventSubscription } from "expo-modules-core";
 
 import { timedLog } from "@/src/common/utils";
 import { ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY } from "@/src/constants";
-import { ConduitModuleAPI } from "@/src/inproxy/module";
-import { InproxyActivityStats, InproxyParameters } from "@/src/inproxy/types";
+import type { ConduitModuleAPI } from "@/src/inproxy/module";
+import {
+    InproxyActivityStats,
+    InproxyEvent,
+    InproxyParameters,
+    IpcEvent,
+} from "@/src/inproxy/types";
 import { getZeroedInproxyActivityStats } from "@/src/inproxy/utils";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -33,6 +38,21 @@ async function* generateMockData(
     // initial empty data, representing no usage
     // TODO: this is a crappy way to clone
     const data = getZeroedInproxyActivityStats();
+
+    function syncSegments() {
+        data.segments.total.totalBytesUp = data.totalBytesUp;
+        data.segments.total.totalBytesDown = data.totalBytesDown;
+        data.segments.total.currentAnnouncingWorkers =
+            data.currentAnnouncingWorkers;
+        data.segments.total.currentConnectingClients =
+            data.currentConnectingClients;
+        data.segments.total.currentConnectedClients =
+            data.currentConnectedClients;
+        data.segments.total.dataByPeriod["1000ms"] =
+            data.dataByPeriod["1000ms"];
+        data.segments.total.dataByPeriod["3600000ms"] =
+            data.dataByPeriod["3600000ms"];
+    }
 
     async function doTick() {
         // shift every array to drop the first value
@@ -103,35 +123,22 @@ async function* generateMockData(
             data.dataByPeriod["1000ms"].bytesUp.push(0);
             data.dataByPeriod["1000ms"].bytesDown.push(0);
         }
+        syncSegments();
         await sleep(1000);
     }
 
     while (true) {
+        syncSegments();
         yield data;
         await doTick();
     }
 }
 
-// We need to initialize the NativeEventEmitter in the mock class so we can emit
-// values back out of it, but we don't have a NativeModule object to pass in
-// yet, since the class itself will be used to instantiate the mocked
-// NativeModule object. On Android we can simply omit any argument to the new
-// NativeEventEmitter() constructor, but on iOS, one is required. To work around
-// this, we will pass this dummy object which satisfies the required
-// NativeModule interface.
-const dummyNativeModule = {
-    addListener: (_: string) => {
-        return;
-    },
-    removeListeners: (_: number) => {
-        return;
-    },
-};
-
 class ConduitModuleMock {
     private running: boolean = false;
     private mockDataGenerator: AsyncGenerator | null = null;
-    private nativeEventEmitter: NativeEventEmitter;
+    private listeners = new Set<(event: InproxyEvent) => void>();
+    private ipcListeners = new Set<(event: IpcEvent) => void>();
 
     constructor() {
         AsyncStorage.getItem(ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY).then(
@@ -141,7 +148,6 @@ class ConduitModuleMock {
                 }
             },
         );
-        this.nativeEventEmitter = new NativeEventEmitter(dummyNativeModule);
         this.emitState();
 
         // NOTE: the mock data emitter will reset when the app reloads, unlike
@@ -149,13 +155,19 @@ class ConduitModuleMock {
     }
 
     private emitState() {
-        this.nativeEventEmitter.emit("ConduitEvent", {
+        this.emitEvent({
             type: "proxyState",
             data: {
                 status: this.running ? "RUNNING" : "STOPPED",
                 networkState: "HAS_INTERNET",
             },
         });
+    }
+
+    private emitEvent(event: InproxyEvent) {
+        for (const listener of this.listeners) {
+            listener(event);
+        }
     }
 
     private async emitMockData(maxClients: number, limitBandwidth: number) {
@@ -165,14 +177,14 @@ class ConduitModuleMock {
         let data = (await this.mockDataGenerator.next()).value;
         while (data) {
             if (data) {
-                this.nativeEventEmitter.emit("ConduitEvent", {
+                this.emitEvent({
                     type: "inProxyActivityStats",
                     data: data,
                 });
             }
             data = (await this.mockDataGenerator.next()).value;
         }
-        this.nativeEventEmitter.emit("ConduitEvent", {
+        this.emitEvent({
             type: "inProxyActivityStats",
             data: getZeroedInproxyActivityStats(),
         });
@@ -185,14 +197,34 @@ class ConduitModuleMock {
         }
     }
 
-    public addListener(name: string) {
-        timedLog(`MOCK: ConduitModule.addListener(${name})`);
+    public addInproxyEventListener(
+        listener: (event: InproxyEvent) => void,
+    ): EventSubscription {
+        timedLog(`MOCK: ConduitModule.addInproxyEventListener(...)`);
+        this.listeners.add(listener);
+        this.emitState();
+        return {
+            remove: () => {
+                this.listeners.delete(listener);
+            },
+        } as EventSubscription;
+    }
+
+    public emitCurrentInproxyState() {
+        timedLog("MOCK: ConduitModule.emitCurrentInproxyState()");
         this.emitState();
     }
 
-    public removeListeners(count: number) {
-        timedLog(`MOCK: ConduitModuleMock.removeListeners(${count})`);
-        this.emitState();
+    public addIpcEventListener(
+        listener: (event: IpcEvent) => void,
+    ): EventSubscription {
+        timedLog(`MOCK: ConduitModule.addIpcEventListener(...)`);
+        this.ipcListeners.add(listener);
+        return {
+            remove: () => {
+                this.ipcListeners.delete(listener);
+            },
+        } as EventSubscription;
     }
 
     public async sendFeedback() {
@@ -215,12 +247,14 @@ class ConduitModuleMock {
     public async toggleInProxy(params: InproxyParameters) {
         const {
             maxClients,
+            maxPersonalClients,
             limitUpstreamBytesPerSecond,
             limitDownstreamBytesPerSecond,
             privateKey: _,
         } = params;
+        const totalMaxClients = maxClients + maxPersonalClients;
         timedLog(
-            `MOCK: ConduitModule.toggleInProxy(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
+            `MOCK: ConduitModule.toggleInProxy(common=${maxClients}, personal=${maxPersonalClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.running = !this.running;
         await AsyncStorage.setItem(
@@ -230,7 +264,7 @@ class ConduitModuleMock {
         this.emitState();
         if (this.running) {
             await this.emitMockData(
-                maxClients,
+                totalMaxClients,
                 limitUpstreamBytesPerSecond + limitDownstreamBytesPerSecond,
             );
         } else {
@@ -241,12 +275,13 @@ class ConduitModuleMock {
     public async paramsChanged(params: InproxyParameters) {
         const {
             maxClients,
+            maxPersonalClients,
             limitUpstreamBytesPerSecond,
             limitDownstreamBytesPerSecond,
             privateKey: _,
         } = params;
         timedLog(
-            `MOCK: ConduitModule.paramsChanged(${maxClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
+            `MOCK: ConduitModule.paramsChanged(common=${maxClients}, personal=${maxPersonalClients}, ${limitUpstreamBytesPerSecond}, ${limitDownstreamBytesPerSecond}, <redacted>)`,
         );
         this.emitState();
         if (this.running) {

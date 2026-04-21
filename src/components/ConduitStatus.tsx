@@ -16,211 +16,169 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import {
-    Blur,
-    Canvas,
-    Group,
-    Paint,
-    Paragraph,
-    SkParagraphStyle,
-    SkTextStyle,
-    Skia,
-    TextAlign,
-    TextDirection,
-    useFonts,
-    vec,
-} from "@shopify/react-native-skia";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { View, useWindowDimensions } from "react-native";
-import {
-    useDerivedValue,
-    useSharedValue,
-    withDelay,
-    withTiming,
-} from "react-native-reanimated";
+import { Text, View } from "react-native";
 
-import { drawBigFont, niceBytes } from "@/src/common/utils";
-import { FaderGroup } from "@/src/components/canvas/FaderGroup";
-import { useConduitName } from "@/src/hooks";
-import { useInproxyContext } from "@/src/inproxy/context";
-import {
-    useInproxyCurrentConnectedClients,
-    useInproxyCurrentConnectingClients,
-    useInproxyStatus,
-    useInproxyTotalBytesTransferred,
-} from "@/src/inproxy/hooks";
-import { fonts, palette, sharedStyles as ss } from "@/src/styles";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
-export function ConduitStatus({
-    width,
-    height,
-    applyBlur = false,
-}: {
-    width: number;
-    height: number;
-    applyBlur: boolean;
-}) {
-    const { t, i18n } = useTranslation();
-    const isRTL = i18n.dir() === "rtl" ? true : false;
-    const win = useWindowDimensions();
+export interface ConduitStatusProps {
+    /** Conduit alias / station name */
+    alias: string;
+    /** Whether to show the local conduit section (Android only) */
+    showLocal: boolean;
+    /** Local common/public connected peers */
+    localPublicConnected: number;
+    /** Whether the local conduit is running */
+    localIsOnline: boolean;
+    /** Whether to show the hosted conduit section */
+    showHosted: boolean;
+    /** Hosted public connected peers */
+    hostedPublicConnected: number;
+    /** Combined personal pairing connected peers */
+    personalPairingConnected: number;
+}
 
-    const { logErrorToDiagnostic } = useInproxyContext();
-    const { data: inproxyStatus } = useInproxyStatus();
-    const { data: connectedPeers } = useInproxyCurrentConnectedClients();
-    const { data: connectingPeers } = useInproxyCurrentConnectingClients();
-    const { data: totalBytesTransferred } = useInproxyTotalBytesTransferred();
-    const { data: conduitName } = useConduitName();
+export function ConduitStatus(props: ConduitStatusProps) {
+    const { t } = useTranslation();
 
-    // use conduitName if user has set it
-    let conduitStationText: string;
-    if (conduitName) {
-        conduitStationText = conduitName;
-    } else {
-        conduitStationText = t("CONDUIT_STATION_I18N.string");
+    const {
+        alias,
+        showLocal,
+        localPublicConnected,
+        localIsOnline,
+        showHosted,
+        hostedPublicConnected,
+        personalPairingConnected,
+    } = props;
+
+    const hasAnyContent = showLocal || showHosted;
+    if (!hasAnyContent) {
+        return null;
     }
-    const proxyStatusText = t(`${inproxyStatus}_I18N.string`);
-    const connectedPeersText = t("CONNECTED_PEERS_I18N.string", {
-        peers: connectedPeers,
-    });
-    const connectingPeersText =
-        " + " +
-        t("CONNECTING_PEERS_I18N.string", {
-            peers: connectingPeers,
-        });
-    const totalBytesTransferredText = t("TOTAL_BYTES_TRANSFERRED_I18N.string", {
-        niceBytes: niceBytes(totalBytesTransferred, logErrorToDiagnostic),
-    });
-    const waitingForPeersText = t("WAITING_FOR_PEERS_I18N.string");
 
-    // Fade in gradient on app start
-    const fadeIn = useSharedValue(0);
-    // Fade in status text when conduit is running
-    const fader = useSharedValue(0);
-    const shouldAnimateIn = React.useRef(true);
-    const shouldAnimateOut = React.useRef(true);
-
-    React.useEffect(() => {
-        if (inproxyStatus !== "UNKNOWN") {
-            fadeIn.value = withDelay(0, withTiming(1, { duration: 2000 }));
-        }
-        if (inproxyStatus === "RUNNING") {
-            if (shouldAnimateIn.current) {
-                fader.value = withTiming(1, { duration: 1000 });
-                shouldAnimateIn.current = false;
-                shouldAnimateOut.current = true;
-            }
-        } else if (inproxyStatus === "STOPPED") {
-            if (shouldAnimateOut.current) {
-                fader.value = withTiming(0, { duration: 1000 });
-                shouldAnimateIn.current = true;
-                shouldAnimateOut.current = false;
-            }
-        }
-    }, [inproxyStatus]);
-
-    const fontMgr = useFonts({ Jura: [fonts.JuraRegular] });
-    const fontSize = drawBigFont(win) ? 20 : 16;
-    const statusParagraph = useDerivedValue(() => {
-        if (!fontMgr) {
-            return null;
-        }
-        let paragraphStyle: SkParagraphStyle = {
-            textAlign: TextAlign.Center,
-        };
-        if (isRTL) {
-            paragraphStyle.textDirection = TextDirection.RTL;
-        }
-        const mainTextStyle: SkTextStyle = {
-            color: Skia.Color(palette.black),
-            fontFamilies: ["Jura"],
-            fontSize: fontSize,
-            fontStyle: {
-                weight: 400,
-            },
-            letterSpacing: 1, // 5% of 20
-        };
-        const aliasTextStyle: SkTextStyle = {
-            color: Skia.Color(palette.black),
-            shadows: [
-                {
-                    color: new Float32Array([0.13, 0.12, 0.12, 0.3]),
-                    offset: vec(0, 1),
-                    blurRadius: 2,
-                },
-            ],
-            fontFamilies: ["Jura"],
-            fontSize: fontSize,
-            fontStyle: {
-                weight: 400,
-            },
-            letterSpacing: 1, // 5% of 20
-        };
-        const runningTextStyle: SkTextStyle = {
-            color: Skia.Color(palette.white),
-            shadows: [
-                {
-                    color: new Float32Array([0.13, 0.12, 0.12, 0.3]),
-                    offset: vec(0, 1),
-                    blurRadius: 2,
-                },
-            ],
-            fontFamilies: ["Jura"],
-            fontSize: fontSize,
-            fontStyle: {
-                weight: 700,
-            },
-            letterSpacing: 1, // 5% of 20
-        };
-        const waitingTextStyle: SkTextStyle = {
-            color: Skia.Color(palette.grey),
-            fontFamilies: ["Jura"],
-            fontSize: fontSize - 2,
-            fontStyle: {
-                weight: 300,
-            },
-            letterSpacing: 1, // 5% of 20
-        };
-
-        return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
-            .pushStyle(aliasTextStyle)
-            .addText(conduitStationText + " ")
-            .pushStyle(runningTextStyle)
-            .addText(proxyStatusText + "\n")
-            .pop()
-            .pushStyle(waitingTextStyle)
-            .addText(connectedPeers === 0 ? waitingForPeersText + "\n" : "\n")
-            .pop()
-            .pushStyle(mainTextStyle)
-            .addText(connectedPeersText + "\n")
-            .addText(connectingPeersText + "\n")
-            .addText(totalBytesTransferredText + "\n")
-            .build();
-    });
+    const metricFontSize = 17;
+    const metricColor = "rgba(35, 30, 40, 0.78)";
+    const showPersonalPairing =
+        showHosted ||
+        !showLocal ||
+        localIsOnline ||
+        personalPairingConnected > 0;
+    const summaryRows = [
+        showLocal
+            ? {
+                  label: t("LOCAL_CONDUIT_I18N.string", {
+                      defaultValue: "Local Conduit",
+                  }),
+                  value: localIsOnline
+                      ? localPublicConnected
+                      : t("HOME_SUMMARY_OFFLINE_I18N.string", {
+                            defaultValue: "OFFLINE",
+                        }),
+              }
+            : null,
+        showHosted
+            ? {
+                  label: t("HOSTED_CONDUIT_FALLBACK_I18N.string", {
+                      defaultValue: "Hosted Conduit",
+                  }),
+                  value: hostedPublicConnected,
+              }
+            : null,
+        showPersonalPairing
+            ? {
+                  label: t("PERSONAL_PAIRING_TITLE_I18N.string", {
+                      defaultValue: "Personal Pairing",
+                  }),
+                  value: personalPairingConnected,
+              }
+            : null,
+    ].filter(
+        (row): row is { label: string; value: number | string } => row != null,
+    );
 
     return (
         <View
-            style={[
-                {
-                    width: width,
-                    height: height,
-                },
-            ]}
+            style={{
+                alignItems: "stretch",
+                paddingHorizontal: 20,
+                paddingVertical: 0,
+                marginTop: -60,
+                gap: 6,
+            }}
         >
-            <Canvas style={[ss.flex]}>
-                <FaderGroup opacity={fader}>
-                    <Group
-                        layer={<Paint>{applyBlur && <Blur blur={7} />}</Paint>}
+            {alias.trim().length > 0 ? (
+                <Text
+                    numberOfLines={1}
+                    style={[
+                        ss.bodyFont,
+                        {
+                            color: palette.black,
+                            fontSize: 26,
+                            letterSpacing: 1,
+                            textAlign: "center",
+                        },
+                    ]}
+                >
+                    {alias}
+                </Text>
+            ) : null}
+
+            <View style={{ gap: 2 }}>
+                {summaryRows.map((row) => (
+                    <View
+                        key={row.label}
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 12,
+                        }}
                     >
-                        <Paragraph
-                            paragraph={statusParagraph}
-                            x={0}
-                            y={0}
-                            width={width}
-                        />
-                    </Group>
-                </FaderGroup>
-            </Canvas>
+                        <Text
+                            style={[
+                                ss.bodyFont,
+                                {
+                                    flex: 1,
+                                    fontSize: metricFontSize,
+                                    color: metricColor,
+                                    letterSpacing: 0.6,
+                                    textAlign: "left",
+                                },
+                            ]}
+                        >
+                            {row.label}
+                        </Text>
+                        <Text
+                            style={[
+                                ss.bodyFont,
+                                {
+                                    fontSize: metricFontSize,
+                                    color: metricColor,
+                                    letterSpacing: 0.6,
+                                    textAlign: "right",
+                                },
+                            ]}
+                        >
+                            {formatSummaryValue(t, row.value)}
+                        </Text>
+                    </View>
+                ))}
+            </View>
         </View>
     );
+}
+
+function formatSummaryValue(
+    t: (key: string, options?: Record<string, unknown>) => string,
+    value: number | string,
+): string {
+    if (typeof value === "string") {
+        return value;
+    }
+
+    return t("HOME_SUMMARY_PEER_COUNT_I18N.string", {
+        count: value,
+        defaultValue: value === 1 ? "{{count}} peer" : "{{count}} peers",
+    });
 }

@@ -1,0 +1,11 @@
+<resources>
+  <string name="conduit_service_stop_label_text">Dừng</string>
+  <string name="conduit_service_running_notification_short_text">%1$d / %2$d \u00B7 %3$s</string>
+  <string name="conduit_service_running_notification_long_text">Người sử dụng dịch vụ: %1$d đã kết nối / %2$d đang kết nối\nDữ liệu: %3$s đã truyền</string>
+  <string name="conduit_service_no_internet_notification_text">Đang chờ kết nối mạng</string>
+  <string name="conduit_service_channel_description">Thông báo cho dịch vụ Conduit</string>
+  <string name="notification_conduit_inproxy_must_upgrade_text">Yêu cầu cập nhật: Vui lòng tải xuống phiên bản mới nhất của ứng dụng để tiếp tục sử dụng.</string>
+  <string name="notification_conduit_failed_to_start_text">Dịch vụ Conduit không thể khởi động. Nhấp vào thông báo để biết thêm thông tin</string>
+  <string name="notification_conduit_failed_to_restart_text">Dịch vụ Conduit không thể khởi động. Nhấp vào thông báo để biết thêm thông tin</string>
+  <string name="conduit_service_starting_notification_text">Dịch vụ Conduit đang khởi động…</string>
+</resources>

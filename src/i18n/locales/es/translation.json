@@ -89,6 +89,9 @@
     "ONBOARDING_WELCOME_BODY_I18N": {
         "string": "¡Convierte tu dispositivo en un faro de libertad en Internet!\n\nPuedes ayudar a la gente de todo el mundo a liberarse de las redes restrictivas y acceder al Internet global de forma segura a través de la red Psiphon."
     },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "¡Convierte tu dispositivo en un faro de libertad en Internet!\n\nPuedes ayudar a la gente de todo el mundo a liberarse de las redes restrictivas y acceder al Internet global de forma segura a través de la red Psiphon."
+    },
     "ONBOARDING_WELCOME_BUTTON_I18N": {
         "string": "Seguir"
     },
@@ -97,6 +100,9 @@
     },
     "ONBOARDING_INFO_1_BODY_I18N": {
         "string": "Conduit es una aplicación de código abierto que permite a las personas en regiones censuradas de todo el mundo a pivotar sobre tu dispositivo para llegar a la red Psiphon.\n\nMientras más terminales Conduit existan, más fuerte será Psiphon y más abierto será Internet."
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "En iOS, Conduit te permite crear y administrar terminales Conduit alojadas en la nube que ayudan a los usuarios de Psiphon a llegar a la red Psiphon.\n\nTu dispositivo se usa para administrar tu terminal, mientras que la terminal en sí se ejecuta en la nube."
     },
     "ONBOARDING_INFO_1_BUTTON_I18N": {
         "string": "Seguir"
@@ -107,14 +113,35 @@
     "ONBOARDING_PERMISSIONS_BODY_I18N": {
         "string": "Conduit recomienda habilitar las notificaciones para poder proporcionar actualizaciones críticas sobre tu terminal Conduit.\n\n¿Listo para comenzar?"
     },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "Conduit recomienda habilitar las notificaciones para que podamos proporcionarte actualizaciones importantes sobre tu cuenta, tu suscripción y tu terminal Conduit alojada.\n\n¿Listo para comenzar?"
+    },
     "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
         "string": "Comenzar"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "Comenzar"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "Conduit alojado"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "Además de ejecutar un conduit directamente en tu dispositivo, puedes suscribirte a una terminal alojada para contar con soporte permanente.\n\nConduit alojado ejecuta tu terminal en la nube y la mantiene activa las 24 horas del día, los 7 días de la semana, incluso cuando tu dispositivo está sin conexión."
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "En iOS, las terminales Conduit están alojadas en la nube.\n\nUna suscripción mantiene tu terminal funcionando en la nube las 24 horas del día, los 7 días de la semana, incluso cuando tu dispositivo está sin conexión."
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "Seguir"
     },
     "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
         "string": "Política de Privacidad"
     },
     "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
         "string": "No recopilamos información personal identificable de los usuarios de Conduit. Todos los datos transmitidos se encriptan y ni tú ni Psiphon puede acceder a ellos. Los usuarios conectados no pueden acceder a tu dispositivo de ninguna forma\n\nAl usar Conduit, aceptas nuestra política de privacidad, disponible a continuación."
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "No recopilamos información personal identificable de los usuarios de Conduit. Los datos que envía la app de iOS se cifran durante la transmisión y otros usuarios no pueden acceder a tu dispositivo a través de la app.\n\nAl usar Conduit, aceptas nuestra política de privacidad, disponible a continuación."
     },
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Aceptar"
