@@ -10,7 +10,7 @@
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "ca.psiphon.conduit",
-            "buildNumber": "19",
+            "buildNumber": "23",
             "deploymentTarget": "15.1",
             "icon": "./assets/images/conduit-launcher.png",
             "infoPlist": {
@@ -19,7 +19,7 @@
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 62,
+            "versionCode": 67,
             "permissions": ["com.android.vending.BILLING"],
             "adaptiveIcon": {
                 "foregroundImage": "./assets/images/android-icon-foreground.png",

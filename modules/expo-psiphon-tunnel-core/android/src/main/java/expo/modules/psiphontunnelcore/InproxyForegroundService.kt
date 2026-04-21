@@ -1103,7 +1103,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         }
     }
 
-    @Suppress("DEPRECATION")
     private fun unmarshalProxyActivityStats(encoded: String?): ProxyActivityStats? {
         if (encoded.isNullOrBlank()) {
             return null
@@ -1119,7 +1118,15 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         return try {
             parcel.unmarshall(bytes, 0, bytes.size)
             parcel.setDataPosition(0)
-            parcel.readParcelable(ProxyActivityStats::class.java.classLoader)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                parcel.readParcelable(
+                    ProxyActivityStats::class.java.classLoader,
+                    ProxyActivityStats::class.java,
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                parcel.readParcelable(ProxyActivityStats::class.java.classLoader)
+            }
         } catch (e: Exception) {
             Log.w(tag, "Failed to unmarshal proxy activity stats", e)
             null

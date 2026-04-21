@@ -19,6 +19,7 @@
 package expo.modules.psiphontunnelcore.stats
 
 import android.os.Bundle
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 
@@ -76,7 +77,16 @@ class ProxyActivityStats private constructor(initializeCollections: Boolean) : D
         val listSize = parcel.readInt()
         bucketCollections = ArrayList(listSize)
         repeat(listSize) {
-            bucketCollections.add(parcel.readParcelable(BucketCollection::class.java.classLoader))
+            val bucketCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                parcel.readParcelable(
+                    BucketCollection::class.java.classLoader,
+                    BucketCollection::class.java,
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                parcel.readParcelable(BucketCollection::class.java.classLoader)
+            }
+            bucketCollections.add(bucketCollection)
         }
     }
 
@@ -236,10 +246,14 @@ class ProxyActivityStats private constructor(initializeCollections: Boolean) : D
         const val MAX_BUCKETS = MAX_BUCKETS_1000MS
         const val BUCKET_PERIOD_MILLISECONDS = BUCKET_PERIOD_MILLISECONDS_1000MS
 
-        @Suppress("DEPRECATION")
         fun fromBundle(bundle: Bundle): ProxyActivityStats? {
             bundle.classLoader = ProxyActivityStats::class.java.classLoader
-            return bundle.getParcelable("proxy_activity_stats")
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                bundle.getParcelable("proxy_activity_stats", ProxyActivityStats::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                bundle.getParcelable("proxy_activity_stats")
+            }
         }
 
         @JvmField
