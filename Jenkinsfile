@@ -49,8 +49,9 @@ pipeline {
                 dir('android') {
 
                     withSecrets() {
-                        writeFile file: 'app/src/main/res/raw/psiphon_config', text: env.ANDROID_PSIPHON_CONFIG
-                        writeFile file: 'app/src/main/res/raw/embedded_server_entries', text: env.ANDROID_EMBEDDED_SERVER_ENTRIES
+                        sh 'mkdir -p ../modules/expo-psiphon-tunnel-core/android/src/main/res/raw'
+                        writeFile file: '../modules/expo-psiphon-tunnel-core/android/src/main/res/raw/android_psiphon_config', text: env.ANDROID_PSIPHON_CONFIG
+                        writeFile file: '../modules/expo-psiphon-tunnel-core/android/src/main/res/raw/android_embedded_server_entries', text: env.ANDROID_EMBEDDED_SERVER_ENTRIES
                         writeFile file: 'app/upload-keystore.jks', text: env.ANDROID_UPLOAD_KEYSTORE, encoding: "Base64"
                         writeFile file: 'keystore.properties', text: env.ANDROID_UPLOAD_KEYSTORE_PROPERTIES
                     }
