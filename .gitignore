@@ -19,9 +19,6 @@ web-build/
 expo-env.d.ts
 # @end expo-cli
 
-# git hash version file
-src/git-hash.ts
-
 
 # tunnel core config files
 psiphon_config
