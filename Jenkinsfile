@@ -29,12 +29,12 @@ pipeline {
             steps {
 
                 sh 'npm ci'
-               
+                
                 script {
-                    releaseName = TAG_NAME.minus("release-android-")
+                    env.RELEASE_NAME = TAG_NAME.minus("release-android-")
                 }
 
-                writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${releaseName}';"
+                writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${env.RELEASE_NAME}';"
 
                 withSecrets() {
                     writeFile file: '.env.production', text: [
@@ -47,9 +47,9 @@ pipeline {
                 }
 
                 dir('android') {
+                    sh 'mkdir -p ../modules/expo-psiphon-tunnel-core/android/src/main/res/raw'
 
                     withSecrets() {
-                        sh 'mkdir -p ../modules/expo-psiphon-tunnel-core/android/src/main/res/raw'
                         writeFile file: '../modules/expo-psiphon-tunnel-core/android/src/main/res/raw/android_psiphon_config', text: env.ANDROID_PSIPHON_CONFIG
                         writeFile file: '../modules/expo-psiphon-tunnel-core/android/src/main/res/raw/android_embedded_server_entries', text: env.ANDROID_EMBEDDED_SERVER_ENTRIES
                         writeFile file: 'app/upload-keystore.jks', text: env.ANDROID_UPLOAD_KEYSTORE, encoding: "Base64"
@@ -58,7 +58,7 @@ pipeline {
 
                     sh './gradlew clean bundleRelease'
 
-                    sh "mv app/build/outputs/bundle/release/app-release.aab app/build/outputs/bundle/release/conduit-${releaseName}.aab"
+                    sh "mv app/build/outputs/bundle/release/app-release.aab app/build/outputs/bundle/release/conduit-${env.RELEASE_NAME}.aab"
                 }
 
                 archiveArtifacts artifacts: 'android/app/build/outputs/bundle/release/*.aab', fingerprint: true, onlyIfSuccessful: true
@@ -77,10 +77,10 @@ pipeline {
         }
         failure {
             script {
-                changes = getChangeList()
+                def changes = getChangeList()
+                slackSend message:"${env.JOB_NAME} - Build #${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open>)\nChanges:\n${changes}",
+                          color: "danger"
             }
-            slackSend message:"${env.JOB_NAME} - Build #${env.BUILD_NUMBER} failed (<${env.BUILD_URL}|Open>)\nChanges:\n${changes}",
-                      color: "danger"
         }
     }
 }
