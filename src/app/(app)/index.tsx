@@ -81,6 +81,7 @@ import { createHostedSessionClient } from "@/src/hosted/sessionClient";
 import { useHostedHomeWidgetStats } from "@/src/hosted/statsQueries";
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
+    useInproxyActivityStatsReady,
     useInproxyCurrentCommonConnectedClients,
     useInproxyCurrentConnectedClients,
     useInproxyCurrentPersonalConnectedClients,
@@ -111,6 +112,7 @@ export default function HomeScreen() {
     const { isPersonalPairingReady, toggleInproxy } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
     const { data: inproxyMustUpgrade } = useInproxyMustUpgrade();
+    const { data: localActivityStatsReady } = useInproxyActivityStatsReady();
     const { data: localConnectedPeers } = useInproxyCurrentConnectedClients();
     const { data: localPublicConnected } =
         useInproxyCurrentCommonConnectedClients();
@@ -260,7 +262,17 @@ export default function HomeScreen() {
         [conduits, entitlementAllowed],
     );
 
+    const showHostedSummary =
+        entitlementAllowed && hostedConduitsForScene.length > 0;
     const localRunning = inproxyStatus === "RUNNING";
+    const localStatusMetricsPending = localRunning && !localActivityStatsReady;
+    const hostedStatusMetricsPending =
+        showHostedSummary &&
+        shouldLoadHostedStats &&
+        isMetricsLoading &&
+        !recent;
+    const personalPairingStatusMetricsPending =
+        localStatusMetricsPending || hostedStatusMetricsPending;
     const localSceneConnectedPeers = localRunning ? localConnectedPeers : 0;
     const personalPairingConnected = showLocalExperience
         ? localPersonalConnected + personalConnected
@@ -276,8 +288,6 @@ export default function HomeScreen() {
 
         return getProxyId(conduitKeyPair.data);
     }, [conduitKeyPair.data]);
-    const showHostedSummary =
-        entitlementAllowed && hostedConduitsForScene.length > 0;
     const hostedStationName =
         conduitName && conduitName.trim().length > 0
             ? conduitName.trim()
@@ -859,10 +869,15 @@ export default function HomeScreen() {
                         <ConduitStatus
                             alias={orbStatusLead}
                             showLocal={showLocalExperience}
+                            localMetricsPending={localStatusMetricsPending}
                             localPublicConnected={localPublicConnected}
                             localIsOnline={localRunning}
                             showHosted={showHostedSummary}
+                            hostedMetricsPending={hostedStatusMetricsPending}
                             hostedPublicConnected={publicConnected}
+                            personalPairingMetricsPending={
+                                personalPairingStatusMetricsPending
+                            }
                             personalPairingConnected={personalPairingConnected}
                         />
                     </>

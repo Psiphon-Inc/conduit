@@ -22,6 +22,7 @@ import {
     QUERYKEY_INPROXY_ACTIVITY_BY_1000MS,
     QUERYKEY_INPROXY_ACTIVITY_BY_3600000MS,
     QUERYKEY_INPROXY_ACTIVITY_SEGMENTS,
+    QUERYKEY_INPROXY_ACTIVITY_STATS_READY,
     QUERYKEY_INPROXY_COMMON_REGION_ACTIVITY,
     QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS,
     QUERYKEY_INPROXY_CURRENT_COMMON_CONNECTED_CLIENTS,
@@ -57,6 +58,15 @@ export const useInproxyStatus = (): DefinedUseQueryResult<InproxyStatusEnum> =>
         initialData: "UNKNOWN" as InproxyStatusEnum,
         enabled: false,
     });
+
+export const useInproxyActivityStatsReady =
+    (): DefinedUseQueryResult<boolean> =>
+        useQuery({
+            queryKey: [QUERYKEY_INPROXY_ACTIVITY_STATS_READY],
+            queryFn: async () => false,
+            initialData: false,
+            enabled: false,
+        });
 
 export const useInproxyActivityBy1000ms =
     (): DefinedUseQueryResult<InproxyActivityByPeriod> =>

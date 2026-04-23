@@ -39,6 +39,7 @@ import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_CLIENTS_TOTAL_MAX,
     QUERYKEY_INPROXY_ACTIVITY_SEGMENTS,
+    QUERYKEY_INPROXY_ACTIVITY_STATS_READY,
     QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS,
     QUERYKEY_INPROXY_CURRENT_COMMON_CONNECTED_CLIENTS,
     QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS,
@@ -58,6 +59,7 @@ import {
     InproxyEvent,
     InproxyParameters,
     InproxyParametersSchema,
+    InproxyStatusEnum,
     InproxyStatusEnumSchema,
     IpcEvent,
     IpcEventSchema,
@@ -108,6 +110,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // these values are implemented in `hooks.ts`.
     const queryClient = useQueryClient();
     const lastDashboardStatsUpdateAtMsRef = useRef(0);
+    const lastInproxyStatusRef = useRef<InproxyStatusEnum | null>(null);
 
     useEffect(() => {
         // this manages InproxyEvent subscription and connects it to the handler
@@ -207,12 +210,26 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
 
     function handleProxyState(proxyState: ProxyState): void {
         const inproxyStatus = InproxyStatusEnumSchema.parse(proxyState.status);
+        const previousStatus = lastInproxyStatusRef.current;
+        lastInproxyStatusRef.current = inproxyStatus;
+
         queryClient.setQueryData([QUERYKEY_INPROXY_STATUS], inproxyStatus);
+        if (inproxyStatus === "RUNNING" && previousStatus !== "RUNNING") {
+            queryClient.setQueryData(
+                [QUERYKEY_INPROXY_ACTIVITY_STATS_READY],
+                false,
+            );
+        }
         // The module does not send an update for ActivityData when the Inproxy
         // is stopped, so reset it when we receive a non-running status.
         if (inproxyStatus !== "RUNNING") {
+            queryClient.setQueryData(
+                [QUERYKEY_INPROXY_ACTIVITY_STATS_READY],
+                false,
+            );
             handleInproxyActivityStats(getZeroedInproxyActivityStats(), {
                 forceDashboardStatsUpdate: true,
+                markActivityStatsReady: false,
             });
         }
         // NOTE: proxyState.networkState is currently ignored
@@ -256,8 +273,17 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
 
     function handleInproxyActivityStats(
         inproxyActivityStats: InproxyActivityStats,
-        options?: { forceDashboardStatsUpdate?: boolean },
+        options?: {
+            forceDashboardStatsUpdate?: boolean;
+            markActivityStatsReady?: boolean;
+        },
     ): void {
+        if (options?.markActivityStatsReady !== false) {
+            queryClient.setQueryData(
+                [QUERYKEY_INPROXY_ACTIVITY_STATS_READY],
+                true,
+            );
+        }
         queryClient.setQueryData(
             [QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS],
             inproxyActivityStats.currentAnnouncingWorkers,

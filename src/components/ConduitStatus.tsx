@@ -18,7 +18,7 @@
  */
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 
 import { palette, sharedStyles as ss } from "@/src/styles";
 
@@ -29,12 +29,18 @@ export interface ConduitStatusProps {
     showLocal: boolean;
     /** Local common/public connected peers */
     localPublicConnected: number;
+    /** Whether local metrics are still waiting on their first update */
+    localMetricsPending: boolean;
     /** Whether the local conduit is running */
     localIsOnline: boolean;
     /** Whether to show the hosted conduit section */
     showHosted: boolean;
+    /** Whether hosted metrics are still waiting on their first update */
+    hostedMetricsPending: boolean;
     /** Hosted public connected peers */
     hostedPublicConnected: number;
+    /** Whether personal pairing metrics are still waiting on their first update */
+    personalPairingMetricsPending: boolean;
     /** Combined personal pairing connected peers */
     personalPairingConnected: number;
 }
@@ -46,9 +52,12 @@ export function ConduitStatus(props: ConduitStatusProps) {
         alias,
         showLocal,
         localPublicConnected,
+        localMetricsPending,
         localIsOnline,
         showHosted,
+        hostedMetricsPending,
         hostedPublicConnected,
+        personalPairingMetricsPending,
         personalPairingConnected,
     } = props;
 
@@ -70,6 +79,7 @@ export function ConduitStatus(props: ConduitStatusProps) {
                   label: t("LOCAL_CONDUIT_I18N.string", {
                       defaultValue: "Local Conduit",
                   }),
+                  isLoading: localIsOnline && localMetricsPending,
                   value: localIsOnline
                       ? localPublicConnected
                       : t("HOME_SUMMARY_OFFLINE_I18N.string", {
@@ -82,6 +92,7 @@ export function ConduitStatus(props: ConduitStatusProps) {
                   label: t("HOSTED_CONDUIT_FALLBACK_I18N.string", {
                       defaultValue: "Hosted Conduit",
                   }),
+                  isLoading: hostedMetricsPending,
                   value: hostedPublicConnected,
               }
             : null,
@@ -90,11 +101,18 @@ export function ConduitStatus(props: ConduitStatusProps) {
                   label: t("PERSONAL_PAIRING_TITLE_I18N.string", {
                       defaultValue: "Personal Pairing",
                   }),
+                  isLoading: personalPairingMetricsPending,
                   value: personalPairingConnected,
               }
             : null,
     ].filter(
-        (row): row is { label: string; value: number | string } => row != null,
+        (
+            row,
+        ): row is {
+            isLoading: boolean;
+            label: string;
+            value: number | string;
+        } => row != null,
     );
 
     return (
@@ -149,19 +167,26 @@ export function ConduitStatus(props: ConduitStatusProps) {
                         >
                             {row.label}
                         </Text>
-                        <Text
-                            style={[
-                                ss.bodyFont,
-                                {
-                                    fontSize: metricFontSize,
-                                    color: metricColor,
-                                    letterSpacing: 0.6,
-                                    textAlign: "right",
-                                },
-                            ]}
-                        >
-                            {formatSummaryValue(t, row.value)}
-                        </Text>
+                        {row.isLoading ? (
+                            <ActivityIndicator
+                                size="small"
+                                color={metricColor}
+                            />
+                        ) : (
+                            <Text
+                                style={[
+                                    ss.bodyFont,
+                                    {
+                                        fontSize: metricFontSize,
+                                        color: metricColor,
+                                        letterSpacing: 0.6,
+                                        textAlign: "right",
+                                    },
+                                ]}
+                            >
+                                {formatSummaryValue(t, row.value)}
+                            </Text>
+                        )}
                     </View>
                 ))}
             </View>

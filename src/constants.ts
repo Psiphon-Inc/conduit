@@ -79,6 +79,8 @@ export const QUERYKEY_ACCOUNT_KEYPAIR = "accountKeyPair";
 export const QUERYKEY_INPROXY_KEYPAIR = "conduitKeyPair";
 // inproxy
 export const QUERYKEY_INPROXY_STATUS = "inproxyStatus";
+export const QUERYKEY_INPROXY_ACTIVITY_STATS_READY =
+    "inproxyActivityStatsReady";
 export const QUERYKEY_INPROXY_ACTIVITY_BY_1000MS = "inproxyActivityBy1000ms";
 export const QUERYKEY_INPROXY_ACTIVITY_BY_3600000MS =
     "inproxyActivityBy3600000ms";
