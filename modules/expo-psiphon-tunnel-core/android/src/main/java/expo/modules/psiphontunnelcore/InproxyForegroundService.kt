@@ -384,14 +384,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 putInt("currentConnectedClients", stats.currentConnectedClients)
                 putBundle("dataByPeriod", dataByPeriod)
                 putBundle("segments", activitySegmentsBundle(stats.segments))
-                putParcelableArrayList(
-                    "personalRegionActivity",
-                    ArrayList(stats.personalRegionActivity.map { activity -> regionActivityBundle(activity) }),
-                )
-                putParcelableArrayList(
-                    "commonRegionActivity",
-                    ArrayList(stats.commonRegionActivity.map { activity -> regionActivityBundle(activity) }),
-                )
                 putBundle(
                     "regionalBreakdownByWindow",
                     regionalBreakdownByWindowBundle(stats.regionalBreakdownByWindow),
@@ -446,7 +438,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             return android.os.Bundle().apply {
                 putBundle("personal", segmentStatsBundle(segments.personal))
                 putBundle("common", segmentStatsBundle(segments.common))
-                putBundle("total", segmentStatsBundle(segments.total))
             }
         }
 

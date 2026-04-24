@@ -19,7 +19,7 @@
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 69,
+            "versionCode": 70,
             "permissions": ["com.android.vending.BILLING"],
             "adaptiveIcon": {
                 "foregroundImage": "./assets/images/android-icon-foreground.png",

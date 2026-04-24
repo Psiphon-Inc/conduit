@@ -55,6 +55,7 @@ import { useAndroidPersonalCompartmentId } from "@/src/hooks";
 import { ConduitModule } from "@/src/inproxy/module";
 import {
     InproxyActivityStats,
+    InproxyActivityStatsSchema,
     InproxyContextValue,
     InproxyEvent,
     InproxyParameters,
@@ -190,7 +191,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             case "inProxyActivityStats":
                 try {
                     handleInproxyActivityStats(
-                        inproxyEvent.data as InproxyActivityStats,
+                        InproxyActivityStatsSchema.parse(inproxyEvent.data),
                     );
                 } catch (error) {
                     logErrorToDiagnostic(

@@ -238,13 +238,21 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         if (isInproxyReceiverRegistered) {
             return
         }
-        ContextCompat.registerReceiver(
-            context.applicationContext,
-            inproxyReceiver,
-            IntentFilter(InproxyForegroundService.BROADCAST_ACTION_EVENT),
-            ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
-        isInproxyReceiverRegistered = true
+        try {
+            ContextCompat.registerReceiver(
+                context.applicationContext,
+                inproxyReceiver,
+                IntentFilter(InproxyForegroundService.BROADCAST_ACTION_EVENT),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+            isInproxyReceiverRegistered = true
+        } catch (error: SecurityException) {
+            AppLogStore.error(
+                context.applicationContext,
+                "ExpoPsiphonTunnelCoreModule",
+                "Failed to register inproxy receiver: ${error.message}",
+            )
+        }
     }
 
     private fun unregisterInproxyReceiverIfNeeded() {
@@ -262,13 +270,21 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         if (isIpcReceiverRegistered) {
             return
         }
-        ContextCompat.registerReceiver(
-            context.applicationContext,
-            ipcReceiver,
-            IntentFilter(IpcEventQueue.BROADCAST_ACTION_EVENT),
-            ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
-        isIpcReceiverRegistered = true
+        try {
+            ContextCompat.registerReceiver(
+                context.applicationContext,
+                ipcReceiver,
+                IntentFilter(IpcEventQueue.BROADCAST_ACTION_EVENT),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+            isIpcReceiverRegistered = true
+        } catch (error: SecurityException) {
+            AppLogStore.error(
+                context.applicationContext,
+                "ExpoPsiphonTunnelCoreModule",
+                "Failed to register IPC receiver: ${error.message}",
+            )
+        }
     }
 
     private fun unregisterIpcReceiverIfNeeded() {

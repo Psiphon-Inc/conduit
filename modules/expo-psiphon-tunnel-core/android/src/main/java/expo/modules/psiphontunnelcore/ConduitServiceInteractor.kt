@@ -91,14 +91,22 @@ class ConduitServiceInteractor(private val context: Context) {
 
     init {
         val intentFilter = IntentFilter(SERVICE_STARTING_BROADCAST_INTENT)
-        ContextCompat.registerReceiver(
-            context,
-            broadcastReceiver,
-            intentFilter,
-            SERVICE_STARTING_BROADCAST_PERMISSION,
-            null,
-            ContextCompat.RECEIVER_EXPORTED,
-        )
+        try {
+            ContextCompat.registerReceiver(
+                context,
+                broadcastReceiver,
+                intentFilter,
+                SERVICE_STARTING_BROADCAST_PERMISSION,
+                null,
+                ContextCompat.RECEIVER_EXPORTED,
+            )
+        } catch (error: SecurityException) {
+            AppLogStore.error(
+                context.applicationContext,
+                TAG,
+                "Failed to register service-start receiver: ${error.message}",
+            )
+        }
     }
 
     fun onStart(callback: (String, Bundle) -> Unit) {

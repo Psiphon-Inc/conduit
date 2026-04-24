@@ -269,13 +269,21 @@ class ConduitStateService : Service() {
         if (isReceiverRegistered) {
             return
         }
-        ContextCompat.registerReceiver(
-            applicationContext,
-            inproxyEventReceiver,
-            IntentFilter(InproxyForegroundService.BROADCAST_ACTION_EVENT),
-            ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
-        isReceiverRegistered = true
+        try {
+            ContextCompat.registerReceiver(
+                applicationContext,
+                inproxyEventReceiver,
+                IntentFilter(InproxyForegroundService.BROADCAST_ACTION_EVENT),
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+            isReceiverRegistered = true
+        } catch (error: SecurityException) {
+            AppLogStore.error(
+                applicationContext,
+                TAG,
+                "Failed to register inproxy receiver: ${error.message}",
+            )
+        }
     }
 
     private fun unregisterInproxyReceiverIfNeeded() {

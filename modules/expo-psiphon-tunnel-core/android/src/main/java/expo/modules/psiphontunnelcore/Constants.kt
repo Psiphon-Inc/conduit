@@ -20,6 +20,7 @@ package expo.modules.psiphontunnelcore
 object Constants {
     const val ONE_MB = 1 shl 20
     const val HALF_MB = 1 shl 19
+    const val QUARTER_MB = 1 shl 18
     const val DATA_ROOT_DIRECTORY_NAME = "psiphon_data"
 
     const val INPROXY_PREFS = "PsiphonTunnelCoreInproxyPrefs"

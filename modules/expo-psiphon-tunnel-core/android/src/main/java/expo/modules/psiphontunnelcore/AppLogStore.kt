@@ -31,7 +31,7 @@ import java.util.TimeZone
 object AppLogStore {
     private const val APP_LOG_FILE_NAME = "app.log"
     private const val APP_LOG_ARCHIVE_FILE_NAME = "app.log.1"
-    private const val MAX_LOG_FILE_BYTES = 100 * 1024L
+    private const val MAX_LOG_FILE_BYTES = Constants.QUARTER_MB.toLong()
     private val lock = Any()
     private val timestampFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("UTC")

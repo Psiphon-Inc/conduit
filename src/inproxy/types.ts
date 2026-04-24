@@ -91,7 +91,7 @@ const InproxyActivitySegmentSchema = z.object({
 const InproxyActivitySegmentsSchema = z.object({
     personal: InproxyActivitySegmentSchema,
     common: InproxyActivitySegmentSchema,
-    total: InproxyActivitySegmentSchema,
+    total: InproxyActivitySegmentSchema.optional(),
 });
 
 function makeZeroPeriod(numBuckets: number) {
@@ -339,9 +339,11 @@ export type InproxyActivityByPeriod = z.infer<
 export type InproxyActivitySegment = z.infer<
     typeof InproxyActivitySegmentSchema
 >;
-export type InproxyActivitySegments = z.infer<
-    typeof InproxyActivitySegmentsSchema
->;
+export type InproxyActivitySegments = {
+    personal: InproxyActivitySegment;
+    common: InproxyActivitySegment;
+    total: InproxyActivitySegment;
+};
 export type InproxyActivityRegion = z.infer<typeof InproxyActivityRegionSchema>;
 export type InproxyRegionalBreakdownByWindow = z.infer<
     typeof InproxyRegionalBreakdownByWindowSchema
