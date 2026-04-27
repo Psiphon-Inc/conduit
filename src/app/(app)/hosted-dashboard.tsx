@@ -865,42 +865,6 @@ export default function HostedDashboardScreen() {
                         </View>
                     ) : null}
 
-                    {supportsLocalDashboard && !hostedAvailable ? (
-                        <View
-                            style={{
-                                paddingHorizontal: 16,
-                                paddingTop: 12,
-                            }}
-                        >
-                            <Pressable
-                                onPress={() =>
-                                    router.push("/(app)/hosted-setup")
-                                }
-                                style={{
-                                    borderRadius: 12,
-                                    borderWidth: 1,
-                                    borderColor: palette.deepMauve,
-                                    backgroundColor: "rgba(255,255,255,0.72)",
-                                    paddingHorizontal: 14,
-                                    paddingVertical: 12,
-                                }}
-                            >
-                                <Text
-                                    style={[
-                                        ss.bodyFont,
-                                        ss.blackText,
-                                        {
-                                            textAlign: "center",
-                                            fontWeight: "700",
-                                        },
-                                    ]}
-                                >
-                                    + {t("HOST_A_STATION_I18N.string")}
-                                </Text>
-                            </Pressable>
-                        </View>
-                    ) : null}
-
                     {__DEV__ && false ? (
                         <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
                             <DevStatsDataSourceToggle
