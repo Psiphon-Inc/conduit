@@ -17,12 +17,8 @@
  */
 package expo.modules.psiphontunnelcore
 
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.os.Bundle
-import androidx.core.content.ContextCompat
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -40,37 +36,10 @@ class ExpoPsiphonTunnelCoreModule : Module() {
     private lateinit var conduitServiceInteractor: ConduitServiceInteractor
     private var hasInproxyObservers = false
     private var hasIpcObservers = false
-    private var isInproxyReceiverRegistered = false
-    private var isIpcReceiverRegistered = false
+    private var isIpcListenerRegistered = false
 
-    private val inproxyReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action != InproxyForegroundService.BROADCAST_ACTION_EVENT) {
-                return
-            }
-
-            val eventType = intent.getStringExtra(InproxyForegroundService.EXTRA_EVENT_TYPE) ?: return
-            if (eventType != "proxyError") {
-                return
-            }
-            val eventData = intent.getBundleExtra(InproxyForegroundService.EXTRA_EVENT_DATA) ?: Bundle()
-            if (!hasInproxyObservers) {
-                return
-            }
-            emitInproxyEvent(eventType, eventData)
-        }
-    }
-
-    private val ipcReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action != IpcEventQueue.BROADCAST_ACTION_EVENT) {
-                return
-            }
-            if (!hasIpcObservers) {
-                return
-            }
-            flushPendingIpcEvents()
-        }
+    private val ipcEventListener = {
+        flushPendingIpcEvents()
     }
 
     override fun definition() = ModuleDefinition {
@@ -85,8 +54,7 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         OnDestroy {
             conduitServiceInteractor.onStop()
             conduitServiceInteractor.onDestroy()
-            unregisterInproxyReceiverIfNeeded()
-            unregisterIpcReceiverIfNeeded()
+            unregisterIpcListenerIfNeeded()
         }
 
         Function("logInfo") { tag: String, message: String ->
@@ -173,37 +141,33 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         }
 
         Function("emitCurrentInproxyState") {
-            InproxyForegroundService.emitCurrentState(context.applicationContext)
-            InproxyForegroundService.emitPendingProxyError(context.applicationContext)
+            conduitServiceInteractor.requestCurrentState()
         }
 
         OnStartObserving("inproxyEvent") {
             hasInproxyObservers = true
-            registerInproxyReceiverIfNeeded()
             conduitServiceInteractor.onStart { eventType, eventData ->
                 if (!hasInproxyObservers) {
                     return@onStart
                 }
                 emitInproxyEvent(eventType, eventData)
             }
-            InproxyForegroundService.emitPendingProxyError(context.applicationContext)
         }
 
         OnStopObserving("inproxyEvent") {
             hasInproxyObservers = false
             conduitServiceInteractor.onStop()
-            unregisterInproxyReceiverIfNeeded()
         }
 
         OnStartObserving("ipcEvent") {
             hasIpcObservers = true
-            registerIpcReceiverIfNeeded()
+            registerIpcListenerIfNeeded()
             flushPendingIpcEvents()
         }
 
         OnStopObserving("ipcEvent") {
             hasIpcObservers = false
-            unregisterIpcReceiverIfNeeded()
+            unregisterIpcListenerIfNeeded()
         }
     }
 
@@ -234,68 +198,20 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         }
     }
 
-    private fun registerInproxyReceiverIfNeeded() {
-        if (isInproxyReceiverRegistered) {
+    private fun registerIpcListenerIfNeeded() {
+        if (isIpcListenerRegistered) {
             return
         }
-        try {
-            ContextCompat.registerReceiver(
-                context.applicationContext,
-                inproxyReceiver,
-                IntentFilter(InproxyForegroundService.BROADCAST_ACTION_EVENT),
-                ContextCompat.RECEIVER_NOT_EXPORTED,
-            )
-            isInproxyReceiverRegistered = true
-        } catch (error: SecurityException) {
-            AppLogStore.error(
-                context.applicationContext,
-                "ExpoPsiphonTunnelCoreModule",
-                "Failed to register inproxy receiver: ${error.message}",
-            )
-        }
+        IpcEventQueue.registerListener(ipcEventListener)
+        isIpcListenerRegistered = true
     }
 
-    private fun unregisterInproxyReceiverIfNeeded() {
-        if (!isInproxyReceiverRegistered) {
+    private fun unregisterIpcListenerIfNeeded() {
+        if (!isIpcListenerRegistered) {
             return
         }
-        try {
-            context.applicationContext.unregisterReceiver(inproxyReceiver)
-        } catch (_: IllegalArgumentException) {
-        }
-        isInproxyReceiverRegistered = false
-    }
-
-    private fun registerIpcReceiverIfNeeded() {
-        if (isIpcReceiverRegistered) {
-            return
-        }
-        try {
-            ContextCompat.registerReceiver(
-                context.applicationContext,
-                ipcReceiver,
-                IntentFilter(IpcEventQueue.BROADCAST_ACTION_EVENT),
-                ContextCompat.RECEIVER_NOT_EXPORTED,
-            )
-            isIpcReceiverRegistered = true
-        } catch (error: SecurityException) {
-            AppLogStore.error(
-                context.applicationContext,
-                "ExpoPsiphonTunnelCoreModule",
-                "Failed to register IPC receiver: ${error.message}",
-            )
-        }
-    }
-
-    private fun unregisterIpcReceiverIfNeeded() {
-        if (!isIpcReceiverRegistered) {
-            return
-        }
-        try {
-            context.applicationContext.unregisterReceiver(ipcReceiver)
-        } catch (_: IllegalArgumentException) {
-        }
-        isIpcReceiverRegistered = false
+        IpcEventQueue.unregisterListener(ipcEventListener)
+        isIpcListenerRegistered = false
     }
 
     private fun bundleToMap(bundle: Bundle): Map<String, Any?> {

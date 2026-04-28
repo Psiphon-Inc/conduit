@@ -17,14 +17,12 @@
  */
 package expo.modules.psiphontunnelcore
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 
 object IpcEventQueue {
     private const val MAX_PENDING_EVENTS = 100
-    const val BROADCAST_ACTION_EVENT =
-        "expo.modules.psiphontunnelcore.action.IPC_EVENT"
 
     data class PendingIpcEvent(
         val eventType: String,
@@ -33,20 +31,41 @@ object IpcEventQueue {
 
     private val lock = Any()
     private val pendingEvents = ArrayDeque<PendingIpcEvent>()
+    private val listeners = LinkedHashSet<() -> Unit>()
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var notificationPosted = false
 
-    fun enqueue(context: Context, eventType: String, eventData: Bundle) {
+    fun enqueue(eventType: String, eventData: Bundle) {
         val event = PendingIpcEvent(eventType, Bundle(eventData))
+        var shouldPostNotification = false
         synchronized(lock) {
             if (pendingEvents.size >= MAX_PENDING_EVENTS) {
                 pendingEvents.removeFirst()
             }
             pendingEvents.addLast(event)
+            if (listeners.isNotEmpty() && !notificationPosted) {
+                notificationPosted = true
+                shouldPostNotification = true
+            }
         }
 
-        val intent = Intent(BROADCAST_ACTION_EVENT).apply {
-            setPackage(context.packageName)
+        if (shouldPostNotification) {
+            mainHandler.post {
+                notifyListeners()
+            }
         }
-        context.sendBroadcast(intent)
+    }
+
+    fun registerListener(listener: () -> Unit) {
+        synchronized(lock) {
+            listeners.add(listener)
+        }
+    }
+
+    fun unregisterListener(listener: () -> Unit) {
+        synchronized(lock) {
+            listeners.remove(listener)
+        }
     }
 
     fun drainPending(): List<PendingIpcEvent> {
@@ -57,5 +76,13 @@ object IpcEventQueue {
             pendingEvents.clear()
             return drained
         }
+    }
+
+    private fun notifyListeners() {
+        val listenerSnapshot = synchronized(lock) {
+            notificationPosted = false
+            listeners.toList()
+        }
+        listenerSnapshot.forEach { listener -> listener() }
     }
 }

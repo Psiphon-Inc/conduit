@@ -148,13 +148,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         const val ACTION_PARAMS_CHANGED = "expo.modules.psiphontunnelcore.action.PARAMS_CHANGED"
         const val ACTION_STOP_INPROXY = "expo.modules.psiphontunnelcore.action.STOP_INPROXY"
         const val ACTION_START_INPROXY_WITH_LAST_PARAMS = "expo.modules.psiphontunnelcore.action.START_INPROXY_WITH_LAST_PARAMS"
-        const val ACTION_EMIT_CURRENT_STATE = "expo.modules.psiphontunnelcore.action.EMIT_CURRENT_STATE"
-        private const val ACTION_EMIT_PENDING_PROXY_ERROR =
-            "expo.modules.psiphontunnelcore.action.EMIT_PENDING_PROXY_ERROR"
-
-        const val BROADCAST_ACTION_EVENT = "expo.modules.psiphontunnelcore.action.INPROXY_EVENT"
-        const val EXTRA_EVENT_TYPE = "eventType"
-        const val EXTRA_EVENT_DATA = "eventData"
 
         private const val NOTIFICATION_CHANNEL_ID = "PsiphonTunnelCoreInproxyChannel"
         private const val NOTIFICATION_ID = 18489
@@ -171,10 +164,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             "PsiphonTunnelCorePendingProxyError"
         private const val KEY_PENDING_ERROR_ACTION = "action"
         private const val KEY_PENDING_ERROR_MESSAGE = "message"
-        const val SERVICE_STARTING_BROADCAST_PERMISSION =
-            "ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION"
-        const val SERVICE_STARTING_BROADCAST_INTENT =
-            "ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_INTENT"
 
         @Volatile
         private var latestProxyState = ProxyState(Status.STOPPED, null)
@@ -266,19 +255,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             ContextCompat.startForegroundService(context, intent)
         }
 
-        fun emitCurrentState(context: Context) {
-            val intent = Intent(context, InproxyForegroundService::class.java).apply {
-                action = ACTION_EMIT_CURRENT_STATE
-            }
-            context.startService(intent)
-        }
-
-        fun emitPendingProxyError(context: Context) {
-            val pendingError = loadPendingProxyError(context) ?: return
-            emitProxyError(context, pendingError.action, pendingError.message)
-            clearPendingProxyError(context)
-        }
-
         private fun pendingProxyErrorFile(context: Context): File {
             return File(context.applicationContext.filesDir, PENDING_PROXY_ERROR_FILE)
         }
@@ -329,17 +305,11 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 .apply()
         }
 
-        private fun emitProxyState(context: Context, state: ProxyState) {
-            val data = proxyStateBundle(state)
-            emitEvent(context, "proxyState", data)
-        }
-
-        private fun emitProxyError(context: Context, action: String, message: String?) {
-            val data = android.os.Bundle().apply {
+        private fun proxyErrorBundle(action: String, message: String?): android.os.Bundle {
+            return android.os.Bundle().apply {
                 putString("action", action)
                 putString("message", message)
             }
-            emitEvent(context, "proxyError", data)
         }
 
         private fun proxyStateBundle(state: ProxyState): android.os.Bundle {
@@ -478,15 +448,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 putDouble("bytesDown", activity.bytesDown)
             }
         }
-
-        private fun emitEvent(context: Context, eventType: String, data: android.os.Bundle) {
-            val intent = Intent(BROADCAST_ACTION_EVENT).apply {
-                setPackage(context.packageName)
-                putExtra(EXTRA_EVENT_TYPE, eventType)
-                putExtra(EXTRA_EVENT_DATA, data)
-            }
-            context.sendBroadcast(intent)
-        }
     }
 
     private val tag = "InproxyForegroundService"
@@ -551,6 +512,12 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 Log.i(tag, "Client unregistered, total=${clients.size}")
             }
         }
+
+        override fun consumePendingProxyError(): android.os.Bundle {
+            val pendingError = loadPendingProxyError(applicationContext) ?: return android.os.Bundle()
+            clearPendingProxyError(applicationContext)
+            return proxyErrorBundle(pendingError.action, pendingError.message)
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -570,8 +537,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             ACTION_PARAMS_CHANGED -> handleParamsChanged(intent)
             ACTION_STOP_INPROXY -> stopInproxy("manual stop")
             ACTION_START_INPROXY_WITH_LAST_PARAMS -> handleStartWithLastParams()
-            ACTION_EMIT_CURRENT_STATE -> emitCurrentLocalState()
-            ACTION_EMIT_PENDING_PROXY_ERROR -> emitPendingProxyError(applicationContext)
             else -> Log.w(tag, "Unknown action: $action")
         }
         if (!isRunning.get()) {
@@ -650,12 +615,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         startInproxy(params)
     }
 
-    private fun emitCurrentLocalState() {
-        publishProxyState(state)
-        maybeEmitActivityStats(stats, force = true)
-        emitPendingProxyError(applicationContext)
-    }
-
     private fun startInproxy(params: InproxyParameters) {
         if (!isRunning.compareAndSet(false, true)) {
             return
@@ -664,7 +623,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         Utils.setServiceRunningFlag(applicationContext, true)
         resetStats()
         startActivityEmitter()
-        sendServiceStartingBroadcast()
 
         state = ProxyState(Status.RUNNING, NetworkState.HAS_INTERNET)
         latestProxyState = state
@@ -1417,11 +1375,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         manager.notify(NOTIFICATION_ID, buildNotification())
     }
 
-    private fun sendServiceStartingBroadcast() {
-        val intent = Intent(SERVICE_STARTING_BROADCAST_INTENT)
-        sendBroadcast(intent, SERVICE_STARTING_BROADCAST_PERMISSION)
-    }
-
     override fun getContext(): Context {
         return this
     }
@@ -1637,7 +1590,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     private fun publishProxyState(nextState: ProxyState) {
-        emitProxyState(applicationContext, nextState)
         notifyClientsProxyState(nextState)
     }
 
@@ -1688,8 +1640,27 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         }
     }
 
+    private fun notifyClientsProxyError(action: String, message: String?) {
+        val payload = proxyErrorBundle(action, message)
+        synchronized(clientsLock) {
+            val deadClients = mutableListOf<IBinder>()
+            clients.forEach { (clientBinder, client) ->
+                try {
+                    client.onProxyError(payload)
+                } catch (error: RemoteException) {
+                    if (error is DeadObjectException) {
+                        deadClients.add(clientBinder)
+                    } else {
+                        Log.e(tag, "Failed to notify proxy error", error)
+                    }
+                }
+            }
+            deadClients.forEach { clients.remove(it) }
+        }
+    }
+
     private fun reportProxyError(action: String, message: String?, notificationTextResId: Int) {
-        emitProxyError(applicationContext, action, message)
+        notifyClientsProxyError(action, message)
         persistPendingProxyError(action, message)
         deliverProxyErrorIntent(action, message, notificationTextResId)
     }

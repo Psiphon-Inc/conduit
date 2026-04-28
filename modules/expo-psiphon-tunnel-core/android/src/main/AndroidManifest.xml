@@ -2,11 +2,6 @@
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
   <uses-permission android:name="android.permission.INTERNET" />
-  <uses-permission android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION" />
-
-  <permission
-    android:name="ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION"
-    android:protectionLevel="signature" />
 
   <application>
     <service

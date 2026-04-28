@@ -18,17 +18,18 @@
 package expo.modules.psiphontunnelcore
 
 import android.app.Service
-import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.os.Binder
 import android.os.Bundle
 import android.os.DeadObjectException
 import android.os.IBinder
 import android.os.RemoteException
 import android.util.Log
-import androidx.core.content.ContextCompat
+import ca.psiphon.conduit.nativemodule.IConduitClientCallback
+import ca.psiphon.conduit.nativemodule.IConduitService
 import ca.psiphon.conduit.state.IConduitStateCallback
 import ca.psiphon.conduit.state.IConduitStateService
 import org.json.JSONObject
@@ -65,31 +66,46 @@ class ConduitStateService : Service() {
 
     private val clients = ConcurrentHashMap<IBinder, IConduitStateCallback>()
     private val clientsLock = Any()
-    private var isReceiverRegistered = false
+    private var inproxyService: IConduitService? = null
+    private var isInproxyServiceBound = false
+    private var isDestroyed = false
     private var currentUpdate = StateUpdate(
         appVersion = -1,
         state = ProxyState.UNKNOWN,
     )
 
-    private val inproxyEventReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action != InproxyForegroundService.BROADCAST_ACTION_EVENT) {
-                return
-            }
+    private val inproxyClientCallback = object : IConduitClientCallback.Stub() {
+        override fun onProxyStateUpdated(proxyStateBundle: Bundle) {
+            updateAndNotify(proxyStateFromBundle(proxyStateBundle))
+        }
 
-            val eventType = intent.getStringExtra(InproxyForegroundService.EXTRA_EVENT_TYPE)
-            if (eventType != "proxyState") {
-                return
-            }
+        override fun onProxyActivityStatsUpdated(proxyActivityStatsBundle: Bundle) {
+            // The external state API only mirrors whether the proxy is running.
+        }
 
-            val eventData = intent.getBundleExtra(InproxyForegroundService.EXTRA_EVENT_DATA) ?: Bundle()
-            val status = eventData.getString("status")
-            val state = when (status) {
-                "RUNNING" -> ProxyState.RUNNING
-                "STOPPED" -> ProxyState.STOPPED
-                else -> ProxyState.UNKNOWN
+        override fun onProxyError(proxyErrorBundle: Bundle) {
+            // Errors are delivered to the app UI through ExpoPsiphonTunnelCoreModule.
+        }
+    }
+
+    private val inproxyServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            Log.i(TAG, "Connected to InproxyForegroundService")
+            inproxyService = IConduitService.Stub.asInterface(service)
+            try {
+                inproxyService?.registerClient(inproxyClientCallback)
+            } catch (error: RemoteException) {
+                Log.e(TAG, "Failed to register inproxy state callback", error)
             }
-            updateAndNotify(state)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            Log.i(TAG, "Disconnected from InproxyForegroundService")
+            inproxyService = null
+            isInproxyServiceBound = false
+            if (!isDestroyed) {
+                bindInproxyService()
+            }
         }
     }
 
@@ -169,6 +185,7 @@ class ConduitStateService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        isDestroyed = false
 
         val fileTrustedSignatures =
             PackageHelper.readTrustedSignaturesFromFile(applicationContext)
@@ -200,12 +217,13 @@ class ConduitStateService : Service() {
             },
         )
 
-        registerInproxyReceiverIfNeeded()
+        bindInproxyService()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterInproxyReceiverIfNeeded()
+        isDestroyed = true
+        unbindInproxyService()
         synchronized(clientsLock) {
             clients.clear()
         }
@@ -265,36 +283,39 @@ class ConduitStateService : Service() {
         }
     }
 
-    private fun registerInproxyReceiverIfNeeded() {
-        if (isReceiverRegistered) {
-            return
-        }
-        try {
-            ContextCompat.registerReceiver(
-                applicationContext,
-                inproxyEventReceiver,
-                IntentFilter(InproxyForegroundService.BROADCAST_ACTION_EVENT),
-                ContextCompat.RECEIVER_NOT_EXPORTED,
-            )
-            isReceiverRegistered = true
-        } catch (error: SecurityException) {
-            AppLogStore.error(
-                applicationContext,
-                TAG,
-                "Failed to register inproxy receiver: ${error.message}",
-            )
+    private fun proxyStateFromBundle(eventData: Bundle): ProxyState {
+        return when (eventData.getString("status")) {
+            "RUNNING" -> ProxyState.RUNNING
+            "STOPPED" -> ProxyState.STOPPED
+            else -> ProxyState.UNKNOWN
         }
     }
 
-    private fun unregisterInproxyReceiverIfNeeded() {
-        if (!isReceiverRegistered) {
+    private fun bindInproxyService() {
+        if (isInproxyServiceBound) {
             return
         }
+        val intent = Intent(applicationContext, InproxyForegroundService::class.java)
+        isInproxyServiceBound = bindService(intent, inproxyServiceConnection, Context.BIND_AUTO_CREATE)
+        if (!isInproxyServiceBound) {
+            Log.w(TAG, "bindService returned false for InproxyForegroundService")
+        }
+    }
+
+    private fun unbindInproxyService() {
         try {
-            unregisterReceiver(inproxyEventReceiver)
+            inproxyService?.unregisterClient(inproxyClientCallback)
+        } catch (error: RemoteException) {
+            Log.e(TAG, "Failed to unregister inproxy state callback", error)
+        }
+        try {
+            if (isInproxyServiceBound) {
+                unbindService(inproxyServiceConnection)
+            }
         } catch (_: IllegalArgumentException) {
         }
-        isReceiverRegistered = false
+        inproxyService = null
+        isInproxyServiceBound = false
     }
 
     private fun isTrustedUid(uid: Int): Boolean {
@@ -344,7 +365,7 @@ class ConduitStateService : Service() {
                 putString("message", message)
             }
         }
-        IpcEventQueue.enqueue(applicationContext, type, data)
+        IpcEventQueue.enqueue(type, data)
     }
 
     private fun appVersionCode(): Int {
