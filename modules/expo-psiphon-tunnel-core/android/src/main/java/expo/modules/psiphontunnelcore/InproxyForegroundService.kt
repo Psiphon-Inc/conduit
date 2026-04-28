@@ -342,11 +342,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             emitEvent(context, "proxyError", data)
         }
 
-        private fun emitActivityStats(context: Context, stats: ActivityStats) {
-            val data = activityStatsBundle(stats)
-            emitEvent(context, "inProxyActivityStats", data)
-        }
-
         private fun proxyStateBundle(state: ProxyState): android.os.Bundle {
             return android.os.Bundle().apply {
                 putString("status", state.status.name)
@@ -1646,18 +1641,13 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         notifyClientsProxyState(nextState)
     }
 
-    private fun publishActivityStats(nextStats: ActivityStats) {
-        emitActivityStats(applicationContext, nextStats)
-        notifyClientsActivityStats(nextStats)
-    }
-
     private fun maybeEmitActivityStats(nextStats: ActivityStats, force: Boolean) {
         val nowMs = System.currentTimeMillis()
         if (!force && nowMs - lastActivityStatsEmitMs < ACTIVITY_STATS_EMIT_INTERVAL_MS) {
             return
         }
         lastActivityStatsEmitMs = nowMs
-        publishActivityStats(nextStats)
+        notifyClientsActivityStats(nextStats)
     }
 
     private fun notifyClientsProxyState(nextState: ProxyState) {
