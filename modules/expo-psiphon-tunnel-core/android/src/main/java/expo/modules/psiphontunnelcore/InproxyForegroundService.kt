@@ -153,7 +153,8 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         private const val NOTIFICATION_ID = 18489
         private const val ACTIVITY_NUM_BUCKETS_1000MS = ProxyActivityStats.MAX_BUCKETS_1000MS
         private const val ACTIVITY_NUM_BUCKETS_3600000MS = ProxyActivityStats.MAX_BUCKETS_3600000MS
-        private const val REGIONAL_ACCUMULATOR_PERSIST_VERSION = 2
+        private const val REGIONAL_ACCUMULATOR_PERSIST_VERSION = 3
+        private const val REGIONAL_ACCUMULATOR_PERSIST_VERSION_V2 = 2
         private const val REGIONAL_ACCUMULATOR_PERSIST_VERSION_V1 = 1
         private const val REGIONAL_ACCUMULATOR_FILE_NAME = "inproxy_regional_breakdown_v1.json"
         private const val REGIONAL_ACCUMULATOR_PERSIST_INTERVAL_MS = 15_000L
@@ -476,6 +477,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     private var latestCommonRegionActivity: List<RegionActivity> = emptyList()
     private val personalRegionalAccumulator = RegionalByteAccumulator()
     private val commonRegionalAccumulator = RegionalByteAccumulator()
+    private val totalHourlyActivityAccumulator = HourlyActivityAccumulator()
+    private val personalHourlyActivityAccumulator = HourlyActivityAccumulator()
+    private val commonHourlyActivityAccumulator = HourlyActivityAccumulator()
     private var regionalAccumulatorDirty = false
     private var statsPersistenceDirty = false
     private var lastRegionalAccumulatorPersistMs = 0L
@@ -753,6 +757,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         }
 
         val snapshot = synchronized(statsLock) {
+            val timestampMs = System.currentTimeMillis()
             // Keep occupancy metrics represented in every bucket even when
             // the core emits activity callbacks only on changes.
             proxyActivityStats.add(
@@ -775,6 +780,30 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 0,
                 latestCommonConnectingClients,
                 latestCommonConnectedClients,
+            )
+            totalHourlyActivityAccumulator.ingest(
+                0,
+                0,
+                latestAnnouncingWorkers,
+                latestConnectingClients,
+                latestConnectedClients,
+                timestampMs,
+            )
+            personalHourlyActivityAccumulator.ingest(
+                0,
+                0,
+                0,
+                latestPersonalConnectingClients,
+                latestPersonalConnectedClients,
+                timestampMs,
+            )
+            commonHourlyActivityAccumulator.ingest(
+                0,
+                0,
+                0,
+                latestCommonConnectingClients,
+                latestCommonConnectedClients,
+                timestampMs,
             )
             snapshotFromProxyActivityStats(
                 totalSource = proxyActivityStats,
@@ -801,9 +830,19 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         personalRegionActivity: List<RegionActivity>,
         commonRegionActivity: List<RegionActivity>,
     ): ActivityStats {
-        val totalSegment = segmentFromProxyActivityStats(totalSource)
-        val personalSegment = segmentFromProxyActivityStats(personalSource)
-        val commonSegment = segmentFromProxyActivityStats(commonSource)
+        val nowMs = System.currentTimeMillis()
+        val totalSegment = segmentFromProxyActivityStats(
+            totalSource,
+            totalHourlyActivityAccumulator.toPeriodSnapshot(nowMs = nowMs),
+        )
+        val personalSegment = segmentFromProxyActivityStats(
+            personalSource,
+            personalHourlyActivityAccumulator.toPeriodSnapshot(nowMs = nowMs),
+        )
+        val commonSegment = segmentFromProxyActivityStats(
+            commonSource,
+            commonHourlyActivityAccumulator.toPeriodSnapshot(nowMs = nowMs),
+        )
         val regionalBreakdownByWindow = RegionalBreakdownByWindow(
             window48h = RegionalBreakdownWindow(
                 personal = personalRegionalAccumulator.toRegionActivity(hours = 48),
@@ -820,8 +859,8 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         )
         return ActivityStats(
             elapsedTime = totalSource.elapsedTime,
-            totalBytesUp = totalSource.totalBytesUp.toDouble(),
-            totalBytesDown = totalSource.totalBytesDown.toDouble(),
+            totalBytesUp = totalSegment.totalBytesUp,
+            totalBytesDown = totalSegment.totalBytesDown,
             currentAnnouncingWorkers = totalSource.currentAnnouncingWorkers,
             currentConnectingClients = totalSource.currentConnectingClients,
             currentConnectedClients = totalSource.currentConnectedClients,
@@ -846,10 +885,19 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         )
     }
 
-    private fun segmentFromProxyActivityStats(source: ProxyActivityStats): SegmentStats {
+    private fun segmentFromProxyActivityStats(
+        source: ProxyActivityStats,
+        hourlyOverride: HourlyActivityPeriodSnapshot?,
+    ): SegmentStats {
         return SegmentStats(
-            totalBytesUp = source.totalBytesUp.toDouble(),
-            totalBytesDown = source.totalBytesDown.toDouble(),
+            totalBytesUp = maxOf(
+                source.totalBytesUp,
+                hourlyOverride?.totalBytesUp ?: 0L,
+            ).toDouble(),
+            totalBytesDown = maxOf(
+                source.totalBytesDown,
+                hourlyOverride?.totalBytesDown ?: 0L,
+            ).toDouble(),
             currentAnnouncingWorkers = source.currentAnnouncingWorkers,
             currentConnectingClients = source.currentConnectingClients,
             currentConnectedClients = source.currentConnectedClients,
@@ -868,20 +916,20 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             connectedClientsSeries =
                 source.getConnectedClientsSeries(ProxyActivityStats.BUCKET_COLLECTION_1000MS)
                     .map { it.toInt() },
-            hourlyBytesUpSeries =
-                source.getBytesUpSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
+            hourlyBytesUpSeries = hourlyOverride?.bytesUpSeries
+                ?: source.getBytesUpSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
                     .map { it.toDouble() },
-            hourlyBytesDownSeries =
-                source.getBytesDownSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
+            hourlyBytesDownSeries = hourlyOverride?.bytesDownSeries
+                ?: source.getBytesDownSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
                     .map { it.toDouble() },
-            hourlyAnnouncingWorkersSeries =
-                source.getAnnouncingWorkersSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
+            hourlyAnnouncingWorkersSeries = hourlyOverride?.announcingWorkersSeries
+                ?: source.getAnnouncingWorkersSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
                     .map { it.toInt() },
-            hourlyConnectingClientsSeries =
-                source.getConnectingClientsSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
+            hourlyConnectingClientsSeries = hourlyOverride?.connectingClientsSeries
+                ?: source.getConnectingClientsSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
                     .map { it.toInt() },
-            hourlyConnectedClientsSeries =
-                source.getConnectedClientsSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
+            hourlyConnectedClientsSeries = hourlyOverride?.connectedClientsSeries
+                ?: source.getConnectedClientsSeries(ProxyActivityStats.BUCKET_COLLECTION_3600000MS)
                     .map { it.toInt() },
         )
     }
@@ -901,6 +949,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             val payloadVersion = payload.optInt("version", -1)
             if (
                 payloadVersion != REGIONAL_ACCUMULATOR_PERSIST_VERSION &&
+                    payloadVersion != REGIONAL_ACCUMULATOR_PERSIST_VERSION_V2 &&
                     payloadVersion != REGIONAL_ACCUMULATOR_PERSIST_VERSION_V1
             ) {
                 Log.w(tag, "Ignoring regional accumulator payload version=$payloadVersion")
@@ -916,6 +965,18 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 )
 
                 if (payloadVersion >= REGIONAL_ACCUMULATOR_PERSIST_VERSION) {
+                    totalHourlyActivityAccumulator.restoreFromPersistedJson(
+                        payload.optJSONObject("totalHourlyActivity"),
+                    )
+                    personalHourlyActivityAccumulator.restoreFromPersistedJson(
+                        payload.optJSONObject("personalHourlyActivity"),
+                    )
+                    commonHourlyActivityAccumulator.restoreFromPersistedJson(
+                        payload.optJSONObject("commonHourlyActivity"),
+                    )
+                }
+
+                if (payloadVersion >= REGIONAL_ACCUMULATOR_PERSIST_VERSION_V2) {
                     val persistedBootEpochMs = payload.optLong("bootEpochMs", Long.MIN_VALUE)
                     val canRestoreProxyStats =
                         persistedBootEpochMs != Long.MIN_VALUE &&
@@ -939,6 +1000,21 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                             proxyActivityStats = restoredTotal
                             personalProxyActivityStats = restoredPersonal
                             commonProxyActivityStats = restoredCommon
+                            if (payloadVersion < REGIONAL_ACCUMULATOR_PERSIST_VERSION) {
+                                val nowMs = System.currentTimeMillis()
+                                totalHourlyActivityAccumulator.restoreFromProxyActivityStats(
+                                    restoredTotal,
+                                    nowMs,
+                                )
+                                personalHourlyActivityAccumulator.restoreFromProxyActivityStats(
+                                    restoredPersonal,
+                                    nowMs,
+                                )
+                                commonHourlyActivityAccumulator.restoreFromProxyActivityStats(
+                                    restoredCommon,
+                                    nowMs,
+                                )
+                            }
                         }
                     } else {
                         Log.i(
@@ -994,6 +1070,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 .put("bootEpochMs", currentBootEpochMs())
                 .put("personal", personalRegionalAccumulator.toPersistedJson())
                 .put("common", commonRegionalAccumulator.toPersistedJson())
+                .put("totalHourlyActivity", totalHourlyActivityAccumulator.toPersistedJson())
+                .put("personalHourlyActivity", personalHourlyActivityAccumulator.toPersistedJson())
+                .put("commonHourlyActivity", commonHourlyActivityAccumulator.toPersistedJson())
                 .put(
                     "totalProxyActivityStats",
                     marshalProxyActivityStats(proxyActivityStats),
@@ -1092,39 +1171,250 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         val bytesByRegion: MutableMap<String, Long>,
     )
 
+    private data class HourlyActivityPeriodSnapshot(
+        val totalBytesUp: Long,
+        val totalBytesDown: Long,
+        val bytesUpSeries: List<Double>,
+        val bytesDownSeries: List<Double>,
+        val announcingWorkersSeries: List<Int>,
+        val connectingClientsSeries: List<Int>,
+        val connectedClientsSeries: List<Int>,
+    )
+
+    private data class HourlyActivityBucket(
+        val hourStartMs: Long,
+        var bytesUp: Long,
+        var bytesDown: Long,
+        var announcingWorkers: Int,
+        var connectingClients: Int,
+        var connectedClients: Int,
+    )
+
+    private class HourlyActivityAccumulator {
+        private val buckets = mutableListOf<HourlyActivityBucket>()
+
+        fun ingest(
+            bytesUp: Long,
+            bytesDown: Long,
+            announcingWorkers: Int,
+            connectingClients: Int,
+            connectedClients: Int,
+            timestampMs: Long,
+        ) {
+            val bucket = ensureBucket(hourStartMs(timestampMs))
+            bucket.bytesUp += maxOf(0L, bytesUp)
+            bucket.bytesDown += maxOf(0L, bytesDown)
+            bucket.announcingWorkers = maxOf(bucket.announcingWorkers, announcingWorkers)
+            bucket.connectingClients = maxOf(bucket.connectingClients, connectingClients)
+            bucket.connectedClients = maxOf(bucket.connectedClients, connectedClients)
+        }
+
+        fun toPeriodSnapshot(
+            hours: Int = ACTIVITY_NUM_BUCKETS_3600000MS,
+            nowMs: Long = System.currentTimeMillis(),
+        ): HourlyActivityPeriodSnapshot? {
+            if (hours <= 0 || buckets.isEmpty()) {
+                return null
+            }
+
+            val hourMs = TimeUnit.HOURS.toMillis(1)
+            val latestHourStartMs = hourStartMs(nowMs)
+            val firstHourStartMs = latestHourStartMs - (hours - 1) * hourMs
+            val bucketsByHour = buckets.associateBy { bucket -> bucket.hourStartMs }
+            val bytesUpSeries = ArrayList<Double>(hours)
+            val bytesDownSeries = ArrayList<Double>(hours)
+            val announcingWorkersSeries = ArrayList<Int>(hours)
+            val connectingClientsSeries = ArrayList<Int>(hours)
+            val connectedClientsSeries = ArrayList<Int>(hours)
+            var totalBytesUp = 0L
+            var totalBytesDown = 0L
+
+            for (index in 0 until hours) {
+                val bucket = bucketsByHour[firstHourStartMs + index * hourMs]
+                if (bucket == null) {
+                    bytesUpSeries.add(0.0)
+                    bytesDownSeries.add(0.0)
+                    announcingWorkersSeries.add(0)
+                    connectingClientsSeries.add(0)
+                    connectedClientsSeries.add(0)
+                } else {
+                    totalBytesUp += bucket.bytesUp
+                    totalBytesDown += bucket.bytesDown
+                    bytesUpSeries.add(bucket.bytesUp.toDouble())
+                    bytesDownSeries.add(bucket.bytesDown.toDouble())
+                    announcingWorkersSeries.add(bucket.announcingWorkers)
+                    connectingClientsSeries.add(bucket.connectingClients)
+                    connectedClientsSeries.add(bucket.connectedClients)
+                }
+            }
+
+            return HourlyActivityPeriodSnapshot(
+                totalBytesUp = totalBytesUp,
+                totalBytesDown = totalBytesDown,
+                bytesUpSeries = bytesUpSeries,
+                bytesDownSeries = bytesDownSeries,
+                announcingWorkersSeries = announcingWorkersSeries,
+                connectingClientsSeries = connectingClientsSeries,
+                connectedClientsSeries = connectedClientsSeries,
+            )
+        }
+
+        fun toPersistedJson(): JSONObject {
+            val bucketsJson = JSONArray()
+            for (bucket in buckets) {
+                bucketsJson.put(
+                    JSONObject()
+                        .put("hourStartMs", bucket.hourStartMs)
+                        .put("bytesUp", bucket.bytesUp)
+                        .put("bytesDown", bucket.bytesDown)
+                        .put("announcingWorkers", bucket.announcingWorkers)
+                        .put("connectingClients", bucket.connectingClients)
+                        .put("connectedClients", bucket.connectedClients),
+                )
+            }
+            return JSONObject().put("buckets", bucketsJson)
+        }
+
+        fun restoreFromPersistedJson(json: JSONObject?) {
+            buckets.clear()
+            val bucketsJson = json?.optJSONArray("buckets") ?: JSONArray()
+            for (index in 0 until bucketsJson.length()) {
+                val bucketJson = bucketsJson.optJSONObject(index) ?: continue
+                val hourStartMs = bucketJson.optLong("hourStartMs", Long.MIN_VALUE)
+                if (hourStartMs == Long.MIN_VALUE) {
+                    continue
+                }
+                buckets.add(
+                    HourlyActivityBucket(
+                        hourStartMs = hourStartMs,
+                        bytesUp = maxOf(0L, bucketJson.optLong("bytesUp", 0L)),
+                        bytesDown = maxOf(0L, bucketJson.optLong("bytesDown", 0L)),
+                        announcingWorkers = maxOf(0, bucketJson.optInt("announcingWorkers", 0)),
+                        connectingClients = maxOf(0, bucketJson.optInt("connectingClients", 0)),
+                        connectedClients = maxOf(0, bucketJson.optInt("connectedClients", 0)),
+                    ),
+                )
+            }
+            buckets.sortBy { bucket -> bucket.hourStartMs }
+            pruneOldBuckets()
+        }
+
+        fun restoreFromProxyActivityStats(source: ProxyActivityStats, nowMs: Long) {
+            val bytesUpSeries = source.getBytesUpSeries(
+                ProxyActivityStats.BUCKET_COLLECTION_3600000MS,
+            )
+            val bytesDownSeries = source.getBytesDownSeries(
+                ProxyActivityStats.BUCKET_COLLECTION_3600000MS,
+            )
+            val announcingWorkersSeries = source.getAnnouncingWorkersSeries(
+                ProxyActivityStats.BUCKET_COLLECTION_3600000MS,
+            )
+            val connectingClientsSeries = source.getConnectingClientsSeries(
+                ProxyActivityStats.BUCKET_COLLECTION_3600000MS,
+            )
+            val connectedClientsSeries = source.getConnectedClientsSeries(
+                ProxyActivityStats.BUCKET_COLLECTION_3600000MS,
+            )
+            val size = listOf(
+                bytesUpSeries.size,
+                bytesDownSeries.size,
+                announcingWorkersSeries.size,
+                connectingClientsSeries.size,
+                connectedClientsSeries.size,
+                ACTIVITY_NUM_BUCKETS_3600000MS,
+            ).minOrNull() ?: return
+            if (size <= 0) {
+                return
+            }
+
+            buckets.clear()
+            val hourMs = TimeUnit.HOURS.toMillis(1)
+            val firstHourStartMs = hourStartMs(nowMs) - (size - 1) * hourMs
+            for (index in 0 until size) {
+                val bytesUp = maxOf(0L, bytesUpSeries[index])
+                val bytesDown = maxOf(0L, bytesDownSeries[index])
+                val announcingWorkers = maxOf(0, announcingWorkersSeries[index].toInt())
+                val connectingClients = maxOf(0, connectingClientsSeries[index].toInt())
+                val connectedClients = maxOf(0, connectedClientsSeries[index].toInt())
+                if (
+                    bytesUp == 0L &&
+                        bytesDown == 0L &&
+                        announcingWorkers == 0 &&
+                        connectingClients == 0 &&
+                        connectedClients == 0
+                ) {
+                    continue
+                }
+                buckets.add(
+                    HourlyActivityBucket(
+                        hourStartMs = firstHourStartMs + index * hourMs,
+                        bytesUp = bytesUp,
+                        bytesDown = bytesDown,
+                        announcingWorkers = announcingWorkers,
+                        connectingClients = connectingClients,
+                        connectedClients = connectedClients,
+                    ),
+                )
+            }
+            pruneOldBuckets()
+        }
+
+        private fun ensureBucket(hourStartMs: Long): HourlyActivityBucket {
+            val latest = buckets.lastOrNull()
+            if (latest != null && latest.hourStartMs == hourStartMs) {
+                return latest
+            }
+
+            buckets.firstOrNull { bucket -> bucket.hourStartMs == hourStartMs }?.let {
+                return it
+            }
+
+            val created = HourlyActivityBucket(
+                hourStartMs = hourStartMs,
+                bytesUp = 0,
+                bytesDown = 0,
+                announcingWorkers = 0,
+                connectingClients = 0,
+                connectedClients = 0,
+            )
+            buckets.add(created)
+            buckets.sortBy { bucket -> bucket.hourStartMs }
+            pruneOldBuckets()
+            return created
+        }
+
+        private fun pruneOldBuckets() {
+            while (buckets.size > ACTIVITY_NUM_BUCKETS_3600000MS) {
+                buckets.removeAt(0)
+            }
+        }
+
+        private fun hourStartMs(timestampMs: Long): Long {
+            val hourMs = TimeUnit.HOURS.toMillis(1)
+            return timestampMs - (timestampMs % hourMs)
+        }
+    }
+
     private class RegionalByteAccumulator {
         private val buckets = mutableListOf<RegionalHourBucket>()
-        private var previousTotalsByRegion: Map<String, Long> = emptyMap()
         private var latestConnectedByRegion: Map<String, Int> = emptyMap()
 
         fun reset() {
             buckets.clear()
-            previousTotalsByRegion = emptyMap()
             latestConnectedByRegion = emptyMap()
         }
 
         fun ingest(snapshot: List<RegionActivity>, timestampMs: Long) {
-            val hourStartMs = timestampMs - (timestampMs % TimeUnit.HOURS.toMillis(1))
-            val bucket = ensureBucket(hourStartMs)
-            val currentTotalsByRegion = snapshot.associate { activity ->
-                activity.region to (activity.bytesUp + activity.bytesDown).toLong()
-            }
+            val bucket = ensureBucket(hourStartMs(timestampMs))
 
-            for ((region, currentTotal) in currentTotalsByRegion) {
-                val previousTotal = previousTotalsByRegion[region] ?: 0L
-                val delta =
-                    if (currentTotal >= previousTotal) {
-                        currentTotal - previousTotal
-                    } else {
-                        currentTotal
-                    }
+            for (activity in snapshot) {
+                val delta = (activity.bytesUp + activity.bytesDown).toLong()
                 if (delta > 0L) {
-                    bucket.bytesByRegion[region] =
-                        (bucket.bytesByRegion[region] ?: 0L) + delta
+                    bucket.bytesByRegion[activity.region] =
+                        (bucket.bytesByRegion[activity.region] ?: 0L) + delta
                 }
             }
 
-            previousTotalsByRegion = currentTotalsByRegion
             latestConnectedByRegion = snapshot.associate { activity ->
                 activity.region to activity.connectedClients
             }
@@ -1142,7 +1432,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
             return JSONObject()
                 .put("buckets", bucketsJson)
-                .put("previousTotalsByRegion", longMapToJson(previousTotalsByRegion))
                 .put("latestConnectedByRegion", intMapToJson(latestConnectedByRegion))
         }
 
@@ -1173,7 +1462,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 buckets.removeAt(0)
             }
 
-            previousTotalsByRegion = jsonToLongMap(json.optJSONObject("previousTotalsByRegion"))
             latestConnectedByRegion = jsonToIntMap(json.optJSONObject("latestConnectedByRegion"))
         }
 
@@ -1182,7 +1470,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 return emptyList()
             }
 
-            val latestHourStartMs = buckets.last().hourStartMs
+            val latestHourStartMs = hourStartMs(System.currentTimeMillis())
             val cutoffHourStartMs =
                 latestHourStartMs - (hours - 1) * TimeUnit.HOURS.toMillis(1)
             val bytesByRegion = mutableMapOf<String, Long>()
@@ -1226,6 +1514,11 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 buckets.removeAt(0)
             }
             return created
+        }
+
+        private fun hourStartMs(timestampMs: Long): Long {
+            val hourMs = TimeUnit.HOURS.toMillis(1)
+            return timestampMs - (timestampMs % hourMs)
         }
 
         private fun longMapToJson(map: Map<String, Long>): JSONObject {
@@ -1502,6 +1795,31 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             personalRegionalAccumulator.ingest(latestPersonalRegionActivity, timestampMs)
             commonRegionalAccumulator.ingest(latestCommonRegionActivity, timestampMs)
             regionalAccumulatorDirty = true
+
+            totalHourlyActivityAccumulator.ingest(
+                bytesUp,
+                bytesDown,
+                announcing,
+                connectingClients,
+                connectedClients,
+                timestampMs,
+            )
+            personalHourlyActivityAccumulator.ingest(
+                personalSnapshot.bytesUp,
+                personalSnapshot.bytesDown,
+                0,
+                personalSnapshot.connectingClients,
+                personalSnapshot.connectedClients,
+                timestampMs,
+            )
+            commonHourlyActivityAccumulator.ingest(
+                commonBytesUp,
+                commonBytesDown,
+                0,
+                commonConnecting,
+                commonConnected,
+                timestampMs,
+            )
 
             proxyActivityStats.add(
                 bytesUp,
