@@ -34,7 +34,7 @@ pipeline {
                     env.RELEASE_NAME = TAG_NAME.minus("release-android-")
                 }
 
-                writeFile file: 'src/git-hash.js', text: "export const GIT_HASH = '${env.RELEASE_NAME}';"
+                writeFile file: 'src/git-hash.ts', text: "export const GIT_HASH = '${env.RELEASE_NAME}';"
 
                 withSecrets() {
                     writeFile file: '.env.production', text: [
