@@ -18,6 +18,7 @@
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
+import { Platform } from "react-native";
 import { ReactTestRenderer, act, create } from "react-test-renderer";
 
 import {
@@ -59,6 +60,13 @@ const mockedUseHostedExperienceState =
     >;
 
 describe("ConduitActionsProvider", () => {
+    const originalPlatformOs = Platform.OS;
+    const originalPlatformConstants = Platform.constants;
+
+    beforeEach(() => {
+        setPlatform("ios", { interfaceIdiom: "phone" });
+    });
+
     afterEach(() => {
         jest.clearAllMocks();
         mountedRenderers.splice(0).forEach((renderer) => {
@@ -66,6 +74,7 @@ describe("ConduitActionsProvider", () => {
                 renderer.unmount();
             });
         });
+        setPlatform(originalPlatformOs, originalPlatformConstants);
     });
 
     it("does not use the local Android personal compartment ID on iOS", () => {
@@ -96,6 +105,43 @@ describe("ConduitActionsProvider", () => {
 
         expect(contextValue.personalCompartmentId).toBeNull();
         expect(contextValue.isPersonalPairingPreparing).toBe(true);
+    });
+
+    it("uses the local personal compartment ID on Mac Catalyst", () => {
+        setPlatform("ios", {
+            ...originalPlatformConstants,
+            interfaceIdiom: "mac",
+            isMacCatalyst: true,
+        });
+        mockedUseHostedExperienceState.mockReturnValue({
+            authPhase: "authenticated",
+            session: { personalPairingWrapperBaseUrl: null },
+            stationPhase: "active",
+            entitlementSnapshot: "active",
+            conduitsSnapshot: {
+                entitlement: { status: "active" },
+                conduits: [
+                    {
+                        conduit_id: "cond_1",
+                        proxy_id: "st_1",
+                        status: "active",
+                    },
+                ],
+            },
+        } as never);
+
+        const queryClient = createTestQueryClient();
+        queryClient.setQueryData(
+            [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+            "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g",
+        );
+
+        const contextValue = renderProvider(queryClient);
+
+        expect(contextValue.personalCompartmentId).toBe(
+            "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g",
+        );
+        expect(contextValue.isPersonalPairingPreparing).toBe(false);
     });
 
     it("uses the hosted snapshot personal compartment ID on iOS once it is ready", () => {
@@ -169,5 +215,16 @@ function createTestQueryClient(): QueryClient {
             queries: { gcTime: Infinity },
             mutations: { gcTime: Infinity },
         },
+    });
+}
+
+function setPlatform(os: typeof Platform.OS, constants: object) {
+    Object.defineProperty(Platform, "OS", {
+        configurable: true,
+        value: os,
+    });
+    Object.defineProperty(Platform, "constants", {
+        configurable: true,
+        value: constants,
     });
 }

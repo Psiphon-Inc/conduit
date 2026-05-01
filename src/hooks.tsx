@@ -28,7 +28,11 @@ import {
 } from "@/src/constants";
 import { loadCachedAlias } from "@/src/hosted/aliasCache";
 import { PersonalCompartmentId } from "@/src/hosted/contracts";
-import { loadAndroidPersonalCompartmentId } from "@/src/personalCompartmentId";
+import {
+    isLocalPersonalPairingSupported,
+    loadAndroidPersonalCompartmentId,
+    loadLocalPersonalCompartmentId,
+} from "@/src/personalCompartmentId";
 
 const PermissionsStatusSchema = z.enum([
     "GRANTED",
@@ -64,6 +68,16 @@ export const useAndroidPersonalCompartmentId =
             gcTime: Infinity,
             enabled: Platform.OS === "android",
             queryFn: async () => loadAndroidPersonalCompartmentId(),
+        });
+
+export const useLocalPersonalCompartmentId =
+    (): UseQueryResult<PersonalCompartmentId | null> =>
+        useQuery({
+            queryKey: [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+            staleTime: Infinity,
+            gcTime: Infinity,
+            enabled: isLocalPersonalPairingSupported(),
+            queryFn: async () => loadLocalPersonalCompartmentId(),
         });
 
 export const useConduitName = (): UseQueryResult<string> => {
