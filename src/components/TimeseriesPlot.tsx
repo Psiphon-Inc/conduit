@@ -123,6 +123,8 @@ export interface TimeseriesPlotProps {
     numXTicks?: number;
     showLegend?: boolean;
     lineWidth?: number;
+    plotNotice?: string | null;
+    onPlotNoticePress?: () => void;
     referenceTimeMs?: number;
     valueFormatter?: (value: number) => string;
 }
@@ -143,6 +145,8 @@ export function TimeseriesPlot({
     numXTicks = 4,
     showLegend = true,
     lineWidth = 2.5,
+    plotNotice,
+    onPlotNoticePress,
     referenceTimeMs,
     valueFormatter,
 }: TimeseriesPlotProps) {
@@ -779,6 +783,50 @@ export function TimeseriesPlot({
                 >
                     {t("NO_DATA_YET_I18N.string")}
                 </Text>
+            ) : null}
+
+            {plotNotice ? (
+                <View
+                    pointerEvents={onPlotNoticePress ? "auto" : "none"}
+                    style={{
+                        position: "absolute",
+                        left: axisMargin.left,
+                        right: axisMargin.right,
+                        top: axisMargin.top,
+                        bottom: axisMargin.bottom,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        paddingHorizontal: 8,
+                    }}
+                >
+                    <Pressable
+                        accessibilityRole={
+                            onPlotNoticePress ? "button" : undefined
+                        }
+                        disabled={!onPlotNoticePress}
+                        onPress={onPlotNoticePress}
+                        style={[
+                            {
+                                backgroundColor: "rgba(255, 255, 255, 0.78)",
+                                borderRadius: 999,
+                                paddingHorizontal: 12,
+                                paddingVertical: 7,
+                            },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                ss.tinyFont,
+                                {
+                                    color: palette.midGrey,
+                                    textAlign: "center",
+                                },
+                            ]}
+                        >
+                            {plotNotice}
+                        </Text>
+                    </Pressable>
+                </View>
             ) : null}
 
             {showLegend && allSanitizedSeries.length > 1 ? (

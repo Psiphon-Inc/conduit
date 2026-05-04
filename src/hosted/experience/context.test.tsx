@@ -32,6 +32,7 @@ import {
 import { HostedAuthService } from "@/src/hosted/auth/types";
 import {
     HostedAccountProfileConflictError,
+    HostedClientRequestError,
     HostedPersonalCompartmentIdConflictError,
     createHostedClient,
 } from "@/src/hosted/client";
@@ -427,6 +428,179 @@ describe("hosted experience context", () => {
 
         expect(sessionClient.refresh).toHaveBeenCalledTimes(1);
         expect(getContextValue().state.session?.accessToken).toBe("access.new");
+    });
+
+    it("can force-refresh a still-current session", async () => {
+        const now = jest.fn().mockReturnValue(20_000);
+        const oldProfile = {
+            alias: "Old Alias",
+            alias_is_default: false,
+            profile_version: 1,
+        };
+        const newProfile = {
+            alias: "New Alias",
+            alias_is_default: false,
+            profile_version: 2,
+        };
+        const currentSession = makeSession({
+            accessToken: "access.old",
+            accessTokenExpiresAtMs: 200_000,
+            refreshTokenExpiresAtMs: 400_000,
+            accountProfile: oldProfile,
+        });
+        const refreshedSession = {
+            ...currentSession,
+            accessToken: "access.new",
+            accessTokenExpiresAtMs: 400_000,
+            accountProfile: newProfile,
+        };
+
+        let storedSession = currentSession;
+        const sessionClient = makeSessionClient({
+            loadHostedSession: jest
+                .fn()
+                .mockImplementation(async () => storedSession),
+            refresh: jest.fn().mockImplementation(async () => {
+                storedSession = refreshedSession;
+                return refreshedSession;
+            }),
+            persistHostedSession: jest
+                .fn()
+                .mockImplementation(async (session) => {
+                    storedSession = session;
+                }),
+        });
+
+        const hostedClient = makeHostedClient({
+            getAccountProfile: jest.fn().mockResolvedValue(oldProfile),
+        });
+        const revenueCat = makeRevenueCatContext();
+        const authService = makeAuthService();
+
+        let contextValue: HostedExperienceContextValue | null = null;
+        function Consumer() {
+            contextValue = useHostedExperienceContext();
+            return null;
+        }
+
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now,
+                    authService,
+                    sessionClient,
+                    hostedClient,
+                    revenueCat,
+                },
+                <Consumer />,
+            );
+        });
+        await waitFor(() => {
+            expect(contextValue!.state.accountProfile?.alias).toBe("Old Alias");
+        });
+
+        await act(async () => {
+            await contextValue!.refreshSession();
+        });
+        await flushPromises();
+
+        expect(sessionClient.refresh).toHaveBeenCalledTimes(1);
+        expect(contextValue!.state.session?.accessToken).toBe("access.new");
+        expect(contextValue!.state.accountProfile?.alias).toBe("New Alias");
+    });
+
+    it("refreshes and retries hosted API calls after a still-current token 401", async () => {
+        const now = jest.fn().mockReturnValue(20_000);
+        const currentSession = makeSession({
+            accessToken: "access.old",
+            accessTokenExpiresAtMs: 200_000,
+            refreshTokenExpiresAtMs: 400_000,
+        });
+        const refreshedSession = {
+            ...currentSession,
+            accessToken: "access.new",
+            accessTokenExpiresAtMs: 400_000,
+        };
+
+        let storedSession = currentSession;
+        const sessionClient = makeSessionClient({
+            loadHostedSession: jest
+                .fn()
+                .mockImplementation(async () => storedSession),
+            refresh: jest.fn().mockImplementation(async () => {
+                storedSession = refreshedSession;
+                return refreshedSession;
+            }),
+            persistHostedSession: jest
+                .fn()
+                .mockImplementation(async (session) => {
+                    storedSession = session;
+                }),
+        });
+
+        const hostedClient = makeHostedClient({
+            getConduitsSnapshot: jest
+                .fn()
+                .mockRejectedValueOnce(
+                    new HostedClientRequestError("access token rejected", 401),
+                )
+                .mockResolvedValueOnce({
+                    entitlement: {
+                        status: "active",
+                        product_id: "test.product.primary",
+                    },
+                    conduits: [
+                        {
+                            conduit_id: "cond_1",
+                            proxy_id: "st_1",
+                            status: "active",
+                        },
+                    ],
+                }),
+        });
+        const revenueCat = makeRevenueCatContext();
+        const authService = makeAuthService();
+
+        let contextValue: HostedExperienceContextValue | null = null;
+        function Consumer() {
+            contextValue = useHostedExperienceContext();
+            return null;
+        }
+
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now,
+                    authService,
+                    sessionClient,
+                    hostedClient,
+                    revenueCat,
+                },
+                <Consumer />,
+            );
+        });
+
+        await waitFor(() => {
+            expect(hostedClient.getConduitsSnapshot).toHaveBeenCalledWith(
+                "access.new",
+            );
+        });
+
+        expect(sessionClient.refresh).toHaveBeenCalledTimes(1);
+        expect(hostedClient.getConduitsSnapshot).toHaveBeenNthCalledWith(
+            1,
+            "access.old",
+        );
+        expect(hostedClient.getConduitsSnapshot).toHaveBeenNthCalledWith(
+            2,
+            "access.new",
+        );
+        await waitFor(() => {
+            expect(contextValue!.state.session?.accessToken).toBe("access.new");
+            expect(contextValue!.state.stationPhase).toBe("active");
+        });
     });
 
     it("restores hosted auth from the persisted provider hint", async () => {

@@ -285,7 +285,9 @@ export function PersonalPairingShareModal({
                                     { fontSize: 22 },
                                 ]}
                             >
-                                {t("PERSONAL_PAIRING_TITLE_I18N.string")}
+                                {t(
+                                    "PERSONAL_PAIRING_SHARE_MODAL_TITLE_I18N.string",
+                                )}
                             </Text>
 
                             <Text

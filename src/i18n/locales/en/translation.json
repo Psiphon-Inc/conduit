@@ -299,6 +299,18 @@
     "SHARE_PERSONAL_PAIRING_I18N": {
         "string": "Share personal pairing"
     },
+    "SETTINGS_PERSONAL_PAIRING_I18N": {
+        "string": "Personal Pairing",
+        "developer_comment": "Settings row label for opening personal pairing."
+    },
+    "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "Connect people directly to your Conduit",
+        "developer_comment": "Settings row subtitle for personal pairing."
+    },
+    "SHARE_PERSONAL_PAIRING_LINK_I18N": {
+        "string": "Share Personal Pairing link",
+        "developer_comment": "Home screen CTA button label for sharing the Personal Pairing link."
+    },
     "PREPARING_PERSONAL_PAIRING_I18N": {
         "string": "Preparing personal pairing..."
     },
@@ -347,8 +359,16 @@
         "string": "Local Conduit: {{status}}",
         "developer_comment": "Status label shown on the local dashboard header row."
     },
+    "LOCAL_DASHBOARD_HISTORY_START_PROMPT_I18N": {
+        "string": "Start Local Conduit to load history.",
+        "developer_comment": "Chart notice shown when the local dashboard has no cached history because the local conduit is stopped."
+    },
     "HOST_A_STATION_I18N": {
         "string": "Host a Conduit"
+    },
+    "HOST_A_STATION_IOS_I18N": {
+        "string": "Create a Hosted Conduit",
+        "developer_comment": "Title for the iOS hosted conduit setup CTA."
     },
     "VIEW_YOUR_CONDUIT_I18N": {
         "string": "View your Conduit",
@@ -356,6 +376,10 @@
     },
     "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N": {
         "string": "Create a Psiphon-hosted Conduit station to make your Conduit Station more reliably accessible"
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_IOS_I18N": {
+        "string": "Create a Psiphon-hosted Conduit station that runs in the cloud.",
+        "developer_comment": "Description for the iOS hosted conduit setup CTA, where there is no local runner."
     },
     "VIEW_YOUR_CONDUIT_DESCRIPTION_I18N": {
         "string": "Sign back in to see your hosted setup and pick up where you left off.",
@@ -403,6 +427,10 @@
     },
     "PERSONAL_PAIRING_TITLE_I18N": {
         "string": "Personal Pairing",
+        "developer_comment": "Label for Personal Pairing in status summaries."
+    },
+    "PERSONAL_PAIRING_SHARE_MODAL_TITLE_I18N": {
+        "string": "Personal Pairing link",
         "developer_comment": "Title of the personal pairing share modal."
     },
     "SHARE_IN_I18N": {
@@ -428,6 +456,30 @@
     "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
         "string": "Claim hosted rewards in Ryve",
         "developer_comment": "Label for claiming hosted conduit rewards in the Ryve app."
+    },
+    "REWARDS_I18N": {
+        "string": "Rewards",
+        "developer_comment": "Settings row label for Ryve rewards."
+    },
+    "HOSTED_REWARDS_I18N": {
+        "string": "Hosted Rewards",
+        "developer_comment": "Android settings row label for hosted Ryve rewards."
+    },
+    "LOCAL_REWARDS_I18N": {
+        "string": "Local Rewards",
+        "developer_comment": "Android settings row label for local Ryve rewards."
+    },
+    "LEGAL_I18N": {
+        "string": "LEGAL",
+        "developer_comment": "Settings section label for legal links."
+    },
+    "TERMS_OF_USE_I18N": {
+        "string": "Terms of Use",
+        "developer_comment": "Settings row label for terms of use."
+    },
+    "MORE_INFO_I18N": {
+        "string": "More Info",
+        "developer_comment": "Settings row label for replaying onboarding information screens."
     },
     "ACCOUNT_I18N": {
         "string": "Account",

@@ -29,6 +29,22 @@
     "MAX_PEERS_I18N": {
         "string": "Número máximo de compañeros"
     },
+    "MAX_PUBLIC_PEERS_I18N": {
+        "string": "Número máximo de compañeros públicos",
+        "developer_comment": "Label for the maximum number of public peers allowed."
+    },
+    "MAX_PERSONAL_PEERS_I18N": {
+        "string": "Número máximo de compañeros personales",
+        "developer_comment": "Label for the maximum number of personal peers allowed."
+    },
+    "MAX_TOTAL_PEERS_NOTE_I18N": {
+        "string": "Los compañeros públicos y personales comparten un límite combinado de {{max}}.",
+        "developer_comment": "Helper text explaining the combined public and personal peer cap."
+    },
+    "MAX_TOTAL_PEERS_ERROR_I18N": {
+        "string": "Reduce los compañeros públicos o personales para mantener el total combinado en {{max}} o menos.",
+        "developer_comment": "Validation message shown when the combined public and personal peer limit is exceeded."
+    },
     "MAX_MBPS_PER_PEER_I18N": {
         "string": "Cantidad máxima de MB/s por compañero"
     },
@@ -56,6 +72,10 @@
     "CONDUIT_STATION_I18N": {
         "string": "Terminal Conduit"
     },
+    "LOCAL_CONDUIT_I18N": {
+        "string": "Conduit local",
+        "developer_comment": "Title for the local conduit details modal."
+    },
     "RUNNING_I18N": {
         "string": "EN MARCHA"
     },
@@ -73,6 +93,10 @@
     },
     "SENT_THANK_YOU_I18N": {
         "string": "Enviado, ¡gracias!"
+    },
+    "TRY_AGAIN_I18N": {
+        "string": "Intentar de nuevo",
+        "developer_comment": "Button label to retry a failed or offline operation."
     },
     "HOLD_TO_TURN_OFF_I18N": {
         "string": "Mantener pulsado para desactivar"
@@ -164,20 +188,47 @@
     "NAME_YOUR_CONDUIT_I18N": {
         "string": "Asignar nombre a tu Conduit"
     },
+    "INPUT_YOUR_CONDUIT_NAME_I18N": {
+        "string": "Introduce el nombre de tu Conduit"
+    },
+    "SAVE_I18N": {
+        "string": "Guardar"
+    },
     "ID_I18N": {
         "string": "Identificación"
     },
     "ALIAS_I18N": {
         "string": "Alias"
     },
+    "ALIAS_VISIBILITY_HINT_I18N": {
+        "string": "Cualquier persona con la que compartas el emparejamiento personal verá este texto"
+    },
     "CLAIM_REWARDS_IN_RYVE_I18N": {
         "string": "Canjear recompensas en Ryve"
+    },
+    "CLAIM_HOSTED_REWARDS_I18N": {
+        "string": "Canjear recompensas alojadas",
+        "developer_comment": "Label for claiming hosted conduit rewards from settings."
+    },
+    "CLAIM_LOCAL_REWARDS_I18N": {
+        "string": "Canjear recompensas locales",
+        "developer_comment": "Label for claiming local conduit rewards from settings on Android."
     },
     "SCAN_THIS_FROM_RYVE_APP_I18N": {
         "string": "Escanea este código QR en la app de Ryve para vincular esta terminal Conduit con tu cuenta de Ryve"
     },
     "CLOSE_I18N": {
         "string": "Cerrar"
+    },
+    "TURN_OFF_I18N": {
+        "string": "Desactivar",
+        "developer_comment": "Button label for turning off the local conduit."
+    },
+    "EDIT_I18N": {
+        "string": "Editar"
+    },
+    "HIDE_I18N": {
+        "string": "Ocultar"
     },
     "INVALID_QR_CODE_I18N": {
         "string": "código QR no válido"
@@ -191,11 +242,8 @@
     "REVEAL_I18N": {
         "string": "Mostrar"
     },
-    "EDIT_I18N": {
-        "string": "Editar"
-    },
-    "HIDE_I18N": {
-        "string": "Ocultar"
+    "REVEAL_QR_I18N": {
+        "string": "Mostrar QR"
     },
     "REDUCED_USAGE_WINDOW_I18N": {
         "string": "Ventana de uso reducido"
@@ -244,5 +292,619 @@
     },
     "REDUCED_REQUIRED_BANDWIDTH_I18N": {
         "string": "Ancho de banda necesario reducido"
+    },
+    "HOSTED_CALL_TO_ACTION_I18N": {
+        "string": "Aloja tu propio Conduit en la nube"
+    },
+    "SHARE_PERSONAL_PAIRING_I18N": {
+        "string": "Compartir emparejamiento personal"
+    },
+    "SETTINGS_PERSONAL_PAIRING_I18N": {
+        "string": "Emparejamiento personal",
+        "developer_comment": "Settings row label for opening personal pairing."
+    },
+    "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "Conecta a personas directamente con tu Conduit",
+        "developer_comment": "Settings row subtitle for personal pairing."
+    },
+    "SHARE_PERSONAL_PAIRING_LINK_I18N": {
+        "string": "Compartir enlace de emparejamiento personal",
+        "developer_comment": "Home screen CTA button label for sharing the Personal Pairing link."
+    },
+    "PREPARING_PERSONAL_PAIRING_I18N": {
+        "string": "Preparando emparejamiento personal..."
+    },
+    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
+        "string": "Tu impacto (últimos 30 días)"
+    },
+    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
+        "string": "Cargando resumen de impacto..."
+    },
+    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
+        "string": "El resumen de impacto no está disponible porque no se devolvieron objetivos de estadísticas autorizados para esta cuenta."
+    },
+    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
+        "string": "Pico de usuarios conectados en los últimos 30 días"
+    },
+    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
+        "string": "Bytes transferidos en los últimos 30 días"
+    },
+    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
+        "string": "Suscripción y cuenta"
+    },
+    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
+        "string": "Estado de la suscripción: {{status}}"
+    },
+    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
+        "string": "Producto: {{productId}}"
+    },
+    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
+        "string": "Renueva/vence el: {{expiresAt}}"
+    },
+    "HOSTED_MANAGE_OPEN_BILLING_I18N": {
+        "string": "Gestionar facturación"
+    },
+    "DASHBOARD_I18N": {
+        "string": "Panel"
+    },
+    "DASHBOARD_LOCAL_STATION_I18N": {
+        "string": "Local",
+        "developer_comment": "Label for selecting local station stats on the dashboard."
+    },
+    "DASHBOARD_HOSTED_STATION_I18N": {
+        "string": "Alojado",
+        "developer_comment": "Label for selecting hosted station stats on the dashboard."
+    },
+    "LOCAL_DASHBOARD_STATUS_I18N": {
+        "string": "Conduit local: {{status}}",
+        "developer_comment": "Status label shown on the local dashboard header row."
+    },
+    "LOCAL_DASHBOARD_HISTORY_START_PROMPT_I18N": {
+        "string": "Inicia Conduit local para cargar el historial.",
+        "developer_comment": "Chart notice shown when the local dashboard has no cached history because the local conduit is stopped."
+    },
+    "HOST_A_STATION_I18N": {
+        "string": "Alojar un Conduit"
+    },
+    "HOST_A_STATION_IOS_I18N": {
+        "string": "Crear un Conduit alojado",
+        "developer_comment": "Title for the iOS hosted conduit setup CTA."
+    },
+    "VIEW_YOUR_CONDUIT_I18N": {
+        "string": "Ver tu Conduit",
+        "developer_comment": "Title for the hosted conduit action card when the user has signed in before and needs to get back to their existing setup."
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N": {
+        "string": "Crea una terminal Conduit alojada por Psiphon para que tu Conduit Station sea más accesible de forma confiable"
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_IOS_I18N": {
+        "string": "Crea una terminal Conduit alojada por Psiphon que se ejecuta en la nube.",
+        "developer_comment": "Description for the iOS hosted conduit setup CTA, where there is no local runner."
+    },
+    "VIEW_YOUR_CONDUIT_DESCRIPTION_I18N": {
+        "string": "Vuelve a iniciar sesión para ver tu configuración alojada y continuar donde lo dejaste.",
+        "developer_comment": "Description for the hosted conduit action card when the user has signed in before and needs to access an existing setup."
+    },
+    "CLAIM_REWARDS_I18N": {
+        "string": "Canjear recompensas"
+    },
+    "SET_AS_MAIN_ORB_I18N": {
+        "string": "Definir como principal"
+    },
+    "OR_I18N": {
+        "string": "o"
+    },
+    "OPEN_IN_RYVE_I18N": {
+        "string": "Abrir en Ryve"
+    },
+    "STATION_NAME_REQUIRED_I18N": {
+        "string": "Introduce un nombre de terminal.",
+        "developer_comment": "Hint shown in the Personal Pairing share modal when the user has not yet set a valid conduit station name."
+    },
+    "PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "Comparte este enlace con amigos y familiares y se conectarán a tu terminal Conduit. Tendrán que pegar este enlace en la app de Psiphon.",
+        "developer_comment": "Description text shown in the Personal Pairing share modal."
+    },
+    "DEFAULT_CONDUIT_NAME_I18N": {
+        "string": "Mi Conduit alojado",
+        "developer_comment": "Default fallback name for a hosted conduit station."
+    },
+    "PERSONAL_PAIRING_NOT_READY_I18N": {
+        "string": "El emparejamiento personal aún no está listo.",
+        "developer_comment": "Notice shown when personal pairing compartment is not available."
+    },
+    "PERSONAL_PAIRING_INVALID_NAME_I18N": {
+        "string": "Establece un nombre de Conduit válido (3–32 caracteres) antes de compartir.",
+        "developer_comment": "Notice shown when conduit name is invalid for sharing."
+    },
+    "SHARE_UNAVAILABLE_TOKEN_COPIED_I18N": {
+        "string": "Compartir no está disponible. Se copió el token de emparejamiento en su lugar.",
+        "developer_comment": "Fallback notice when native share sheet is unavailable."
+    },
+    "CLOSE_PERSONAL_PAIRING_ACCESSIBILITY_I18N": {
+        "string": "Cerrar emparejamiento personal",
+        "developer_comment": "Accessibility label for the close button in the personal pairing modal."
+    },
+    "PERSONAL_PAIRING_TITLE_I18N": {
+        "string": "Emparejamiento personal",
+        "developer_comment": "Label for Personal Pairing in status summaries."
+    },
+    "PERSONAL_PAIRING_SHARE_MODAL_TITLE_I18N": {
+        "string": "Enlace de emparejamiento personal",
+        "developer_comment": "Title of the personal pairing share modal."
+    },
+    "SHARE_IN_I18N": {
+        "string": "Enviar enlace en",
+        "developer_comment": "Label next to the language picker in the personal pairing share modal."
+    },
+    "SHARE_LINK_I18N": {
+        "string": "Compartir enlace",
+        "developer_comment": "Label for the share link button."
+    },
+    "MBPS_PER_PEER_I18N": {
+        "string": "MBPS por compañero",
+        "developer_comment": "Label for the megabits per second per peer setting."
+    },
+    "MAX_BANDWIDTH_USAGE_I18N": {
+        "string": "Uso máximo de ancho de banda",
+        "developer_comment": "Label for the maximum bandwidth usage setting."
+    },
+    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "Comparte tu conexión directamente con amigos y familiares",
+        "developer_comment": "Description text for the personal pairing share action in settings."
+    },
+    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
+        "string": "Canjear recompensas alojadas en Ryve",
+        "developer_comment": "Label for claiming hosted conduit rewards in the Ryve app."
+    },
+    "REWARDS_I18N": {
+        "string": "Recompensas",
+        "developer_comment": "Settings row label for Ryve rewards."
+    },
+    "HOSTED_REWARDS_I18N": {
+        "string": "Recompensas alojadas",
+        "developer_comment": "Android settings row label for hosted Ryve rewards."
+    },
+    "LOCAL_REWARDS_I18N": {
+        "string": "Recompensas locales",
+        "developer_comment": "Android settings row label for local Ryve rewards."
+    },
+    "LEGAL_I18N": {
+        "string": "LEGAL",
+        "developer_comment": "Settings section label for legal links."
+    },
+    "TERMS_OF_USE_I18N": {
+        "string": "Términos de uso",
+        "developer_comment": "Settings row label for terms of use."
+    },
+    "MORE_INFO_I18N": {
+        "string": "Más información",
+        "developer_comment": "Settings row label for replaying onboarding information screens."
+    },
+    "ACCOUNT_I18N": {
+        "string": "Cuenta",
+        "developer_comment": "Header label for the account section."
+    },
+    "RENEW_SUBSCRIPTION_I18N": {
+        "string": "Renovar suscripción",
+        "developer_comment": "Button label to renew a subscription."
+    },
+    "RENEW_SUBSCRIPTION_DESCRIPTION_I18N": {
+        "string": "Tu Conduit alojado se apagará el {{ expiresAt }}",
+        "developer_comment": "Subtitle shown on the home screen renew button when the subscription is canceled but not yet expired."
+    },
+    "RENEWS_EXPIRES_I18N": {
+        "string": "Renueva / vence",
+        "developer_comment": "Label for the subscription renewal/expiry date."
+    },
+    "SIGN_IN_I18N": {
+        "string": "Iniciar sesión",
+        "developer_comment": "Button label to sign in to an account."
+    },
+    "SIGN_OUT_I18N": {
+        "string": "Cerrar sesión",
+        "developer_comment": "Button label to sign out of the account."
+    },
+    "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
+        "string": "Cerrar detalles de Conduit",
+        "developer_comment": "Accessibility label for the close button in the hosted conduit modal."
+    },
+    "SCOPE_PERSONAL_I18N": {
+        "string": "Personal",
+        "developer_comment": "Label for the personal scope of a hosted conduit compartment."
+    },
+    "HOSTED_PERSONAL_SCOPE_I18N": {
+        "string": "Personal alojado",
+        "developer_comment": "Label for the hosted personal conduit scope on Android."
+    },
+    "SCOPE_COMMON_I18N": {
+        "string": "Público",
+        "developer_comment": "Label for the common/public scope of a hosted conduit compartment."
+    },
+    "HOSTED_PUBLIC_SCOPE_I18N": {
+        "string": "Público alojado",
+        "developer_comment": "Label for the hosted public conduit scope on Android."
+    },
+    "HOSTED_CONDUIT_FALLBACK_I18N": {
+        "string": "Conduit alojado",
+        "developer_comment": "Fallback display name for a hosted conduit."
+    },
+    "LOADING_HOSTED_STATUS_I18N": {
+        "string": "Cargando estado alojado...",
+        "developer_comment": "Text shown while hosted conduit status is loading."
+    },
+    "RESTORE_YOUR_CONDUIT_I18N": {
+        "string": "Restaurar tu Conduit",
+        "developer_comment": "Title for the restore conduit action card."
+    },
+    "RESTORE_CONDUIT_DESCRIPTION_I18N": {
+        "string": "Reconecta tu suscripción alojada y recupera tu infraestructura segura.",
+        "developer_comment": "Description for the restore conduit action card."
+    },
+    "CONDUIT_ALIAS_VALIDATION_ERROR_I18N": {
+        "string": "3–{{ maxLength }} caracteres, solo letras/números/espacios/.-_",
+        "developer_comment": "Validation error shown when the conduit alias doesn't meet requirements."
+    },
+    "CLOSE_RYVE_MODAL_ACCESSIBILITY_I18N": {
+        "string": "Cerrar modal de Ryve",
+        "developer_comment": "Accessibility label for the close button in the Ryve modal."
+    },
+    "LOADING_CONDUIT_DATA_I18N": {
+        "string": "Cargando datos de Conduit...",
+        "developer_comment": "Text shown while conduit data is loading in the Ryve modal."
+    },
+    "ERROR_FORMATTING_KEYDATA_I18N": {
+        "string": "Error al formatear datos de clave",
+        "developer_comment": "Error message when key data cannot be formatted."
+    },
+    "CONNECTED_COUNT_I18N": {
+        "string": "Conectados: {{ count }}",
+        "developer_comment": "Label showing the number of connected peers on a hosted conduit card."
+    },
+    "NO_RECENT_DATA_YET_I18N": {
+        "string": "Aún no hay datos recientes",
+        "developer_comment": "Placeholder shown in a timeseries plot when there is no recent data."
+    },
+    "NO_DATA_YET_I18N": {
+        "string": "aún no hay datos",
+        "developer_comment": "Placeholder shown in a timeseries plot when there is no data."
+    },
+    "TRANSFERRED_PER_INTERVAL_I18N": {
+        "string": "Transferido por intervalo",
+        "developer_comment": "Y-axis label for the bytes transferred chart."
+    },
+    "CONNECTED_USERS_I18N": {
+        "string": "Usuarios conectados",
+        "developer_comment": "Y-axis label for the connected users chart."
+    },
+    "CONNECTING_USERS_I18N": {
+        "string": "Usuarios conectándose",
+        "developer_comment": "Y-axis label for the connecting users chart."
+    },
+    "CONNECTED_I18N": {
+        "string": "Conectados",
+        "developer_comment": "Label for the connected metric tab."
+    },
+    "CONNECTING_I18N": {
+        "string": "Conectando",
+        "developer_comment": "Label for the connecting metric tab."
+    },
+    "BYTES_I18N": {
+        "string": "Bytes",
+        "developer_comment": "Label for the bytes transferred metric tab."
+    },
+    "SYNCING_I18N": {
+        "string": "Sincronizando...",
+        "developer_comment": "Text shown while stats are syncing."
+    },
+    "MINI_ORB_STATUS_I18N": {
+        "string": "Conectados {{ connected }} | Conectando {{ connecting }}",
+        "developer_comment": "Status text on the hosted mini orb showing connected and connecting counts."
+    },
+    "HOME_I18N": {
+        "string": "Inicio",
+        "developer_comment": "Label for the Home tab in bottom navigation."
+    },
+    "ERROR_I18N": {
+        "string": "Error",
+        "developer_comment": "Generic error text."
+    },
+    "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
+        "string": "Enlace a la política de privacidad",
+        "developer_comment": "Accessibility label for the privacy policy link."
+    },
+    "LINK_TO_INFO_WEBSITE_ACCESSIBILITY_I18N": {
+        "string": "Enlace al sitio web de información",
+        "developer_comment": "Accessibility label for the learn more link."
+    },
+    "CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
+        "string": "Orbe de Conduit. Toca para interactuar.",
+        "developer_comment": "Accessibility label for the main conduit orb."
+    },
+    "LOCAL_CONDUIT_ORB_ACCESSIBILITY_I18N": {
+        "string": "Orbe de Conduit local",
+        "developer_comment": "Accessibility label for the local conduit orb."
+    },
+    "CONDUIT_ORB_ACCESSIBILITY_I18N": {
+        "string": "Orbe de Conduit",
+        "developer_comment": "Accessibility label for a generic conduit orb."
+    },
+    "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
+        "string": "Orbe de Conduit alojado. Toca para ver detalles",
+        "developer_comment": "Accessibility label for the hosted conduit orb."
+    },
+    "SIGN_IN_TO_SYNC_I18N": {
+        "string": "Inicia sesión para sincronizar tu cuenta alojada",
+        "developer_comment": "Hint shown when user needs to sign in for hosted account sync."
+    },
+    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
+        "string": "{{ bytes }} transferidos{{ window }}",
+        "developer_comment": "Metric text showing bytes transferred with optional time window suffix."
+    },
+    "N_HOSTED_PEERS_ONLINE_I18N": {
+        "string": "{{ count }} compañeros alojados en línea",
+        "developer_comment": "Metric text showing the number of hosted peers currently online."
+    },
+    "HOME_SUMMARY_PEER_COUNT_I18N": {
+        "string": "{{count}} compañeros",
+        "developer_comment": "Peer count text shown on the simplified home summary rows."
+    },
+    "HOME_SUMMARY_OFFLINE_I18N": {
+        "string": "SIN CONEXIÓN",
+        "developer_comment": "Status text shown for the local conduit row when it is not running."
+    },
+    "PUBLIC_PEERS_ONLINE_I18N": {
+        "string": "compañeros públicos en línea"
+    },
+    "PERSONAL_PEERS_ONLINE_I18N": {
+        "string": "compañeros personales en línea"
+    },
+    "SYNCING_HOSTED_USAGE_METRICS_I18N": {
+        "string": "Sincronizando métricas de uso alojado...",
+        "developer_comment": "Hint shown while hosted usage metrics are being synced."
+    },
+    "UPGRADE_REQUIRED_LOCAL_CONDUIT_I18N": {
+        "string": "Actualización requerida para Conduit local",
+        "developer_comment": "Hint shown when a local conduit requires an app upgrade."
+    },
+    "HOLD_ORB_TO_TURN_OFF_I18N": {
+        "string": "Mantén pulsado el orbe para desactivar mientras haya compañeros conectados",
+        "developer_comment": "Hint shown when user taps orb while peers are connected."
+    },
+    "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
+        "string": "Botón de escena de Conduit local",
+        "developer_comment": "Accessibility label for the local conduit scene selector."
+    },
+    "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
+        "string": "Botón de escena de Conduit alojado",
+        "developer_comment": "Accessibility label for the hosted conduit scene selector."
+    },
+    "PREPARING_HOSTED_CONDUIT_I18N": {
+        "string": "Preparando tu Conduit alojado...",
+        "developer_comment": "Loading message during hosted conduit setup."
+    },
+    "PREPARING_I18N": {
+        "string": "Preparando...",
+        "developer_comment": "Generic loading message shown while a feature is preparing."
+    },
+    "CONNECTING_TO_YOUR_HOSTED_CONDUIT_I18N": {
+        "string": "Conectando con tu Conduit alojado...",
+        "developer_comment": "Loading message shown while the initial hosted session and conduits snapshot are being loaded."
+    },
+    "SETTING_UP_INFRASTRUCTURE_I18N": {
+        "string": "Configurando tu infraestructura...",
+        "developer_comment": "Loading message while hosted infrastructure is being provisioned."
+    },
+    "PROVISIONING_LEAVE_HINT_I18N": {
+        "string": "Puedes salir de esta pantalla mientras se aprovisiona tu infraestructura.",
+        "developer_comment": "Helper text on the provisioning screen indicating the user does not need to wait."
+    },
+    "OPENING_YOUR_DASHBOARD_I18N": {
+        "string": "Abriendo tu panel...",
+        "developer_comment": "Loading message while dashboard is being opened."
+    },
+    "UNAVAILABLE_I18N": {
+        "string": "No disponible",
+        "developer_comment": "Label shown when a feature or resource is unavailable."
+    },
+    "SETUP_INCOMPLETE_I18N": {
+        "string": "La configuración está incompleta para esta compilación. Comprueba la URL alojada, la clave de Clerk y la clave de RevenueCat.",
+        "developer_comment": "Status message shown when hosted setup configuration is incomplete."
+    },
+    "CHOOSE_A_PLAN_I18N": {
+        "string": "Elige un plan",
+        "developer_comment": "Header text for the subscription plan selection screen."
+    },
+    "RETRY_PLAN_LOAD_I18N": {
+        "string": "Reintentar carga del plan",
+        "developer_comment": "Button label to retry loading subscription plans."
+    },
+    "SIGN_IN_WITH_GOOGLE_I18N": {
+        "string": "Iniciar sesión con Google",
+        "developer_comment": "Button label for Google sign-in."
+    },
+    "SIGN_IN_WITH_APPLE_I18N": {
+        "string": "Iniciar sesión con Apple",
+        "developer_comment": "Button label for Apple sign-in."
+    },
+    "CONTINUE_I18N": {
+        "string": "Continuar",
+        "developer_comment": "Button label to continue to the next step."
+    },
+    "RESTORE_PURCHASES_I18N": {
+        "string": "Restaurar compras",
+        "developer_comment": "Button label to restore previous in-app purchases."
+    },
+    "CONTINUE_RETRY_INFRA_CHECK_I18N": {
+        "string": "Continuar: reintentar comprobación de infraestructura",
+        "developer_comment": "Button label to retry infrastructure verification."
+    },
+    "MANAGE_SETUP_DETAILS_I18N": {
+        "string": "Gestionar detalles de configuración",
+        "developer_comment": "Button label to manage hosted setup details."
+    },
+    "LAST_30D_SUFFIX_I18N": {
+        "string": " (últimos 30 días)",
+        "developer_comment": "Suffix appended to dashboard labels indicating a 30-day window."
+    },
+    "DASHBOARD_NOT_READY_I18N": {
+        "string": "El acceso al panel aún no está listo. Actualiza el estado de configuración e inténtalo de nuevo.",
+        "developer_comment": "Message shown when dashboard data is not yet available."
+    },
+    "NO_AUTHORIZED_TARGETS_I18N": {
+        "string": "Aún no hay objetivos de panel autorizados.",
+        "developer_comment": "Message shown when there are no authorized stats targets."
+    },
+    "YOUR_CONDUITS_I18N": {
+        "string": "Tus Conduits",
+        "developer_comment": "Header for the list of user's conduits on the dashboard."
+    },
+    "WHO_ARE_YOU_HELPING_I18N": {
+        "string": "¿A quién estás ayudando?",
+        "developer_comment": "Header for the top helped countries section on the dashboard."
+    },
+    "OPEN_REGIONAL_BREAKDOWN_I18N": {
+        "string": "Abrir desglose regional",
+        "developer_comment": "Accessibility label for opening the regional activity modal from the dashboard map."
+    },
+    "TAP_MAP_FOR_COUNTRY_DETAILS_I18N": {
+        "string": "Toca el mapa para ver detalles del país",
+        "developer_comment": "Hint shown above the dashboard map to explain the interaction."
+    },
+    "REGIONAL_ACTIVITY_BY_BYTES_I18N": {
+        "string": "Actividad regional por bytes transferidos",
+        "developer_comment": "Title shown in the dashboard regional breakdown modal."
+    },
+    "TOP_HELPED_COUNTRIES_I18N": {
+        "string": "Países más ayudados por {{ metric }} ({{ window }})",
+        "developer_comment": "Subheader describing the top helped countries chart."
+    },
+    "BYTES_TRANSFERRED_LABEL_I18N": {
+        "string": "bytes transferidos",
+        "developer_comment": "Label for the bytes transferred metric."
+    },
+    "CONNECTED_USERS_LABEL_I18N": {
+        "string": "usuarios conectados",
+        "developer_comment": "Label for the connected users metric."
+    },
+    "TAP_TO_SWITCH_METRIC_I18N": {
+        "string": "Toca la sección para cambiar la métrica",
+        "developer_comment": "Hint text telling users to tap to switch between metrics."
+    },
+    "COMPLETING_SIGN_IN_I18N": {
+        "string": "Completando inicio de sesión...",
+        "developer_comment": "Text shown during SSO callback while sign-in is being completed."
+    },
+    "ONBOARDING_INFO_ACCESSIBILITY_I18N": {
+        "string": "Información de introducción, se actualizará",
+        "developer_comment": "Accessibility label for the onboarding info section."
+    },
+    "HOSTED_ONBOARDING_STEP_SIGN_IN_TITLE_I18N": {
+        "string": "Iniciar sesión",
+        "developer_comment": "Hosted onboarding step title for account sign-in."
+    },
+    "HOSTED_ONBOARDING_STEP_SIGN_IN_HELPER_I18N": {
+        "string": "Usa tu cuenta para que podamos mantener tu configuración alojada privada y recuperable.",
+        "developer_comment": "Hosted onboarding step helper for account sign-in."
+    },
+    "HOSTED_ONBOARDING_STEP_ACTIVATE_TITLE_I18N": {
+        "string": "Activar acceso alojado",
+        "developer_comment": "Hosted onboarding step title for plan activation."
+    },
+    "HOSTED_ONBOARDING_STEP_ACTIVATE_HELPER_I18N": {
+        "string": "Tu plan mantiene el servicio en funcionamiento y desbloquea la configuración segura.",
+        "developer_comment": "Hosted onboarding step helper for plan activation."
+    },
+    "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_TITLE_I18N": {
+        "string": "Preparar tu infraestructura segura",
+        "developer_comment": "Hosted onboarding step title for infrastructure provisioning."
+    },
+    "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_HELPER_I18N": {
+        "string": "Creamos y verificamos tu conduit alojado, y luego puedes compartirlo.",
+        "developer_comment": "Hosted onboarding step helper for infrastructure provisioning."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_HEADLINE_I18N": {
+        "string": "Sin conexión a internet",
+        "developer_comment": "Hosted onboarding headline shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_DETAIL_I18N": {
+        "string": "No podemos contactar con el servidor ahora. Comprueba tu conexión e inténtalo de nuevo.",
+        "developer_comment": "Hosted onboarding detail shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_HELPER_I18N": {
+        "string": "Nos reconectaremos en cuanto tu dispositivo vuelva a estar en línea.",
+        "developer_comment": "Hosted onboarding helper shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HEADLINE_I18N": {
+        "string": "Inicia sesión para ver tu conduit alojado",
+        "developer_comment": "Hosted onboarding headline for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_DETAIL_I18N": {
+        "string": "Te reconectaremos con tu configuración alojada existente y el estado actual de la cuenta.",
+        "developer_comment": "Hosted onboarding detail for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HELPER_I18N": {
+        "string": "Si tu sesión caducó, vuelve a iniciar sesión para ver tu panel, gestionar tu plan o continuar la configuración.",
+        "developer_comment": "Hosted onboarding helper for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_HEADLINE_I18N": {
+        "string": "Inicia sesión para comenzar tu configuración alojada",
+        "developer_comment": "Hosted onboarding headline for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_DETAIL_I18N": {
+        "string": "Inicia sesión para gestionar tu conduit alojado desde cualquier dispositivo.",
+        "developer_comment": "Hosted onboarding detail for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_HELPER_I18N": {
+        "string": "Tu cuenta vincula tu conduit para que puedas supervisarlo, configurarlo y compartirlo entre dispositivos.",
+        "developer_comment": "Hosted onboarding helper for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_HEADLINE_I18N": {
+        "string": "Tu configuración alojada necesita atención",
+        "developer_comment": "Hosted onboarding headline when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_DETAIL_I18N": {
+        "string": "Restaura el acceso para mantener disponible tu conduit alojado.",
+        "developer_comment": "Hosted onboarding detail when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_HELPER_I18N": {
+        "string": "Tu configuración guardada permanece vinculada a esta cuenta, para que puedas recuperarla sin empezar de nuevo.",
+        "developer_comment": "Hosted onboarding helper when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_HEADLINE_I18N": {
+        "string": "Reactiva tu plan alojado para continuar",
+        "developer_comment": "Hosted onboarding headline when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_DETAIL_I18N": {
+        "string": "Tu conduit sigue vinculado a esta cuenta, pero el acceso está pausado hasta que tu plan vuelva a estar activo.",
+        "developer_comment": "Hosted onboarding detail when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_HELPER_I18N": {
+        "string": "Elige un plan para reanudar el uso compartido y el acceso al panel.",
+        "developer_comment": "Hosted onboarding helper when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_WAIT_HEADLINE_I18N": {
+        "string": "Estamos preparando tu infraestructura segura",
+        "developer_comment": "Hosted onboarding headline while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_WAIT_DETAIL_I18N": {
+        "string": "Esto puede tardar un momento mientras terminamos las comprobaciones de cuenta y terminal.",
+        "developer_comment": "Hosted onboarding detail while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_WAIT_HELPER_I18N": {
+        "string": "Mantendremos el progreso actualizado; puedes actualizar en cualquier momento sin perder tu avance.",
+        "developer_comment": "Hosted onboarding helper while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_HEADLINE_I18N": {
+        "string": "Activa tu plan alojado para continuar",
+        "developer_comment": "Hosted onboarding headline for initial plan activation."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_DETAIL_I18N": {
+        "string": "La activación desbloquea tu conduit alojado para que puedas apoyar el acceso abierto a internet.",
+        "developer_comment": "Hosted onboarding detail for initial plan activation."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
+        "string": "Elige un plan para continuar la configuración y desbloquear el uso compartido.",
+        "developer_comment": "Hosted onboarding helper for initial plan activation."
     }
 }

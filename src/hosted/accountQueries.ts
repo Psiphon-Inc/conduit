@@ -34,9 +34,9 @@ import { AccountProfile } from "@/src/hosted/contracts";
 import { hostedQueryKeys } from "@/src/hosted/queryKeys";
 import {
     HostedSessionDependencies,
-    ensureHostedSession,
     setHostedSessionState,
     useHostedSessionQuery,
+    withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
 
 type HostedClient = ReturnType<typeof createHostedClient>;
@@ -58,14 +58,19 @@ export function useHostedAccountProfileQuery(
         ),
         enabled: Boolean(input.baseUrl && sessionQuery.data?.accountId),
         initialData: sessionQuery.data?.accountProfile ?? null,
-        queryFn: async () => {
-            const session = await ensureHostedSession(queryClient, input);
-            const profile = await input.hostedClient.getAccountProfile(
-                session.accessToken,
-            );
-            await syncHostedProfileCaches(queryClient, input, session, profile);
-            return profile;
-        },
+        queryFn: async () =>
+            withHostedSessionRecovery(queryClient, input, async (session) => {
+                const profile = await input.hostedClient.getAccountProfile(
+                    session.accessToken,
+                );
+                await syncHostedProfileCaches(
+                    queryClient,
+                    input,
+                    session,
+                    profile,
+                );
+                return profile;
+            }),
     });
 }
 
@@ -85,37 +90,46 @@ export async function updateHostedAccountAlias(
     input: HostedAccountDependencies,
     alias: string,
 ): Promise<AccountProfile> {
-    const session = await ensureHostedSession(queryClient, input);
-    const profile =
-        queryClient.getQueryData<AccountProfile | null>(
-            hostedQueryKeys.accountProfile(input.baseUrl, session.accountId),
-        ) ?? session.accountProfile;
-    if (!profile) {
-        throw new Error("Hosted account profile unavailable");
-    }
+    return withHostedSessionRecovery(queryClient, input, async (session) => {
+        const profile =
+            queryClient.getQueryData<AccountProfile | null>(
+                hostedQueryKeys.accountProfile(
+                    input.baseUrl,
+                    session.accountId,
+                ),
+            ) ?? session.accountProfile;
+        if (!profile) {
+            throw new Error("Hosted account profile unavailable");
+        }
 
-    try {
-        const nextProfile = await input.hostedClient.updateAccountProfile(
-            session.accessToken,
-            {
-                alias,
-                expected_profile_version: profile.profile_version,
-            },
-        );
-        await syncHostedProfileCaches(queryClient, input, session, nextProfile);
-        return nextProfile;
-    } catch (error) {
-        if (error instanceof HostedAccountProfileConflictError) {
+        try {
+            const nextProfile = await input.hostedClient.updateAccountProfile(
+                session.accessToken,
+                {
+                    alias,
+                    expected_profile_version: profile.profile_version,
+                },
+            );
             await syncHostedProfileCaches(
                 queryClient,
                 input,
                 session,
-                error.currentProfile,
+                nextProfile,
             );
-            return error.currentProfile;
+            return nextProfile;
+        } catch (error) {
+            if (error instanceof HostedAccountProfileConflictError) {
+                await syncHostedProfileCaches(
+                    queryClient,
+                    input,
+                    session,
+                    error.currentProfile,
+                );
+                return error.currentProfile;
+            }
+            throw error;
         }
-        throw error;
-    }
+    });
 }
 
 export async function syncHostedProfileCaches(

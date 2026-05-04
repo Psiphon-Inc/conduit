@@ -25,6 +25,7 @@ import {
 } from "@shopify/react-native-skia";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Image as ExpoImage } from "expo-image";
+import * as Linking from "expo-linking";
 import * as Network from "expo-network";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
@@ -46,8 +47,17 @@ import { HostedSetupSignInHero } from "@/src/components/HostedSetupSignInHero";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
+import {
+    APPLE_STANDARD_EULA_URL,
+    APP_MAX_CONTENT_WIDTH,
+    PRIVACY_POLICY_URL,
+    TERMS_OF_USE_URL,
+} from "@/src/constants";
 import { readHostedClerkPublishableKey } from "@/src/hosted/auth/clerk";
-import { createHostedClient } from "@/src/hosted/client";
+import {
+    HostedClientRequestError,
+    createHostedClient,
+} from "@/src/hosted/client";
 import {
     formatConduitScope,
     orderedConduitsForDisplay,
@@ -242,10 +252,23 @@ export default function HostedSetupScreen() {
                 revenueCat.getOfferings(),
                 actions.refreshSessionIfNeeded(),
             ]);
-            const planCatalog = await hostedClient.getPlanCatalog(
-                session.accessToken,
-                buildHostedPlanCatalogQuery(),
-            );
+            const catalogQuery = buildHostedPlanCatalogQuery();
+            const fetchPlanCatalog = (accessToken: string) =>
+                hostedClient.getPlanCatalog(accessToken, catalogQuery);
+            let planCatalog: Awaited<ReturnType<typeof fetchPlanCatalog>>;
+            try {
+                planCatalog = await fetchPlanCatalog(session.accessToken);
+            } catch (error) {
+                if (
+                    !(error instanceof HostedClientRequestError) ||
+                    error.status !== 401
+                ) {
+                    throw error;
+                }
+
+                const refreshed = await actions.refreshSession();
+                planCatalog = await fetchPlanCatalog(refreshed.accessToken);
+            }
             const fallback = resolveHostedPlanOptions({
                 catalog: planCatalog,
                 platform: Platform.OS === "ios" ? "ios" : "android",
@@ -436,7 +459,13 @@ export default function HostedSetupScreen() {
             ? null
             : actionError;
 
-    const sceneWidth = Math.max(240, Math.min(window.width - 32, 520));
+    const contentWidth = Math.min(window.width, APP_MAX_CONTENT_WIDTH);
+    const centeredContentStyle = {
+        width: "100%" as const,
+        maxWidth: APP_MAX_CONTENT_WIDTH,
+        alignSelf: "center" as const,
+    };
+    const sceneWidth = Math.max(240, Math.min(contentWidth - 32, 520));
     const sceneHeight = Math.max(220, Math.min(window.height * 0.32, 320));
 
     if (showInitialLoading || showTransitionLoading) {
@@ -448,6 +477,7 @@ export default function HostedSetupScreen() {
                         ss.column,
                         ss.alignCenter,
                         ss.justifyCenter,
+                        centeredContentStyle,
                         { padding: 24 },
                     ]}
                 >
@@ -468,6 +498,7 @@ export default function HostedSetupScreen() {
                         ss.flex,
                         ss.column,
                         ss.justifySpaceBetween,
+                        centeredContentStyle,
                         { padding: 24, gap: 20 },
                     ]}
                 >
@@ -546,6 +577,7 @@ export default function HostedSetupScreen() {
                         ss.column,
                         ss.alignCenter,
                         ss.justifyCenter,
+                        centeredContentStyle,
                         { padding: 24, gap: 16 },
                     ]}
                 >
@@ -594,6 +626,7 @@ export default function HostedSetupScreen() {
                         ss.column,
                         ss.alignCenter,
                         ss.justifyCenter,
+                        centeredContentStyle,
                         { padding: 24 },
                     ]}
                 >
@@ -614,6 +647,7 @@ export default function HostedSetupScreen() {
                     padding: 16,
                     gap: 14,
                     justifyContent: "space-between",
+                    ...centeredContentStyle,
                 }}
             >
                 <View style={[ss.column]}>
@@ -1035,6 +1069,7 @@ function PrimaryActionBlock({
                     variant="primary"
                     gradientBackground={true}
                 />
+                <HostedPaywallLegalLinks />
             </View>
         );
     }
@@ -1072,6 +1107,58 @@ function PrimaryActionBlock({
     }
 
     return null;
+}
+
+function HostedPaywallLegalLinks() {
+    const { t } = useTranslation();
+    const termsOfUseUrl =
+        Platform.OS === "ios" ? APPLE_STANDARD_EULA_URL : TERMS_OF_USE_URL;
+
+    return (
+        <View
+            style={[
+                ss.row,
+                ss.justifyCenter,
+                ss.alignCenter,
+                ss.flexWrap,
+                { gap: 8 },
+            ]}
+        >
+            <Pressable
+                accessibilityRole="link"
+                onPress={() => {
+                    void Linking.openURL(termsOfUseUrl);
+                }}
+            >
+                <Text
+                    style={[
+                        ss.tinyFont,
+                        ss.purpleText,
+                        { textDecorationLine: "underline" },
+                    ]}
+                >
+                    {t("TERMS_OF_USE_I18N.string")}
+                </Text>
+            </Pressable>
+            <Text style={[ss.tinyFont, ss.lightGreyText]}>|</Text>
+            <Pressable
+                accessibilityRole="link"
+                onPress={() => {
+                    void Linking.openURL(PRIVACY_POLICY_URL);
+                }}
+            >
+                <Text
+                    style={[
+                        ss.tinyFont,
+                        ss.purpleText,
+                        { textDecorationLine: "underline" },
+                    ]}
+                >
+                    {t("PRIVACY_POLICY_I18N.string")}
+                </Text>
+            </Pressable>
+        </View>
+    );
 }
 
 function toSceneViewIndex(action: HostedOnboardingPrimaryAction): number {

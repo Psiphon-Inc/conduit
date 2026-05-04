@@ -30,6 +30,10 @@ export const LEARN_MORE_URL = "https://conduit.psiphon.ca/en";
 export const RYVE_LEARN_MORE_URL = "https://ryve.app";
 export const PRIVACY_POLICY_URL =
     "https://conduit.psiphon.ca/en/conduit-privacy-policy";
+export const TERMS_OF_USE_URL =
+    "https://conduit.psiphon.ca/en/hosted-conduit-eula";
+export const APPLE_STANDARD_EULA_URL =
+    "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/";
 export const RYVE_APP_LISTING_GOOGLE =
     "https://play.google.com/store/apps/details?id=network.ryve.app&referrer=utm_source%3Dconduit_app%26utm_campaign%3Dconduit_modal";
 
@@ -37,6 +41,7 @@ export const RYVE_CLAIM_DEEP_LINK = "network.ryve.app://(app)/conduits?claim=";
 
 // Window height cutoff used to render smaller text in Skia Paragraphs
 export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;
+export const APP_MAX_CONTENT_WIDTH = 600;
 
 // Used to track storage migration success
 export const CURRENT_STORAGE_VERSION = 3;

@@ -37,6 +37,7 @@ export function useHostedExperienceActions(): HostedExperienceActions {
         restorePurchases,
         purchasePackage,
         refreshSessionIfNeeded,
+        refreshSession,
         updateAccountAlias,
     } = useHostedExperienceContext();
 
@@ -48,11 +49,13 @@ export function useHostedExperienceActions(): HostedExperienceActions {
             restorePurchases,
             purchasePackage,
             refreshSessionIfNeeded,
+            refreshSession,
             updateAccountAlias,
         }),
         [
             pollConduitsOnce,
             purchasePackage,
+            refreshSession,
             refreshSessionIfNeeded,
             restorePurchases,
             signIn,

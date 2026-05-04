@@ -24,6 +24,7 @@ import {
 } from "@tanstack/react-query";
 
 import { cacheHostedAlias } from "@/src/hosted/aliasCache";
+import { HostedClientRequestError } from "@/src/hosted/client";
 import {
     isHostedRefreshTokenExpired,
     shouldRefreshHostedSession,
@@ -88,6 +89,13 @@ export async function ensureHostedSession(
         return currentSession;
     }
 
+    return refreshHostedSession(queryClient, input);
+}
+
+export async function refreshHostedSession(
+    queryClient: QueryClient,
+    input: HostedSessionDependencies,
+): Promise<HostedSession> {
     try {
         const refreshed = await input.sessionClient.refresh();
         await setHostedSessionState(queryClient, input, refreshed);
@@ -101,18 +109,77 @@ export async function ensureHostedSession(
     }
 }
 
+export async function withHostedSessionRecovery<T>(
+    queryClient: QueryClient,
+    input: HostedSessionDependencies,
+    request: (session: HostedSession) => Promise<T>,
+): Promise<T> {
+    const session = await ensureHostedSession(queryClient, input);
+    try {
+        return await request(session);
+    } catch (error) {
+        if (!isHostedUnauthorizedError(error)) {
+            throw error;
+        }
+        const refreshed = await refreshHostedSession(queryClient, input);
+        return request(refreshed);
+    }
+}
+
 export async function setHostedSessionState(
     queryClient: QueryClient,
     input: HostedSessionDependencies,
     session: HostedSession | null,
 ): Promise<void> {
-    if (session) {
-        await input.sessionClient.persistHostedSession(session);
-        if (session.accountProfile) {
-            await cacheHostedAlias(queryClient, session.accountProfile);
-        }
+    const queryKey = hostedQueryKeys.session(input.baseUrl);
+    if (!session) {
+        queryClient.setQueryData(queryKey, null);
+        return;
     }
-    queryClient.setQueryData(hostedQueryKeys.session(input.baseUrl), session);
+
+    let nextSession = session;
+    // Profile/cache writes can race with token refreshes; keep the newest token.
+    queryClient.setQueryData<HostedSession | null>(queryKey, (current) => {
+        nextSession = mergeHostedSessionState(current, session);
+        return nextSession;
+    });
+
+    await input.sessionClient.persistHostedSession(nextSession);
+    if (nextSession.accountProfile) {
+        await cacheHostedAlias(queryClient, nextSession.accountProfile);
+        queryClient.setQueryData(
+            hostedQueryKeys.accountProfile(
+                input.baseUrl,
+                nextSession.accountId,
+            ),
+            nextSession.accountProfile,
+        );
+    }
+}
+
+function isHostedUnauthorizedError(error: unknown): boolean {
+    return error instanceof HostedClientRequestError && error.status === 401;
+}
+
+function mergeHostedSessionState(
+    current: HostedSession | null | undefined,
+    next: HostedSession,
+): HostedSession {
+    if (
+        !current ||
+        current.accountId !== next.accountId ||
+        current.accessTokenExpiresAtMs <= next.accessTokenExpiresAtMs
+    ) {
+        return next;
+    }
+
+    return {
+        ...current,
+        accountProfile: next.accountProfile ?? current.accountProfile,
+        personalPairingWrapperBaseUrl:
+            next.personalPairingWrapperBaseUrl ??
+            current.personalPairingWrapperBaseUrl,
+    };
 }
 
 export async function clearHostedSessionState(

@@ -29,8 +29,8 @@ import { ConduitsSnapshot } from "@/src/hosted/contracts";
 import { hostedQueryKeys } from "@/src/hosted/queryKeys";
 import {
     HostedSessionDependencies,
-    ensureHostedSession,
     useHostedSessionQuery,
+    withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
 
 type HostedClient = ReturnType<typeof createHostedClient>;
@@ -85,17 +85,18 @@ export async function fetchHostedConduitsSnapshot(
     queryClient: QueryClient,
     input: HostedConduitDependencies,
 ): Promise<ConduitsSnapshot> {
-    const session = await ensureHostedSession(queryClient, input);
-    const snapshot = await input.hostedClient.getConduitsSnapshot(
-        session.accessToken,
-    );
-    if (snapshot.account) {
-        await syncHostedProfileCaches(
-            queryClient,
-            input,
-            session,
-            snapshot.account,
+    return withHostedSessionRecovery(queryClient, input, async (session) => {
+        const snapshot = await input.hostedClient.getConduitsSnapshot(
+            session.accessToken,
         );
-    }
-    return snapshot;
+        if (snapshot.account) {
+            await syncHostedProfileCaches(
+                queryClient,
+                input,
+                session,
+                snapshot.account,
+            );
+        }
+        return snapshot;
+    });
 }

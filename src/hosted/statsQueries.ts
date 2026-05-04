@@ -45,8 +45,8 @@ import {
 import { HostedStatsDataSource, hostedQueryKeys } from "@/src/hosted/queryKeys";
 import {
     HostedSessionDependencies,
-    ensureHostedSession,
     useHostedSessionQuery,
+    withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
 
 type HostedClient = ReturnType<typeof createHostedClient>;
@@ -89,26 +89,12 @@ export function useHostedStatsSessionQuery(
             if (dataSource === "mock") {
                 return null;
             }
-            const session = await ensureHostedSession(queryClient, input);
             try {
-                const statsSession =
-                    await input.hostedClient.createStatsSession(
-                        session.accessToken,
-                    );
-                const hostedTargets = statsSession.targets.filter(
-                    (target) => target.source === "hosted",
+                return await createHostedStatsSessionData(
+                    queryClient,
+                    input,
+                    null,
                 );
-                const selection = selectStatsTarget({
-                    previousProxyId: null,
-                    targets:
-                        hostedTargets.length > 0
-                            ? hostedTargets
-                            : statsSession.targets,
-                });
-                return {
-                    statsToken: statsSession.stats_token,
-                    proxyId: selection.selectedProxyId,
-                };
             } catch (error) {
                 if (
                     error instanceof HostedClientRequestError &&
@@ -348,30 +334,12 @@ async function fetchStatsWithRecovery<T>(
                     input.dataSource,
                 ),
                 staleTime: 0,
-                queryFn: async () => {
-                    const accessSession = await ensureHostedSession(
+                queryFn: async () =>
+                    createHostedStatsSessionData(
                         queryClient,
                         input,
-                    );
-                    const statsSession =
-                        await input.hostedClient.createStatsSession(
-                            accessSession.accessToken,
-                        );
-                    const hostedTargets = statsSession.targets.filter(
-                        (target) => target.source === "hosted",
-                    );
-                    const selection = selectStatsTarget({
-                        previousProxyId: sessionData.proxyId,
-                        targets:
-                            hostedTargets.length > 0
-                                ? hostedTargets
-                                : statsSession.targets,
-                    });
-                    return {
-                        statsToken: statsSession.stats_token,
-                        proxyId: selection.selectedProxyId,
-                    };
-                },
+                        sessionData.proxyId,
+                    ),
             });
             if (!refreshedSession) {
                 throw error;
@@ -380,6 +348,30 @@ async function fetchStatsWithRecovery<T>(
         }
         throw error;
     }
+}
+
+async function createHostedStatsSessionData(
+    queryClient: QueryClient,
+    input: HostedStatsDependencies,
+    previousProxyId: string | null,
+): Promise<HostedStatsSessionData> {
+    return withHostedSessionRecovery(queryClient, input, async (session) => {
+        const statsSession = await input.hostedClient.createStatsSession(
+            session.accessToken,
+        );
+        const hostedTargets = statsSession.targets.filter(
+            (target) => target.source === "hosted",
+        );
+        const selection = selectStatsTarget({
+            previousProxyId,
+            targets:
+                hostedTargets.length > 0 ? hostedTargets : statsSession.targets,
+        });
+        return {
+            statsToken: statsSession.stats_token,
+            proxyId: selection.selectedProxyId,
+        };
+    });
 }
 
 function sessionQueryAccountId(
