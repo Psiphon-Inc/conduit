@@ -630,9 +630,20 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
         state = ProxyState(Status.RUNNING, NetworkState.HAS_INTERNET)
         latestProxyState = state
-        publishProxyState(state)
 
-        startForeground(NOTIFICATION_ID, buildNotification())
+        if (!startForegroundSafely()) {
+            Log.e(tag, "Unable to start inproxy because the foreground notification is unavailable")
+            isRunning.set(false)
+            stopActivityEmitter()
+            Utils.setServiceRunningFlag(applicationContext, false)
+            state = ProxyState(Status.STOPPED, null)
+            latestProxyState = state
+            publishProxyState(state)
+            stopSelf()
+            return
+        }
+        publishProxyState(state)
+        updateNotification()
 
         stopLatch = CountDownLatch(1)
         executor.submit {
@@ -1602,18 +1613,54 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         )
     }
 
-    private fun ensureNotificationChannel() {
+    private fun ensureNotificationChannel(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            return
+            return true
         }
-        val manager = getSystemService(NotificationManager::class.java) ?: return
-        val channel = NotificationChannel(
-            NOTIFICATION_CHANNEL_ID,
-            appName(),
-            NotificationManager.IMPORTANCE_LOW,
-        )
-        channel.description = getString(R.string.conduit_service_channel_description)
-        manager.createNotificationChannel(channel)
+        val manager = getSystemService(NotificationManager::class.java) ?: return false
+        return try {
+            val channel = NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                appName(),
+                NotificationManager.IMPORTANCE_LOW,
+            )
+            channel.description = getString(R.string.conduit_service_channel_description)
+            manager.createNotificationChannel(channel)
+            manager.getNotificationChannel(NOTIFICATION_CHANNEL_ID) != null
+        } catch (error: RuntimeException) {
+            Log.e(tag, "Failed to create foreground notification channel", error)
+            false
+        }
+    }
+
+    private fun startForegroundSafely(): Boolean {
+        if (!ensureNotificationChannel()) {
+            return false
+        }
+        return try {
+            startForeground(NOTIFICATION_ID, buildStartingNotification())
+            true
+        } catch (error: RuntimeException) {
+            Log.e(tag, "Failed to start foreground notification", error)
+            false
+        }
+    }
+
+    private fun notificationBuilder(): NotificationCompat.Builder {
+        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_conduit_notification)
+            .setContentTitle(appName())
+            .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOnlyAlertOnce(true)
+    }
+
+    private fun buildStartingNotification(): Notification {
+        val text = getString(R.string.conduit_service_starting_notification_text)
+        return notificationBuilder()
+            .setContentText(text)
+            .build()
     }
 
     private fun buildNotification(): Notification {
@@ -1627,10 +1674,10 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val (notificationIconId, shortText, longText) =
+        val (shortText, longText) =
             if (state.networkState == NetworkState.NO_INTERNET) {
                 val text = getString(R.string.conduit_service_no_internet_notification_text)
-                Triple(R.drawable.ic_conduit_no_internet, text, text)
+                Pair(text, text)
             } else {
                 val transferBytes = (stats.totalBytesUp + stats.totalBytesDown).toLong()
                 val prettyData = Formatter.formatFileSize(this, transferBytes)
@@ -1646,15 +1693,12 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                     stats.currentConnectingClients,
                     prettyData,
                 )
-                Triple(R.drawable.ic_conduit_active, shortText, longText)
+                Pair(shortText, longText)
             }
 
-        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(notificationIconId)
-            .setContentTitle(appName())
+        return notificationBuilder()
             .setContentText(shortText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(longText))
-            .setOngoing(true)
             .addAction(
                 R.drawable.ic_conduit_stop_service,
                 getString(R.string.conduit_service_stop_label_text),
@@ -1664,8 +1708,15 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     private fun updateNotification() {
+        if (!ensureNotificationChannel()) {
+            return
+        }
         val manager = getSystemService(NotificationManager::class.java) ?: return
-        manager.notify(NOTIFICATION_ID, buildNotification())
+        try {
+            manager.notify(NOTIFICATION_ID, buildNotification())
+        } catch (error: RuntimeException) {
+            Log.e(tag, "Failed to update foreground notification", error)
+        }
     }
 
     override fun getContext(): Context {
@@ -2030,16 +2081,22 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
         val notificationText = getString(notificationTextResId)
         val manager = getSystemService(NotificationManager::class.java) ?: return
-        val notification = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_conduit_error)
-            .setContentTitle(appName())
+        if (!ensureNotificationChannel()) {
+            return
+        }
+        val notification = notificationBuilder()
             .setContentText(notificationText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText))
+            .setOngoing(false)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .build()
         val notificationId = 19000 + (action.hashCode().absoluteValue % 1000)
-        manager.notify(notificationId, notification)
+        try {
+            manager.notify(notificationId, notification)
+        } catch (error: RuntimeException) {
+            Log.e(tag, "Failed to show proxy error notification", error)
+        }
     }
 
     private fun appName(): String {

@@ -1,7 +1,7 @@
 <resources>
   <string name="conduit_service_stop_label_text">توقف</string>
-  <string name="conduit_service_running_notification_short_text">۱\n۲\n۳</string>
-  <string name="conduit_service_running_notification_long_text">اتصال فعال %1$d\nدر حال اتصال %2$d\nانتقال داده شد %3$s</string>
+  <string name="conduit_service_running_notification_short_text">%1$d \u00B7 %3$s</string>
+  <string name="conduit_service_running_notification_long_text">اتصال فعال %1$d\nانتقال داده شد %3$s</string>
   <string name="conduit_service_no_internet_notification_text">منتظر اتصال به شبکه</string>
   <string name="conduit_service_channel_description">اعلان‌های Conduit</string>
   <string name="notification_conduit_inproxy_must_upgrade_text">آپدیت کنید: برای استفاده از این برنامه، آخرین نسخه را دانلود کنید.</string>
