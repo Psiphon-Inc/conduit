@@ -16,7 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+    QueryClient,
+    useMutation,
+    useQuery,
+    useQueryClient,
+} from "@tanstack/react-query";
 import * as Network from "expo-network";
 import React from "react";
 import { PurchasesPackage } from "react-native-purchases";
@@ -81,8 +86,10 @@ import {
     HostedSessionDependencies,
     clearHostedSessionState,
     ensureHostedSession,
+    refreshHostedSession,
     setHostedSessionState,
     useHostedSessionQuery,
+    withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
 import {
     loadAndroidPersonalCompartmentId,
@@ -99,6 +106,7 @@ export interface HostedExperienceActions {
     restorePurchases(): Promise<void>;
     purchasePackage(aPackage: PurchasesPackage): Promise<void>;
     refreshSessionIfNeeded(): Promise<HostedSession>;
+    refreshSession(): Promise<HostedSession>;
     updateAccountAlias(alias: string): Promise<AccountProfile>;
 }
 
@@ -299,7 +307,8 @@ function HostedExperienceProviderInner(
                 const personalCompartmentId =
                     await syncAndroidPersonalCompartmentId({
                         hostedClient,
-                        accessToken: session.accessToken,
+                        queryClient,
+                        sessionDeps,
                     });
                 queryClient.setQueryData(
                     [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
@@ -633,6 +642,11 @@ function HostedExperienceProviderInner(
         return ensureHostedSession(queryClient, sessionDeps);
     }, [baseUrl, queryClient, sessionDeps]);
 
+    const refreshSession = React.useCallback(async () => {
+        assertConfiguredBaseUrl(baseUrl);
+        return refreshHostedSession(queryClient, sessionDeps);
+    }, [baseUrl, queryClient, sessionDeps]);
+
     const signIn = React.useCallback(
         async (provider: OAuthProvider) => {
             await signInMutation.mutateAsync(provider);
@@ -690,6 +704,7 @@ function HostedExperienceProviderInner(
             purchasePackage: async (aPackage) =>
                 purchaseMutation.mutateAsync(aPackage),
             refreshSessionIfNeeded,
+            refreshSession,
             updateAccountAlias: async (alias) =>
                 updateAccountAliasMutation.mutateAsync(alias),
         }),
@@ -699,6 +714,7 @@ function HostedExperienceProviderInner(
             lastAuthProvider,
             pollConduitsOnce,
             purchaseMutation,
+            refreshSession,
             refreshSessionIfNeeded,
             restoreMutation,
             signIn,
@@ -734,7 +750,8 @@ async function configureRevenueCatForSession(input: {
 
 async function syncAndroidPersonalCompartmentId(input: {
     hostedClient: HostedClient;
-    accessToken: string;
+    queryClient: QueryClient;
+    sessionDeps: HostedSessionDependencies;
 }): Promise<PersonalCompartmentId | null> {
     const localPersonalCompartmentId = await loadAndroidPersonalCompartmentId();
     if (!localPersonalCompartmentId) {
@@ -742,11 +759,15 @@ async function syncAndroidPersonalCompartmentId(input: {
     }
 
     try {
-        const normalizedPersonalCompartmentId =
-            await input.hostedClient.setPersonalCompartmentId(
-                input.accessToken,
-                localPersonalCompartmentId,
-            );
+        const normalizedPersonalCompartmentId = await withHostedSessionRecovery(
+            input.queryClient,
+            input.sessionDeps,
+            (session) =>
+                input.hostedClient.setPersonalCompartmentId(
+                    session.accessToken,
+                    localPersonalCompartmentId,
+                ),
+        );
         await persistAndroidPersonalCompartmentId(
             normalizedPersonalCompartmentId,
         );

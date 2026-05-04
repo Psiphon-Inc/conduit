@@ -22,6 +22,7 @@ import { View, useWindowDimensions } from "react-native";
 
 import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
+import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
 
 export default function SettingsScreen() {
     const win = useWindowDimensions();
@@ -45,7 +46,16 @@ export default function SettingsScreen() {
                 </Rect>
             </Canvas>
             <SafeAreaView>
-                <ConduitSettings inline={true} />
+                <View
+                    style={{
+                        flex: 1,
+                        width: "100%",
+                        maxWidth: APP_MAX_CONTENT_WIDTH,
+                        alignSelf: "center",
+                    }}
+                >
+                    <ConduitSettings inline={true} />
+                </View>
             </SafeAreaView>
         </View>
     );

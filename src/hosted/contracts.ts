@@ -184,6 +184,12 @@ export type ConduitsSnapshot = z.infer<typeof ConduitsSnapshotSchema>;
 export const HostedCatalogPlatformSchema = z.enum(["ios", "android"]);
 export type HostedCatalogPlatform = z.infer<typeof HostedCatalogPlatformSchema>;
 
+export const HostedPlanCatalogConstraintPlatformSchema = z.enum([
+    "ios",
+    "android",
+    "web",
+]);
+
 export const HostedPlanCatalogQuerySchema = z.object({
     platform: HostedCatalogPlatformSchema,
     locale: z.string().min(1),
@@ -248,7 +254,9 @@ export const HostedPlanCatalogPlanSchema = z.object({
     capabilities: z.record(z.string(), z.unknown()).optional(),
     constraints: z
         .object({
-            allowedPlatforms: z.array(HostedCatalogPlatformSchema).optional(),
+            allowedPlatforms: z
+                .array(HostedPlanCatalogConstraintPlatformSchema)
+                .optional(),
             minAppVersion: z.string().min(1).optional(),
             countryAllowlist: z.array(z.string().min(2).max(2)).optional(),
             countryBlocklist: z.array(z.string().min(2).max(2)).optional(),

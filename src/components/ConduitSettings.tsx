@@ -19,6 +19,7 @@
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, Text, View } from "react-native";
@@ -49,10 +50,12 @@ import { Icon } from "@/src/components/Icon";
 import { ReducedUsageWindow } from "@/src/components/ReducedUsageWindow";
 import { RyveCallToAction } from "@/src/components/RyveCallToAction";
 import {
+    APPLE_STANDARD_EULA_URL,
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_CLIENTS_TOTAL_MAX,
     INPROXY_MAX_MBPS_PER_PEER_MAX,
     PRIVACY_POLICY_URL,
+    TERMS_OF_USE_URL,
 } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { useInproxyContext } from "@/src/inproxy/context";
@@ -69,7 +72,7 @@ import {
     InproxyParameters,
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 // ---------------------------------------------------------------------------
 // LocalConduitSettingsCard — expandable card for phone-hosted conduit (Android)
@@ -317,13 +320,13 @@ function LocalConduitSettingsCard({
 
 export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     const { t } = useTranslation();
+    const router = useRouter();
 
     const {
         inproxyParameters,
         isPersonalPairingReady,
         selectInproxyParameters,
         logErrorToDiagnostic,
-        sendFeedback,
     } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
     const { data: conduitName } = useConduitName();
@@ -337,6 +340,13 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     } = useConduitActions();
     const disablePersonalPairingOnIos =
         Platform.OS === "ios" && personalCompartmentId == null;
+    const hostedRewardsLabel =
+        Platform.OS === "android"
+            ? t("HOSTED_REWARDS_I18N.string")
+            : t("REWARDS_I18N.string");
+    const localRewardsLabel = t("LOCAL_REWARDS_I18N.string");
+    const termsOfUseUrl =
+        Platform.OS === "ios" ? APPLE_STANDARD_EULA_URL : TERMS_OF_USE_URL;
 
     const [displayRestartConfirmation, setDisplayRestartConfirmation] =
         React.useState(false);
@@ -344,31 +354,17 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     const [localSettingsExpanded, setLocalSettingsExpanded] =
         React.useState(false);
     const [showReducedSelector, setShowReducedSelector] = React.useState(false);
-    const [showDiagnosticThanks, setShowDiagnosticThanks] =
-        React.useState(false);
     const localStationIsRunning = inproxyStatus === "RUNNING";
     const settingsPaddedStyle = [
         ss.padded,
         { paddingHorizontal: SETTINGS_HORIZONTAL_PADDING },
     ];
     const settingsLineItemStyle = [
-        ...lineItemStyle,
+        ss.padded,
+        ss.row,
+        ss.height60,
         { paddingHorizontal: SETTINGS_HORIZONTAL_PADDING },
     ];
-
-    React.useEffect(() => {
-        if (!showDiagnosticThanks) {
-            return;
-        }
-
-        const timeoutId = setTimeout(() => {
-            setShowDiagnosticThanks(false);
-        }, 5000);
-
-        return () => {
-            clearTimeout(timeoutId);
-        };
-    }, [showDiagnosticThanks]);
 
     const storedReducedStart = inproxyParameters.reducedStartTime
         ? convertUtcTimeToLocal(inproxyParameters.reducedStartTime)
@@ -748,35 +744,55 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
         }
     }
 
-    function onSendDiagnosticPress() {
-        void sendFeedback();
-        setShowDiagnosticThanks(true);
-    }
-
-    function renderRyveSettingsAction(label: string, onPress: () => void) {
+    function renderSettingsAction({
+        icon,
+        label,
+        subtitle,
+        onPress,
+        disabled = false,
+    }: {
+        icon: React.ReactNode;
+        label: string;
+        subtitle?: string;
+        onPress: () => void;
+        disabled?: boolean;
+    }) {
         return (
             <Pressable
                 onPress={onPress}
+                disabled={disabled}
                 style={[
                     ...settingsLineItemStyle,
-                    ss.flex,
                     ss.justifySpaceBetween,
                     {
                         flexDirection: "row",
                         alignItems: "center",
+                        opacity: disabled ? 0.65 : 1,
                     },
                 ]}
             >
                 <View style={[ss.row, ss.alignCenter, ss.flex, { gap: 10 }]}>
-                    <ExpoImage
-                        source={require("@/assets/images/icons/ryve.svg")}
-                        tintColor={palette.black}
-                        style={{ width: 20, height: 20 }}
-                        contentFit="contain"
-                    />
-                    <Text style={[ss.bodyFont, ss.blackText]}>{label}</Text>
+                    {icon}
+                    <View style={[ss.column, ss.flex, { gap: 4 }]}>
+                        <Text style={[ss.bodyFont, ss.blackText]}>{label}</Text>
+                        {subtitle ? (
+                            <Text
+                                style={[
+                                    ss.tinyFont,
+                                    ss.blackText,
+                                    { opacity: 0.7 },
+                                ]}
+                            >
+                                {subtitle}
+                            </Text>
+                        ) : null}
+                    </View>
                 </View>
-                <Icon name="chevron-right" color={palette.black} size={16} />
+                <Icon
+                    name="chevron-right"
+                    color={disabled ? palette.lightGrey : palette.black}
+                    size={16}
+                />
             </Pressable>
         );
     }
@@ -881,13 +897,12 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
             {/* Scrollable body */}
             <GestureHandlerRootView>
                 <ScrollView
-                    contentContainerStyle={{ width: "100%" }}
+                    contentContainerStyle={{ width: "100%", flexGrow: 1 }}
                     ref={scrollRef}
                 >
                     {/* Editable name */}
                     <View
                         style={[
-                            ss.greyBorderBottom,
                             ...settingsPaddedStyle,
                             { minHeight: 60, justifyContent: "center" },
                         ]}
@@ -938,195 +953,157 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         />
                     ) : null}
 
-                    {/* Share Personal Pairing */}
-                    <Pressable
-                        onPress={() => openPersonalPairingModal()}
-                        disabled={disablePersonalPairingOnIos}
-                        style={[
-                            ...settingsLineItemStyle,
-                            ss.flex,
-                            ss.justifySpaceBetween,
-                            {
-                                flexDirection: "row",
-                                alignItems: "center",
-                                opacity: disablePersonalPairingOnIos ? 0.65 : 1,
-                            },
-                        ]}
-                    >
-                        <View
-                            style={[
-                                ss.row,
-                                ss.alignCenter,
-                                ss.flex,
-                                { gap: 10 },
-                            ]}
-                        >
+                    {/* Personal Pairing */}
+                    {renderSettingsAction({
+                        icon: (
                             <ExpoImage
                                 source={require("@/assets/images/icons/p2p_24px.svg")}
                                 tintColor={palette.black}
                                 style={{ width: 20, height: 20 }}
                                 contentFit="contain"
                             />
-                            <View style={[ss.column, ss.flex, { gap: 4 }]}>
-                                <Text style={[ss.bodyFont, ss.blackText]}>
-                                    {t("SHARE_PERSONAL_PAIRING_I18N.string")}
-                                </Text>
-                                <Text
-                                    style={[
-                                        ss.tinyFont,
-                                        ss.blackText,
-                                        { opacity: 0.7 },
-                                    ]}
-                                >
-                                    {isPersonalPairingPreparing
-                                        ? t(
-                                              "PREPARING_PERSONAL_PAIRING_I18N.string",
-                                              {
-                                                  defaultValue:
-                                                      "Preparing personal pairing...",
-                                              },
-                                          )
-                                        : t(
-                                              "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N.string",
-                                          )}
-                                </Text>
-                            </View>
-                        </View>
-                        <Icon
-                            name="chevron-right"
-                            color={
-                                disablePersonalPairingOnIos
-                                    ? palette.lightGrey
-                                    : palette.black
-                            }
-                            size={16}
-                        />
-                    </Pressable>
+                        ),
+                        label: t("SETTINGS_PERSONAL_PAIRING_I18N.string"),
+                        subtitle: isPersonalPairingPreparing
+                            ? t("PREPARING_PERSONAL_PAIRING_I18N.string", {
+                                  defaultValue: "Preparing personal pairing...",
+                              })
+                            : t(
+                                  "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N.string",
+                              ),
+                        onPress: () => openPersonalPairingModal(),
+                        disabled: disablePersonalPairingOnIos,
+                    })}
 
                     {/* Claim hosted rewards */}
                     {hostedRyveClaim
-                        ? renderRyveSettingsAction(
-                              t("CLAIM_HOSTED_REWARDS_I18N.string"),
-                              () =>
+                        ? renderSettingsAction({
+                              icon: (
+                                  <ExpoImage
+                                      source={require("@/assets/images/icons/ryve.svg")}
+                                      tintColor={palette.black}
+                                      style={{ width: 20, height: 20 }}
+                                      contentFit="contain"
+                                  />
+                              ),
+                              label: hostedRewardsLabel,
+                              subtitle: t("CLAIM_REWARDS_IN_RYVE_I18N.string"),
+                              onPress: () =>
                                   openRyveClaimModal(
                                       hostedRyveClaim,
                                       conduitName,
                                   ),
-                          )
+                          })
                         : null}
 
                     {/* Claim local rewards (Android only) */}
                     {Platform.OS === "android" ? (
                         <RyveCallToAction
-                            triggerLabel={t("CLAIM_LOCAL_REWARDS_I18N.string")}
+                            triggerLabel={localRewardsLabel}
                             renderTrigger={(onPress) =>
-                                renderRyveSettingsAction(
-                                    t("CLAIM_LOCAL_REWARDS_I18N.string"),
+                                renderSettingsAction({
+                                    icon: (
+                                        <ExpoImage
+                                            source={require("@/assets/images/icons/ryve.svg")}
+                                            tintColor={palette.black}
+                                            style={{ width: 20, height: 20 }}
+                                            contentFit="contain"
+                                        />
+                                    ),
+                                    label: localRewardsLabel,
+                                    subtitle: t(
+                                        "CLAIM_REWARDS_IN_RYVE_I18N.string",
+                                    ),
                                     onPress,
-                                )
+                                })
                             }
                         />
                     ) : null}
 
                     {/* Account */}
-                    <View
-                        style={[
-                            ss.greyBorderBottom,
-                            ...settingsPaddedStyle,
-                            { minHeight: 60 },
-                        ]}
-                    >
+                    <View style={[...settingsPaddedStyle, { minHeight: 60 }]}>
                         <HostedConduitSettingsCard />
                     </View>
 
-                    {/* Padding between last setting entry and bottom area stuff */}
-                    <View
-                        style={{
-                            height: 30,
-                        }}
-                    />
-                    {/* Send Diagnostic + Privacy Policy (shared row) */}
+                    {renderSettingsAction({
+                        icon: (
+                            <Icon
+                                name="question"
+                                color={palette.black}
+                                size={20}
+                            />
+                        ),
+                        label: t("MORE_INFO_I18N.string"),
+                        onPress: () => router.push("/(app)/onboarding"),
+                    })}
+
+                    {/* Legal */}
                     <View
                         style={[
                             ...settingsPaddedStyle,
                             ss.row,
                             ss.alignCenter,
-                            Platform.OS !== "ios"
-                                ? { justifyContent: "space-between" }
-                                : ss.justifyCenter,
+                            {
+                                gap: 6,
+                                marginTop: 20,
+                                paddingVertical: 0,
+                            },
                         ]}
                     >
-                        {Platform.OS !== "ios" ? (
-                            <Pressable
-                                onPress={onSendDiagnosticPress}
-                                disabled={showDiagnosticThanks}
-                                style={{
-                                    flex: 1,
-                                    alignItems: "flex-end",
-                                    paddingRight: 12,
-                                }}
-                            >
-                                <Text
-                                    style={[
-                                        ss.bodyFont,
-                                        ss.lightGreyText,
-                                        {
-                                            textDecorationLine:
-                                                showDiagnosticThanks
-                                                    ? "none"
-                                                    : "underline",
-                                        },
-                                    ]}
-                                >
-                                    {showDiagnosticThanks
-                                        ? t("SENT_THANK_YOU_I18N.string")
-                                        : t("SEND_DIAGNOSTIC_I18N.string")}
-                                </Text>
-                            </Pressable>
-                        ) : null}
-                        {Platform.OS !== "ios" ? (
-                            <Text
-                                style={[
-                                    ss.lightGreyText,
-                                    ss.largeFont,
-                                    { width: 12, textAlign: "center" },
-                                ]}
-                            >
-                                |
-                            </Text>
-                        ) : null}
-                        <Pressable
-                            onPress={() =>
-                                void Linking.openURL(PRIVACY_POLICY_URL)
-                            }
-                            style={
-                                Platform.OS !== "ios"
-                                    ? {
-                                          flex: 1,
-                                          alignItems: "flex-start",
-                                          paddingLeft: 12,
-                                      }
-                                    : undefined
-                            }
-                        >
-                            <Text
-                                style={[
-                                    ss.bodyFont,
-                                    ss.lightGreyText,
-                                    { textDecorationLine: "underline" },
-                                ]}
-                            >
-                                {t("PRIVACY_POLICY_I18N.string")}
-                            </Text>
-                        </Pressable>
+                        <View
+                            style={{
+                                width: 12,
+                                height: 1,
+                                backgroundColor: "rgba(0, 0, 0, 0.32)",
+                            }}
+                        />
+                        <Text style={[ss.tinyFont, ss.lightGreyText]}>
+                            {t("LEGAL_I18N.string")}
+                        </Text>
+                        <View
+                            style={{
+                                flex: 1,
+                                height: 1,
+                                backgroundColor: "rgba(0, 0, 0, 0.32)",
+                            }}
+                        />
                     </View>
+
+                    {renderSettingsAction({
+                        icon: (
+                            <Icon
+                                name="shield"
+                                color={palette.black}
+                                size={20}
+                            />
+                        ),
+                        label: t("PRIVACY_POLICY_I18N.string"),
+                        onPress: () => void Linking.openURL(PRIVACY_POLICY_URL),
+                    })}
+
+                    {renderSettingsAction({
+                        icon: (
+                            <Icon
+                                name="notepad"
+                                color={palette.black}
+                                size={20}
+                            />
+                        ),
+                        label: t("TERMS_OF_USE_I18N.string"),
+                        onPress: () => void Linking.openURL(termsOfUseUrl),
+                    })}
+
+                    <View style={{ flexGrow: 1, minHeight: 30 }} />
 
                     {/* App version */}
                     <View
                         style={[
                             ...settingsPaddedStyle,
-                            ss.alignCenter,
-                            ss.justifyCenter,
+                            {
+                                alignItems: "flex-end",
+                                paddingTop: 20,
+                                paddingBottom: 16,
+                            },
                         ]}
                     >
                         <GitHash />

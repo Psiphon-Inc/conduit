@@ -104,10 +104,20 @@ const ICONS: Record<IconName, IconAsset> = {
         viewWidth: 76,
         viewHeight: 76,
     },
+    notepad: {
+        source: require("@/assets/images/icons/notepad.svg"),
+        viewWidth: 58,
+        viewHeight: 58,
+    },
     "right-arrow": {
         source: require("@/assets/images/icons/right-arrow.svg"),
         viewWidth: 13,
         viewHeight: 5,
+    },
+    shield: {
+        source: require("@/assets/images/icons/shield.svg"),
+        viewWidth: 58,
+        viewHeight: 58,
     },
 };
 
@@ -124,6 +134,8 @@ type IconName =
     | "question"
     | "external-link"
     | "analytics"
+    | "notepad"
+    | "shield"
     | "right-arrow";
 
 export function Icon({

@@ -47,11 +47,15 @@ export interface HostedStatusPanelTimeseries {
 export function HostedStatusPanel({
     timeseries,
     statusNotice,
+    chartNotice,
+    onChartNoticePress,
     referenceTimeMs,
     isLoading = false,
 }: {
     timeseries?: HostedStatusPanelTimeseries;
     statusNotice?: string | null;
+    chartNotice?: string | null;
+    onChartNoticePress?: () => void;
     referenceTimeMs?: number;
     /** When true, show a loading indicator over the chart area
      *  (e.g. while fetching data for a newly-selected time window). */
@@ -177,6 +181,8 @@ export function HostedStatusPanel({
                         width={Math.max(260, plotWidth)}
                         height={235}
                         series={activeSeries}
+                        plotNotice={chartNotice}
+                        onPlotNoticePress={onChartNoticePress}
                         referenceTimeMs={referenceTimeMs}
                         yAxisLabel={yAxisLabel}
                         valueFormatter={valueFormatter}

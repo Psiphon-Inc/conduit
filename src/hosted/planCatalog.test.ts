@@ -16,7 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { HostedPlanCatalogResponse } from "@/src/hosted/contracts";
+import {
+    HostedPlanCatalogResponse,
+    HostedPlanCatalogResponseSchema,
+} from "@/src/hosted/contracts";
 import { resolveHostedPlanOptions } from "@/src/hosted/planCatalog";
 
 describe("hosted plan catalog matching", () => {
@@ -216,6 +219,24 @@ describe("hosted plan catalog matching", () => {
         });
         expect(error.options).toHaveLength(0);
         expect(error.blockingError).toContain("Fatal configuration mismatch");
+    });
+
+    it("parses catalog constraints that include web", () => {
+        const catalog: HostedPlanCatalogResponse = {
+            ...buildSeedCatalog(),
+            plans: [
+                {
+                    ...buildSeedCatalog().plans[0],
+                    constraints: {
+                        allowedPlatforms: ["ios", "android", "web"],
+                    },
+                },
+            ],
+        };
+
+        expect(() =>
+            HostedPlanCatalogResponseSchema.parse(catalog),
+        ).not.toThrow();
     });
 });
 

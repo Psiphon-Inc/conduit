@@ -66,6 +66,7 @@ import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { StatsSyncStatusRow } from "@/src/components/StatsSyncStatusRow";
 import { TimeseriesDataPoint } from "@/src/components/TimeseriesPlot";
 import {
+    APP_MAX_CONTENT_WIDTH,
     ASYNCSTORAGE_DASHBOARD_RECENT_WINDOW_KEY,
     ASYNCSTORAGE_DASHBOARD_STATION_MODE_KEY,
 } from "@/src/constants";
@@ -124,6 +125,7 @@ import {
     useHostedStatsSessionQuery,
     useHostedStatsSummaryQuery,
 } from "@/src/hosted/statsQueries";
+import { useInproxyContext } from "@/src/inproxy/context";
 import {
     useInproxyActivitySegments,
     useInproxyRegionalBreakdownByWindow,
@@ -149,6 +151,7 @@ export default function HostedDashboardScreen() {
     const isFocused = useIsFocused();
     const { t } = useTranslation();
     const supportsLocalDashboard = Platform.OS === "android";
+    const { toggleInproxy } = useInproxyContext();
 
     const [recentWindow, setRecentWindowState] =
         React.useState<RecentWindow>("5m");
@@ -529,6 +532,12 @@ export default function HostedDashboardScreen() {
         regionalBreakdownWindow,
         supportsLocalDashboard,
     ]);
+    const localDashboardHasHistory = React.useMemo(
+        () =>
+            supportsLocalDashboard &&
+            hasLocalDashboardHistory(localSegmentsQuery.data),
+        [localSegmentsQuery.data, supportsLocalDashboard],
+    );
     const lastUpdatedAt =
         liveQuery.data?.generatedAt ??
         regionalRecentQuery.data?.generatedAt ??
@@ -567,6 +576,22 @@ export default function HostedDashboardScreen() {
     const dashboardPlotIsLoading = showingLocalDashboard
         ? false
         : recentQuery.isPlaceholderData;
+    const dashboardStatusNotice =
+        showingLocalDashboard && localStatusQuery.data !== "RUNNING"
+            ? localConduitStatus
+            : null;
+    const dashboardChartNotice =
+        showingLocalDashboard &&
+        localStatusQuery.data !== "RUNNING" &&
+        !localDashboardHasHistory
+            ? t("LOCAL_DASHBOARD_HISTORY_START_PROMPT_I18N.string")
+            : null;
+    const handleLocalDashboardChartNoticePress = React.useCallback(() => {
+        if (!showingLocalDashboard || localStatusQuery.data !== "STOPPED") {
+            return;
+        }
+        void toggleInproxy();
+    }, [localStatusQuery.data, showingLocalDashboard, toggleInproxy]);
 
     React.useEffect(() => {
         if (
@@ -628,8 +653,12 @@ export default function HostedDashboardScreen() {
                 <ScrollView
                     ref={scrollViewRef}
                     contentContainerStyle={{
+                        flexGrow: 1,
                         paddingTop: 16,
                         paddingBottom: 24,
+                        width: "100%",
+                        maxWidth: APP_MAX_CONTENT_WIDTH,
+                        alignSelf: "center",
                     }}
                 >
                     <View
@@ -791,6 +820,14 @@ export default function HostedDashboardScreen() {
                             >
                                 <HostedStatusPanel
                                     timeseries={statusTimeseries}
+                                    statusNotice={dashboardStatusNotice}
+                                    chartNotice={dashboardChartNotice}
+                                    onChartNoticePress={
+                                        dashboardChartNotice &&
+                                        localStatusQuery.data === "STOPPED"
+                                            ? handleLocalDashboardChartNoticePress
+                                            : undefined
+                                    }
                                     referenceTimeMs={
                                         dashboardPlotReferenceTimeMs
                                     }
@@ -905,6 +942,41 @@ function toDashboardRegionMetrics(
         bytesUpTotal: region.bytesUp,
         bytesDownTotal: region.bytesDown,
     }));
+}
+
+function hasLocalDashboardHistory(segments: InproxyActivitySegments): boolean {
+    return (
+        hasSegmentHistory(segments.personal) ||
+        hasSegmentHistory(segments.common) ||
+        hasSegmentHistory(segments.total)
+    );
+}
+
+function hasSegmentHistory(segment: InproxyActivitySegment): boolean {
+    if (
+        segment.totalBytesUp > 0 ||
+        segment.totalBytesDown > 0 ||
+        segment.currentConnectedClients > 0 ||
+        segment.currentConnectingClients > 0
+    ) {
+        return true;
+    }
+
+    return (
+        hasPeriodHistory(segment.dataByPeriod["1000ms"]) ||
+        (segment.dataByPeriod["3600000ms"]
+            ? hasPeriodHistory(segment.dataByPeriod["3600000ms"])
+            : false)
+    );
+}
+
+function hasPeriodHistory(period: InproxyActivityByPeriod): boolean {
+    return (
+        period.bytesUp.some((value) => value > 0) ||
+        period.bytesDown.some((value) => value > 0) ||
+        period.connectedClients.some((value) => value > 0) ||
+        period.connectingClients.some((value) => value > 0)
+    );
 }
 
 function toLocalStatusTimeseries(input: {

@@ -19,7 +19,13 @@
 import { Image as ExpoImage } from "expo-image";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    Platform,
+    Pressable,
+    Text,
+    View,
+} from "react-native";
 import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
 import { Icon } from "@/src/components/Icon";
@@ -272,7 +278,7 @@ function HostedCallToAction({
                           ? t("PREPARING_PERSONAL_PAIRING_I18N.string", {
                                 defaultValue: "Preparing personal pairing...",
                             })
-                          : t("SHARE_PERSONAL_PAIRING_I18N.string")}
+                          : t("SHARE_PERSONAL_PAIRING_LINK_I18N.string")}
                 </Text>
             </Pressable>
         );
@@ -283,13 +289,19 @@ function HostedCallToAction({
             ? t("RESTORE_YOUR_CONDUIT_I18N.string")
             : hasRecentHostedSignIn
               ? t("VIEW_YOUR_CONDUIT_I18N.string")
-              : t("HOST_A_STATION_I18N.string");
+              : Platform.OS === "ios"
+                ? t("HOST_A_STATION_IOS_I18N.string")
+                : t("HOST_A_STATION_I18N.string");
     const cardDescription =
         mode === "restore"
             ? t("RESTORE_CONDUIT_DESCRIPTION_I18N.string")
             : hasRecentHostedSignIn
               ? t("VIEW_YOUR_CONDUIT_DESCRIPTION_I18N.string")
-              : t("CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N.string");
+              : Platform.OS === "ios"
+                ? t(
+                      "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_IOS_I18N.string",
+                  )
+                : t("CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N.string");
 
     return (
         <Pressable

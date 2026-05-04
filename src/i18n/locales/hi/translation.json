@@ -29,6 +29,22 @@
     "MAX_PEERS_I18N": {
         "string": "अधिकतम साथी"
     },
+    "MAX_PUBLIC_PEERS_I18N": {
+        "string": "अधिकतम सार्वजनिक साथी",
+        "developer_comment": "Label for the maximum number of public peers allowed."
+    },
+    "MAX_PERSONAL_PEERS_I18N": {
+        "string": "अधिकतम निजी साथी",
+        "developer_comment": "Label for the maximum number of personal peers allowed."
+    },
+    "MAX_TOTAL_PEERS_NOTE_I18N": {
+        "string": "सार्वजनिक और निजी साथी {{max}} की संयुक्त सीमा साझा करते हैं।",
+        "developer_comment": "Helper text explaining the combined public and personal peer cap."
+    },
+    "MAX_TOTAL_PEERS_ERROR_I18N": {
+        "string": "संयुक्त कुल को {{max}} या उससे कम रखने के लिए सार्वजनिक या निजी साथियों को घटाएं।",
+        "developer_comment": "Validation message shown when the combined public and personal peer limit is exceeded."
+    },
     "MAX_MBPS_PER_PEER_I18N": {
         "string": "अधिकतम MB/s प्रति साथी"
     },
@@ -56,6 +72,10 @@
     "CONDUIT_STATION_I18N": {
         "string": "कान्डूइट स्टेशन"
     },
+    "LOCAL_CONDUIT_I18N": {
+        "string": "स्थानीय कान्डूइट",
+        "developer_comment": "Title for the local conduit details modal."
+    },
     "RUNNING_I18N": {
         "string": "क्रियाशील"
     },
@@ -73,6 +93,10 @@
     },
     "SENT_THANK_YOU_I18N": {
         "string": "भेज दिया, धन्यवाद"
+    },
+    "TRY_AGAIN_I18N": {
+        "string": "फिर से कोशिश करें",
+        "developer_comment": "Button label to retry a failed or offline operation."
     },
     "HOLD_TO_TURN_OFF_I18N": {
         "string": "बंद करने के लिए दबाए रखें"
@@ -164,20 +188,47 @@
     "NAME_YOUR_CONDUIT_I18N": {
         "string": "अपने कान्डूइट को नाम दें"
     },
+    "INPUT_YOUR_CONDUIT_NAME_I18N": {
+        "string": "अपने कान्डूइट का नाम डालें"
+    },
+    "SAVE_I18N": {
+        "string": "सहेजें"
+    },
     "ID_I18N": {
         "string": "ID"
     },
     "ALIAS_I18N": {
         "string": "उर्फ"
     },
+    "ALIAS_VISIBILITY_HINT_I18N": {
+        "string": "जिस किसी के साथ आप निजी पेयरिंग साझा करेंगे, वह यह टेक्स्ट देखेगा"
+    },
     "CLAIM_REWARDS_IN_RYVE_I18N": {
         "string": "Ryve में रिवॉर्ड प्राप्त करें"
+    },
+    "CLAIM_HOSTED_REWARDS_I18N": {
+        "string": "होस्टेड पुरस्कार प्राप्त करें",
+        "developer_comment": "Label for claiming hosted conduit rewards from settings."
+    },
+    "CLAIM_LOCAL_REWARDS_I18N": {
+        "string": "स्थानीय पुरस्कार प्राप्त करें",
+        "developer_comment": "Label for claiming local conduit rewards from settings on Android."
     },
     "SCAN_THIS_FROM_RYVE_APP_I18N": {
         "string": "इस QR कोड को Ryve ऐप से स्कैन करें ताकि यह Conduit स्टेशन आपके Ryve खाते से जुड़ सके"
     },
     "CLOSE_I18N": {
         "string": "बंद करें"
+    },
+    "TURN_OFF_I18N": {
+        "string": "बंद करें",
+        "developer_comment": "Button label for turning off the local conduit."
+    },
+    "EDIT_I18N": {
+        "string": "संपादित करें"
+    },
+    "HIDE_I18N": {
+        "string": "छिपाएँ"
     },
     "INVALID_QR_CODE_I18N": {
         "string": "अमान्य QR कोड"
@@ -191,11 +242,8 @@
     "REVEAL_I18N": {
         "string": "दिखाएँ"
     },
-    "EDIT_I18N": {
-        "string": "संपादित करें"
-    },
-    "HIDE_I18N": {
-        "string": "छिपाएँ"
+    "REVEAL_QR_I18N": {
+        "string": "QR दिखाएं"
     },
     "REDUCED_USAGE_WINDOW_I18N": {
         "string": "कम उपयोग विंडो"
@@ -244,5 +292,619 @@
     },
     "REDUCED_REQUIRED_BANDWIDTH_I18N": {
         "string": "कम आवश्यक बैंडविड्थ"
+    },
+    "HOSTED_CALL_TO_ACTION_I18N": {
+        "string": "अपना क्लाउड कान्डूइट होस्ट करें"
+    },
+    "SHARE_PERSONAL_PAIRING_I18N": {
+        "string": "निजी पेयरिंग साझा करें"
+    },
+    "SETTINGS_PERSONAL_PAIRING_I18N": {
+        "string": "निजी पेयरिंग",
+        "developer_comment": "Settings row label for opening personal pairing."
+    },
+    "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "लोगों को सीधे अपने कान्डूइट से जोड़ें",
+        "developer_comment": "Settings row subtitle for personal pairing."
+    },
+    "SHARE_PERSONAL_PAIRING_LINK_I18N": {
+        "string": "निजी पेयरिंग लिंक साझा करें",
+        "developer_comment": "Home screen CTA button label for sharing the Personal Pairing link."
+    },
+    "PREPARING_PERSONAL_PAIRING_I18N": {
+        "string": "निजी पेयरिंग तैयार की जा रही है..."
+    },
+    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
+        "string": "आपका प्रभाव (पिछले 30 दिन)"
+    },
+    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
+        "string": "प्रभाव सारांश लोड हो रहा है..."
+    },
+    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
+        "string": "प्रभाव सारांश उपलब्ध नहीं है क्योंकि इस खाते के लिए कोई अधिकृत आँकड़ा लक्ष्य वापस नहीं मिला।"
+    },
+    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
+        "string": "पिछले 30 दिनों में सबसे अधिक जुड़े हुए उपयोगकर्ता"
+    },
+    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
+        "string": "पिछले 30 दिनों में ट्रांसफर किए गए बाइट्स"
+    },
+    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
+        "string": "सदस्यता और खाता"
+    },
+    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
+        "string": "सदस्यता स्थिति: {{status}}"
+    },
+    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
+        "string": "उत्पाद: {{productId}}"
+    },
+    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
+        "string": "नवीनीकरण/समाप्ति: {{expiresAt}}"
+    },
+    "HOSTED_MANAGE_OPEN_BILLING_I18N": {
+        "string": "बिलिंग प्रबंधित करें"
+    },
+    "DASHBOARD_I18N": {
+        "string": "डैशबोर्ड"
+    },
+    "DASHBOARD_LOCAL_STATION_I18N": {
+        "string": "स्थानीय",
+        "developer_comment": "Label for selecting local station stats on the dashboard."
+    },
+    "DASHBOARD_HOSTED_STATION_I18N": {
+        "string": "होस्टेड",
+        "developer_comment": "Label for selecting hosted station stats on the dashboard."
+    },
+    "LOCAL_DASHBOARD_STATUS_I18N": {
+        "string": "स्थानीय कान्डूइट: {{status}}",
+        "developer_comment": "Status label shown on the local dashboard header row."
+    },
+    "LOCAL_DASHBOARD_HISTORY_START_PROMPT_I18N": {
+        "string": "इतिहास लोड करने के लिए स्थानीय कान्डूइट शुरू करें।",
+        "developer_comment": "Chart notice shown when the local dashboard has no cached history because the local conduit is stopped."
+    },
+    "HOST_A_STATION_I18N": {
+        "string": "कान्डूइट होस्ट करें"
+    },
+    "HOST_A_STATION_IOS_I18N": {
+        "string": "होस्टेड कान्डूइट बनाएं",
+        "developer_comment": "Title for the iOS hosted conduit setup CTA."
+    },
+    "VIEW_YOUR_CONDUIT_I18N": {
+        "string": "अपना कान्डूइट देखें",
+        "developer_comment": "Title for the hosted conduit action card when the user has signed in before and needs to get back to their existing setup."
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N": {
+        "string": "अपने कान्डूइट स्टेशन को अधिक भरोसेमंद रूप से उपलब्ध कराने के लिए Psiphon-होस्टेड कान्डूइट स्टेशन बनाएं"
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_IOS_I18N": {
+        "string": "क्लाउड में चलने वाला Psiphon-होस्टेड कान्डूइट स्टेशन बनाएं।",
+        "developer_comment": "Description for the iOS hosted conduit setup CTA, where there is no local runner."
+    },
+    "VIEW_YOUR_CONDUIT_DESCRIPTION_I18N": {
+        "string": "अपना होस्टेड सेटअप देखने और जहाँ छोड़ा था वहीं से जारी रखने के लिए फिर से साइन इन करें।",
+        "developer_comment": "Description for the hosted conduit action card when the user has signed in before and needs to access an existing setup."
+    },
+    "CLAIM_REWARDS_I18N": {
+        "string": "पुरस्कार प्राप्त करें"
+    },
+    "SET_AS_MAIN_ORB_I18N": {
+        "string": "मुख्य के रूप में सेट करें"
+    },
+    "OR_I18N": {
+        "string": "या"
+    },
+    "OPEN_IN_RYVE_I18N": {
+        "string": "Ryve में खोलें"
+    },
+    "STATION_NAME_REQUIRED_I18N": {
+        "string": "स्टेशन का नाम डालें।",
+        "developer_comment": "Hint shown in the Personal Pairing share modal when the user has not yet set a valid conduit station name."
+    },
+    "PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "यह लिंक दोस्तों और परिवार के साथ साझा करें और वे आपके कान्डूइट स्टेशन से जुड़ेंगे। उन्हें यह लिंक Psiphon ऐप में पेस्ट करना होगा।",
+        "developer_comment": "Description text shown in the Personal Pairing share modal."
+    },
+    "DEFAULT_CONDUIT_NAME_I18N": {
+        "string": "मेरा होस्टेड कान्डूइट",
+        "developer_comment": "Default fallback name for a hosted conduit station."
+    },
+    "PERSONAL_PAIRING_NOT_READY_I18N": {
+        "string": "निजी पेयरिंग अभी तैयार नहीं है।",
+        "developer_comment": "Notice shown when personal pairing compartment is not available."
+    },
+    "PERSONAL_PAIRING_INVALID_NAME_I18N": {
+        "string": "साझा करने से पहले कृपया एक मान्य कान्डूइट नाम सेट करें (3–32 अक्षर)।",
+        "developer_comment": "Notice shown when conduit name is invalid for sharing."
+    },
+    "SHARE_UNAVAILABLE_TOKEN_COPIED_I18N": {
+        "string": "साझा करना उपलब्ध नहीं है। इसके बजाय पेयरिंग टोकन कॉपी किया गया।",
+        "developer_comment": "Fallback notice when native share sheet is unavailable."
+    },
+    "CLOSE_PERSONAL_PAIRING_ACCESSIBILITY_I18N": {
+        "string": "निजी पेयरिंग बंद करें",
+        "developer_comment": "Accessibility label for the close button in the personal pairing modal."
+    },
+    "PERSONAL_PAIRING_TITLE_I18N": {
+        "string": "निजी पेयरिंग",
+        "developer_comment": "Label for Personal Pairing in status summaries."
+    },
+    "PERSONAL_PAIRING_SHARE_MODAL_TITLE_I18N": {
+        "string": "निजी पेयरिंग लिंक",
+        "developer_comment": "Title of the personal pairing share modal."
+    },
+    "SHARE_IN_I18N": {
+        "string": "लिंक इस भाषा में भेजें",
+        "developer_comment": "Label next to the language picker in the personal pairing share modal."
+    },
+    "SHARE_LINK_I18N": {
+        "string": "लिंक साझा करें",
+        "developer_comment": "Label for the share link button."
+    },
+    "MBPS_PER_PEER_I18N": {
+        "string": "प्रति साथी MBPS",
+        "developer_comment": "Label for the megabits per second per peer setting."
+    },
+    "MAX_BANDWIDTH_USAGE_I18N": {
+        "string": "अधिकतम बैंडविड्थ उपयोग",
+        "developer_comment": "Label for the maximum bandwidth usage setting."
+    },
+    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "अपना कनेक्शन सीधे दोस्तों और परिवार के साथ साझा करें",
+        "developer_comment": "Description text for the personal pairing share action in settings."
+    },
+    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
+        "string": "Ryve में होस्टेड पुरस्कार प्राप्त करें",
+        "developer_comment": "Label for claiming hosted conduit rewards in the Ryve app."
+    },
+    "REWARDS_I18N": {
+        "string": "पुरस्कार",
+        "developer_comment": "Settings row label for Ryve rewards."
+    },
+    "HOSTED_REWARDS_I18N": {
+        "string": "होस्टेड पुरस्कार",
+        "developer_comment": "Android settings row label for hosted Ryve rewards."
+    },
+    "LOCAL_REWARDS_I18N": {
+        "string": "स्थानीय पुरस्कार",
+        "developer_comment": "Android settings row label for local Ryve rewards."
+    },
+    "LEGAL_I18N": {
+        "string": "कानूनी",
+        "developer_comment": "Settings section label for legal links."
+    },
+    "TERMS_OF_USE_I18N": {
+        "string": "उपयोग की शर्तें",
+        "developer_comment": "Settings row label for terms of use."
+    },
+    "MORE_INFO_I18N": {
+        "string": "और जानकारी",
+        "developer_comment": "Settings row label for replaying onboarding information screens."
+    },
+    "ACCOUNT_I18N": {
+        "string": "खाता",
+        "developer_comment": "Header label for the account section."
+    },
+    "RENEW_SUBSCRIPTION_I18N": {
+        "string": "सदस्यता नवीनीकृत करें",
+        "developer_comment": "Button label to renew a subscription."
+    },
+    "RENEW_SUBSCRIPTION_DESCRIPTION_I18N": {
+        "string": "आपका होस्टेड कान्डूइट {{ expiresAt }} पर बंद हो जाएगा",
+        "developer_comment": "Subtitle shown on the home screen renew button when the subscription is canceled but not yet expired."
+    },
+    "RENEWS_EXPIRES_I18N": {
+        "string": "नवीनीकृत / समाप्त",
+        "developer_comment": "Label for the subscription renewal/expiry date."
+    },
+    "SIGN_IN_I18N": {
+        "string": "साइन इन करें",
+        "developer_comment": "Button label to sign in to an account."
+    },
+    "SIGN_OUT_I18N": {
+        "string": "साइन आउट करें",
+        "developer_comment": "Button label to sign out of the account."
+    },
+    "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
+        "string": "कान्डूइट विवरण बंद करें",
+        "developer_comment": "Accessibility label for the close button in the hosted conduit modal."
+    },
+    "SCOPE_PERSONAL_I18N": {
+        "string": "निजी",
+        "developer_comment": "Label for the personal scope of a hosted conduit compartment."
+    },
+    "HOSTED_PERSONAL_SCOPE_I18N": {
+        "string": "होस्टेड निजी",
+        "developer_comment": "Label for the hosted personal conduit scope on Android."
+    },
+    "SCOPE_COMMON_I18N": {
+        "string": "सार्वजनिक",
+        "developer_comment": "Label for the common/public scope of a hosted conduit compartment."
+    },
+    "HOSTED_PUBLIC_SCOPE_I18N": {
+        "string": "होस्टेड सार्वजनिक",
+        "developer_comment": "Label for the hosted public conduit scope on Android."
+    },
+    "HOSTED_CONDUIT_FALLBACK_I18N": {
+        "string": "होस्टेड कान्डूइट",
+        "developer_comment": "Fallback display name for a hosted conduit."
+    },
+    "LOADING_HOSTED_STATUS_I18N": {
+        "string": "होस्टेड स्थिति लोड हो रही है...",
+        "developer_comment": "Text shown while hosted conduit status is loading."
+    },
+    "RESTORE_YOUR_CONDUIT_I18N": {
+        "string": "अपना कान्डूइट पुनर्स्थापित करें",
+        "developer_comment": "Title for the restore conduit action card."
+    },
+    "RESTORE_CONDUIT_DESCRIPTION_I18N": {
+        "string": "अपनी होस्टेड सदस्यता फिर से जोड़ें और अपनी सुरक्षित संरचना पुनः प्राप्त करें।",
+        "developer_comment": "Description for the restore conduit action card."
+    },
+    "CONDUIT_ALIAS_VALIDATION_ERROR_I18N": {
+        "string": "3–{{ maxLength }} अक्षर, केवल अक्षर/संख्या/स्पेस/.-_",
+        "developer_comment": "Validation error shown when the conduit alias doesn't meet requirements."
+    },
+    "CLOSE_RYVE_MODAL_ACCESSIBILITY_I18N": {
+        "string": "Ryve मोडल बंद करें",
+        "developer_comment": "Accessibility label for the close button in the Ryve modal."
+    },
+    "LOADING_CONDUIT_DATA_I18N": {
+        "string": "कान्डूइट डेटा लोड हो रहा है...",
+        "developer_comment": "Text shown while conduit data is loading in the Ryve modal."
+    },
+    "ERROR_FORMATTING_KEYDATA_I18N": {
+        "string": "कुंजी डेटा फ़ॉर्मेट करने में त्रुटि",
+        "developer_comment": "Error message when key data cannot be formatted."
+    },
+    "CONNECTED_COUNT_I18N": {
+        "string": "कनेक्टेड: {{ count }}",
+        "developer_comment": "Label showing the number of connected peers on a hosted conduit card."
+    },
+    "NO_RECENT_DATA_YET_I18N": {
+        "string": "अभी कोई हालिया डेटा नहीं",
+        "developer_comment": "Placeholder shown in a timeseries plot when there is no recent data."
+    },
+    "NO_DATA_YET_I18N": {
+        "string": "अभी कोई डेटा नहीं",
+        "developer_comment": "Placeholder shown in a timeseries plot when there is no data."
+    },
+    "TRANSFERRED_PER_INTERVAL_I18N": {
+        "string": "प्रति अंतराल ट्रांसफर किया गया",
+        "developer_comment": "Y-axis label for the bytes transferred chart."
+    },
+    "CONNECTED_USERS_I18N": {
+        "string": "जुड़े हुए उपयोगकर्ता",
+        "developer_comment": "Y-axis label for the connected users chart."
+    },
+    "CONNECTING_USERS_I18N": {
+        "string": "जुड़ रहे उपयोगकर्ता",
+        "developer_comment": "Y-axis label for the connecting users chart."
+    },
+    "CONNECTED_I18N": {
+        "string": "जुड़ा हुआ",
+        "developer_comment": "Label for the connected metric tab."
+    },
+    "CONNECTING_I18N": {
+        "string": "जुड़ रहा है",
+        "developer_comment": "Label for the connecting metric tab."
+    },
+    "BYTES_I18N": {
+        "string": "बाइट्स",
+        "developer_comment": "Label for the bytes transferred metric tab."
+    },
+    "SYNCING_I18N": {
+        "string": "सिंक हो रहा है...",
+        "developer_comment": "Text shown while stats are syncing."
+    },
+    "MINI_ORB_STATUS_I18N": {
+        "string": "जुड़े {{ connected }} | जुड़ रहे {{ connecting }}",
+        "developer_comment": "Status text on the hosted mini orb showing connected and connecting counts."
+    },
+    "HOME_I18N": {
+        "string": "होम",
+        "developer_comment": "Label for the Home tab in bottom navigation."
+    },
+    "ERROR_I18N": {
+        "string": "त्रुटि",
+        "developer_comment": "Generic error text."
+    },
+    "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
+        "string": "गोपनीयता नीति का लिंक",
+        "developer_comment": "Accessibility label for the privacy policy link."
+    },
+    "LINK_TO_INFO_WEBSITE_ACCESSIBILITY_I18N": {
+        "string": "जानकारी वेबसाइट का लिंक",
+        "developer_comment": "Accessibility label for the learn more link."
+    },
+    "CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
+        "string": "कान्डूइट ऑर्ब। इंटरैक्ट करने के लिए टैप करें।",
+        "developer_comment": "Accessibility label for the main conduit orb."
+    },
+    "LOCAL_CONDUIT_ORB_ACCESSIBILITY_I18N": {
+        "string": "स्थानीय कान्डूइट ऑर्ब",
+        "developer_comment": "Accessibility label for the local conduit orb."
+    },
+    "CONDUIT_ORB_ACCESSIBILITY_I18N": {
+        "string": "कान्डूइट ऑर्ब",
+        "developer_comment": "Accessibility label for a generic conduit orb."
+    },
+    "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
+        "string": "होस्टेड कान्डूइट ऑर्ब। विवरण के लिए टैप करें",
+        "developer_comment": "Accessibility label for the hosted conduit orb."
+    },
+    "SIGN_IN_TO_SYNC_I18N": {
+        "string": "अपना होस्टेड खाता सिंक करने के लिए साइन इन करें",
+        "developer_comment": "Hint shown when user needs to sign in for hosted account sync."
+    },
+    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
+        "string": "{{ bytes }} ट्रांसफर किए गए{{ window }}",
+        "developer_comment": "Metric text showing bytes transferred with optional time window suffix."
+    },
+    "N_HOSTED_PEERS_ONLINE_I18N": {
+        "string": "{{ count }} होस्टेड साथी ऑनलाइन",
+        "developer_comment": "Metric text showing the number of hosted peers currently online."
+    },
+    "HOME_SUMMARY_PEER_COUNT_I18N": {
+        "string": "{{count}} साथी",
+        "developer_comment": "Peer count text shown on the simplified home summary rows."
+    },
+    "HOME_SUMMARY_OFFLINE_I18N": {
+        "string": "ऑफ़लाइन",
+        "developer_comment": "Status text shown for the local conduit row when it is not running."
+    },
+    "PUBLIC_PEERS_ONLINE_I18N": {
+        "string": "सार्वजनिक साथी ऑनलाइन"
+    },
+    "PERSONAL_PEERS_ONLINE_I18N": {
+        "string": "निजी साथी ऑनलाइन"
+    },
+    "SYNCING_HOSTED_USAGE_METRICS_I18N": {
+        "string": "होस्टेड उपयोग मेट्रिक्स सिंक हो रहे हैं...",
+        "developer_comment": "Hint shown while hosted usage metrics are being synced."
+    },
+    "UPGRADE_REQUIRED_LOCAL_CONDUIT_I18N": {
+        "string": "स्थानीय कान्डूइट के लिए अपग्रेड आवश्यक है",
+        "developer_comment": "Hint shown when a local conduit requires an app upgrade."
+    },
+    "HOLD_ORB_TO_TURN_OFF_I18N": {
+        "string": "साथी जुड़े होने पर बंद करने के लिए ऑर्ब को दबाए रखें",
+        "developer_comment": "Hint shown when user taps orb while peers are connected."
+    },
+    "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
+        "string": "स्थानीय कान्डूइट दृश्य बटन",
+        "developer_comment": "Accessibility label for the local conduit scene selector."
+    },
+    "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
+        "string": "होस्टेड कान्डूइट दृश्य बटन",
+        "developer_comment": "Accessibility label for the hosted conduit scene selector."
+    },
+    "PREPARING_HOSTED_CONDUIT_I18N": {
+        "string": "आपका होस्टेड कान्डूइट तैयार किया जा रहा है...",
+        "developer_comment": "Loading message during hosted conduit setup."
+    },
+    "PREPARING_I18N": {
+        "string": "तैयार किया जा रहा है...",
+        "developer_comment": "Generic loading message shown while a feature is preparing."
+    },
+    "CONNECTING_TO_YOUR_HOSTED_CONDUIT_I18N": {
+        "string": "आपके होस्टेड कान्डूइट से जुड़ रहा है...",
+        "developer_comment": "Loading message shown while the initial hosted session and conduits snapshot are being loaded."
+    },
+    "SETTING_UP_INFRASTRUCTURE_I18N": {
+        "string": "आपकी संरचना सेट की जा रही है...",
+        "developer_comment": "Loading message while hosted infrastructure is being provisioned."
+    },
+    "PROVISIONING_LEAVE_HINT_I18N": {
+        "string": "आपकी संरचना प्रावधान में रहते हुए आप यह स्क्रीन छोड़ सकते हैं।",
+        "developer_comment": "Helper text on the provisioning screen indicating the user does not need to wait."
+    },
+    "OPENING_YOUR_DASHBOARD_I18N": {
+        "string": "आपका डैशबोर्ड खोला जा रहा है...",
+        "developer_comment": "Loading message while dashboard is being opened."
+    },
+    "UNAVAILABLE_I18N": {
+        "string": "उपलब्ध नहीं",
+        "developer_comment": "Label shown when a feature or resource is unavailable."
+    },
+    "SETUP_INCOMPLETE_I18N": {
+        "string": "इस बिल्ड के लिए सेटअप अधूरा है। होस्टेड URL, Clerk कुंजी और RevenueCat कुंजी जांचें।",
+        "developer_comment": "Status message shown when hosted setup configuration is incomplete."
+    },
+    "CHOOSE_A_PLAN_I18N": {
+        "string": "एक प्लान चुनें",
+        "developer_comment": "Header text for the subscription plan selection screen."
+    },
+    "RETRY_PLAN_LOAD_I18N": {
+        "string": "प्लान लोड फिर से आज़माएं",
+        "developer_comment": "Button label to retry loading subscription plans."
+    },
+    "SIGN_IN_WITH_GOOGLE_I18N": {
+        "string": "Google से साइन इन करें",
+        "developer_comment": "Button label for Google sign-in."
+    },
+    "SIGN_IN_WITH_APPLE_I18N": {
+        "string": "Apple से साइन इन करें",
+        "developer_comment": "Button label for Apple sign-in."
+    },
+    "CONTINUE_I18N": {
+        "string": "जारी रखें",
+        "developer_comment": "Button label to continue to the next step."
+    },
+    "RESTORE_PURCHASES_I18N": {
+        "string": "खरीदारियां पुनर्स्थापित करें",
+        "developer_comment": "Button label to restore previous in-app purchases."
+    },
+    "CONTINUE_RETRY_INFRA_CHECK_I18N": {
+        "string": "जारी रखें: संरचना जांच फिर से करें",
+        "developer_comment": "Button label to retry infrastructure verification."
+    },
+    "MANAGE_SETUP_DETAILS_I18N": {
+        "string": "सेटअप विवरण प्रबंधित करें",
+        "developer_comment": "Button label to manage hosted setup details."
+    },
+    "LAST_30D_SUFFIX_I18N": {
+        "string": " (पिछले 30 दिन)",
+        "developer_comment": "Suffix appended to dashboard labels indicating a 30-day window."
+    },
+    "DASHBOARD_NOT_READY_I18N": {
+        "string": "डैशबोर्ड एक्सेस अभी तैयार नहीं है। सेटअप स्थिति रिफ्रेश करें और फिर से कोशिश करें।",
+        "developer_comment": "Message shown when dashboard data is not yet available."
+    },
+    "NO_AUTHORIZED_TARGETS_I18N": {
+        "string": "अभी कोई अधिकृत डैशबोर्ड लक्ष्य नहीं है।",
+        "developer_comment": "Message shown when there are no authorized stats targets."
+    },
+    "YOUR_CONDUITS_I18N": {
+        "string": "आपके कान्डूइट्स",
+        "developer_comment": "Header for the list of user's conduits on the dashboard."
+    },
+    "WHO_ARE_YOU_HELPING_I18N": {
+        "string": "आप किसकी मदद कर रहे हैं?",
+        "developer_comment": "Header for the top helped countries section on the dashboard."
+    },
+    "OPEN_REGIONAL_BREAKDOWN_I18N": {
+        "string": "क्षेत्रीय विवरण खोलें",
+        "developer_comment": "Accessibility label for opening the regional activity modal from the dashboard map."
+    },
+    "TAP_MAP_FOR_COUNTRY_DETAILS_I18N": {
+        "string": "देश के विवरण के लिए मानचित्र टैप करें",
+        "developer_comment": "Hint shown above the dashboard map to explain the interaction."
+    },
+    "REGIONAL_ACTIVITY_BY_BYTES_I18N": {
+        "string": "ट्रांसफर किए गए बाइट्स के अनुसार क्षेत्रीय गतिविधि",
+        "developer_comment": "Title shown in the dashboard regional breakdown modal."
+    },
+    "TOP_HELPED_COUNTRIES_I18N": {
+        "string": "{{ metric }} के अनुसार सर्वाधिक मदद पाने वाले देश ({{ window }})",
+        "developer_comment": "Subheader describing the top helped countries chart."
+    },
+    "BYTES_TRANSFERRED_LABEL_I18N": {
+        "string": "ट्रांसफर किए गए बाइट्स",
+        "developer_comment": "Label for the bytes transferred metric."
+    },
+    "CONNECTED_USERS_LABEL_I18N": {
+        "string": "जुड़े हुए उपयोगकर्ता",
+        "developer_comment": "Label for the connected users metric."
+    },
+    "TAP_TO_SWITCH_METRIC_I18N": {
+        "string": "मेट्रिक बदलने के लिए सेक्शन टैप करें",
+        "developer_comment": "Hint text telling users to tap to switch between metrics."
+    },
+    "COMPLETING_SIGN_IN_I18N": {
+        "string": "साइन-इन पूरा हो रहा है...",
+        "developer_comment": "Text shown during SSO callback while sign-in is being completed."
+    },
+    "ONBOARDING_INFO_ACCESSIBILITY_I18N": {
+        "string": "ऑनबोर्डिंग जानकारी, अपडेट होगी",
+        "developer_comment": "Accessibility label for the onboarding info section."
+    },
+    "HOSTED_ONBOARDING_STEP_SIGN_IN_TITLE_I18N": {
+        "string": "साइन इन करें",
+        "developer_comment": "Hosted onboarding step title for account sign-in."
+    },
+    "HOSTED_ONBOARDING_STEP_SIGN_IN_HELPER_I18N": {
+        "string": "अपना खाता उपयोग करें ताकि हम आपका होस्टेड सेटअप निजी और पुनःप्राप्त करने योग्य रख सकें।",
+        "developer_comment": "Hosted onboarding step helper for account sign-in."
+    },
+    "HOSTED_ONBOARDING_STEP_ACTIVATE_TITLE_I18N": {
+        "string": "होस्टेड एक्सेस सक्रिय करें",
+        "developer_comment": "Hosted onboarding step title for plan activation."
+    },
+    "HOSTED_ONBOARDING_STEP_ACTIVATE_HELPER_I18N": {
+        "string": "आपका प्लान सेवा को चालू रखता है और सुरक्षित सेटअप अनलॉक करता है।",
+        "developer_comment": "Hosted onboarding step helper for plan activation."
+    },
+    "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_TITLE_I18N": {
+        "string": "अपनी सुरक्षित संरचना तैयार करें",
+        "developer_comment": "Hosted onboarding step title for infrastructure provisioning."
+    },
+    "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_HELPER_I18N": {
+        "string": "हम आपका होस्टेड कान्डूइट बनाकर सत्यापित करते हैं, फिर आप इसे साझा कर सकते हैं।",
+        "developer_comment": "Hosted onboarding step helper for infrastructure provisioning."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_HEADLINE_I18N": {
+        "string": "इंटरनेट कनेक्शन नहीं है",
+        "developer_comment": "Hosted onboarding headline shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_DETAIL_I18N": {
+        "string": "हम अभी सर्वर तक नहीं पहुंच पा रहे हैं। अपना कनेक्शन जांचें और फिर से कोशिश करें।",
+        "developer_comment": "Hosted onboarding detail shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_HELPER_I18N": {
+        "string": "आपकी डिवाइस के फिर से ऑनलाइन होते ही हम फिर से कनेक्ट करेंगे।",
+        "developer_comment": "Hosted onboarding helper shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HEADLINE_I18N": {
+        "string": "अपना होस्टेड कान्डूइट देखने के लिए साइन इन करें",
+        "developer_comment": "Hosted onboarding headline for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_DETAIL_I18N": {
+        "string": "हम आपको आपके मौजूदा होस्टेड सेटअप और वर्तमान खाता स्थिति से फिर से जोड़ेंगे।",
+        "developer_comment": "Hosted onboarding detail for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HELPER_I18N": {
+        "string": "अगर आपका सत्र समाप्त हो गया है, तो अपना डैशबोर्ड देखने, प्लान प्रबंधित करने या सेटअप जारी रखने के लिए फिर से साइन इन करें।",
+        "developer_comment": "Hosted onboarding helper for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_HEADLINE_I18N": {
+        "string": "अपना होस्टेड सेटअप शुरू करने के लिए साइन इन करें",
+        "developer_comment": "Hosted onboarding headline for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_DETAIL_I18N": {
+        "string": "किसी भी डिवाइस से अपना होस्टेड कान्डूइट प्रबंधित करने के लिए साइन इन करें।",
+        "developer_comment": "Hosted onboarding detail for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_HELPER_I18N": {
+        "string": "आपका खाता आपके कान्डूइट को लिंक करता है ताकि आप उसे डिवाइसों पर मॉनिटर, कॉन्फ़िगर और साझा कर सकें।",
+        "developer_comment": "Hosted onboarding helper for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_HEADLINE_I18N": {
+        "string": "आपके होस्टेड सेटअप पर ध्यान देने की आवश्यकता है",
+        "developer_comment": "Hosted onboarding headline when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_DETAIL_I18N": {
+        "string": "अपना होस्टेड कान्डूइट उपलब्ध रखने के लिए एक्सेस पुनर्स्थापित करें।",
+        "developer_comment": "Hosted onboarding detail when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_HELPER_I18N": {
+        "string": "आपका सहेजा गया सेटअप इस खाते से जुड़ा रहता है, इसलिए आप बिना फिर से शुरू किए उसे पुनः प्राप्त कर सकते हैं।",
+        "developer_comment": "Hosted onboarding helper when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_HEADLINE_I18N": {
+        "string": "जारी रखने के लिए अपना होस्टेड प्लान फिर से सक्रिय करें",
+        "developer_comment": "Hosted onboarding headline when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_DETAIL_I18N": {
+        "string": "आपका कान्डूइट अभी भी इस खाते से जुड़ा है, लेकिन आपका प्लान फिर से सक्रिय होने तक एक्सेस रुका हुआ है।",
+        "developer_comment": "Hosted onboarding detail when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_HELPER_I18N": {
+        "string": "साझा करना और डैशबोर्ड एक्सेस फिर से शुरू करने के लिए एक प्लान चुनें।",
+        "developer_comment": "Hosted onboarding helper when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_WAIT_HEADLINE_I18N": {
+        "string": "हम आपकी सुरक्षित संरचना तैयार कर रहे हैं",
+        "developer_comment": "Hosted onboarding headline while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_WAIT_DETAIL_I18N": {
+        "string": "खाता और स्टेशन जांच पूरी करते समय इसमें कुछ समय लग सकता है।",
+        "developer_comment": "Hosted onboarding detail while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_WAIT_HELPER_I18N": {
+        "string": "हम प्रगति अद्यतित रखेंगे; आप अपनी जगह खोए बिना कभी भी रिफ्रेश कर सकते हैं।",
+        "developer_comment": "Hosted onboarding helper while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_HEADLINE_I18N": {
+        "string": "जारी रखने के लिए अपना होस्टेड प्लान सक्रिय करें",
+        "developer_comment": "Hosted onboarding headline for initial plan activation."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_DETAIL_I18N": {
+        "string": "सक्रियण आपके होस्टेड कान्डूइट को अनलॉक करता है ताकि आप खुले इंटरनेट एक्सेस का समर्थन कर सकें।",
+        "developer_comment": "Hosted onboarding detail for initial plan activation."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
+        "string": "सेटअप जारी रखने और साझा करना अनलॉक करने के लिए एक प्लान चुनें।",
+        "developer_comment": "Hosted onboarding helper for initial plan activation."
     }
 }

@@ -89,7 +89,7 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                     -1,
                     true,
                 );
-            } else if (current === 2) {
+            } else if (current >= 2) {
                 phoneOpacity.value = withTiming(0, { duration: 500 });
             }
         },

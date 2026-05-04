@@ -55,6 +55,7 @@ import {
     resolveEvolutionLevel,
     toOrbLevelFromCount,
 } from "@/src/components/orb-scene/orbUtils";
+import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { createHostedClient } from "@/src/hosted/client";
 import {
@@ -135,7 +136,10 @@ export default function HomeScreen() {
     > | null>(null);
 
     const totalUsableHeight = win.height - (insets.top + insets.bottom);
-    const totalUsableWidth = win.width;
+    const totalUsableWidth = Math.min(
+        win.width - (insets.left + insets.right),
+        APP_MAX_CONTENT_WIDTH,
+    );
     const logoHeight = totalUsableHeight * 0.06;
     const orbSceneHeight = totalUsableHeight * 0.45;
     const actionsAreaHeight = totalUsableHeight * 0.2;
@@ -805,130 +809,147 @@ export default function HomeScreen() {
         <GestureHandlerRootView style={{ flex: 1 }}>
             <SkyBox gradientState={skyBoxGradientState} />
             <SafeAreaView>
-                <LogoWordmark width={totalUsableWidth} height={logoHeight} />
+                <View
+                    style={{
+                        flex: 1,
+                        width: "100%",
+                        maxWidth: APP_MAX_CONTENT_WIDTH,
+                        alignSelf: "center",
+                    }}
+                >
+                    <LogoWordmark
+                        width={totalUsableWidth}
+                        height={logoHeight}
+                    />
 
-                {!showLocalExperience &&
-                (!initialSessionResolved || isHostedEntitlementResolving) ? (
-                    <View
-                        style={{
-                            width: totalUsableWidth,
-                            height: orbSceneHeight,
-                            justifyContent: "center",
-                            alignItems: "center",
-                        }}
-                    >
-                        <ActivityIndicator size="small" color="#8B5CF6" />
-                    </View>
-                ) : !heavyContentReady ? (
-                    <View
-                        style={{
-                            width: totalUsableWidth,
-                            height: orbSceneHeight,
-                            justifyContent: "center",
-                            alignItems: "center",
-                        }}
-                    >
-                        <ActivityIndicator size="small" color="#6B7280" />
-                    </View>
-                ) : (
-                    <>
-                        <OrbScene
-                            width={totalUsableWidth}
-                            height={orbSceneHeight}
-                            applyBlur={bgBlur}
-                            maxVisibleOrbs={showLocalExperience ? 3 : 2}
-                            evolutionLevel={orbEvolutionLevel}
-                            themeLevel={skyBoxGradientState}
-                            pressHint={showDefaultOrbHint}
-                            activityLanes={orbActivityLanes}
-                            orbModes={orbVisualModes}
-                            localOrbIndex={localOrbIndex}
-                            highlightedOrbIndex={selectedHostedOrbIndex}
-                            onPress={orbTapAction}
-                            onHostedOrbPress={handleHostedOrbPress}
-                            onLongPress={orbLongPressAction}
-                            statusOpacity={statusOpacity}
-                            orbRadiusScale={1}
-                            statusTopRatio={0.72}
-                            pressDisabled={
-                                !showLocalExperience &&
-                                isHostedEntitlementResolving
-                            }
-                            accessibilityLabel={
-                                showLocalExperience
-                                    ? t(
-                                          "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N.string",
-                                      )
-                                    : t(
-                                          "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N.string",
-                                      )
-                            }
-                            orbSlotMap={orbSlotMap}
-                        />
+                    {!showLocalExperience &&
+                    (!initialSessionResolved ||
+                        isHostedEntitlementResolving) ? (
+                        <View
+                            style={{
+                                width: totalUsableWidth,
+                                height: orbSceneHeight,
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <ActivityIndicator size="small" color="#8B5CF6" />
+                        </View>
+                    ) : !heavyContentReady ? (
+                        <View
+                            style={{
+                                width: totalUsableWidth,
+                                height: orbSceneHeight,
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <ActivityIndicator size="small" color="#6B7280" />
+                        </View>
+                    ) : (
+                        <>
+                            <OrbScene
+                                width={totalUsableWidth}
+                                height={orbSceneHeight}
+                                applyBlur={bgBlur}
+                                maxVisibleOrbs={showLocalExperience ? 3 : 2}
+                                evolutionLevel={orbEvolutionLevel}
+                                themeLevel={skyBoxGradientState}
+                                pressHint={showDefaultOrbHint}
+                                activityLanes={orbActivityLanes}
+                                orbModes={orbVisualModes}
+                                localOrbIndex={localOrbIndex}
+                                highlightedOrbIndex={selectedHostedOrbIndex}
+                                onPress={orbTapAction}
+                                onHostedOrbPress={handleHostedOrbPress}
+                                onLongPress={orbLongPressAction}
+                                statusOpacity={statusOpacity}
+                                orbRadiusScale={1}
+                                statusTopRatio={0.72}
+                                pressDisabled={
+                                    !showLocalExperience &&
+                                    isHostedEntitlementResolving
+                                }
+                                accessibilityLabel={
+                                    showLocalExperience
+                                        ? t(
+                                              "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N.string",
+                                          )
+                                        : t(
+                                              "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N.string",
+                                          )
+                                }
+                                orbSlotMap={orbSlotMap}
+                            />
 
-                        <ConduitStatus
-                            alias={orbStatusLead}
-                            showLocal={showLocalExperience}
-                            localMetricsPending={localStatusMetricsPending}
-                            localPublicConnected={localPublicConnected}
-                            localIsOnline={localRunning}
-                            showHosted={showHostedSummary}
-                            hostedMetricsPending={hostedStatusMetricsPending}
-                            hostedPublicConnected={publicConnected}
-                            personalPairingMetricsPending={
-                                personalPairingStatusMetricsPending
-                            }
-                            personalPairingConnected={personalPairingConnected}
-                        />
-                    </>
-                )}
-
-                {(shouldLoadHostedStats || hostedStatsUpdatedAt) && (
-                    <View
-                        pointerEvents="none"
-                        style={{
-                            position: "absolute",
-                            left: 0,
-                            right: 0,
-                            bottom: 8,
-                            paddingHorizontal: 16,
-                            zIndex: 3,
-                        }}
-                    >
-                        <StatsSyncStatusRow
-                            updatedAt={hostedStatsUpdatedAt}
-                            isSyncing={isHostedStatsSyncing}
-                        />
-                    </View>
-                )}
-
-                <ActionsArea
-                    width={totalUsableWidth}
-                    height={actionsAreaHeight}
-                    hostedCallToActionMode={hostedCallToActionMode}
-                    hasRecentHostedSignIn={lastAuthProvider != null}
-                    showProvisioning={
-                        (entitlementAllowed &&
-                            (state.stationPhase === "none" ||
-                                state.stationPhase === "provisioning")) ||
-                        state.revenuecatPhase === "purchase_pending" ||
-                        state.revenuecatPhase === "restore_pending"
-                    }
-                    showRenew={
-                        state.entitlementSnapshot === "canceled_not_expired"
-                    }
-                    renewExpiresAt={formatExpiresAt(
-                        state.conduitsSnapshot?.entitlement?.expires_at,
+                            <ConduitStatus
+                                alias={orbStatusLead}
+                                showLocal={showLocalExperience}
+                                localMetricsPending={localStatusMetricsPending}
+                                localPublicConnected={localPublicConnected}
+                                localIsOnline={localRunning}
+                                showHosted={showHostedSummary}
+                                hostedMetricsPending={
+                                    hostedStatusMetricsPending
+                                }
+                                hostedPublicConnected={publicConnected}
+                                personalPairingMetricsPending={
+                                    personalPairingStatusMetricsPending
+                                }
+                                personalPairingConnected={
+                                    personalPairingConnected
+                                }
+                            />
+                        </>
                     )}
-                    onRenew={() =>
-                        router.push({
-                            pathname: "/(app)/hosted-setup",
-                            params: { intent: "renew" },
-                        })
-                    }
-                    onSharePersonalPairing={openPairingModal}
-                    onHostedCallToActionPress={handleHostedPrimaryAction}
-                />
+
+                    {(shouldLoadHostedStats || hostedStatsUpdatedAt) && (
+                        <View
+                            pointerEvents="none"
+                            style={{
+                                position: "absolute",
+                                left: 0,
+                                right: 0,
+                                bottom: 8,
+                                paddingHorizontal: 16,
+                                zIndex: 3,
+                            }}
+                        >
+                            <StatsSyncStatusRow
+                                updatedAt={hostedStatsUpdatedAt}
+                                isSyncing={isHostedStatsSyncing}
+                            />
+                        </View>
+                    )}
+
+                    <ActionsArea
+                        width={totalUsableWidth}
+                        height={actionsAreaHeight}
+                        hostedCallToActionMode={hostedCallToActionMode}
+                        hasRecentHostedSignIn={lastAuthProvider != null}
+                        showProvisioning={
+                            (entitlementAllowed &&
+                                (state.stationPhase === "none" ||
+                                    state.stationPhase === "provisioning")) ||
+                            state.revenuecatPhase === "purchase_pending" ||
+                            state.revenuecatPhase === "restore_pending"
+                        }
+                        showRenew={
+                            state.entitlementSnapshot === "canceled_not_expired"
+                        }
+                        renewExpiresAt={formatExpiresAt(
+                            state.conduitsSnapshot?.entitlement?.expires_at,
+                        )}
+                        onRenew={() =>
+                            router.push({
+                                pathname: "/(app)/hosted-setup",
+                                params: { intent: "renew" },
+                            })
+                        }
+                        onSharePersonalPairing={openPairingModal}
+                        onHostedCallToActionPress={handleHostedPrimaryAction}
+                    />
+                </View>
             </SafeAreaView>
         </GestureHandlerRootView>
     );

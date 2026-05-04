@@ -29,6 +29,22 @@
     "MAX_PEERS_I18N": {
         "string": "بیشترین کاربران"
     },
+    "MAX_PUBLIC_PEERS_I18N": {
+        "string": "حداکثر کاربران عمومی",
+        "developer_comment": "Label for the maximum number of public peers allowed."
+    },
+    "MAX_PERSONAL_PEERS_I18N": {
+        "string": "حداکثر کاربران شخصی",
+        "developer_comment": "Label for the maximum number of personal peers allowed."
+    },
+    "MAX_TOTAL_PEERS_NOTE_I18N": {
+        "string": "کاربران عمومی و شخصی یک محدودیت مشترک {{max}} دارند.",
+        "developer_comment": "Helper text explaining the combined public and personal peer cap."
+    },
+    "MAX_TOTAL_PEERS_ERROR_I18N": {
+        "string": "تعداد کاربران عمومی یا شخصی را کم کنید تا مجموع مشترک {{max}} یا کمتر بماند.",
+        "developer_comment": "Validation message shown when the combined public and personal peer limit is exceeded."
+    },
     "MAX_MBPS_PER_PEER_I18N": {
         "string": "بیشترین مگابایت برای هر کاربر"
     },
@@ -56,6 +72,10 @@
     "CONDUIT_STATION_I18N": {
         "string": "ایستگاه Conduit"
     },
+    "LOCAL_CONDUIT_I18N": {
+        "string": "Conduit محلی",
+        "developer_comment": "Title for the local conduit details modal."
+    },
     "RUNNING_I18N": {
         "string": "در حال اجرا"
     },
@@ -73,6 +93,10 @@
     },
     "SENT_THANK_YOU_I18N": {
         "string": "فرستاده شد!‌"
+    },
+    "TRY_AGAIN_I18N": {
+        "string": "دوباره تلاش کنید",
+        "developer_comment": "Button label to retry a failed or offline operation."
     },
     "HOLD_TO_TURN_OFF_I18N": {
         "string": "برای خاموش کردن اینجا را فشار دهید"
@@ -164,20 +188,47 @@
     "NAME_YOUR_CONDUIT_I18N": {
         "string": "ایستگاه خود را نام‌گذاری کنید "
     },
+    "INPUT_YOUR_CONDUIT_NAME_I18N": {
+        "string": "نام Conduit خود را وارد کنید"
+    },
+    "SAVE_I18N": {
+        "string": "ذخیره"
+    },
     "ID_I18N": {
         "string": "شناسه"
     },
     "ALIAS_I18N": {
         "string": "نام مستعار"
     },
+    "ALIAS_VISIBILITY_HINT_I18N": {
+        "string": "هر کسی که جفت‌سازی شخصی را با او به اشتراک بگذارید این متن را می‌بیند"
+    },
     "CLAIM_REWARDS_IN_RYVE_I18N": {
         "string": "دریافت پاداش‌ها در Ryve"
+    },
+    "CLAIM_HOSTED_REWARDS_I18N": {
+        "string": "دریافت پاداش‌های میزبانی‌شده",
+        "developer_comment": "Label for claiming hosted conduit rewards from settings."
+    },
+    "CLAIM_LOCAL_REWARDS_I18N": {
+        "string": "دریافت پاداش‌های محلی",
+        "developer_comment": "Label for claiming local conduit rewards from settings on Android."
     },
     "SCAN_THIS_FROM_RYVE_APP_I18N": {
         "string": "این کد QR را در اپلیکیشن Ryve اسکن کنید تا این ایستگاه Conduit را به حساب Ryve خود متصل کنید"
     },
     "CLOSE_I18N": {
         "string": "بستن"
+    },
+    "TURN_OFF_I18N": {
+        "string": "خاموش کردن",
+        "developer_comment": "Button label for turning off the local conduit."
+    },
+    "EDIT_I18N": {
+        "string": "ویرایش"
+    },
+    "HIDE_I18N": {
+        "string": "پنهان"
     },
     "INVALID_QR_CODE_I18N": {
         "string": "کد QR نامعتبر"
@@ -191,11 +242,8 @@
     "REVEAL_I18N": {
         "string": "نمایش"
     },
-    "EDIT_I18N": {
-        "string": "ویرایش"
-    },
-    "HIDE_I18N": {
-        "string": "پنهان"
+    "REVEAL_QR_I18N": {
+        "string": "نمایش QR"
     },
     "REDUCED_USAGE_WINDOW_I18N": {
         "string": "بازه مصرف کاهش‌یافته"
@@ -244,5 +292,619 @@
     },
     "REDUCED_REQUIRED_BANDWIDTH_I18N": {
         "string": "پهنای باند مورد نیاز کاهش‌یافته"
+    },
+    "HOSTED_CALL_TO_ACTION_I18N": {
+        "string": "Conduit ابری خودتان را میزبانی کنید"
+    },
+    "SHARE_PERSONAL_PAIRING_I18N": {
+        "string": "اشتراک‌گذاری جفت‌سازی شخصی"
+    },
+    "SETTINGS_PERSONAL_PAIRING_I18N": {
+        "string": "جفت‌سازی شخصی",
+        "developer_comment": "Settings row label for opening personal pairing."
+    },
+    "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "افراد را مستقیماً به Conduit خود وصل کنید",
+        "developer_comment": "Settings row subtitle for personal pairing."
+    },
+    "SHARE_PERSONAL_PAIRING_LINK_I18N": {
+        "string": "اشتراک‌گذاری پیوند جفت‌سازی شخصی",
+        "developer_comment": "Home screen CTA button label for sharing the Personal Pairing link."
+    },
+    "PREPARING_PERSONAL_PAIRING_I18N": {
+        "string": "در حال آماده‌سازی جفت‌سازی شخصی..."
+    },
+    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
+        "string": "تأثیر شما (۳۰ روز گذشته)"
+    },
+    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
+        "string": "در حال بارگذاری خلاصه تأثیر..."
+    },
+    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
+        "string": "خلاصه تأثیر در دسترس نیست، چون هیچ هدف آمار مجازی برای این حساب برگردانده نشد."
+    },
+    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
+        "string": "بیشترین کاربران متصل در ۳۰ روز گذشته"
+    },
+    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
+        "string": "بایت‌های منتقل‌شده در ۳۰ روز گذشته"
+    },
+    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
+        "string": "اشتراک و حساب"
+    },
+    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
+        "string": "وضعیت اشتراک: {{status}}"
+    },
+    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
+        "string": "محصول: {{productId}}"
+    },
+    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
+        "string": "تمدید/انقضا در: {{expiresAt}}"
+    },
+    "HOSTED_MANAGE_OPEN_BILLING_I18N": {
+        "string": "مدیریت صورت‌حساب"
+    },
+    "DASHBOARD_I18N": {
+        "string": "داشبورد"
+    },
+    "DASHBOARD_LOCAL_STATION_I18N": {
+        "string": "محلی",
+        "developer_comment": "Label for selecting local station stats on the dashboard."
+    },
+    "DASHBOARD_HOSTED_STATION_I18N": {
+        "string": "میزبانی‌شده",
+        "developer_comment": "Label for selecting hosted station stats on the dashboard."
+    },
+    "LOCAL_DASHBOARD_STATUS_I18N": {
+        "string": "Conduit محلی: {{status}}",
+        "developer_comment": "Status label shown on the local dashboard header row."
+    },
+    "LOCAL_DASHBOARD_HISTORY_START_PROMPT_I18N": {
+        "string": "Conduit محلی را شروع کنید تا تاریخچه بارگذاری شود.",
+        "developer_comment": "Chart notice shown when the local dashboard has no cached history because the local conduit is stopped."
+    },
+    "HOST_A_STATION_I18N": {
+        "string": "میزبانی یک Conduit"
+    },
+    "HOST_A_STATION_IOS_I18N": {
+        "string": "ایجاد Conduit میزبانی‌شده",
+        "developer_comment": "Title for the iOS hosted conduit setup CTA."
+    },
+    "VIEW_YOUR_CONDUIT_I18N": {
+        "string": "Conduit خود را ببینید",
+        "developer_comment": "Title for the hosted conduit action card when the user has signed in before and needs to get back to their existing setup."
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N": {
+        "string": "یک ایستگاه Conduit میزبانی‌شده توسط Psiphon ایجاد کنید تا Conduit Station شما قابل‌دسترسی‌تر و مطمئن‌تر شود"
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_IOS_I18N": {
+        "string": "یک ایستگاه Conduit میزبانی‌شده توسط Psiphon ایجاد کنید که در ابر اجرا می‌شود.",
+        "developer_comment": "Description for the iOS hosted conduit setup CTA, where there is no local runner."
+    },
+    "VIEW_YOUR_CONDUIT_DESCRIPTION_I18N": {
+        "string": "دوباره وارد شوید تا تنظیمات میزبانی‌شده خود را ببینید و از همان‌جا ادامه دهید.",
+        "developer_comment": "Description for the hosted conduit action card when the user has signed in before and needs to access an existing setup."
+    },
+    "CLAIM_REWARDS_I18N": {
+        "string": "دریافت پاداش‌ها"
+    },
+    "SET_AS_MAIN_ORB_I18N": {
+        "string": "تنظیم به عنوان اصلی"
+    },
+    "OR_I18N": {
+        "string": "یا"
+    },
+    "OPEN_IN_RYVE_I18N": {
+        "string": "باز کردن در Ryve"
+    },
+    "STATION_NAME_REQUIRED_I18N": {
+        "string": "نام ایستگاه را وارد کنید.",
+        "developer_comment": "Hint shown in the Personal Pairing share modal when the user has not yet set a valid conduit station name."
+    },
+    "PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "این پیوند را با دوستان و خانواده به اشتراک بگذارید تا به ایستگاه Conduit شما وصل شوند. آن‌ها باید این پیوند را در برنامه Psiphon جای‌گذاری کنند.",
+        "developer_comment": "Description text shown in the Personal Pairing share modal."
+    },
+    "DEFAULT_CONDUIT_NAME_I18N": {
+        "string": "Conduit میزبانی‌شده من",
+        "developer_comment": "Default fallback name for a hosted conduit station."
+    },
+    "PERSONAL_PAIRING_NOT_READY_I18N": {
+        "string": "جفت‌سازی شخصی هنوز آماده نیست.",
+        "developer_comment": "Notice shown when personal pairing compartment is not available."
+    },
+    "PERSONAL_PAIRING_INVALID_NAME_I18N": {
+        "string": "لطفاً پیش از اشتراک‌گذاری یک نام معتبر برای conduit تنظیم کنید (۳–۳۲ نویسه).",
+        "developer_comment": "Notice shown when conduit name is invalid for sharing."
+    },
+    "SHARE_UNAVAILABLE_TOKEN_COPIED_I18N": {
+        "string": "اشتراک‌گذاری در دسترس نیست. به‌جای آن توکن جفت‌سازی کپی شد.",
+        "developer_comment": "Fallback notice when native share sheet is unavailable."
+    },
+    "CLOSE_PERSONAL_PAIRING_ACCESSIBILITY_I18N": {
+        "string": "بستن جفت‌سازی شخصی",
+        "developer_comment": "Accessibility label for the close button in the personal pairing modal."
+    },
+    "PERSONAL_PAIRING_TITLE_I18N": {
+        "string": "جفت‌سازی شخصی",
+        "developer_comment": "Label for Personal Pairing in status summaries."
+    },
+    "PERSONAL_PAIRING_SHARE_MODAL_TITLE_I18N": {
+        "string": "پیوند جفت‌سازی شخصی",
+        "developer_comment": "Title of the personal pairing share modal."
+    },
+    "SHARE_IN_I18N": {
+        "string": "ارسال پیوند به زبان",
+        "developer_comment": "Label next to the language picker in the personal pairing share modal."
+    },
+    "SHARE_LINK_I18N": {
+        "string": "اشتراک‌گذاری پیوند",
+        "developer_comment": "Label for the share link button."
+    },
+    "MBPS_PER_PEER_I18N": {
+        "string": "MBPS برای هر کاربر",
+        "developer_comment": "Label for the megabits per second per peer setting."
+    },
+    "MAX_BANDWIDTH_USAGE_I18N": {
+        "string": "حداکثر مصرف پهنای باند",
+        "developer_comment": "Label for the maximum bandwidth usage setting."
+    },
+    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "اتصال خود را مستقیم با دوستان و خانواده به اشتراک بگذارید",
+        "developer_comment": "Description text for the personal pairing share action in settings."
+    },
+    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
+        "string": "دریافت پاداش‌های میزبانی‌شده در Ryve",
+        "developer_comment": "Label for claiming hosted conduit rewards in the Ryve app."
+    },
+    "REWARDS_I18N": {
+        "string": "پاداش‌ها",
+        "developer_comment": "Settings row label for Ryve rewards."
+    },
+    "HOSTED_REWARDS_I18N": {
+        "string": "پاداش‌های میزبانی‌شده",
+        "developer_comment": "Android settings row label for hosted Ryve rewards."
+    },
+    "LOCAL_REWARDS_I18N": {
+        "string": "پاداش‌های محلی",
+        "developer_comment": "Android settings row label for local Ryve rewards."
+    },
+    "LEGAL_I18N": {
+        "string": "حقوقی",
+        "developer_comment": "Settings section label for legal links."
+    },
+    "TERMS_OF_USE_I18N": {
+        "string": "شرایط استفاده",
+        "developer_comment": "Settings row label for terms of use."
+    },
+    "MORE_INFO_I18N": {
+        "string": "اطلاعات بیشتر",
+        "developer_comment": "Settings row label for replaying onboarding information screens."
+    },
+    "ACCOUNT_I18N": {
+        "string": "حساب",
+        "developer_comment": "Header label for the account section."
+    },
+    "RENEW_SUBSCRIPTION_I18N": {
+        "string": "تمدید اشتراک",
+        "developer_comment": "Button label to renew a subscription."
+    },
+    "RENEW_SUBSCRIPTION_DESCRIPTION_I18N": {
+        "string": "Conduit میزبانی‌شده شما در {{ expiresAt }} خاموش می‌شود",
+        "developer_comment": "Subtitle shown on the home screen renew button when the subscription is canceled but not yet expired."
+    },
+    "RENEWS_EXPIRES_I18N": {
+        "string": "تمدید / انقضا",
+        "developer_comment": "Label for the subscription renewal/expiry date."
+    },
+    "SIGN_IN_I18N": {
+        "string": "ورود",
+        "developer_comment": "Button label to sign in to an account."
+    },
+    "SIGN_OUT_I18N": {
+        "string": "خروج",
+        "developer_comment": "Button label to sign out of the account."
+    },
+    "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
+        "string": "بستن جزئیات conduit",
+        "developer_comment": "Accessibility label for the close button in the hosted conduit modal."
+    },
+    "SCOPE_PERSONAL_I18N": {
+        "string": "شخصی",
+        "developer_comment": "Label for the personal scope of a hosted conduit compartment."
+    },
+    "HOSTED_PERSONAL_SCOPE_I18N": {
+        "string": "شخصی میزبانی‌شده",
+        "developer_comment": "Label for the hosted personal conduit scope on Android."
+    },
+    "SCOPE_COMMON_I18N": {
+        "string": "عمومی",
+        "developer_comment": "Label for the common/public scope of a hosted conduit compartment."
+    },
+    "HOSTED_PUBLIC_SCOPE_I18N": {
+        "string": "عمومی میزبانی‌شده",
+        "developer_comment": "Label for the hosted public conduit scope on Android."
+    },
+    "HOSTED_CONDUIT_FALLBACK_I18N": {
+        "string": "Conduit میزبانی‌شده",
+        "developer_comment": "Fallback display name for a hosted conduit."
+    },
+    "LOADING_HOSTED_STATUS_I18N": {
+        "string": "در حال بارگذاری وضعیت میزبانی‌شده...",
+        "developer_comment": "Text shown while hosted conduit status is loading."
+    },
+    "RESTORE_YOUR_CONDUIT_I18N": {
+        "string": "بازیابی Conduit شما",
+        "developer_comment": "Title for the restore conduit action card."
+    },
+    "RESTORE_CONDUIT_DESCRIPTION_I18N": {
+        "string": "اشتراک میزبانی‌شده خود را دوباره وصل کنید و زیرساخت امن خود را بازیابی کنید.",
+        "developer_comment": "Description for the restore conduit action card."
+    },
+    "CONDUIT_ALIAS_VALIDATION_ERROR_I18N": {
+        "string": "۳–{{ maxLength }} نویسه، فقط حروف/اعداد/فاصله/.-_",
+        "developer_comment": "Validation error shown when the conduit alias doesn't meet requirements."
+    },
+    "CLOSE_RYVE_MODAL_ACCESSIBILITY_I18N": {
+        "string": "بستن پنجره Ryve",
+        "developer_comment": "Accessibility label for the close button in the Ryve modal."
+    },
+    "LOADING_CONDUIT_DATA_I18N": {
+        "string": "در حال بارگذاری داده‌های Conduit...",
+        "developer_comment": "Text shown while conduit data is loading in the Ryve modal."
+    },
+    "ERROR_FORMATTING_KEYDATA_I18N": {
+        "string": "خطا در قالب‌بندی داده‌های کلید",
+        "developer_comment": "Error message when key data cannot be formatted."
+    },
+    "CONNECTED_COUNT_I18N": {
+        "string": "متصل: {{ count }}",
+        "developer_comment": "Label showing the number of connected peers on a hosted conduit card."
+    },
+    "NO_RECENT_DATA_YET_I18N": {
+        "string": "هنوز داده جدیدی وجود ندارد",
+        "developer_comment": "Placeholder shown in a timeseries plot when there is no recent data."
+    },
+    "NO_DATA_YET_I18N": {
+        "string": "هنوز داده‌ای وجود ندارد",
+        "developer_comment": "Placeholder shown in a timeseries plot when there is no data."
+    },
+    "TRANSFERRED_PER_INTERVAL_I18N": {
+        "string": "منتقل‌شده در هر بازه",
+        "developer_comment": "Y-axis label for the bytes transferred chart."
+    },
+    "CONNECTED_USERS_I18N": {
+        "string": "کاربران متصل",
+        "developer_comment": "Y-axis label for the connected users chart."
+    },
+    "CONNECTING_USERS_I18N": {
+        "string": "کاربران در حال اتصال",
+        "developer_comment": "Y-axis label for the connecting users chart."
+    },
+    "CONNECTED_I18N": {
+        "string": "متصل",
+        "developer_comment": "Label for the connected metric tab."
+    },
+    "CONNECTING_I18N": {
+        "string": "در حال اتصال",
+        "developer_comment": "Label for the connecting metric tab."
+    },
+    "BYTES_I18N": {
+        "string": "بایت",
+        "developer_comment": "Label for the bytes transferred metric tab."
+    },
+    "SYNCING_I18N": {
+        "string": "در حال همگام‌سازی...",
+        "developer_comment": "Text shown while stats are syncing."
+    },
+    "MINI_ORB_STATUS_I18N": {
+        "string": "متصل {{ connected }} | در حال اتصال {{ connecting }}",
+        "developer_comment": "Status text on the hosted mini orb showing connected and connecting counts."
+    },
+    "HOME_I18N": {
+        "string": "خانه",
+        "developer_comment": "Label for the Home tab in bottom navigation."
+    },
+    "ERROR_I18N": {
+        "string": "خطا",
+        "developer_comment": "Generic error text."
+    },
+    "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
+        "string": "پیوند به سیاست حفظ حریم خصوصی",
+        "developer_comment": "Accessibility label for the privacy policy link."
+    },
+    "LINK_TO_INFO_WEBSITE_ACCESSIBILITY_I18N": {
+        "string": "پیوند به وب‌سایت اطلاعات",
+        "developer_comment": "Accessibility label for the learn more link."
+    },
+    "CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
+        "string": "گوی Conduit. برای تعامل ضربه بزنید.",
+        "developer_comment": "Accessibility label for the main conduit orb."
+    },
+    "LOCAL_CONDUIT_ORB_ACCESSIBILITY_I18N": {
+        "string": "گوی conduit محلی",
+        "developer_comment": "Accessibility label for the local conduit orb."
+    },
+    "CONDUIT_ORB_ACCESSIBILITY_I18N": {
+        "string": "گوی conduit",
+        "developer_comment": "Accessibility label for a generic conduit orb."
+    },
+    "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
+        "string": "گوی conduit میزبانی‌شده. برای جزئیات ضربه بزنید",
+        "developer_comment": "Accessibility label for the hosted conduit orb."
+    },
+    "SIGN_IN_TO_SYNC_I18N": {
+        "string": "برای همگام‌سازی حساب میزبانی‌شده خود وارد شوید",
+        "developer_comment": "Hint shown when user needs to sign in for hosted account sync."
+    },
+    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
+        "string": "{{ bytes }} منتقل شد{{ window }}",
+        "developer_comment": "Metric text showing bytes transferred with optional time window suffix."
+    },
+    "N_HOSTED_PEERS_ONLINE_I18N": {
+        "string": "{{ count }} کاربر میزبانی‌شده آنلاین",
+        "developer_comment": "Metric text showing the number of hosted peers currently online."
+    },
+    "HOME_SUMMARY_PEER_COUNT_I18N": {
+        "string": "{{count}} کاربر",
+        "developer_comment": "Peer count text shown on the simplified home summary rows."
+    },
+    "HOME_SUMMARY_OFFLINE_I18N": {
+        "string": "آفلاین",
+        "developer_comment": "Status text shown for the local conduit row when it is not running."
+    },
+    "PUBLIC_PEERS_ONLINE_I18N": {
+        "string": "کاربران عمومی آنلاین"
+    },
+    "PERSONAL_PEERS_ONLINE_I18N": {
+        "string": "کاربران شخصی آنلاین"
+    },
+    "SYNCING_HOSTED_USAGE_METRICS_I18N": {
+        "string": "در حال همگام‌سازی شاخص‌های استفاده میزبانی‌شده...",
+        "developer_comment": "Hint shown while hosted usage metrics are being synced."
+    },
+    "UPGRADE_REQUIRED_LOCAL_CONDUIT_I18N": {
+        "string": "برای conduit محلی ارتقا لازم است",
+        "developer_comment": "Hint shown when a local conduit requires an app upgrade."
+    },
+    "HOLD_ORB_TO_TURN_OFF_I18N": {
+        "string": "وقتی کاربران متصل هستند، گوی را نگه دارید تا خاموش شود",
+        "developer_comment": "Hint shown when user taps orb while peers are connected."
+    },
+    "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
+        "string": "دکمه صحنه conduit محلی",
+        "developer_comment": "Accessibility label for the local conduit scene selector."
+    },
+    "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
+        "string": "دکمه صحنه conduit میزبانی‌شده",
+        "developer_comment": "Accessibility label for the hosted conduit scene selector."
+    },
+    "PREPARING_HOSTED_CONDUIT_I18N": {
+        "string": "در حال آماده‌سازی Conduit میزبانی‌شده شما...",
+        "developer_comment": "Loading message during hosted conduit setup."
+    },
+    "PREPARING_I18N": {
+        "string": "در حال آماده‌سازی...",
+        "developer_comment": "Generic loading message shown while a feature is preparing."
+    },
+    "CONNECTING_TO_YOUR_HOSTED_CONDUIT_I18N": {
+        "string": "در حال اتصال به Conduit میزبانی‌شده شما...",
+        "developer_comment": "Loading message shown while the initial hosted session and conduits snapshot are being loaded."
+    },
+    "SETTING_UP_INFRASTRUCTURE_I18N": {
+        "string": "در حال راه‌اندازی زیرساخت شما...",
+        "developer_comment": "Loading message while hosted infrastructure is being provisioned."
+    },
+    "PROVISIONING_LEAVE_HINT_I18N": {
+        "string": "می‌توانید هنگام آماده‌سازی زیرساخت از این صفحه خارج شوید.",
+        "developer_comment": "Helper text on the provisioning screen indicating the user does not need to wait."
+    },
+    "OPENING_YOUR_DASHBOARD_I18N": {
+        "string": "در حال باز کردن داشبورد شما...",
+        "developer_comment": "Loading message while dashboard is being opened."
+    },
+    "UNAVAILABLE_I18N": {
+        "string": "در دسترس نیست",
+        "developer_comment": "Label shown when a feature or resource is unavailable."
+    },
+    "SETUP_INCOMPLETE_I18N": {
+        "string": "راه‌اندازی برای این ساخت کامل نیست. URL میزبانی‌شده، کلید Clerk و کلید RevenueCat را بررسی کنید.",
+        "developer_comment": "Status message shown when hosted setup configuration is incomplete."
+    },
+    "CHOOSE_A_PLAN_I18N": {
+        "string": "یک طرح انتخاب کنید",
+        "developer_comment": "Header text for the subscription plan selection screen."
+    },
+    "RETRY_PLAN_LOAD_I18N": {
+        "string": "تلاش دوباره برای بارگذاری طرح",
+        "developer_comment": "Button label to retry loading subscription plans."
+    },
+    "SIGN_IN_WITH_GOOGLE_I18N": {
+        "string": "ورود با Google",
+        "developer_comment": "Button label for Google sign-in."
+    },
+    "SIGN_IN_WITH_APPLE_I18N": {
+        "string": "ورود با Apple",
+        "developer_comment": "Button label for Apple sign-in."
+    },
+    "CONTINUE_I18N": {
+        "string": "ادامه",
+        "developer_comment": "Button label to continue to the next step."
+    },
+    "RESTORE_PURCHASES_I18N": {
+        "string": "بازیابی خریدها",
+        "developer_comment": "Button label to restore previous in-app purchases."
+    },
+    "CONTINUE_RETRY_INFRA_CHECK_I18N": {
+        "string": "ادامه: تلاش دوباره برای بررسی زیرساخت",
+        "developer_comment": "Button label to retry infrastructure verification."
+    },
+    "MANAGE_SETUP_DETAILS_I18N": {
+        "string": "مدیریت جزئیات راه‌اندازی",
+        "developer_comment": "Button label to manage hosted setup details."
+    },
+    "LAST_30D_SUFFIX_I18N": {
+        "string": " (۳۰ روز گذشته)",
+        "developer_comment": "Suffix appended to dashboard labels indicating a 30-day window."
+    },
+    "DASHBOARD_NOT_READY_I18N": {
+        "string": "دسترسی به داشبورد هنوز آماده نیست. وضعیت راه‌اندازی را تازه کنید و دوباره تلاش کنید.",
+        "developer_comment": "Message shown when dashboard data is not yet available."
+    },
+    "NO_AUTHORIZED_TARGETS_I18N": {
+        "string": "هنوز هیچ هدف داشبورد مجازی وجود ندارد.",
+        "developer_comment": "Message shown when there are no authorized stats targets."
+    },
+    "YOUR_CONDUITS_I18N": {
+        "string": "Conduitهای شما",
+        "developer_comment": "Header for the list of user's conduits on the dashboard."
+    },
+    "WHO_ARE_YOU_HELPING_I18N": {
+        "string": "به چه کسانی کمک می‌کنید؟",
+        "developer_comment": "Header for the top helped countries section on the dashboard."
+    },
+    "OPEN_REGIONAL_BREAKDOWN_I18N": {
+        "string": "باز کردن تفکیک منطقه‌ای",
+        "developer_comment": "Accessibility label for opening the regional activity modal from the dashboard map."
+    },
+    "TAP_MAP_FOR_COUNTRY_DETAILS_I18N": {
+        "string": "برای جزئیات کشور روی نقشه ضربه بزنید",
+        "developer_comment": "Hint shown above the dashboard map to explain the interaction."
+    },
+    "REGIONAL_ACTIVITY_BY_BYTES_I18N": {
+        "string": "فعالیت منطقه‌ای بر اساس بایت‌های منتقل‌شده",
+        "developer_comment": "Title shown in the dashboard regional breakdown modal."
+    },
+    "TOP_HELPED_COUNTRIES_I18N": {
+        "string": "کشورهایی که بیشترین کمک را بر اساس {{ metric }} دریافت کرده‌اند ({{ window }})",
+        "developer_comment": "Subheader describing the top helped countries chart."
+    },
+    "BYTES_TRANSFERRED_LABEL_I18N": {
+        "string": "بایت‌های منتقل‌شده",
+        "developer_comment": "Label for the bytes transferred metric."
+    },
+    "CONNECTED_USERS_LABEL_I18N": {
+        "string": "کاربران متصل",
+        "developer_comment": "Label for the connected users metric."
+    },
+    "TAP_TO_SWITCH_METRIC_I18N": {
+        "string": "برای تغییر شاخص روی بخش ضربه بزنید",
+        "developer_comment": "Hint text telling users to tap to switch between metrics."
+    },
+    "COMPLETING_SIGN_IN_I18N": {
+        "string": "در حال تکمیل ورود...",
+        "developer_comment": "Text shown during SSO callback while sign-in is being completed."
+    },
+    "ONBOARDING_INFO_ACCESSIBILITY_I18N": {
+        "string": "اطلاعات معرفی، به‌روزرسانی خواهد شد",
+        "developer_comment": "Accessibility label for the onboarding info section."
+    },
+    "HOSTED_ONBOARDING_STEP_SIGN_IN_TITLE_I18N": {
+        "string": "ورود",
+        "developer_comment": "Hosted onboarding step title for account sign-in."
+    },
+    "HOSTED_ONBOARDING_STEP_SIGN_IN_HELPER_I18N": {
+        "string": "از حساب خود استفاده کنید تا تنظیمات میزبانی‌شده شما خصوصی و قابل بازیابی بماند.",
+        "developer_comment": "Hosted onboarding step helper for account sign-in."
+    },
+    "HOSTED_ONBOARDING_STEP_ACTIVATE_TITLE_I18N": {
+        "string": "فعال‌سازی دسترسی میزبانی‌شده",
+        "developer_comment": "Hosted onboarding step title for plan activation."
+    },
+    "HOSTED_ONBOARDING_STEP_ACTIVATE_HELPER_I18N": {
+        "string": "طرح شما سرویس را فعال نگه می‌دارد و راه‌اندازی امن را باز می‌کند.",
+        "developer_comment": "Hosted onboarding step helper for plan activation."
+    },
+    "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_TITLE_I18N": {
+        "string": "زیرساخت امن خود را آماده کنید",
+        "developer_comment": "Hosted onboarding step title for infrastructure provisioning."
+    },
+    "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_HELPER_I18N": {
+        "string": "ما conduit میزبانی‌شده شما را ایجاد و تأیید می‌کنیم، سپس می‌توانید آن را به اشتراک بگذارید.",
+        "developer_comment": "Hosted onboarding step helper for infrastructure provisioning."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_HEADLINE_I18N": {
+        "string": "اتصال اینترنت وجود ندارد",
+        "developer_comment": "Hosted onboarding headline shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_DETAIL_I18N": {
+        "string": "در حال حاضر نمی‌توانیم به سرور دسترسی پیدا کنیم. اتصال خود را بررسی کنید و دوباره تلاش کنید.",
+        "developer_comment": "Hosted onboarding detail shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_HELPER_I18N": {
+        "string": "به محض آنلاین شدن دوباره دستگاه شما، دوباره وصل می‌شویم.",
+        "developer_comment": "Hosted onboarding helper shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HEADLINE_I18N": {
+        "string": "برای مشاهده conduit میزبانی‌شده خود وارد شوید",
+        "developer_comment": "Hosted onboarding headline for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_DETAIL_I18N": {
+        "string": "شما را دوباره به تنظیمات میزبانی‌شده موجود و وضعیت فعلی حساب وصل می‌کنیم.",
+        "developer_comment": "Hosted onboarding detail for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HELPER_I18N": {
+        "string": "اگر نشست شما منقضی شده است، دوباره وارد شوید تا داشبورد را ببینید، طرح خود را مدیریت کنید یا راه‌اندازی را ادامه دهید.",
+        "developer_comment": "Hosted onboarding helper for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_HEADLINE_I18N": {
+        "string": "برای شروع راه‌اندازی میزبانی‌شده خود وارد شوید",
+        "developer_comment": "Hosted onboarding headline for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_DETAIL_I18N": {
+        "string": "وارد شوید تا conduit میزبانی‌شده خود را از هر دستگاهی مدیریت کنید.",
+        "developer_comment": "Hosted onboarding detail for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_HELPER_I18N": {
+        "string": "حساب شما conduit شما را پیوند می‌دهد تا بتوانید آن را در دستگاه‌های مختلف پایش، پیکربندی و به اشتراک بگذارید.",
+        "developer_comment": "Hosted onboarding helper for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_HEADLINE_I18N": {
+        "string": "راه‌اندازی میزبانی‌شده شما نیاز به توجه دارد",
+        "developer_comment": "Hosted onboarding headline when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_DETAIL_I18N": {
+        "string": "دسترسی را بازیابی کنید تا conduit میزبانی‌شده شما در دسترس بماند.",
+        "developer_comment": "Hosted onboarding detail when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_HELPER_I18N": {
+        "string": "تنظیمات ذخیره‌شده شما به این حساب متصل می‌ماند، بنابراین می‌توانید بدون شروع دوباره آن را بازیابی کنید.",
+        "developer_comment": "Hosted onboarding helper when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_HEADLINE_I18N": {
+        "string": "برای ادامه، طرح میزبانی‌شده خود را دوباره فعال کنید",
+        "developer_comment": "Hosted onboarding headline when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_DETAIL_I18N": {
+        "string": "Conduit شما هنوز به این حساب متصل است، اما دسترسی تا زمان فعال شدن دوباره طرح متوقف شده است.",
+        "developer_comment": "Hosted onboarding detail when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_HELPER_I18N": {
+        "string": "برای ازسرگیری اشتراک‌گذاری و دسترسی به داشبورد، یک طرح انتخاب کنید.",
+        "developer_comment": "Hosted onboarding helper when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_WAIT_HEADLINE_I18N": {
+        "string": "ما در حال آماده‌سازی زیرساخت امن شما هستیم",
+        "developer_comment": "Hosted onboarding headline while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_WAIT_DETAIL_I18N": {
+        "string": "ممکن است کمی طول بکشد تا بررسی‌های حساب و ایستگاه را کامل کنیم.",
+        "developer_comment": "Hosted onboarding detail while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_WAIT_HELPER_I18N": {
+        "string": "پیشرفت را به‌روز نگه می‌داریم؛ هر زمان می‌توانید بدون از دست دادن جای خود تازه‌سازی کنید.",
+        "developer_comment": "Hosted onboarding helper while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_HEADLINE_I18N": {
+        "string": "برای ادامه، طرح میزبانی‌شده خود را فعال کنید",
+        "developer_comment": "Hosted onboarding headline for initial plan activation."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_DETAIL_I18N": {
+        "string": "فعال‌سازی conduit میزبانی‌شده شما را باز می‌کند تا بتوانید از دسترسی به اینترنت آزاد پشتیبانی کنید.",
+        "developer_comment": "Hosted onboarding detail for initial plan activation."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
+        "string": "برای ادامه راه‌اندازی و باز کردن اشتراک‌گذاری، یک طرح انتخاب کنید.",
+        "developer_comment": "Hosted onboarding helper for initial plan activation."
     }
 }

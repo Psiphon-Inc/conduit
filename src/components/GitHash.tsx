@@ -39,7 +39,7 @@ export function GitHash() {
                     { color: palette.lightGrey, fontSize: 14 },
                 ]}
             >
-                v.{GIT_HASH.substring(0, 12)}
+                {GIT_HASH.substring(0, 12)}
             </Animated.Text>
         </View>
     );

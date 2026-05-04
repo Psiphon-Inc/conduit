@@ -24,6 +24,7 @@ import { InteractionManager, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/src/components/Icon";
+import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 type BottomNavItem = {
@@ -108,41 +109,58 @@ export function AppBottomNav() {
                 paddingTop: 8,
                 paddingBottom: Math.max(8, insets.bottom),
                 paddingHorizontal: 8,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
             }}
         >
-            {items.map((item) => {
-                const color = item.isActive ? palette.purple : palette.black;
-                return (
-                    <Pressable
-                        key={item.key}
-                        accessibilityRole="button"
-                        accessibilityLabel={item.label}
-                        onPressIn={() => {
-                            if (!item.isActive) {
-                                void Haptics.impactAsync(
-                                    Haptics.ImpactFeedbackStyle.Light,
-                                );
-                                router.replace(item.href);
-                            }
-                        }}
-                        style={{
-                            flex: 1,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 4,
-                            paddingVertical: 4,
-                        }}
-                    >
-                        <Icon name={item.icon} size={24} color={color} />
-                        <Text style={[ss.tinyFont, { color }]}>
-                            {item.label}
-                        </Text>
-                    </Pressable>
-                );
-            })}
+            <View
+                style={{
+                    width: "100%",
+                    maxWidth: APP_MAX_CONTENT_WIDTH,
+                    alignSelf: "center",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                }}
+            >
+                {items.map((item) => {
+                    const color = item.isActive
+                        ? palette.purple
+                        : palette.black;
+                    const activeBackgroundColor = item.isActive
+                        ? "rgba(126, 92, 184, 0.16)"
+                        : palette.transparent;
+
+                    return (
+                        <Pressable
+                            key={item.key}
+                            accessibilityRole="button"
+                            accessibilityLabel={item.label}
+                            onPressIn={() => {
+                                if (!item.isActive) {
+                                    void Haptics.impactAsync(
+                                        Haptics.ImpactFeedbackStyle.Light,
+                                    );
+                                    router.replace(item.href);
+                                }
+                            }}
+                            style={{
+                                flex: 1,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 4,
+                                marginHorizontal: 4,
+                                paddingVertical: 6,
+                                borderRadius: 18,
+                                backgroundColor: activeBackgroundColor,
+                            }}
+                        >
+                            <Icon name={item.icon} size={24} color={color} />
+                            <Text style={[ss.tinyFont, { color }]}>
+                                {item.label}
+                            </Text>
+                        </Pressable>
+                    );
+                })}
+            </View>
         </View>
     );
 }

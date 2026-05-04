@@ -65,7 +65,10 @@ import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { SkyBox } from "@/src/components/SkyBox";
 import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
-import { ASYNCSTORAGE_HAS_ONBOARDED_KEY } from "@/src/constants";
+import {
+    APP_MAX_CONTENT_WIDTH,
+    ASYNCSTORAGE_HAS_ONBOARDED_KEY,
+} from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
 
@@ -100,11 +103,23 @@ export default function OnboardingScreen() {
     const [totalUsableHeight, setTotalUsableHeight] = useState(win.height);
 
     function onScreenLayout(event: LayoutChangeEvent) {
-        setTotalUsableWidth(event.nativeEvent.layout.width);
+        setTotalUsableWidth(
+            Math.min(event.nativeEvent.layout.width, APP_MAX_CONTENT_WIDTH),
+        );
         setTotalUsableHeight(
             event.nativeEvent.layout.height - (insets.top + insets.bottom),
         );
     }
+
+    const hostedConduitView = {
+        // HOSTED CONDUIT
+        headerText: t("ONBOARDING_HOSTED_HEADER_I18N.string"),
+        bodyText: isIOS
+            ? t("ONBOARDING_HOSTED_BODY_IOS_I18N.string")
+            : t("ONBOARDING_HOSTED_BODY_I18N.string"),
+        buttonText: t("ONBOARDING_HOSTED_BUTTON_I18N.string"),
+        beforeNext: undefined,
+    };
 
     const views = [
         {
@@ -125,15 +140,7 @@ export default function OnboardingScreen() {
             buttonText: t("ONBOARDING_INFO_1_BUTTON_I18N.string"),
             beforeNext: undefined,
         },
-        {
-            // HOSTED CONDUIT
-            headerText: t("ONBOARDING_HOSTED_HEADER_I18N.string"),
-            bodyText: isIOS
-                ? t("ONBOARDING_HOSTED_BODY_IOS_I18N.string")
-                : t("ONBOARDING_HOSTED_BODY_I18N.string"),
-            buttonText: t("ONBOARDING_HOSTED_BUTTON_I18N.string"),
-            beforeNext: undefined,
-        },
+        ...(isIOS ? [] : [hostedConduitView]),
         {
             // PRIVACY POLICY
             headerText: t("ONBOARDING_PRIVACY_POLICY_HEADER_I18N.string"),
@@ -159,12 +166,27 @@ export default function OnboardingScreen() {
             },
         },
     ];
+    const privacyPolicyViewIndex = isIOS ? 2 : 3;
 
     const currentView = useSharedValue(0);
+    const sceneCurrentView = useSharedValue(0);
     const [currentBodyText, setCurrentBodyText] = useState(views[0].bodyText);
     const [currentButtonText, setCurrentButtonText] = useState(
         views[0].buttonText,
     );
+
+    function sceneIndexForView(viewIndex: number) {
+        return isIOS && viewIndex >= privacyPolicyViewIndex
+            ? viewIndex + 1
+            : viewIndex;
+    }
+
+    function updateCurrentView(newIndex: number) {
+        currentView.value = newIndex;
+        sceneCurrentView.value = sceneIndexForView(newIndex);
+        setCurrentBodyText(views[newIndex].bodyText);
+        setCurrentButtonText(views[newIndex].buttonText);
+    }
 
     const learnMoreLinkStyle = useAnimatedStyle(() => {
         return currentView.value === 1
@@ -176,7 +198,7 @@ export default function OnboardingScreen() {
               };
     });
     const privacyPolicyLinkStyle = useAnimatedStyle(() => {
-        return currentView.value === 3
+        return currentView.value === privacyPolicyViewIndex
             ? {
                   display: "flex",
               }
@@ -368,10 +390,7 @@ export default function OnboardingScreen() {
         }
         if (currentView.value < views.length - 1) {
             // continue onboarding
-            currentView.value += 1;
-            const newIndex = currentView.value;
-            setCurrentBodyText(views[newIndex].bodyText);
-            setCurrentButtonText(views[newIndex].buttonText);
+            updateCurrentView(currentView.value + 1);
         } else {
             // onboarding done, record completion and fade to main view
             await AsyncStorage.setItem(ASYNCSTORAGE_HAS_ONBOARDED_KEY, "true");
@@ -391,10 +410,7 @@ export default function OnboardingScreen() {
             } else if (event.translationX > totalUsableWidth * 0.1) {
                 // when user swipes over 10% to the left, move view backwards
                 if (currentView.value > 0) {
-                    currentView.value -= 1;
-                    const newIndex = currentView.value;
-                    setCurrentBodyText(views[newIndex].bodyText);
-                    setCurrentButtonText(views[newIndex].buttonText);
+                    updateCurrentView(currentView.value - 1);
                 }
             }
         })
@@ -433,128 +449,140 @@ export default function OnboardingScreen() {
             <View onLayout={onScreenLayout} style={[ss.absoluteFill]} />
             <SkyBox />
             <SafeAreaView>
-                <Canvas style={[ss.flex]}>
-                    <Group
-                        layer={
-                            <Paint>
-                                <ColorMatrix matrix={everythingOpacityMatrix} />
-                            </Paint>
-                        }
-                    >
+                <View
+                    style={{
+                        flex: 1,
+                        width: "100%",
+                        maxWidth: APP_MAX_CONTENT_WIDTH,
+                        alignSelf: "center",
+                    }}
+                >
+                    <Canvas style={[ss.flex]}>
                         <Group
                             layer={
                                 <Paint>
                                     <ColorMatrix
-                                        matrix={contentOpacityMatrix}
+                                        matrix={everythingOpacityMatrix}
                                     />
                                 </Paint>
                             }
                         >
-                            <Group transform={headerTransform}>
-                                <Paragraph
-                                    paragraph={headerP}
-                                    x={0}
-                                    y={0}
-                                    width={headerSize.width}
-                                />
-                            </Group>
-                            <Group transform={sceneTransform}>
-                                <OnboardingScene
-                                    currentView={currentView}
-                                    sceneWidth={sceneSize.width}
-                                    sceneHeight={sceneSize.height}
-                                />
-                            </Group>
-                            <Group transform={bodyTransform}>
-                                <Paragraph
-                                    paragraph={bodyP}
-                                    x={0}
-                                    y={0}
-                                    width={bodySize.width}
-                                />
-                            </Group>
-                            <Group transform={dotsTransform}>
-                                <ProgressDots
-                                    dotWidth={dotWidth}
-                                    currentView={currentView}
-                                />
-                            </Group>
-                            <Group transform={buttonTransform}>
-                                <RoundedRect
-                                    x={0}
-                                    y={0}
-                                    width={buttonSize.width}
-                                    height={buttonSize.height}
-                                    style="stroke"
-                                    strokeWidth={3}
-                                    color={palette.purple}
-                                    r={buttonBorderRadius}
-                                />
-                                <RoundedRect
-                                    x={0}
-                                    y={0}
-                                    width={buttonSize.width}
-                                    height={buttonSize.height}
-                                    style="fill"
-                                    color={palette.white}
-                                    r={buttonBorderRadius}
-                                />
-                                <Paragraph
-                                    paragraph={buttonP}
-                                    x={0}
-                                    y={totalUsableHeight * 0.02}
-                                    width={buttonSize.width}
-                                />
+                            <Group
+                                layer={
+                                    <Paint>
+                                        <ColorMatrix
+                                            matrix={contentOpacityMatrix}
+                                        />
+                                    </Paint>
+                                }
+                            >
+                                <Group transform={headerTransform}>
+                                    <Paragraph
+                                        paragraph={headerP}
+                                        x={0}
+                                        y={0}
+                                        width={headerSize.width}
+                                    />
+                                </Group>
+                                <Group transform={sceneTransform}>
+                                    <OnboardingScene
+                                        currentView={sceneCurrentView}
+                                        sceneWidth={sceneSize.width}
+                                        sceneHeight={sceneSize.height}
+                                    />
+                                </Group>
+                                <Group transform={bodyTransform}>
+                                    <Paragraph
+                                        paragraph={bodyP}
+                                        x={0}
+                                        y={0}
+                                        width={bodySize.width}
+                                    />
+                                </Group>
+                                <Group transform={dotsTransform}>
+                                    <ProgressDots
+                                        dotWidth={dotWidth}
+                                        currentView={currentView}
+                                        totalViews={views.length}
+                                    />
+                                </Group>
+                                <Group transform={buttonTransform}>
+                                    <RoundedRect
+                                        x={0}
+                                        y={0}
+                                        width={buttonSize.width}
+                                        height={buttonSize.height}
+                                        style="stroke"
+                                        strokeWidth={3}
+                                        color={palette.purple}
+                                        r={buttonBorderRadius}
+                                    />
+                                    <RoundedRect
+                                        x={0}
+                                        y={0}
+                                        width={buttonSize.width}
+                                        height={buttonSize.height}
+                                        style="fill"
+                                        color={palette.white}
+                                        r={buttonBorderRadius}
+                                    />
+                                    <Paragraph
+                                        paragraph={buttonP}
+                                        x={0}
+                                        y={totalUsableHeight * 0.02}
+                                        width={buttonSize.width}
+                                    />
+                                </Group>
                             </Group>
                         </Group>
-                    </Group>
-                </Canvas>
-                <GestureDetector gesture={anywhereGesture}>
-                    <Animated.View
-                        accessible={true}
-                        accessibilityLabel={t(
-                            "ONBOARDING_INFO_ACCESSIBILITY_I18N.string",
-                        )}
-                        accessibilityRole={"text"}
-                        aria-valuetext={currentBodyText}
-                        style={{
-                            position: "absolute",
-                            width: totalUsableWidth,
-                            height: totalUsableHeight,
-                        }}
-                    />
-                </GestureDetector>
-                <GestureDetector gesture={buttonGesture}>
-                    <Animated.View
-                        accessible={true}
-                        accessibilityLabel={currentButtonText}
-                        accessibilityRole={"button"}
-                        style={{
-                            position: "absolute",
-                            borderRadius: buttonBorderRadius,
-                            transform: buttonTransform,
-                            width: buttonSize.width,
-                            height: buttonSize.height,
-                            top: insets.top,
-                        }}
-                    />
-                </GestureDetector>
-                <Animated.View style={{ opacity: everythingOpacity }}>
-                    <Animated.View style={learnMoreLinkStyle}>
-                        <LearnMoreLink
-                            textStyle={{ ...ss.boldFont, ...ss.purpleText }}
-                            containerHeight={privacyPolicyHeight}
+                    </Canvas>
+                    <GestureDetector gesture={anywhereGesture}>
+                        <Animated.View
+                            accessible={true}
+                            accessibilityLabel={t(
+                                "ONBOARDING_INFO_ACCESSIBILITY_I18N.string",
+                            )}
+                            accessibilityRole={"text"}
+                            aria-valuetext={currentBodyText}
+                            style={{
+                                position: "absolute",
+                                width: totalUsableWidth,
+                                height: totalUsableHeight,
+                            }}
                         />
-                    </Animated.View>
-                </Animated.View>
-                <Animated.View style={{ opacity: everythingOpacity }}>
-                    <Animated.View style={privacyPolicyLinkStyle}>
-                        <PrivacyPolicyLink
-                            textStyle={{ ...ss.boldFont, ...ss.purpleText }}
-                            containerHeight={privacyPolicyHeight}
+                    </GestureDetector>
+                    <GestureDetector gesture={buttonGesture}>
+                        <Animated.View
+                            accessible={true}
+                            accessibilityLabel={currentButtonText}
+                            accessibilityRole={"button"}
+                            style={{
+                                position: "absolute",
+                                borderRadius: buttonBorderRadius,
+                                transform: buttonTransform,
+                                width: buttonSize.width,
+                                height: buttonSize.height,
+                                top: insets.top,
+                            }}
                         />
+                    </GestureDetector>
+                    <Animated.View style={{ opacity: everythingOpacity }}>
+                        <Animated.View style={learnMoreLinkStyle}>
+                            <LearnMoreLink
+                                textStyle={{ ...ss.boldFont, ...ss.purpleText }}
+                                containerHeight={privacyPolicyHeight}
+                            />
+                        </Animated.View>
                     </Animated.View>
-                </Animated.View>
+                    <Animated.View style={{ opacity: everythingOpacity }}>
+                        <Animated.View style={privacyPolicyLinkStyle}>
+                            <PrivacyPolicyLink
+                                textStyle={{ ...ss.boldFont, ...ss.purpleText }}
+                                containerHeight={privacyPolicyHeight}
+                            />
+                        </Animated.View>
+                    </Animated.View>
+                </View>
             </SafeAreaView>
         </GestureHandlerRootView>
     );
@@ -563,9 +591,11 @@ export default function OnboardingScreen() {
 function ProgressDots({
     dotWidth,
     currentView,
+    totalViews,
 }: {
     dotWidth: number;
     currentView: SharedValue<number>;
+    totalViews: number;
 }) {
     // Couldn't figure out a way to avoid hardcoding these
     const dot0Fill = useDerivedValue(() => {
@@ -638,19 +668,23 @@ function ProgressDots({
                 style={"fill"}
                 color={dot3Fill}
             />
-            <Circle
-                c={vec(dotWidth * 4, 0)}
-                r={dotWidth / 4}
-                style={"stroke"}
-                strokeWidth={1}
-                color={palette.purple}
-            />
-            <Circle
-                c={vec(dotWidth * 4, 0)}
-                r={dotWidth / 4}
-                style={"fill"}
-                color={dot4Fill}
-            />
+            {totalViews > 4 ? (
+                <Group>
+                    <Circle
+                        c={vec(dotWidth * 4, 0)}
+                        r={dotWidth / 4}
+                        style={"stroke"}
+                        strokeWidth={1}
+                        color={palette.purple}
+                    />
+                    <Circle
+                        c={vec(dotWidth * 4, 0)}
+                        r={dotWidth / 4}
+                        style={"fill"}
+                        color={dot4Fill}
+                    />
+                </Group>
+            ) : null}
         </Group>
     );
 }

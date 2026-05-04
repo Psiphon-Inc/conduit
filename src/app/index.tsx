@@ -17,7 +17,7 @@
  *
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useRootNavigationState, useRouter } from "expo-router";
 import React from "react";
 import { Text, View, useWindowDimensions } from "react-native";
 import { runOnJS, useSharedValue, withTiming } from "react-native-reanimated";
@@ -37,6 +37,8 @@ export default function Index() {
     const { signIn } = useAuthContext();
     const win = useWindowDimensions();
     const router = useRouter();
+    const rootNavigationState = useRootNavigationState();
+    const didStartLoadAppRef = React.useRef(false);
     const [startupError, setStartupError] = React.useState<string | null>(null);
 
     const loadingIndicatorCanvasSize = win.width / 2;
@@ -83,12 +85,18 @@ export default function Index() {
     }
 
     React.useEffect(() => {
+        if (!rootNavigationState?.key || didStartLoadAppRef.current) {
+            return;
+        }
+
+        didStartLoadAppRef.current = true;
+
         // This is introducing an artificial delay of 500ms to have the nice
         // fade in before signing in, since sign in is nearly instant.
         opacity.value = withTiming(1, { duration: 1000 }, () =>
             runOnJS(loadApp)(),
         );
-    }, []);
+    }, [rootNavigationState?.key]);
 
     return (
         <SafeAreaView>
