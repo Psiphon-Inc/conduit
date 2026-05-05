@@ -45,7 +45,7 @@ export default function SettingsScreen() {
                     />
                 </Rect>
             </Canvas>
-            <SafeAreaView>
+            <SafeAreaView includeBottomInset={false}>
                 <View
                     style={{
                         flex: 1,
