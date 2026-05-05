@@ -23,7 +23,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 
 import { AuthProvider } from "@/src/auth/context";
@@ -49,29 +49,36 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
+    const [forceRootReady, setForceRootReady] = useState(false);
     const [loaded, fontError] = useFonts({
         JuraRegular: fonts.JuraRegular,
         JuraBold: fonts.JuraBold,
         Rajdhani: fonts.Rajdhani,
     });
+    const rootReady = loaded || Boolean(fontError) || forceRootReady;
 
     useEffect(() => {
-        const fallbackTimer = setTimeout(() => {
-            SplashScreen.hideAsync();
-        }, 2000);
-
-        if (loaded || fontError) {
-            SplashScreen.hideAsync();
+        if (rootReady) {
+            void SplashScreen.hideAsync();
+            return;
         }
+
+        const fallbackTimer = setTimeout(() => {
+            setForceRootReady(true);
+        }, 2000);
 
         return () => {
             clearTimeout(fallbackTimer);
         };
-    }, [loaded, fontError]);
+    }, [rootReady]);
 
     useEffect(() => {
         SystemUI.setBackgroundColorAsync(palette.black).then(() => {});
     }, []);
+
+    if (!rootReady) {
+        return null;
+    }
 
     return (
         <KeyboardProvider>
