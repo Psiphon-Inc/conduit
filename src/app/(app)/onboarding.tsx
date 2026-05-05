@@ -562,7 +562,6 @@ export default function OnboardingScreen() {
                                 transform: buttonTransform,
                                 width: buttonSize.width,
                                 height: buttonSize.height,
-                                top: insets.top,
                             }}
                         />
                     </GestureDetector>

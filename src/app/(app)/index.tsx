@@ -808,7 +808,7 @@ export default function HomeScreen() {
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
             <SkyBox gradientState={skyBoxGradientState} />
-            <SafeAreaView>
+            <SafeAreaView includeBottomInset={false}>
                 <View
                     style={{
                         flex: 1,
