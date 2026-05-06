@@ -278,9 +278,13 @@ export default function HomeScreen() {
     const personalPairingStatusMetricsPending =
         localStatusMetricsPending || hostedStatusMetricsPending;
     const localSceneConnectedPeers = localRunning ? localConnectedPeers : 0;
-    const personalPairingConnected = showLocalExperience
-        ? localPersonalConnected + personalConnected
-        : personalConnected;
+    const localPersonalPairingConnected =
+        showLocalExperience && localRunning ? localPersonalConnected : 0;
+    const hostedPersonalPairingConnected = showHostedSummary
+        ? personalConnected
+        : 0;
+    const personalPairingConnected =
+        localPersonalPairingConnected + hostedPersonalPairingConnected;
     const localStationName =
         conduitName && conduitName.trim().length > 0
             ? conduitName.trim()

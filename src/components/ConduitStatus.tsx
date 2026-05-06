@@ -68,11 +68,7 @@ export function ConduitStatus(props: ConduitStatusProps) {
 
     const metricFontSize = 17;
     const metricColor = "rgba(35, 30, 40, 0.78)";
-    const showPersonalPairing =
-        showHosted ||
-        !showLocal ||
-        localIsOnline ||
-        personalPairingConnected > 0;
+    const showPersonalPairing = localIsOnline || showHosted;
     const summaryRows = [
         showLocal
             ? {
