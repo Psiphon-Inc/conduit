@@ -27,10 +27,11 @@ import {
     RyveClaimMaterial,
     resolvePreferredRyveName,
 } from "@/src/components/ryveClaim";
-import { useAndroidPersonalCompartmentId, useConduitName } from "@/src/hooks";
+import { useConduitName, useLocalPersonalCompartmentId } from "@/src/hooks";
 import { useHostedExperienceState } from "@/src/hosted/experience/hooks";
 import { isEntitlementAllowed } from "@/src/hosted/experience/stateMachine";
 import { resolveHostedPersonalPairingState } from "@/src/hosted/personalPairing";
+import { isLocalPersonalPairingSupported } from "@/src/personalCompartmentId";
 
 export interface ConduitActionsContextValue {
     /** Open the Ryve claim modal for a given claim material */
@@ -63,13 +64,16 @@ export function useConduitActions(): ConduitActionsContextValue {
 
 export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
     const { openModal } = useModal();
-    const { data: androidPersonalCompartmentId } =
-        useAndroidPersonalCompartmentId();
+    const localPersonalCompartmentIdQuery = useLocalPersonalCompartmentId();
+    const localPersonalCompartmentId = localPersonalCompartmentIdQuery.data;
     const { data: conduitName } = useConduitName();
     const state = useHostedExperienceState();
     const conduits = state.conduitsSnapshot?.conduits ?? [];
     const hasHostedSession =
         state.authPhase === "authenticated" && state.session != null;
+    const localPersonalPairingSupported = isLocalPersonalPairingSupported();
+    const hostedPairingOnly =
+        Platform.OS === "ios" && !localPersonalPairingSupported;
 
     const hostedPersonalPairing = React.useMemo(
         () =>
@@ -88,16 +92,18 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
             state.stationPhase,
         ],
     );
-    const personalCompartmentId =
-        Platform.OS === "ios"
-            ? hostedPersonalPairing.ready
-                ? hostedPersonalPairing.hostedPersonalCompartmentId
-                : null
-            : (hostedPersonalPairing.hostedPersonalCompartmentId ??
-              androidPersonalCompartmentId ??
-              null);
+    const personalCompartmentId = hostedPairingOnly
+        ? hostedPersonalPairing.ready
+            ? hostedPersonalPairing.hostedPersonalCompartmentId
+            : null
+        : (hostedPersonalPairing.hostedPersonalCompartmentId ??
+          localPersonalCompartmentId ??
+          null);
     const isPersonalPairingPreparing =
-        Platform.OS === "ios" && hostedPersonalPairing.preparing;
+        (hostedPairingOnly && hostedPersonalPairing.preparing) ||
+        (localPersonalPairingSupported &&
+            localPersonalCompartmentId === undefined &&
+            localPersonalCompartmentIdQuery.isLoading);
     const personalPairingWrapperBaseUrl =
         state.session?.personalPairingWrapperBaseUrl ?? null;
 

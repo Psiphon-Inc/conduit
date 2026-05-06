@@ -30,11 +30,32 @@ import {
     PersonalCompartmentIdSchema,
 } from "@/src/hosted/contracts";
 
+interface ExtendedPlatformConstants {
+    interfaceIdiom?: string;
+    isMacCatalyst?: boolean;
+}
+
 export async function loadAndroidPersonalCompartmentId(): Promise<PersonalCompartmentId | null> {
     if (Platform.OS !== "android") {
         return null;
     }
 
+    return loadOrCreatePersistedPersonalCompartmentId();
+}
+
+export async function loadLocalPersonalCompartmentId(): Promise<PersonalCompartmentId | null> {
+    if (!isLocalPersonalPairingSupported()) {
+        return null;
+    }
+
+    return loadOrCreatePersistedPersonalCompartmentId();
+}
+
+export function isLocalPersonalPairingSupported(): boolean {
+    return Platform.OS === "android" || isMacCatalyst();
+}
+
+async function loadOrCreatePersistedPersonalCompartmentId(): Promise<PersonalCompartmentId | null> {
     const storedPersonalCompartmentId = parsePersonalCompartmentId(
         await SecureStore.getItemAsync(
             SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
@@ -92,5 +113,18 @@ async function derivePersonalCompartmentId(): Promise<PersonalCompartmentId | nu
 
     return parsePersonalCompartmentId(
         base64nopad.encode(inproxyKeyPair.publicKey),
+    );
+}
+
+function isMacCatalyst(): boolean {
+    if (Platform.OS !== "ios") {
+        return false;
+    }
+
+    const constants = Platform.constants as ExtendedPlatformConstants;
+    return (
+        constants.isMacCatalyst === true ||
+        constants.interfaceIdiom === "mac" ||
+        constants.interfaceIdiom === "macos"
     );
 }
