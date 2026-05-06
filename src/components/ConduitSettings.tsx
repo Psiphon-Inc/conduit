@@ -324,7 +324,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
 
     const {
         inproxyParameters,
-        isPersonalPairingReady,
+        isPersonalPairingReady: isLocalPersonalPairingReady,
         selectInproxyParameters,
         logErrorToDiagnostic,
         sendFeedback,
@@ -335,12 +335,12 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     const {
         openPersonalPairingModal,
         openRyveClaimModal,
-        personalCompartmentId,
         isPersonalPairingPreparing,
+        isPersonalPairingShareReady,
         hostedRyveClaim,
     } = useConduitActions();
-    const disablePersonalPairingOnIos =
-        Platform.OS === "ios" && personalCompartmentId == null;
+    const showPersonalPairingSettingsAction =
+        Platform.OS !== "ios" || isPersonalPairingShareReady;
     const hostedRewardsLabel =
         Platform.OS === "android"
             ? t("HOSTED_REWARDS_I18N.string")
@@ -824,7 +824,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     const canSaveChanges =
         hasStagedChanges &&
         !combinedPeersLimitExceeded &&
-        isPersonalPairingReady;
+        isLocalPersonalPairingReady;
 
     if (displayRestartConfirmation) {
         return (
@@ -977,26 +977,31 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                     ) : null}
 
                     {/* Personal Pairing */}
-                    {renderSettingsAction({
-                        icon: (
-                            <ExpoImage
-                                source={require("@/assets/images/icons/p2p_24px.svg")}
-                                tintColor={palette.black}
-                                style={{ width: 20, height: 20 }}
-                                contentFit="contain"
-                            />
-                        ),
-                        label: t("SETTINGS_PERSONAL_PAIRING_I18N.string"),
-                        subtitle: isPersonalPairingPreparing
-                            ? t("PREPARING_PERSONAL_PAIRING_I18N.string", {
-                                  defaultValue: "Preparing personal pairing...",
-                              })
-                            : t(
-                                  "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N.string",
+                    {showPersonalPairingSettingsAction
+                        ? renderSettingsAction({
+                              icon: (
+                                  <ExpoImage
+                                      source={require("@/assets/images/icons/p2p_24px.svg")}
+                                      tintColor={palette.black}
+                                      style={{ width: 20, height: 20 }}
+                                      contentFit="contain"
+                                  />
                               ),
-                        onPress: () => openPersonalPairingModal(),
-                        disabled: disablePersonalPairingOnIos,
-                    })}
+                              label: t("SETTINGS_PERSONAL_PAIRING_I18N.string"),
+                              subtitle: isPersonalPairingPreparing
+                                  ? t(
+                                        "PREPARING_PERSONAL_PAIRING_I18N.string",
+                                        {
+                                            defaultValue:
+                                                "Preparing personal pairing...",
+                                        },
+                                    )
+                                  : t(
+                                        "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N.string",
+                                    ),
+                              onPress: () => openPersonalPairingModal(),
+                          })
+                        : null}
 
                     {/* Claim hosted rewards */}
                     {hostedRyveClaim

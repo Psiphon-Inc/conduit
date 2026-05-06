@@ -33,6 +33,7 @@ export function useHostedExperienceActions(): HostedExperienceActions {
     const {
         signIn,
         signOut,
+        deleteAccount,
         pollConduitsOnce,
         restorePurchases,
         purchasePackage,
@@ -45,6 +46,7 @@ export function useHostedExperienceActions(): HostedExperienceActions {
         () => ({
             signIn,
             signOut,
+            deleteAccount,
             pollConduitsOnce,
             restorePurchases,
             purchasePackage,
@@ -53,6 +55,7 @@ export function useHostedExperienceActions(): HostedExperienceActions {
             updateAccountAlias,
         }),
         [
+            deleteAccount,
             pollConduitsOnce,
             purchasePackage,
             refreshSession,

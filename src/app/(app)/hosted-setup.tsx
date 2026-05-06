@@ -364,12 +364,38 @@ export default function HostedSetupScreen() {
         },
     });
 
+    const restorePurchasesMutation = useMutation({
+        mutationFn: async () => {
+            await actions.restorePurchases();
+        },
+        onMutate: () => {
+            setActionError(null);
+            setActionNotice(null);
+        },
+        onSuccess: () => {
+            setActionNotice(
+                t("PURCHASES_RESTORED_I18N.string", {
+                    defaultValue: "Purchases restored.",
+                }),
+            );
+        },
+        onError: (error) => {
+            setActionError(toErrorString(error));
+        },
+    });
+
     // After a successful renewal purchase, redirect back to the home screen.
     React.useEffect(() => {
         if (isRenewIntent && purchaseMutation.isSuccess) {
             router.replace("/(app)");
         }
     }, [isRenewIntent, purchaseMutation.isSuccess, router]);
+
+    React.useEffect(() => {
+        if (restorePurchasesMutation.isSuccess && canContinue) {
+            router.replace("/(app)");
+        }
+    }, [canContinue, restorePurchasesMutation.isSuccess, router]);
 
     const recoverAccessMutation = useMutation({
         mutationFn: async () => {
@@ -400,10 +426,13 @@ export default function HostedSetupScreen() {
         config.revenueCatPublicKeys,
     );
     const primaryActionPending =
-        signInMutation.isPending || purchaseMutation.isPending;
+        signInMutation.isPending ||
+        purchaseMutation.isPending ||
+        restorePurchasesMutation.isPending;
     const recoverActionPending = recoverAccessMutation.isPending;
     const activationInFlight =
         purchaseMutation.isPending ||
+        restorePurchasesMutation.isPending ||
         state.revenuecatPhase === "purchase_pending" ||
         state.revenuecatPhase === "restore_pending";
     const setupReady = hasBaseUrl && hasClerkKey && hasRevenueCatKeyForPlatform;
@@ -835,6 +864,9 @@ export default function HostedSetupScreen() {
                         onSignInGoogle={() => signIn("google")}
                         onSignInApple={() => signIn("apple")}
                         onPurchase={purchaseFirstPackage}
+                        onRestorePurchases={() => {
+                            restorePurchasesMutation.mutate();
+                        }}
                         onRecoverAccess={() => {
                             recoverAccessMutation.mutate();
                         }}
@@ -1001,6 +1033,7 @@ function PrimaryActionBlock({
     onSignInGoogle,
     onSignInApple,
     onPurchase,
+    onRestorePurchases,
     onRecoverAccess,
     recoverActionPending,
     onOpenManage,
@@ -1015,6 +1048,7 @@ function PrimaryActionBlock({
     onSignInGoogle: () => void;
     onSignInApple: () => void;
     onPurchase: () => void;
+    onRestorePurchases: () => void;
     onRecoverAccess: () => void;
     recoverActionPending: boolean;
     onOpenManage: () => void;
@@ -1069,6 +1103,18 @@ function PrimaryActionBlock({
                     variant="primary"
                     gradientBackground={true}
                 />
+                <ActionButton
+                    label={t("RESTORE_PURCHASES_I18N.string", {
+                        defaultValue: "Restore Purchases",
+                    })}
+                    onPress={onRestorePurchases}
+                    disabled={
+                        actionPending ||
+                        authPhase !== "authenticated" ||
+                        !setupReady
+                    }
+                    variant="secondary"
+                />
                 <HostedPaywallLegalLinks />
             </View>
         );
@@ -1100,6 +1146,19 @@ function PrimaryActionBlock({
                     label={t("MANAGE_SETUP_DETAILS_I18N.string")}
                     onPress={onOpenManage}
                     disabled={actionPending}
+                    variant="secondary"
+                />
+                <ActionButton
+                    label={t("RESTORE_PURCHASES_I18N.string", {
+                        defaultValue: "Restore Purchases",
+                    })}
+                    onPress={onRestorePurchases}
+                    disabled={
+                        actionPending ||
+                        recoverActionPending ||
+                        authPhase !== "authenticated" ||
+                        !setupReady
+                    }
                     variant="secondary"
                 />
             </View>

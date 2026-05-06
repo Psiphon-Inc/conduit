@@ -147,6 +147,7 @@ export function PersonalPairingShareModal({
     const normalizedName = normalizeNickname(storedConduitName ?? "");
     const hasValidName =
         normalizedName.length > 0 && isValidNickname(normalizedName);
+    const canSharePairingLink = hasValidName && personalCompartmentId != null;
 
     React.useEffect(() => {
         void AsyncStorage.getItem(ASYNCSTORAGE_PAIRING_LANGUAGE_KEY).then(
@@ -323,6 +324,22 @@ export function PersonalPairingShareModal({
                                 </Text>
                             ) : null}
 
+                            {!personalCompartmentId ? (
+                                <Text
+                                    style={[
+                                        ss.bodyFont,
+                                        {
+                                            color: palette.red,
+                                            marginTop: -10,
+                                        },
+                                    ]}
+                                >
+                                    {t(
+                                        "PERSONAL_PAIRING_NOT_READY_I18N.string",
+                                    )}
+                                </Text>
+                            ) : null}
+
                             <View style={[ss.column, { gap: 8 }]}>
                                 <View
                                     style={{
@@ -391,7 +408,7 @@ export function PersonalPairingShareModal({
                                         event.nativeEvent.layout.width,
                                     );
                                 }}
-                                disabled={!hasValidName}
+                                disabled={!canSharePairingLink}
                                 onPress={() => {
                                     void sharePairingLink();
                                 }}
@@ -406,7 +423,7 @@ export function PersonalPairingShareModal({
                                         height: 52,
                                         marginTop: 4,
                                         overflow: "hidden",
-                                        opacity: hasValidName ? 1 : 0.4,
+                                        opacity: canSharePairingLink ? 1 : 0.4,
                                     },
                                 ]}
                             >

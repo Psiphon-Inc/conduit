@@ -49,6 +49,7 @@ import {
     UpdateAccountProfileRequestSchema,
 } from "@/src/hosted/contracts";
 
+const ACCOUNT_PATH = "/v1/account";
 const ACCOUNT_PROFILE_PATH = "/v1/account/profile";
 const PERSONAL_COMPARTMENT_ID_PATH = "/v1/account/personal-compartment-id";
 const CONDUITS_PATH = "/v1/conduits";
@@ -175,6 +176,17 @@ export function createHostedClient(config: HostedClientConfig) {
         }
 
         return parseAccountProfile(body);
+    }
+
+    async function deleteAccount(accessToken: string): Promise<void> {
+        await requestWithBearer(
+            fetchImpl,
+            baseUrl + ACCOUNT_PATH,
+            accessToken,
+            {
+                method: "DELETE",
+            },
+        );
     }
 
     async function setPersonalCompartmentId(
@@ -345,6 +357,7 @@ export function createHostedClient(config: HostedClientConfig) {
         getConduitsSnapshot,
         getAccountProfile,
         updateAccountProfile,
+        deleteAccount,
         setPersonalCompartmentId,
         getPlanCatalog,
         createStatsSession,

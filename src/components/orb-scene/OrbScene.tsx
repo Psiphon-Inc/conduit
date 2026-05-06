@@ -40,6 +40,7 @@ import Animated, {
     useAnimatedReaction,
     useAnimatedStyle,
     useDerivedValue,
+    useReducedMotion,
     useSharedValue,
     withDelay,
     withRepeat,
@@ -74,6 +75,11 @@ export interface OrbSceneHostedOrbPressEvent {
     radius: number;
 }
 
+export interface OrbSceneProvisioningMarker {
+    id: string;
+    orbIndex: number;
+}
+
 export interface OrbSceneProps {
     width: number;
     height: number;
@@ -90,6 +96,7 @@ export interface OrbSceneProps {
     applyBlur?: boolean;
     accessibilityLabel?: string;
     activityLanes?: OrbSceneActivityLane[];
+    provisioningMarkers?: OrbSceneProvisioningMarker[];
     orbModes?: OrbVisualMode[];
     localOrbIndex?: number | null;
     highlightedOrbIndex?: number | null;
@@ -120,6 +127,38 @@ function lightSeed(key: string): number {
         hash = ((hash << 5) + hash + key.charCodeAt(i)) | 0;
     }
     return hash >>> 0;
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+    "worklet";
+    return Math.max(min, Math.min(max, value));
+}
+
+function seededTopRightPhase(id: string): number {
+    return 0.82 + ((lightSeed(id) % 1000) / 1000) * 0.12;
+}
+
+function normalizeProvisioningMarkers(
+    markers?: OrbSceneProvisioningMarker[],
+): OrbSceneProvisioningMarker[] {
+    const seen = new Set<string>();
+    const normalized: OrbSceneProvisioningMarker[] = [];
+    for (const marker of markers ?? []) {
+        if (
+            marker.id.length === 0 ||
+            !Number.isInteger(marker.orbIndex) ||
+            seen.has(marker.id)
+        ) {
+            continue;
+        }
+        seen.add(marker.id);
+        normalized.push(marker);
+    }
+    return normalized;
+}
+
+interface RenderedProvisioningMarker extends OrbSceneProvisioningMarker {
+    active: boolean;
 }
 
 interface OrbAnimatedTheme {
@@ -542,6 +581,127 @@ function OrbGestureOverlay({
     );
 }
 
+interface ProvisioningMarkerProps {
+    marker: RenderedProvisioningMarker;
+    centerX: SharedValue<number>;
+    centerY: SharedValue<number>;
+    radius: SharedValue<number>;
+    reducedMotion: boolean;
+    onExited: (id: string) => void;
+}
+
+function OrbProvisioningMarker({
+    marker,
+    centerX,
+    centerY,
+    radius,
+    reducedMotion,
+    onExited,
+}: ProvisioningMarkerProps) {
+    const orbit = useSharedValue(0);
+    const opacity = useSharedValue(0);
+    const scale = useSharedValue(0.55);
+    const pulse = useSharedValue(1);
+    const phaseOffset = React.useMemo(
+        () => seededTopRightPhase(marker.id),
+        [marker.id],
+    );
+
+    React.useEffect(() => {
+        opacity.value = withTiming(marker.active ? 1 : 0, {
+            duration: marker.active ? 280 : 220,
+        });
+        scale.value = withTiming(marker.active ? 1 : 0.55, {
+            duration: marker.active ? 280 : 220,
+        });
+        if (marker.active) {
+            return;
+        }
+
+        const exitTimer = setTimeout(() => {
+            onExited(marker.id);
+        }, 240);
+        return () => {
+            clearTimeout(exitTimer);
+        };
+    }, [marker.active, marker.id, onExited, opacity, scale]);
+
+    React.useEffect(() => {
+        cancelAnimation(orbit);
+        cancelAnimation(pulse);
+        if (reducedMotion) {
+            orbit.value = 0;
+            pulse.value = withRepeat(
+                withTiming(0.6, {
+                    duration: 1600,
+                    easing: Easing.inOut(Easing.quad),
+                }),
+                -1,
+                true,
+            );
+        } else {
+            pulse.value = 1;
+            orbit.value = 0;
+            orbit.value = withRepeat(
+                withTiming(1, {
+                    duration: 2200,
+                    easing: Easing.linear,
+                }),
+                -1,
+                false,
+            );
+        }
+
+        return () => {
+            cancelAnimation(orbit);
+            cancelAnimation(pulse);
+        };
+    }, [orbit, pulse, reducedMotion]);
+
+    const markerCenter = useDerivedValue(() => {
+        const phase = reducedMotion ? 0.875 : (orbit.value + phaseOffset) % 1;
+        const angle = phase * Math.PI * 2;
+        const orbitRadius = radius.value * 1.08;
+        return vec(
+            centerX.value + Math.cos(angle) * orbitRadius,
+            centerY.value + Math.sin(angle) * orbitRadius,
+        );
+    }, [centerX, centerY, orbit, phaseOffset, radius, reducedMotion]);
+
+    const markerX = useDerivedValue(() => markerCenter.value.x, [markerCenter]);
+    const markerY = useDerivedValue(() => markerCenter.value.y, [markerCenter]);
+    const markerRadius = useDerivedValue(
+        () => clampNumber(radius.value * 0.075, 5, 10) * scale.value,
+        [radius, scale],
+    );
+    const markerGlowRadius = useDerivedValue(
+        () => markerRadius.value * 3,
+        [markerRadius],
+    );
+    const markerOpacity = useDerivedValue(() => {
+        const pulseMultiplier = reducedMotion ? 0.72 + pulse.value * 0.28 : 1;
+        return opacity.value * pulseMultiplier;
+    }, [opacity, pulse, reducedMotion]);
+
+    return (
+        <Group opacity={markerOpacity}>
+            <Circle cx={markerX} cy={markerY} r={markerGlowRadius}>
+                <RadialGradient
+                    c={markerCenter}
+                    r={markerGlowRadius}
+                    colors={["rgba(255,255,255,0.48)", "rgba(255,255,255,0)"]}
+                />
+            </Circle>
+            <Circle
+                cx={markerX}
+                cy={markerY}
+                r={markerRadius}
+                color="rgba(255,255,255,0.96)"
+            />
+        </Group>
+    );
+}
+
 export function OrbScene(props: OrbSceneProps) {
     const {
         width,
@@ -559,6 +719,7 @@ export function OrbScene(props: OrbSceneProps) {
         applyBlur = false,
         accessibilityLabel,
         activityLanes,
+        provisioningMarkers,
         orbModes,
         localOrbIndex,
         highlightedOrbIndex,
@@ -567,6 +728,7 @@ export function OrbScene(props: OrbSceneProps) {
         orbSlotMap,
     } = props;
     const { t } = useTranslation();
+    const reducedMotion = useReducedMotion();
     const targetThemeLevel = themeLevel ?? evolutionLevel;
     const sceneTheme = SCENE_THEMES[targetThemeLevel];
     const sceneScale = Math.min(width, height);
@@ -629,6 +791,43 @@ export function OrbScene(props: OrbSceneProps) {
         "off",
         "off",
     ]);
+    const [renderedProvisioningMarkers, setRenderedProvisioningMarkers] =
+        React.useState<RenderedProvisioningMarker[]>(() =>
+            normalizeProvisioningMarkers(provisioningMarkers).map((marker) => ({
+                ...marker,
+                active: true,
+            })),
+        );
+
+    React.useEffect(() => {
+        const nextMarkers = normalizeProvisioningMarkers(provisioningMarkers);
+        setRenderedProvisioningMarkers((previousMarkers) => {
+            const nextById = new Map(
+                nextMarkers.map((marker) => [marker.id, marker]),
+            );
+            const merged: RenderedProvisioningMarker[] = [];
+
+            for (const marker of nextMarkers) {
+                merged.push({
+                    ...marker,
+                    active: true,
+                });
+            }
+            for (const marker of previousMarkers) {
+                if (!nextById.has(marker.id)) {
+                    merged.push({ ...marker, active: false });
+                }
+            }
+
+            return merged;
+        });
+    }, [provisioningMarkers]);
+
+    const handleProvisioningMarkerExited = React.useCallback((id: string) => {
+        setRenderedProvisioningMarkers((markers) =>
+            markers.filter((marker) => marker.id !== id || marker.active),
+        );
+    }, []);
 
     React.useEffect(() => {
         entryOpacity.value = withDelay(80, withTiming(1, { duration: 720 }));
@@ -1028,6 +1227,15 @@ export function OrbScene(props: OrbSceneProps) {
         }
         return clampLights(lane.connectedCount) > 0;
     });
+    const visibleProvisioningMarkers = renderedProvisioningMarkers.filter(
+        (marker) =>
+            marker.orbIndex >= 0 && marker.orbIndex < orbGeometries.length,
+    );
+    const activeProvisioningOrbIndexes = new Set(
+        visibleProvisioningMarkers
+            .filter((marker) => marker.active)
+            .map((marker) => marker.orbIndex),
+    );
 
     const morphLayer = React.useMemo(() => {
         return (
@@ -1313,6 +1521,20 @@ export function OrbScene(props: OrbSceneProps) {
                                 );
                             })}
                         </Group>
+
+                        <Group>
+                            {visibleProvisioningMarkers.map((marker) => (
+                                <OrbProvisioningMarker
+                                    key={`provisioning-marker-${marker.id}`}
+                                    marker={marker}
+                                    centerX={orbCxValues[marker.orbIndex]}
+                                    centerY={orbCyValues[marker.orbIndex]}
+                                    radius={orbRadiusValues[marker.orbIndex]}
+                                    reducedMotion={reducedMotion}
+                                    onExited={handleProvisioningMarkerExited}
+                                />
+                            ))}
+                        </Group>
                     </Group>
                 </Group>
             </Canvas>
@@ -1335,11 +1557,23 @@ export function OrbScene(props: OrbSceneProps) {
                             }
                           : undefined;
                 const longPressAction = isLocalOrb ? onLongPress : undefined;
+                const isHostedProvisioningOrb =
+                    !isLocalOrb &&
+                    !isPrimaryOffOrb &&
+                    activeProvisioningOrbIndexes.has(orb.index);
                 const orbLabel = isLocalOrb
                     ? t("LOCAL_CONDUIT_ORB_ACCESSIBILITY_I18N.string")
                     : isPrimaryOffOrb
                       ? t("CONDUIT_ORB_ACCESSIBILITY_I18N.string")
-                      : t("HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N.string");
+                      : isHostedProvisioningOrb
+                        ? t(
+                              "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N.string",
+                              {
+                                  defaultValue:
+                                      "Hosted Conduit, provisioning host",
+                              },
+                          )
+                        : t("HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N.string");
 
                 return (
                     <OrbGestureOverlay

@@ -60,6 +60,7 @@ import {
 } from "@/src/hosted/conduitQueries";
 import {
     AccountProfile,
+    ConduitsSnapshot,
     OAuthProvider,
     PersonalCompartmentId,
 } from "@/src/hosted/contracts";
@@ -78,6 +79,7 @@ import {
     RevenueCatContextValue,
     useRevenueCatContext,
 } from "@/src/hosted/revenuecatContext";
+import { HostedEntitlementStatus } from "@/src/hosted/revenuecatEntitlements";
 import {
     HostedSession,
     createHostedSessionClient,
@@ -102,6 +104,7 @@ type HostedClient = ReturnType<typeof createHostedClient>;
 export interface HostedExperienceActions {
     signIn(provider: OAuthProvider): Promise<void>;
     signOut(): Promise<void>;
+    deleteAccount(): Promise<void>;
     pollConduitsOnce(): Promise<void>;
     restorePurchases(): Promise<void>;
     purchasePackage(aPackage: PurchasesPackage): Promise<void>;
@@ -242,6 +245,12 @@ function HostedExperienceProviderInner(
         ...sessionDeps,
         hostedClient,
     });
+    const currentEntitlementStatus = normalizeHostedEntitlementStatus(
+        conduitsQuery.data?.entitlement?.status ?? "",
+    );
+    const lastRevenuecatActionRef = React.useRef<"purchase" | "restore" | null>(
+        null,
+    );
 
     const revenueCatBootstrapQuery = useQuery({
         queryKey: hostedQueryKeys.revenueCat(
@@ -393,8 +402,11 @@ function HostedExperienceProviderInner(
     });
 
     const [purchaseInflight, setPurchaseInflight] = React.useState(false);
+    const [purchaseNeedsFreshEntitlement, setPurchaseNeedsFreshEntitlement] =
+        React.useState(false);
     const purchaseMutation = useMutation({
         mutationFn: async (aPackage: PurchasesPackage) => {
+            const previousEntitlementStatus = currentEntitlementStatus;
             const purchaseResult =
                 await props.revenueCat.purchasePackage(aPackage);
             const session = await ensureHostedSession(queryClient, sessionDeps);
@@ -412,6 +424,8 @@ function HostedExperienceProviderInner(
                     }),
             });
             const confirmed = await pollConduitsDuringActivationWindow({
+                source: "purchase",
+                previousEntitlementStatus,
                 queryClient,
                 baseUrl,
                 now,
@@ -419,17 +433,24 @@ function HostedExperienceProviderInner(
                 sessionDeps,
             });
             if (!confirmed) {
+                setPurchaseInflight(false);
+                setPurchaseNeedsFreshEntitlement(false);
                 setRevenuecatNotice(
                     "Purchase succeeded. Waiting for backend entitlement confirmation. Retry in a few moments.",
                 );
             }
         },
         onMutate: () => {
+            lastRevenuecatActionRef.current = "purchase";
             setPurchaseInflight(true);
+            setPurchaseNeedsFreshEntitlement(
+                currentEntitlementStatus === "canceled_not_expired",
+            );
             setRevenuecatNotice(null);
         },
         onError: () => {
             setPurchaseInflight(false);
+            setPurchaseNeedsFreshEntitlement(false);
         },
     });
 
@@ -465,6 +486,8 @@ function HostedExperienceProviderInner(
                     }),
             });
             const confirmed = await pollConduitsDuringActivationWindow({
+                source: "restore",
+                previousEntitlementStatus: currentEntitlementStatus,
                 queryClient,
                 baseUrl,
                 now,
@@ -472,12 +495,14 @@ function HostedExperienceProviderInner(
                 sessionDeps,
             });
             if (!confirmed) {
+                setRestoreInflight(false);
                 setRevenuecatNotice(
                     "Purchase restored. Waiting for backend entitlement confirmation. Retry in a few moments.",
                 );
             }
         },
         onMutate: () => {
+            lastRevenuecatActionRef.current = "restore";
             setRestoreInflight(true);
             setRevenuecatNotice(null);
         },
@@ -534,23 +559,30 @@ function HostedExperienceProviderInner(
     // mutation is running.  This prevents the home screen from flashing
     // stale UI (e.g. "Restore your Conduit") while the backend is still
     // processing the webhook after a successful purchase.
-    const currentEntitlementStatus = normalizeHostedEntitlementStatus(
-        conduitsQuery.data?.entitlement?.status ?? "",
-    );
+    const entitlementConfirmed = isEntitlementAllowed(currentEntitlementStatus);
     const purchaseFullyConfirmed =
-        currentEntitlementStatus === "active" ||
-        currentEntitlementStatus === "grace";
+        entitlementConfirmed &&
+        (!purchaseNeedsFreshEntitlement ||
+            currentEntitlementStatus !== "canceled_not_expired");
     // Clear the inflight flags once the entitlement reaches its final
     // post-purchase state.  Using manual flags instead of
     // purchaseMutation.isSuccess avoids the stale-success problem where
     // a previous purchase keeps the phase stuck on "purchase_pending"
     // long after the entitlement has cycled back to a non-active state.
     React.useEffect(() => {
-        if (purchaseFullyConfirmed) {
+        if (purchaseInflight && purchaseFullyConfirmed) {
             setPurchaseInflight(false);
+            setPurchaseNeedsFreshEntitlement(false);
+        }
+        if (restoreInflight && entitlementConfirmed) {
             setRestoreInflight(false);
         }
-    }, [purchaseFullyConfirmed]);
+    }, [
+        entitlementConfirmed,
+        purchaseFullyConfirmed,
+        purchaseInflight,
+        restoreInflight,
+    ]);
     const revenuecatPhase: HostedRevenueCatPhase = !sessionQuery.data
         ? "uninitialized"
         : purchaseMutation.isPending || purchaseInflight
@@ -568,9 +600,11 @@ function HostedExperienceProviderInner(
         ? revenuecatNotice
         : revenueCatBootstrapQuery.isError
           ? toErrorMessage(revenueCatBootstrapQuery.error)
-          : purchaseMutation.isError
+          : purchaseMutation.isError &&
+              lastRevenuecatActionRef.current === "purchase"
             ? toErrorMessage(purchaseMutation.error)
-            : restoreMutation.isError
+            : restoreMutation.isError &&
+                lastRevenuecatActionRef.current === "restore"
               ? toErrorMessage(restoreMutation.error)
               : null;
 
@@ -660,6 +694,9 @@ function HostedExperienceProviderInner(
         purchaseMutation.reset();
         restoreMutation.reset();
         updateAccountAliasMutation.reset();
+        setPurchaseInflight(false);
+        setPurchaseNeedsFreshEntitlement(false);
+        setRestoreInflight(false);
         setRevenuecatNotice(null);
 
         try {
@@ -691,6 +728,12 @@ function HostedExperienceProviderInner(
         authService,
     ]);
 
+    const deleteAccount = React.useCallback(async () => {
+        const session = await ensureHostedSession(queryClient, sessionDeps);
+        await hostedClient.deleteAccount(session.accessToken);
+        await signOut();
+    }, [hostedClient, queryClient, sessionDeps, signOut]);
+
     const value = React.useMemo<HostedExperienceContextValue>(
         () => ({
             state,
@@ -699,6 +742,7 @@ function HostedExperienceProviderInner(
             lastAuthProvider,
             signIn,
             signOut,
+            deleteAccount,
             pollConduitsOnce,
             restorePurchases: async () => restoreMutation.mutateAsync(),
             purchasePackage: async (aPackage) =>
@@ -710,6 +754,7 @@ function HostedExperienceProviderInner(
         }),
         [
             initialSessionResolved,
+            deleteAccount,
             hostedSnapshotBootstrapPending,
             lastAuthProvider,
             pollConduitsOnce,
@@ -806,6 +851,8 @@ function toErrorMessage(error: unknown): string {
 }
 
 async function pollConduitsDuringActivationWindow(input: {
+    source: "purchase" | "restore";
+    previousEntitlementStatus: HostedEntitlementStatus;
     queryClient: ReturnType<typeof useQueryClient>;
     baseUrl: string;
     now: () => number;
@@ -838,17 +885,34 @@ async function pollConduitsDuringActivationWindow(input: {
                     hostedClient: input.hostedClient,
                 }),
         });
-        if (
-            isEntitlementAllowed(
-                normalizeHostedEntitlementStatus(snapshot.entitlement.status),
-            )
-        ) {
+        if (isActivationSnapshotConfirmed(input, snapshot)) {
             return true;
         }
         await delay(intervalMs);
     }
 
     return false;
+}
+
+function isActivationSnapshotConfirmed(
+    input: {
+        source: "purchase" | "restore";
+        previousEntitlementStatus: HostedEntitlementStatus;
+    },
+    snapshot: ConduitsSnapshot,
+): boolean {
+    const entitlementStatus = normalizeHostedEntitlementStatus(
+        snapshot.entitlement.status,
+    );
+    if (!isEntitlementAllowed(entitlementStatus)) {
+        return false;
+    }
+
+    return !(
+        input.source === "purchase" &&
+        input.previousEntitlementStatus === "canceled_not_expired" &&
+        entitlementStatus === "canceled_not_expired"
+    );
 }
 
 function delay(ms: number): Promise<void> {

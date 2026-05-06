@@ -755,6 +755,52 @@ describe("hosted experience context", () => {
         ).resolves.toBeNull();
     });
 
+    it("deletes the hosted account before clearing local session state", async () => {
+        const existingSession = makeSession({
+            accessToken: "access.delete",
+            accessTokenExpiresAtMs: 90_000,
+            refreshTokenExpiresAtMs: 1_000_000,
+        });
+        const authService = makeAuthService();
+        const sessionClient = makeSessionClient({
+            loadHostedSession: jest.fn().mockResolvedValue(existingSession),
+        });
+        const hostedClient = makeHostedClient();
+
+        let contextValue: HostedExperienceContextValue | null = null;
+        function Consumer() {
+            contextValue = useHostedExperienceContext();
+            return null;
+        }
+
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 10_000,
+                    authService,
+                    sessionClient,
+                    hostedClient,
+                    revenueCat: makeRevenueCatContext(),
+                },
+                <Consumer />,
+            );
+        });
+
+        await waitFor(() => {
+            expect(contextValue!.state.authPhase).toBe("authenticated");
+        });
+
+        await act(async () => {
+            await contextValue!.deleteAccount();
+        });
+
+        expect(hostedClient.deleteAccount).toHaveBeenCalledWith(
+            "access.delete",
+        );
+        expect(authService.signOut).toHaveBeenCalledTimes(1);
+    });
+
     it("initializes revenuecat for loaded sessions without dev reconcile", async () => {
         const now = jest.fn().mockReturnValue(20_000);
         const existingSession = makeSession({
@@ -815,6 +861,180 @@ describe("hosted experience context", () => {
         expect(hostedClient.reconcileRevenueCat).not.toHaveBeenCalled();
         await waitFor(() => {
             expect(getContextValue().state.revenuecatPhase).toBe("ready");
+        });
+    });
+
+    it("clears restore pending for canceled but still allowed entitlements", async () => {
+        const existingSession = makeSession({
+            accessToken: "access.loaded",
+            accessTokenExpiresAtMs: 1_000_000,
+            refreshTokenExpiresAtMs: 2_000_000,
+        });
+        const sessionClient = makeSessionClient({
+            loadHostedSession: jest.fn().mockResolvedValue(existingSession),
+        });
+        const hostedClient = makeHostedClient({
+            getConduitsSnapshot: jest
+                .fn()
+                .mockResolvedValue(
+                    makeConduitsSnapshot("canceled_not_expired"),
+                ),
+        });
+        const revenueCat = makeRevenueCatContext();
+
+        let contextValue: HostedExperienceContextValue | null = null;
+        function Consumer() {
+            contextValue = useHostedExperienceContext();
+            return null;
+        }
+
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 10_000,
+                    authService: makeAuthService(),
+                    sessionClient,
+                    hostedClient,
+                    revenueCat,
+                },
+                <Consumer />,
+            );
+        });
+
+        await waitFor(() => {
+            expect(contextValue!.state.authPhase).toBe("authenticated");
+        });
+
+        await act(async () => {
+            await contextValue!.restorePurchases();
+        });
+
+        await waitFor(() => {
+            expect(contextValue!.state.entitlementSnapshot).toBe(
+                "canceled_not_expired",
+            );
+            expect(contextValue!.state.revenuecatPhase).toBe("ready");
+        });
+    });
+
+    it("clears restore pending when restore starts from an already allowed entitlement", async () => {
+        const existingSession = makeSession({
+            accessToken: "access.loaded",
+            accessTokenExpiresAtMs: 1_000_000,
+            refreshTokenExpiresAtMs: 2_000_000,
+        });
+        const sessionClient = makeSessionClient({
+            loadHostedSession: jest.fn().mockResolvedValue(existingSession),
+        });
+        const hostedClient = makeHostedClient({
+            getConduitsSnapshot: jest
+                .fn()
+                .mockResolvedValue(
+                    makeConduitsSnapshot("canceled_not_expired"),
+                ),
+        });
+        const revenueCat = makeRevenueCatContext();
+
+        let contextValue: HostedExperienceContextValue | null = null;
+        function Consumer() {
+            contextValue = useHostedExperienceContext();
+            return null;
+        }
+
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 10_000,
+                    authService: makeAuthService(),
+                    sessionClient,
+                    hostedClient,
+                    revenueCat,
+                },
+                <Consumer />,
+            );
+        });
+
+        await waitFor(() => {
+            expect(contextValue!.state.entitlementSnapshot).toBe(
+                "canceled_not_expired",
+            );
+            expect(contextValue!.state.revenuecatPhase).toBe("ready");
+        });
+
+        await act(async () => {
+            await contextValue!.restorePurchases();
+        });
+
+        await waitFor(() => {
+            expect(contextValue!.state.entitlementSnapshot).toBe(
+                "canceled_not_expired",
+            );
+            expect(contextValue!.state.revenuecatPhase).toBe("ready");
+        });
+    });
+
+    it("clears restore pending when backend confirmation times out", async () => {
+        const existingSession = makeSession({
+            accessToken: "access.loaded",
+            accessTokenExpiresAtMs: 1_000_000,
+            refreshTokenExpiresAtMs: 2_000_000,
+        });
+        const sessionClient = makeSessionClient({
+            loadHostedSession: jest.fn().mockResolvedValue(existingSession),
+        });
+        const hostedClient = makeHostedClient({
+            getConduitsSnapshot: jest
+                .fn()
+                .mockResolvedValue(makeConduitsSnapshot("inactive")),
+        });
+        const revenueCat = makeRevenueCatContext();
+        let shouldTimeoutPoll = false;
+        let nowMs = 10_000;
+        const now = jest.fn(() => {
+            if (!shouldTimeoutPoll) {
+                return nowMs;
+            }
+
+            nowMs += 26_000;
+            return nowMs;
+        });
+
+        let contextValue: HostedExperienceContextValue | null = null;
+        function Consumer() {
+            contextValue = useHostedExperienceContext();
+            return null;
+        }
+
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now,
+                    authService: makeAuthService(),
+                    sessionClient,
+                    hostedClient,
+                    revenueCat,
+                },
+                <Consumer />,
+            );
+        });
+
+        await waitFor(() => {
+            expect(contextValue!.state.authPhase).toBe("authenticated");
+        });
+
+        shouldTimeoutPoll = true;
+        await act(async () => {
+            await contextValue!.restorePurchases();
+        });
+
+        await waitFor(() => {
+            expect(contextValue!.state.revenuecatPhase).toBe("ready");
+            expect(contextValue!.state.revenuecatError).toBe(
+                "Purchase restored. Waiting for backend entitlement confirmation. Retry in a few moments.",
+            );
         });
     });
 
@@ -1412,6 +1632,7 @@ type HostedClient = Pick<
     ReturnType<typeof createHostedClient>,
     | "getAccountProfile"
     | "updateAccountProfile"
+    | "deleteAccount"
     | "setPersonalCompartmentId"
     | "getConduitsSnapshot"
     | "getPlanCatalog"
@@ -1431,6 +1652,7 @@ function makeHostedClient(overrides?: Partial<HostedClient>): HostedClient {
             profile_version: 1,
         }),
         updateAccountProfile: jest.fn(),
+        deleteAccount: jest.fn().mockResolvedValue(undefined),
         setPersonalCompartmentId: jest
             .fn()
             .mockResolvedValue("jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g"),
@@ -1446,6 +1668,22 @@ function makeHostedClient(overrides?: Partial<HostedClient>): HostedClient {
             account_id: "acc_123",
         }),
         ...overrides,
+    };
+}
+
+function makeConduitsSnapshot(entitlementStatus: string) {
+    return {
+        entitlement: {
+            status: entitlementStatus,
+            product_id: "test.product.primary",
+        },
+        conduits: [
+            {
+                conduit_id: "cond_1",
+                proxy_id: "st_1",
+                status: "active",
+            },
+        ],
     };
 }
 

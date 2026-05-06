@@ -96,6 +96,7 @@ describe("ConduitActionsProvider", () => {
 
         expect(contextValue.personalCompartmentId).toBeNull();
         expect(contextValue.isPersonalPairingPreparing).toBe(true);
+        expect(contextValue.isPersonalPairingShareReady).toBe(false);
     });
 
     it("uses the hosted snapshot personal compartment ID on iOS once it is ready", () => {
@@ -131,6 +132,37 @@ describe("ConduitActionsProvider", () => {
             "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk",
         );
         expect(contextValue.isPersonalPairingPreparing).toBe(false);
+        expect(contextValue.isPersonalPairingShareReady).toBe(true);
+    });
+
+    it("marks iOS personal pairing not ready when the hosted ID exists before the station is active", () => {
+        mockedUseHostedExperienceState.mockReturnValue({
+            authPhase: "authenticated",
+            session: { personalPairingWrapperBaseUrl: null },
+            stationPhase: "provisioning",
+            entitlementSnapshot: "active",
+            conduitsSnapshot: {
+                entitlement: { status: "active" },
+                conduits: [
+                    {
+                        conduit_id: "cond_1",
+                        proxy_id: "st_1",
+                        status: "provisioning",
+                        traffic_scope: "personal",
+                        personal_compartment_id:
+                            "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk",
+                    },
+                ],
+            },
+        } as never);
+
+        const contextValue = renderProvider(createTestQueryClient());
+
+        expect(contextValue.personalCompartmentId).toBe(
+            "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk",
+        );
+        expect(contextValue.isPersonalPairingPreparing).toBe(true);
+        expect(contextValue.isPersonalPairingShareReady).toBe(false);
     });
 });
 
