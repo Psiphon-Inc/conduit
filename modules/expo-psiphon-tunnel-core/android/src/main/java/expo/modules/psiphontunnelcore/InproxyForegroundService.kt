@@ -34,7 +34,6 @@ import android.os.Parcel
 import android.os.RemoteException
 import android.os.SystemClock
 import android.text.format.Formatter
-import android.util.Log
 import android.util.Base64
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -485,6 +484,26 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     private var lastRegionalAccumulatorPersistMs = 0L
     private var lastActivityStatsEmitMs = 0L
 
+    private fun logInfo(message: String) {
+        AppLogStore.info(applicationContext, tag, message)
+    }
+
+    private fun logWarn(message: String) {
+        AppLogStore.warn(applicationContext, tag, message)
+    }
+
+    private fun logWarn(message: String, error: Throwable) {
+        AppLogStore.warn(applicationContext, tag, message, error)
+    }
+
+    private fun logError(message: String) {
+        AppLogStore.error(applicationContext, tag, message)
+    }
+
+    private fun logError(message: String, error: Throwable) {
+        AppLogStore.error(applicationContext, tag, message, error)
+    }
+
     private val binder = object : IConduitService.Stub() {
         override fun registerClient(client: IConduitClientCallback?) {
             if (client == null) {
@@ -493,16 +512,16 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             synchronized(clientsLock) {
                 val clientBinder = client.asBinder()
                 clients[clientBinder] = client
-                Log.i(tag, "Client registered, total=${clients.size}")
+                logInfo("Client registered, total=${clients.size}")
                 try {
                     client.onProxyStateUpdated(proxyStateBundle(state))
                 } catch (error: RemoteException) {
-                    Log.e(tag, "Failed to send proxy state update to client", error)
+                    logError("Failed to send proxy state update to client", error)
                 }
                 try {
                     client.onProxyActivityStatsUpdated(activityStatsBundle(stats))
                 } catch (error: RemoteException) {
-                    Log.e(tag, "Failed to send proxy activity stats update to client", error)
+                    logError("Failed to send proxy activity stats update to client", error)
                 }
             }
         }
@@ -513,7 +532,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             }
             synchronized(clientsLock) {
                 clients.remove(client.asBinder())
-                Log.i(tag, "Client unregistered, total=${clients.size}")
+                logInfo("Client unregistered, total=${clients.size}")
             }
         }
 
@@ -530,18 +549,23 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
     override fun onCreate() {
         super.onCreate()
+        logInfo("Inproxy foreground service created")
         ensureNotificationChannel()
         loadRegionalAccumulatorsFromDisk()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val action = intent?.action ?: return START_NOT_STICKY
+        val action = intent?.action
+        if (action == null) {
+            logWarn("Received start command without action")
+            return START_NOT_STICKY
+        }
         when (action) {
             ACTION_TOGGLE_INPROXY -> handleToggle(intent)
             ACTION_PARAMS_CHANGED -> handleParamsChanged(intent)
             ACTION_STOP_INPROXY -> stopInproxy("manual stop")
             ACTION_START_INPROXY_WITH_LAST_PARAMS -> handleStartWithLastParams()
-            else -> Log.w(tag, "Unknown action: $action")
+            else -> logWarn("Unknown action: $action")
         }
         if (!isRunning.get()) {
             stopSelf(startId)
@@ -551,6 +575,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
     override fun onDestroy() {
         super.onDestroy()
+        logInfo("Inproxy foreground service destroyed")
         maybePersistRegionalAccumulators(force = true)
         stopActivityEmitter()
         executor.shutdownNow()
@@ -560,12 +585,16 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     private fun handleToggle(intent: Intent) {
+        logInfo("Received toggle action")
         if (isRunning.get()) {
+            logInfo("Service is running; toggling off")
             stopInproxy("toggle stop")
             return
         }
+        logInfo("Service is not running; starting with new parameters")
         val params = InproxyParameters.fromIntent(intent)
         if (params == null) {
+            logError("Attempted to start inproxy with invalid parameters")
             reportProxyError(
                 action = "inProxyStartFailed",
                 message = "Invalid inproxy parameters",
@@ -580,6 +609,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     private fun handleParamsChanged(intent: Intent) {
         val params = InproxyParameters.fromIntent(intent)
         if (params == null) {
+            logError("Attempted to update inproxy parameters with invalid parameters")
             reportProxyError(
                 action = "inProxyRestartFailed",
                 message = "Invalid inproxy parameters",
@@ -589,14 +619,17 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         }
         val changed = params.store(applicationContext)
         if (!changed) {
+            logInfo("Parameters update called, but no changes detected")
             return
         }
+        logInfo("Parameters updated; changes persisted")
         if (isRunning.get()) {
+            logInfo("Service is running; restarting inproxy tunnel due to parameter changes")
             try {
                 resetStats()
                 psiphonTunnel.restartPsiphon()
             } catch (e: Exception) {
-                Log.e(tag, "Failed to restart in-proxy tunnel", e)
+                logError("Failed to restart in-proxy tunnel", e)
                 reportProxyError(
                     action = "inProxyRestartFailed",
                     message = e.message,
@@ -604,16 +637,20 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 )
                 stopInproxy("restart failed")
             }
+        } else {
+            logInfo("Service is stopped; updated parameters will apply on next start")
         }
     }
 
     private fun handleStartWithLastParams() {
         if (isRunning.get()) {
+            logInfo("Service is already running; ignoring start with last parameters action")
             return
         }
+        logInfo("Service is stopped; starting with last known parameters")
         val params = InproxyParameters.load(applicationContext)
         if (params == null) {
-            Log.w(tag, "No persisted inproxy parameters available")
+            logWarn("No persisted inproxy parameters available")
             return
         }
         startInproxy(params)
@@ -621,8 +658,10 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
     private fun startInproxy(params: InproxyParameters) {
         if (!isRunning.compareAndSet(false, true)) {
+            logInfo("Service is not stopped; cannot start")
             return
         }
+        logInfo("Starting inproxy")
 
         Utils.setServiceRunningFlag(applicationContext, true)
         resetStats()
@@ -632,7 +671,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         latestProxyState = state
 
         if (!startForegroundSafely()) {
-            Log.e(tag, "Unable to start inproxy because the foreground notification is unavailable")
+            logError("Unable to start inproxy because the foreground notification is unavailable")
             isRunning.set(false)
             stopActivityEmitter()
             Utils.setServiceRunningFlag(applicationContext, false)
@@ -648,16 +687,19 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         stopLatch = CountDownLatch(1)
         executor.submit {
             try {
+                logInfo("Inproxy task started")
                 psiphonTunnel.startTunneling(Utils.getEmbeddedServers(this))
                 stopLatch?.await()
+                logInfo("Inproxy task stopping")
             } catch (e: PsiphonTunnel.Exception) {
-                Log.e(tag, "Failed to start inproxy", e)
+                logError("Failed to start inproxy", e)
                 reportProxyError(
                     action = "inProxyStartFailed",
                     message = e.message,
                     notificationTextResId = R.string.notification_conduit_failed_to_start_text,
                 )
             } catch (e: InterruptedException) {
+                logWarn("Inproxy task interrupted", e)
                 Thread.currentThread().interrupt()
             } finally {
                 psiphonTunnel.stop()
@@ -673,6 +715,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                     @Suppress("DEPRECATION")
                     stopForeground(true)
                 }
+                logInfo("Inproxy task stopped")
                 stopSelf()
             }
         }
@@ -680,9 +723,10 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
     private fun stopInproxy(reason: String) {
         if (!isRunning.get()) {
+            logInfo("Service is not running; cannot stop: $reason")
             return
         }
-        Log.i(tag, "Stopping inproxy: $reason")
+        logInfo("Stopping inproxy: $reason")
         synchronized(statsLock) {
             latestAnnouncingWorkers = 0
             latestConnectingClients = 0
@@ -963,7 +1007,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                     payloadVersion != REGIONAL_ACCUMULATOR_PERSIST_VERSION_V2 &&
                     payloadVersion != REGIONAL_ACCUMULATOR_PERSIST_VERSION_V1
             ) {
-                Log.w(tag, "Ignoring regional accumulator payload version=$payloadVersion")
+                logWarn("Ignoring regional accumulator payload version=$payloadVersion")
                 return
             }
 
@@ -1028,10 +1072,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                             }
                         }
                     } else {
-                        Log.i(
-                            tag,
-                            "Skipping proxy activity restore due to boot epoch mismatch",
-                        )
+                        logInfo("Skipping proxy activity restore due to boot epoch mismatch")
                     }
                 }
 
@@ -1056,9 +1097,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 statsPersistenceDirty = false
                 lastRegionalAccumulatorPersistMs = System.currentTimeMillis()
             }
-            Log.i(tag, "Loaded persisted regional breakdown state")
+            logInfo("Loaded persisted regional breakdown state")
         } catch (e: Exception) {
-            Log.w(tag, "Failed to load persisted regional breakdown state", e)
+            logWarn("Failed to load persisted regional breakdown state", e)
         }
     }
 
@@ -1115,7 +1156,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 lastRegionalAccumulatorPersistMs = nowMs
             }
         } catch (e: Exception) {
-            Log.w(tag, "Failed to persist regional breakdown state", e)
+            logWarn("Failed to persist regional breakdown state", e)
         }
     }
 
@@ -1130,7 +1171,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             val bytes = parcel.marshall()
             Base64.encodeToString(bytes, Base64.NO_WRAP)
         } catch (e: Exception) {
-            Log.w(tag, "Failed to marshal proxy activity stats", e)
+            logWarn("Failed to marshal proxy activity stats", e)
             null
         } finally {
             parcel.recycle()
@@ -1162,7 +1203,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 parcel.readParcelable(ProxyActivityStats::class.java.classLoader)
             }
         } catch (e: Exception) {
-            Log.w(tag, "Failed to unmarshal proxy activity stats", e)
+            logWarn("Failed to unmarshal proxy activity stats", e)
             null
         } finally {
             parcel.recycle()
@@ -1628,7 +1669,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             manager.createNotificationChannel(channel)
             manager.getNotificationChannel(NOTIFICATION_CHANNEL_ID) != null
         } catch (error: RuntimeException) {
-            Log.e(tag, "Failed to create foreground notification channel", error)
+            logError("Failed to create foreground notification channel", error)
             false
         }
     }
@@ -1641,7 +1682,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             startForeground(NOTIFICATION_ID, buildStartingNotification())
             true
         } catch (error: RuntimeException) {
-            Log.e(tag, "Failed to start foreground notification", error)
+            logError("Failed to start foreground notification", error)
             false
         }
     }
@@ -1715,7 +1756,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         try {
             manager.notify(NOTIFICATION_ID, buildNotification())
         } catch (error: RuntimeException) {
-            Log.e(tag, "Failed to update foreground notification", error)
+            logError("Failed to update foreground notification", error)
         }
     }
 
@@ -1772,8 +1813,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             psiphonConfig.put("InproxyLimitUpstreamBytesPerSecond", params.limitUpstreamBytesPerSecond)
             psiphonConfig.put("InproxyLimitDownstreamBytesPerSecond", params.limitDownstreamBytesPerSecond)
 
-            Log.i(
-                tag,
+            logInfo(
                 "Inproxy config EmitInproxyProxyActivity=true maxCommonClients=${params.maxClients} maxPersonalClients=${params.maxPersonalClients} personalCompartmentPreview=${previewCompartmentId(params.personalCompartmentId)} upLimit=${params.limitUpstreamBytesPerSecond} downLimit=${params.limitDownstreamBytesPerSecond}",
             )
 
@@ -1809,8 +1849,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         commonRegionActivity: Map<String, ca.psiphon.PsiphonTunnel.RegionActivitySnapshot>,
     ) {
         activityCallbackCount += 1
-        Log.i(
-            tag,
+        logInfo(
             "onInproxyProxyActivity #$activityCallbackCount announcing=$announcing connecting=$connectingClients connected=$connectedClients up=$bytesUp down=$bytesDown",
         )
 
@@ -1912,6 +1951,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     override fun onInproxyMustUpgrade() {
+        logWarn("Inproxy must upgrade")
         reportProxyError(
             action = "inProxyMustUpgrade",
             message = "Psiphon core requires an app upgrade",
@@ -1921,6 +1961,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     override fun onStartedWaitingForNetworkConnectivity() {
+        logInfo("Started waiting for network connectivity")
         state = state.copy(networkState = NetworkState.NO_INTERNET)
         latestProxyState = state
         publishProxyState(state)
@@ -1928,6 +1969,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     override fun onStoppedWaitingForNetworkConnectivity() {
+        logInfo("Stopped waiting for network connectivity")
         state = state.copy(networkState = NetworkState.HAS_INTERNET)
         latestProxyState = state
         publishProxyState(state)
@@ -1935,12 +1977,14 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     override fun onConnected() {
+        logInfo("Inproxy connected")
         state = ProxyState(Status.RUNNING, NetworkState.HAS_INTERNET)
         latestProxyState = state
         publishProxyState(state)
     }
 
     override fun onConnecting() {
+        logInfo("Inproxy connecting")
         state = ProxyState(Status.RUNNING, NetworkState.HAS_INTERNET)
         latestProxyState = state
         publishProxyState(state)
@@ -1951,6 +1995,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     override fun onSocksProxyPortInUse(port: Int) {
+        logError("SOCKS proxy port in use: $port")
         reportProxyError(
             action = "inProxyStartFailed",
             message = "SOCKS proxy port in use: $port",
@@ -1982,7 +2027,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                     if (error is DeadObjectException) {
                         deadClients.add(clientBinder)
                     } else {
-                        Log.e(tag, "Failed to notify proxy state", error)
+                        logError("Failed to notify proxy state", error)
                     }
                 }
             }
@@ -2001,7 +2046,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                     if (error is DeadObjectException) {
                         deadClients.add(clientBinder)
                     } else {
-                        Log.e(tag, "Failed to notify proxy activity stats", error)
+                        logError("Failed to notify proxy activity stats", error)
                     }
                 }
             }
@@ -2020,7 +2065,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                     if (error is DeadObjectException) {
                         deadClients.add(clientBinder)
                     } else {
-                        Log.e(tag, "Failed to notify proxy error", error)
+                        logError("Failed to notify proxy error", error)
                     }
                 }
             }
@@ -2029,6 +2074,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     private fun reportProxyError(action: String, message: String?, notificationTextResId: Int) {
+        logWarn("Reporting proxy error action=$action message=${message.orEmpty()}")
         notifyClientsProxyError(action, message)
         persistPendingProxyError(action, message)
         deliverProxyErrorIntent(action, message, notificationTextResId)
@@ -2051,7 +2097,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 .remove(KEY_PENDING_ERROR_MESSAGE)
                 .apply()
         } catch (error: IOException) {
-            Log.w(tag, "Failed to persist pending proxy error", error)
+            logWarn("Failed to persist pending proxy error", error)
         }
     }
 
@@ -2095,7 +2141,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         try {
             manager.notify(notificationId, notification)
         } catch (error: RuntimeException) {
-            Log.e(tag, "Failed to show proxy error notification", error)
+            logError("Failed to show proxy error notification", error)
         }
     }
 
@@ -2119,6 +2165,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         val trustedSignatures = PackageHelper.parseTrustedAppsFromApplicationParameters(params)
         PackageHelper.saveTrustedSignaturesToFile(applicationContext, trustedSignatures)
         PackageHelper.configureRuntimeTrustedSignatures(trustedSignatures)
-        Log.i(tag, "Updated runtime trusted signatures for ${trustedSignatures.size} package(s)")
+        logInfo("Updated runtime trusted signatures for ${trustedSignatures.size} package(s)")
     }
 }

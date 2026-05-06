@@ -23,6 +23,7 @@ import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.Exceptions
@@ -49,6 +50,7 @@ class ExpoPsiphonTunnelCoreModule : Module() {
 
         OnCreate {
             conduitServiceInteractor = ConduitServiceInteractor(context.applicationContext)
+            LogsMaintenanceWorker.schedule(context.applicationContext)
         }
 
         OnDestroy {
@@ -72,18 +74,38 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         AsyncFunction("sendFeedback") { inproxyId: String, promise: Promise ->
             try {
                 val appContext = context.applicationContext
+                val workManager = WorkManager.getInstance(appContext)
+                if (hasPendingFeedbackUpload(workManager)) {
+                    AppLogStore.info(
+                        appContext,
+                        "ExpoPsiphonTunnelCoreModule",
+                        "Feedback upload already pending",
+                    )
+                    promise.resolve(null)
+                    return@AsyncFunction
+                }
+
+                val inputData = FeedbackWorker.createInputData(inproxyId)
+                val feedbackId = inputData.getString(FeedbackWorker.INPUT_FEEDBACK_ID)
+                    ?: throw IllegalStateException("Missing generated feedback ID")
+                AppLogStore.info(
+                    appContext,
+                    "ExpoPsiphonTunnelCoreModule",
+                    "Feedback upload requested: $feedbackId",
+                )
+                FeedbackWorker.createFeedbackSnapshot(appContext, feedbackId)
                 val request = OneTimeWorkRequestBuilder<FeedbackWorker>()
-                    .setInputData(FeedbackWorker.createInputData(inproxyId))
+                    .setInputData(inputData)
                     .setConstraints(
                         Constraints.Builder()
                             .setRequiredNetworkType(NetworkType.CONNECTED)
                             .build(),
                     )
                     .build()
-                WorkManager.getInstance(appContext)
+                workManager
                     .enqueueUniqueWork(
                         FeedbackWorker.UNIQUE_WORK_NAME,
-                        ExistingWorkPolicy.KEEP,
+                        ExistingWorkPolicy.REPLACE,
                         request,
                     )
                 AppLogStore.info(
@@ -94,6 +116,9 @@ class ExpoPsiphonTunnelCoreModule : Module() {
 
                 promise.resolve(null)
             } catch (error: Exception) {
+                if (error is InterruptedException) {
+                    Thread.currentThread().interrupt()
+                }
                 AppLogStore.error(
                     context.applicationContext,
                     "ExpoPsiphonTunnelCoreModule",
@@ -169,6 +194,14 @@ class ExpoPsiphonTunnelCoreModule : Module() {
             hasIpcObservers = false
             unregisterIpcListenerIfNeeded()
         }
+    }
+
+    private fun hasPendingFeedbackUpload(workManager: WorkManager): Boolean {
+        return workManager.getWorkInfosForUniqueWork(FeedbackWorker.UNIQUE_WORK_NAME)
+            .get()
+            .any { workInfo ->
+                workInfo.state == WorkInfo.State.ENQUEUED || workInfo.state == WorkInfo.State.RUNNING
+            }
     }
 
     private fun emitInproxyEvent(eventType: String, eventData: Bundle) {

@@ -27,7 +27,6 @@ import android.os.Bundle
 import android.os.DeadObjectException
 import android.os.IBinder
 import android.os.RemoteException
-import android.util.Log
 import ca.psiphon.conduit.nativemodule.IConduitClientCallback
 import ca.psiphon.conduit.nativemodule.IConduitService
 import ca.psiphon.conduit.state.IConduitStateCallback
@@ -74,6 +73,18 @@ class ConduitStateService : Service() {
         state = ProxyState.UNKNOWN,
     )
 
+    private fun logInfo(message: String) {
+        AppLogStore.info(applicationContext, TAG, message)
+    }
+
+    private fun logWarn(message: String) {
+        AppLogStore.warn(applicationContext, TAG, message)
+    }
+
+    private fun logError(message: String, error: Throwable) {
+        AppLogStore.error(applicationContext, TAG, message, error)
+    }
+
     private val inproxyClientCallback = object : IConduitClientCallback.Stub() {
         override fun onProxyStateUpdated(proxyStateBundle: Bundle) {
             updateAndNotify(proxyStateFromBundle(proxyStateBundle))
@@ -90,17 +101,17 @@ class ConduitStateService : Service() {
 
     private val inproxyServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            Log.i(TAG, "Connected to InproxyForegroundService")
+            logInfo("Connected to InproxyForegroundService")
             inproxyService = IConduitService.Stub.asInterface(service)
             try {
                 inproxyService?.registerClient(inproxyClientCallback)
             } catch (error: RemoteException) {
-                Log.e(TAG, "Failed to register inproxy state callback", error)
+                logError("Failed to register inproxy state callback", error)
             }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            Log.i(TAG, "Disconnected from InproxyForegroundService")
+            logInfo("Disconnected from InproxyForegroundService")
             inproxyService = null
             isInproxyServiceBound = false
             if (!isDestroyed) {
@@ -116,10 +127,7 @@ class ConduitStateService : Service() {
             }
 
             val caller = enforceTrustedCaller("registerClient")
-            Log.i(
-                TAG,
-                "Accepted registerClient from $caller",
-            )
+            logInfo("Accepted registerClient from $caller")
 
             var activeClientCount = 0
             synchronized(clientsLock) {
@@ -129,7 +137,7 @@ class ConduitStateService : Service() {
                 try {
                     client.onStateUpdate(currentUpdate.toJson())
                 } catch (e: RemoteException) {
-                    Log.e(TAG, "Failed to deliver initial state", e)
+                    logError("Failed to deliver initial state", e)
                 }
             }
             emitIpcEvent(
@@ -149,7 +157,7 @@ class ConduitStateService : Service() {
                 clients.remove(client.asBinder())
                 activeClientCount = clients.size
             }
-            Log.i(TAG, "Accepted unregisterClient")
+            logInfo("Accepted unregisterClient")
             emitIpcEvent(
                 type = "unregisterClient",
                 status = "accepted",
@@ -159,10 +167,7 @@ class ConduitStateService : Service() {
 
         override fun fetchConduitPrivateKey(): String {
             val caller = enforceTrustedCaller("fetchConduitPrivateKey")
-            Log.i(
-                TAG,
-                "Accepted fetchConduitPrivateKey from $caller",
-            )
+            logInfo("Accepted fetchConduitPrivateKey from $caller")
 
             val privateKey = InproxyParameters.load(applicationContext)?.privateKey.orEmpty()
             if (privateKey.isBlank()) {
@@ -202,10 +207,7 @@ class ConduitStateService : Service() {
         )
 
         if (devTrustedSignatures.isNotEmpty()) {
-            Log.w(
-                TAG,
-                "Loaded development IPC signatures for ${devTrustedSignatures.size} package(s).",
-            )
+            logWarn("Loaded development IPC signatures for ${devTrustedSignatures.size} package(s).")
         }
 
         currentUpdate = StateUpdate(
@@ -231,7 +233,7 @@ class ConduitStateService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         if (intent?.action != BIND_ACTION) {
-            Log.w(TAG, "Denying bind with invalid action: ${intent?.action}")
+            logWarn("Denying bind with invalid action: ${intent?.action}")
             emitIpcEvent(
                 type = "bind",
                 status = "invalid",
@@ -242,7 +244,7 @@ class ConduitStateService : Service() {
         // The framework invokes onBind during service setup, so Binder.getCallingUid()
         // here does not reliably identify the eventual external client. Enforce caller
         // authorization on the AIDL methods instead, where the remote UID is correct.
-        Log.i(TAG, "Accepted bind for action $BIND_ACTION")
+        logInfo("Accepted bind for action $BIND_ACTION")
         emitIpcEvent(
             type = "bind",
             status = "accepted",
@@ -267,7 +269,7 @@ class ConduitStateService : Service() {
                     if (error is DeadObjectException) {
                         toRemove.add(clientBinder)
                     } else {
-                        Log.e(TAG, "Failed to notify state client", error)
+                        logError("Failed to notify state client", error)
                     }
                 }
             }
@@ -298,7 +300,7 @@ class ConduitStateService : Service() {
         val intent = Intent(applicationContext, InproxyForegroundService::class.java)
         isInproxyServiceBound = bindService(intent, inproxyServiceConnection, Context.BIND_AUTO_CREATE)
         if (!isInproxyServiceBound) {
-            Log.w(TAG, "bindService returned false for InproxyForegroundService")
+            logWarn("bindService returned false for InproxyForegroundService")
         }
     }
 
@@ -306,7 +308,7 @@ class ConduitStateService : Service() {
         try {
             inproxyService?.unregisterClient(inproxyClientCallback)
         } catch (error: RemoteException) {
-            Log.e(TAG, "Failed to unregister inproxy state callback", error)
+            logError("Failed to unregister inproxy state callback", error)
         }
         try {
             if (isInproxyServiceBound) {
@@ -333,10 +335,7 @@ class ConduitStateService : Service() {
     }
 
     private fun logDeniedCaller(operation: String, caller: String) {
-        Log.w(
-            TAG,
-            "Denied $operation from $caller",
-        )
+        logWarn("Denied $operation from $caller")
         emitIpcEvent(
             type = operation,
             status = "denied",
@@ -378,7 +377,7 @@ class ConduitStateService : Service() {
                 packageInfo.versionCode
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch app version code", e)
+            logError("Failed to fetch app version code", e)
             -1
         }
     }

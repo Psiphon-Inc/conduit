@@ -327,6 +327,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
         isPersonalPairingReady,
         selectInproxyParameters,
         logErrorToDiagnostic,
+        sendFeedback,
     } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
     const { data: conduitName } = useConduitName();
@@ -354,6 +355,8 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     const [localSettingsExpanded, setLocalSettingsExpanded] =
         React.useState(false);
     const [showReducedSelector, setShowReducedSelector] = React.useState(false);
+    const [showDiagnosticThanks, setShowDiagnosticThanks] =
+        React.useState(false);
     const localStationIsRunning = inproxyStatus === "RUNNING";
     const settingsPaddedStyle = [
         ss.padded,
@@ -387,6 +390,21 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     const [reducedTimeError, setReducedTimeError] = React.useState<
         null | "format" | "range"
     >(null);
+
+    React.useEffect(() => {
+        if (!showDiagnosticThanks) {
+            return;
+        }
+
+        const timeoutId = setTimeout(() => {
+            setShowDiagnosticThanks(false);
+        }, 5000);
+
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [showDiagnosticThanks]);
+
     const reducedTimePattern = React.useMemo(
         () => /^([01]\d|2[0-3]):([0-5]\d)$/,
         [],
@@ -744,6 +762,11 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
         }
     }
 
+    function onSendDiagnosticPress() {
+        void sendFeedback();
+        setShowDiagnosticThanks(true);
+    }
+
     function renderSettingsAction({
         icon,
         label,
@@ -1036,6 +1059,23 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         label: t("MORE_INFO_I18N.string"),
                         onPress: () => router.push("/(app)/onboarding"),
                     })}
+
+                    {Platform.OS !== "ios"
+                        ? renderSettingsAction({
+                              icon: (
+                                  <Icon
+                                      name="send"
+                                      color={palette.black}
+                                      size={20}
+                                  />
+                              ),
+                              label: showDiagnosticThanks
+                                  ? t("SENT_THANK_YOU_I18N.string")
+                                  : t("SEND_DIAGNOSTIC_I18N.string"),
+                              onPress: onSendDiagnosticPress,
+                              disabled: showDiagnosticThanks,
+                          })
+                        : null}
 
                     {/* Legal */}
                     <View
