@@ -20,7 +20,6 @@ package expo.modules.psiphontunnelcore
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 
 class InproxyRestartReceiver : BroadcastReceiver() {
     private val tag = "InproxyRestartReceiver"
@@ -32,7 +31,7 @@ class InproxyRestartReceiver : BroadcastReceiver() {
         }
 
         if (Utils.getServiceRunningFlag(context)) {
-            Log.i(tag, "Restarting inproxy foreground service after $action")
+            AppLogStore.info(context.applicationContext, tag, "Restarting inproxy foreground service after $action")
             InproxyForegroundService.startWithLastParams(context)
         }
     }

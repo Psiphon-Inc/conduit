@@ -22,7 +22,6 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
 import android.os.Build
-import androidx.annotation.NonNull
 import androidx.work.Data
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -33,9 +32,11 @@ import org.json.JSONObject
 import psi.Psi
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.FileReader
 import java.io.IOException
-import java.nio.channels.FileChannel
+import java.nio.channels.FileLock
 import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -45,7 +46,7 @@ import java.util.TreeMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-class FeedbackWorker(@NonNull context: Context, @NonNull params: WorkerParameters) : Worker(context, params) {
+class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     companion object {
         const val UNIQUE_WORK_NAME = "PsiphonTunnelCoreFeedbackUpload"
         const val INPUT_FEEDBACK_ID = "feedbackId"
@@ -62,11 +63,16 @@ class FeedbackWorker(@NonNull context: Context, @NonNull params: WorkerParameter
                 .build()
         }
 
-        fun createFeedbackSnapshot(@NonNull context: Context, @NonNull feedbackId: String) {
+        fun createFeedbackSnapshot(context: Context, feedbackId: String) {
+            AppLogStore.flush()
             val dir = feedbackDirectoryForContext(context)
+            val appLogFiles = AppLogStore.allLogFiles(context)
+            if (appLogFiles.isEmpty()) {
+                AppLogStore.info(context, TAG, "No app log files found to include in feedback $feedbackId")
+            }
             mergeFiles(
-                File(dir, "app.$feedbackId.feedback"),
-                AppLogStore.allLogFiles(context),
+                appFeedbackFile(dir, feedbackId),
+                appLogFiles,
             )
 
             val noticeFiles = mutableListOf<File>()
@@ -79,11 +85,22 @@ class FeedbackWorker(@NonNull context: Context, @NonNull params: WorkerParameter
             if (notices.exists()) {
                 noticeFiles.add(notices)
             }
+            if (noticeFiles.isEmpty()) {
+                AppLogStore.warn(context, TAG, "No tunnel core notice files found to include in feedback $feedbackId")
+            }
 
-            mergeFiles(File(dir, "tunnelcore.$feedbackId.feedback"), noticeFiles)
+            mergeFiles(tunnelCoreFeedbackFile(dir, feedbackId), noticeFiles)
         }
 
-        fun cleanupOldFeedbackFiles(@NonNull context: Context, olderThanMillis: Long) {
+        private fun ensureFeedbackSnapshot(context: Context, feedbackId: String) {
+            val dir = feedbackDirectoryForContext(context)
+            if (appFeedbackFile(dir, feedbackId).exists() && tunnelCoreFeedbackFile(dir, feedbackId).exists()) {
+                return
+            }
+            createFeedbackSnapshot(context, feedbackId)
+        }
+
+        fun cleanupOldFeedbackFiles(context: Context, olderThanMillis: Long) {
             val dir = feedbackDirectoryForContext(context)
             dir.listFiles()?.forEach { file ->
                 if (file.isFile && file.lastModified() < olderThanMillis) {
@@ -106,24 +123,48 @@ class FeedbackWorker(@NonNull context: Context, @NonNull params: WorkerParameter
             return dir
         }
 
+        private fun appFeedbackFile(dir: File, feedbackId: String): File {
+            return File(dir, "app.$feedbackId.feedback")
+        }
+
+        private fun tunnelCoreFeedbackFile(dir: File, feedbackId: String): File {
+            return File(dir, "tunnelcore.$feedbackId.feedback")
+        }
+
         private fun mergeFiles(outputFile: File, inputFiles: List<File>) {
             if (outputFile.exists()) {
                 outputFile.delete()
             }
-            if (inputFiles.isEmpty()) {
-                return
+            outputFile.parentFile?.let { parent ->
+                if (!parent.exists()) {
+                    parent.mkdirs()
+                }
             }
 
-            FileChannel.open(
-                outputFile.toPath(),
-                java.nio.file.StandardOpenOption.CREATE,
-                java.nio.file.StandardOpenOption.WRITE,
-            ).use { out ->
-                inputFiles.sortedBy { it.lastModified() }.forEach { file ->
-                    FileChannel.open(file.toPath(), java.nio.file.StandardOpenOption.READ).use { input ->
-                        input.transferTo(0, input.size(), out)
+            FileOutputStream(outputFile, false).use { outputStream ->
+                val outputChannel = outputStream.channel
+                inputFiles
+                    .filter { it.exists() && it.isFile }
+                    .sortedBy { it.lastModified() }
+                    .forEach { file ->
+                        FileInputStream(file).use { inputStream ->
+                            val inputChannel = inputStream.channel
+                            val lock: FileLock = inputChannel.lock(0L, Long.MAX_VALUE, true)
+                            try {
+                                var position = 0L
+                                val size = inputChannel.size()
+                                while (position < size) {
+                                    val transferred = inputChannel.transferTo(position, size - position, outputChannel)
+                                    if (transferred <= 0L) {
+                                        break
+                                    }
+                                    position += transferred
+                                }
+                            } finally {
+                                lock.release()
+                            }
+                        }
                     }
-                }
             }
         }
     }
@@ -148,7 +189,7 @@ class FeedbackWorker(@NonNull context: Context, @NonNull params: WorkerParameter
         }
 
         return try {
-            createFeedbackSnapshot(applicationContext, feedbackId)
+            ensureFeedbackSnapshot(applicationContext, feedbackId)
             cleanupOldFeedbackFiles(
                 applicationContext,
                 System.currentTimeMillis() - TimeUnit.HOURS.toMillis(6),
@@ -297,22 +338,24 @@ class FeedbackWorker(@NonNull context: Context, @NonNull params: WorkerParameter
                 }
                 try {
                     val input = JSONObject(line)
-                    val timestamp = parseTimestamp(input.getString("timestamp"))
+                    val inputTimestamp = input.getString("timestamp")
+                    val timestamp = parseTimestamp(inputTimestamp)
+                    val timestampText = normalizedTimestamp(inputTimestamp, timestamp)
                     val output = if (isTunnelCore) {
                         JSONObject()
-                            .put("timestamp!!timestamp", input.getString("timestamp"))
+                            .put("timestamp!!timestamp", timestampText)
                             .put("category", "tunnel-core")
                             .put("data", input)
                     } else {
                         JSONObject()
-                            .put("timestamp!!timestamp", input.getString("timestamp"))
+                            .put("timestamp!!timestamp", timestampText)
                             .put("category", input.optString("tag", "app"))
                             .put("message", input.optString("message", ""))
                             .put("level", input.optString("level", "Info"))
                     }
                     val list = logMap.getOrPut(timestamp) { mutableListOf() }
                     list.add(output)
-                } catch (_: JSONException) {
+                } catch (_: Exception) {
                 }
             }
         }
@@ -352,8 +395,17 @@ class FeedbackWorker(@NonNull context: Context, @NonNull params: WorkerParameter
     }
 
     private fun parseTimestamp(value: String): Date {
+        value.toLongOrNull()?.let { return Date(it) }
         synchronized(rfc3339Formatter) {
             return rfc3339Formatter.parse(value) ?: Date(0)
+        }
+    }
+
+    private fun normalizedTimestamp(value: String, parsed: Date): String {
+        return if (value.toLongOrNull() == null) {
+            value
+        } else {
+            formatTimestamp(parsed.time)
         }
     }
 

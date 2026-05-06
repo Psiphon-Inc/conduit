@@ -24,7 +24,6 @@ import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
-import android.util.Log
 import ca.psiphon.conduit.nativemodule.IConduitClientCallback
 import ca.psiphon.conduit.nativemodule.IConduitService
 
@@ -38,9 +37,21 @@ class ConduitServiceInteractor(private val context: Context) {
     private var conduitService: IConduitService? = null
     private var callback: ((String, Bundle) -> Unit)? = null
 
+    private fun logInfo(message: String) {
+        AppLogStore.info(context, TAG, message)
+    }
+
+    private fun logWarn(message: String) {
+        AppLogStore.warn(context, TAG, message)
+    }
+
+    private fun logError(message: String, error: Throwable) {
+        AppLogStore.error(context, TAG, message, error)
+    }
+
     private val clientCallback = object : IConduitClientCallback.Stub() {
         override fun onProxyStateUpdated(proxyStateBundle: Bundle) {
-            Log.i(TAG, "Received proxy state callback: ${proxyStateBundle.getString("status")}")
+            logInfo("Received proxy state callback: ${proxyStateBundle.getString("status")}")
             callback?.invoke("proxyState", proxyStateBundle)
         }
 
@@ -55,13 +66,13 @@ class ConduitServiceInteractor(private val context: Context) {
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            Log.i(TAG, "Connected to InproxyForegroundService")
+            logInfo("Connected to InproxyForegroundService")
             conduitService = IConduitService.Stub.asInterface(service)
             registerClientIfReady("service connected")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            Log.i(TAG, "Disconnected from InproxyForegroundService")
+            logInfo("Disconnected from InproxyForegroundService")
             conduitService = null
             isServiceBound = false
 
@@ -76,18 +87,18 @@ class ConduitServiceInteractor(private val context: Context) {
     fun onStart(callback: (String, Bundle) -> Unit) {
         this.callback = callback
         isStopped = false
-        Log.i(TAG, "Interactor start")
+        logInfo("Interactor start")
         bindService()
         registerClientIfReady("observer start")
     }
 
     fun onStop() {
         isStopped = true
-        Log.i(TAG, "Interactor stop")
+        logInfo("Interactor stop")
         try {
             conduitService?.unregisterClient(clientCallback)
         } catch (error: RemoteException) {
-            Log.e(TAG, "Failed to unregister inproxy client", error)
+            logError("Failed to unregister inproxy client", error)
         }
 
         if (isServiceBound) {
@@ -124,10 +135,10 @@ class ConduitServiceInteractor(private val context: Context) {
         }
         try {
             service.registerClient(clientCallback)
-            Log.i(TAG, "Registered inproxy client callback: $reason")
+            logInfo("Registered inproxy client callback: $reason")
             emitPendingProxyError()
         } catch (error: RemoteException) {
-            Log.e(TAG, "Failed to register inproxy client: $reason", error)
+            logError("Failed to register inproxy client: $reason", error)
         }
     }
 
@@ -135,12 +146,12 @@ class ConduitServiceInteractor(private val context: Context) {
         if (isServiceBound) {
             return
         }
-        Log.i(TAG, "Binding to InproxyForegroundService")
+        logInfo("Binding to InproxyForegroundService")
         val intent = Intent(context, InproxyForegroundService::class.java)
         val bound = context.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         isServiceBound = bound
         if (!bound) {
-            Log.w(TAG, "bindService returned false")
+            logWarn("bindService returned false")
         }
     }
 
