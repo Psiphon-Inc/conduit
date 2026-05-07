@@ -20,6 +20,7 @@ package expo.modules.psiphontunnelcore
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
 import android.util.Log
 import java.io.File
 import java.util.Locale
@@ -32,6 +33,7 @@ object AppLogStore {
     private const val TAG = "AppLogStore"
     private const val AUTHORITY_SUFFIX = ".log"
     private const val PATH_INSERT_LOGS = "insert"
+    private const val PATH_COMMANDS = "commands"
     private const val LEGACY_APP_LOG_DIRECTORY = "app_logs"
     private const val LEGACY_APP_LOG_FILE_NAME = "app.log"
     private const val LEGACY_APP_LOG_ARCHIVE_FILE_NAME = "app.log.1"
@@ -76,9 +78,9 @@ object AppLogStore {
         return (providerLogs + legacyLogs).filter { it.exists() && it.isFile }
     }
 
-    fun flush(timeoutMs: Long = DEFAULT_FLUSH_TIMEOUT_MS): Boolean {
+    fun flush(context: Context? = null, timeoutMs: Long = DEFAULT_FLUSH_TIMEOUT_MS): Boolean {
         val barrier: Future<*> = executorService.submit {}
-        return try {
+        val executorFlushed = try {
             barrier.get(timeoutMs, TimeUnit.MILLISECONDS)
             true
         } catch (error: TimeoutException) {
@@ -92,6 +94,25 @@ object AppLogStore {
             false
         } catch (error: Exception) {
             Log.w(TAG, "Failed to flush logs", error)
+            false
+        }
+
+        if (!executorFlushed || context == null) {
+            return executorFlushed
+        }
+
+        val appContext = context.applicationContext
+        val uri = Uri.parse("content://${appContext.packageName}$AUTHORITY_SUFFIX/$PATH_COMMANDS")
+        return try {
+            val result: Bundle? = appContext.contentResolver.call(
+                uri,
+                LoggingContentProvider.METHOD_FLUSH,
+                null,
+                null,
+            )
+            result?.getBoolean(LoggingContentProvider.EXTRA_FLUSHED, false) == true
+        } catch (error: Exception) {
+            Log.w(TAG, "Failed to flush provider logs", error)
             false
         }
     }

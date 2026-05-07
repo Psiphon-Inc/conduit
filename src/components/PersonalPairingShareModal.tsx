@@ -191,7 +191,7 @@ export function PersonalPairingShareModal({
             wrapperBaseUrl,
         );
         const shareLink = shareOutput.wrapperUrl ?? shareOutput.deepLink;
-        const shareMessage = `${languageCopy.shareMessage}\n\n${shareLink}\n${shareOutput.rawToken}`;
+        const shareMessage = `${languageCopy.shareMessage}\n\n${shareLink}`;
 
         try {
             await Share.share({ message: shareMessage });

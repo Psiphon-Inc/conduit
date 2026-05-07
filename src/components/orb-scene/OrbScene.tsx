@@ -441,6 +441,17 @@ const SCENE_THEMES: Record<OrbEvolutionLevel, OrbSceneTheme> = {
     },
 };
 
+const PROVISIONING_MARKER_ORBIT_DURATION_MS = 5600;
+const PROVISIONING_MARKER_GLOW_COLORS = [
+    rgbaFromRgb(
+        SCENE_THEMES[HOSTED_ORB_THEME_LEVEL].orb.innerShadowBR.rgb,
+        0.72,
+    ),
+    rgbaFromRgb(SCENE_THEMES[HOSTED_ORB_THEME_LEVEL].orb.radialInner.rgb, 0.42),
+    rgbaFromRgb(SCENE_THEMES[HOSTED_ORB_THEME_LEVEL].orb.radialOuter.rgb, 0),
+];
+const PROVISIONING_MARKER_GLOW_POSITIONS = [0, 0.34, 1];
+
 function OrbGestureOverlay({
     centerX,
     centerY,
@@ -644,7 +655,7 @@ function OrbProvisioningMarker({
             orbit.value = 0;
             orbit.value = withRepeat(
                 withTiming(1, {
-                    duration: 2200,
+                    duration: PROVISIONING_MARKER_ORBIT_DURATION_MS,
                     easing: Easing.linear,
                 }),
                 -1,
@@ -670,13 +681,9 @@ function OrbProvisioningMarker({
 
     const markerX = useDerivedValue(() => markerCenter.value.x, [markerCenter]);
     const markerY = useDerivedValue(() => markerCenter.value.y, [markerCenter]);
-    const markerRadius = useDerivedValue(
-        () => clampNumber(radius.value * 0.075, 5, 10) * scale.value,
-        [radius, scale],
-    );
     const markerGlowRadius = useDerivedValue(
-        () => markerRadius.value * 3,
-        [markerRadius],
+        () => clampNumber(radius.value * 0.18, 11, 24) * scale.value,
+        [radius, scale],
     );
     const markerOpacity = useDerivedValue(() => {
         const pulseMultiplier = reducedMotion ? 0.72 + pulse.value * 0.28 : 1;
@@ -684,20 +691,22 @@ function OrbProvisioningMarker({
     }, [opacity, pulse, reducedMotion]);
 
     return (
-        <Group opacity={markerOpacity}>
+        <Group
+            opacity={markerOpacity}
+            layer={
+                <Paint>
+                    <Blur blur={1} />
+                </Paint>
+            }
+        >
             <Circle cx={markerX} cy={markerY} r={markerGlowRadius}>
                 <RadialGradient
                     c={markerCenter}
                     r={markerGlowRadius}
-                    colors={["rgba(255,255,255,0.48)", "rgba(255,255,255,0)"]}
+                    colors={PROVISIONING_MARKER_GLOW_COLORS}
+                    positions={PROVISIONING_MARKER_GLOW_POSITIONS}
                 />
             </Circle>
-            <Circle
-                cx={markerX}
-                cy={markerY}
-                r={markerRadius}
-                color="rgba(255,255,255,0.96)"
-            />
         </Group>
     );
 }

@@ -68,6 +68,7 @@ class ConduitStateService : Service() {
     private var inproxyService: IConduitService? = null
     private var isInproxyServiceBound = false
     private var isDestroyed = false
+    @Volatile
     private var currentUpdate = StateUpdate(
         appVersion = -1,
         state = ProxyState.UNKNOWN,
@@ -129,14 +130,22 @@ class ConduitStateService : Service() {
             val caller = enforceTrustedCaller("registerClient")
             logInfo("Accepted registerClient from $caller")
 
+            val clientBinder = client.asBinder()
             var activeClientCount = 0
             synchronized(clientsLock) {
-                val clientBinder = client.asBinder()
                 clients[clientBinder] = client
                 activeClientCount = clients.size
-                try {
-                    client.onStateUpdate(currentUpdate.toJson())
-                } catch (e: RemoteException) {
+            }
+            val payload = currentUpdate.toJson()
+            try {
+                client.onStateUpdate(payload)
+            } catch (e: RemoteException) {
+                if (e is DeadObjectException) {
+                    synchronized(clientsLock) {
+                        clients.remove(clientBinder, client)
+                        activeClientCount = clients.size
+                    }
+                } else {
                     logError("Failed to deliver initial state", e)
                 }
             }
@@ -254,35 +263,48 @@ class ConduitStateService : Service() {
     }
 
     private fun updateAndNotify(state: ProxyState) {
-        currentUpdate = StateUpdate(
+        val update = StateUpdate(
             appVersion = appVersionCode(),
             state = state,
         )
+        if (update == currentUpdate) {
+            return
+        }
+        currentUpdate = update
 
-        val payload = currentUpdate.toJson()
-        synchronized(clientsLock) {
-            val toRemove = mutableListOf<IBinder>()
-            clients.forEach { (clientBinder, callback) ->
-                try {
-                    callback.onStateUpdate(payload)
-                } catch (error: RemoteException) {
-                    if (error is DeadObjectException) {
-                        toRemove.add(clientBinder)
-                    } else {
-                        logError("Failed to notify state client", error)
-                    }
+        val payload = update.toJson()
+        val callbacks = synchronized(clientsLock) {
+            clients.entries.map { it.key to it.value }
+        }
+        val toRemove = mutableListOf<IBinder>()
+        callbacks.forEach { (clientBinder, callback) ->
+            try {
+                callback.onStateUpdate(payload)
+            } catch (error: RemoteException) {
+                if (error is DeadObjectException) {
+                    toRemove.add(clientBinder)
+                } else {
+                    logError("Failed to notify state client", error)
                 }
             }
-            toRemove.forEach { clients.remove(it) }
-            if (toRemove.isNotEmpty()) {
-                emitIpcEvent(
-                    type = "stateClient",
-                    status = "disconnected",
-                    activeClientCount = clients.size,
-                    message = "Removed disconnected state client callback",
-                )
-            }
         }
+        if (toRemove.isEmpty()) {
+            return
+        }
+        val activeClientCount = synchronized(clientsLock) {
+            callbacks.forEach { (clientBinder, callback) ->
+                if (clientBinder in toRemove) {
+                    clients.remove(clientBinder, callback)
+                }
+            }
+            clients.size
+        }
+        emitIpcEvent(
+            type = "stateClient",
+            status = "disconnected",
+            activeClientCount = activeClientCount,
+            message = "Removed disconnected state client callback",
+        )
     }
 
     private fun proxyStateFromBundle(eventData: Bundle): ProxyState {

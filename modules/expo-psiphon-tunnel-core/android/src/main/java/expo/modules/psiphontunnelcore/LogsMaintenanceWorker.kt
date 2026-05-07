@@ -20,6 +20,7 @@ package expo.modules.psiphontunnelcore
 import android.content.Context
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -47,10 +48,32 @@ class LogsMaintenanceWorker(context: Context, params: WorkerParameters) : Worker
     }
 
     override fun doWork(): Result {
+        val activeFeedbackIds = try {
+            activeFeedbackIds()
+        } catch (error: Exception) {
+            AppLogStore.warn(applicationContext, TAG_WORK, "Skipping feedback cleanup; active work query failed", error)
+            return Result.retry()
+        }
         FeedbackWorker.cleanupOldFeedbackFiles(
             applicationContext,
             System.currentTimeMillis() - DELETE_LOGS_AFTER_MILLIS,
+            activeFeedbackIds,
         )
         return Result.success()
+    }
+
+    private fun activeFeedbackIds(): Set<String> {
+        return WorkManager.getInstance(applicationContext)
+            .getWorkInfosForUniqueWork(FeedbackWorker.UNIQUE_WORK_NAME)
+            .get()
+            .filter { workInfo ->
+                workInfo.state == WorkInfo.State.ENQUEUED ||
+                    workInfo.state == WorkInfo.State.RUNNING ||
+                    workInfo.state == WorkInfo.State.BLOCKED
+            }
+            .flatMap { workInfo -> workInfo.tags }
+            .filter { tag -> tag.startsWith(FeedbackWorker.FEEDBACK_ID_TAG_PREFIX) }
+            .map { tag -> tag.removePrefix(FeedbackWorker.FEEDBACK_ID_TAG_PREFIX) }
+            .toSet()
     }
 }

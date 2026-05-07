@@ -38,6 +38,7 @@ class ExpoPsiphonTunnelCoreModule : Module() {
     private var hasInproxyObservers = false
     private var hasIpcObservers = false
     private var isIpcListenerRegistered = false
+    private var isInteractorStarted = false
 
     private val ipcEventListener = {
         flushPendingIpcEvents()
@@ -50,12 +51,25 @@ class ExpoPsiphonTunnelCoreModule : Module() {
 
         OnCreate {
             conduitServiceInteractor = ConduitServiceInteractor(context.applicationContext)
+            if (appContext.currentActivity != null) {
+                startInteractorIfNeeded()
+            }
             LogsMaintenanceWorker.schedule(context.applicationContext)
         }
 
+        OnActivityEntersForeground {
+            startInteractorIfNeeded()
+        }
+
+        OnActivityEntersBackground {
+            stopInteractorIfNeeded()
+        }
+
         OnDestroy {
-            conduitServiceInteractor.onStop()
-            conduitServiceInteractor.onDestroy()
+            stopInteractorIfNeeded()
+            if (::conduitServiceInteractor.isInitialized) {
+                conduitServiceInteractor.onDestroy()
+            }
             unregisterIpcListenerIfNeeded()
         }
 
@@ -96,6 +110,7 @@ class ExpoPsiphonTunnelCoreModule : Module() {
                 FeedbackWorker.createFeedbackSnapshot(appContext, feedbackId)
                 val request = OneTimeWorkRequestBuilder<FeedbackWorker>()
                     .setInputData(inputData)
+                    .addTag(FeedbackWorker.tagForFeedbackId(feedbackId))
                     .setConstraints(
                         Constraints.Builder()
                             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -166,22 +181,16 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         }
 
         Function("emitCurrentInproxyState") {
-            conduitServiceInteractor.requestCurrentState()
+            requestCurrentInproxyStateIfReady()
         }
 
         OnStartObserving("inproxyEvent") {
             hasInproxyObservers = true
-            conduitServiceInteractor.onStart { eventType, eventData ->
-                if (!hasInproxyObservers) {
-                    return@onStart
-                }
-                emitInproxyEvent(eventType, eventData)
-            }
+            requestCurrentInproxyStateIfReady()
         }
 
         OnStopObserving("inproxyEvent") {
             hasInproxyObservers = false
-            conduitServiceInteractor.onStop()
         }
 
         OnStartObserving("ipcEvent") {
@@ -202,6 +211,35 @@ class ExpoPsiphonTunnelCoreModule : Module() {
             .any { workInfo ->
                 workInfo.state == WorkInfo.State.ENQUEUED || workInfo.state == WorkInfo.State.RUNNING
             }
+    }
+
+    private fun startInteractorIfNeeded() {
+        if (!::conduitServiceInteractor.isInitialized || isInteractorStarted) {
+            return
+        }
+        conduitServiceInteractor.onStart { eventType, eventData ->
+            if (!hasInproxyObservers) {
+                return@onStart
+            }
+            emitInproxyEvent(eventType, eventData)
+        }
+        isInteractorStarted = true
+    }
+
+    private fun stopInteractorIfNeeded() {
+        if (!::conduitServiceInteractor.isInitialized || !isInteractorStarted) {
+            return
+        }
+        conduitServiceInteractor.onStop()
+        isInteractorStarted = false
+    }
+
+    private fun requestCurrentInproxyStateIfReady() {
+        if (!::conduitServiceInteractor.isInitialized) {
+            return
+        }
+        startInteractorIfNeeded()
+        conduitServiceInteractor.requestCurrentState()
     }
 
     private fun emitInproxyEvent(eventType: String, eventData: Bundle) {
