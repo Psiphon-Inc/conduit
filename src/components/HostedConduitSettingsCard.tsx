@@ -493,13 +493,7 @@ export function HostedConduitSettingsCard() {
                                 }}
                             >
                                 <Text style={[ss.tinyFont, ss.blackText]}>
-                                    {t(
-                                        "DELETE_ACCOUNT_CONFIRMATION_I18N.string",
-                                        {
-                                            defaultValue:
-                                                "This deletes your Hosted Conduit account from this app and signs you out.",
-                                        },
-                                    )}
+                                    {t("DELETE_ACCOUNT_CONFIRMATION_I18N.string")}
                                 </Text>
                                 {renderAccountAction({
                                     label: t(

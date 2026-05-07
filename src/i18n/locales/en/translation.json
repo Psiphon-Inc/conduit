@@ -510,8 +510,8 @@
         "developer_comment": "Button label to initiate account deletion."
     },
     "DELETE_ACCOUNT_CONFIRMATION_I18N": {
-        "string": "This deletes your Hosted Conduit account from this app and signs you out.",
-        "developer_comment": "Confirmation warning shown before deleting an account."
+        "string": "You currently have an active subscription. Delete account will delete your hosted servers, but your subscription may continue billing until you cancel it through the App Store or Google Play.",
+        "developer_comment": "Confirmation warning shown before deleting an account with an active subscription."
     },
     "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N": {
         "string": "Delete account",
