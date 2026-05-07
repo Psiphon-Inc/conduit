@@ -22,6 +22,7 @@ import android.content.ContentValues
 import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
+import android.os.Bundle
 import android.util.Log
 import org.json.JSONObject
 import java.io.File
@@ -39,13 +40,17 @@ import java.util.logging.Logger
 class LoggingContentProvider : ContentProvider() {
     companion object {
         const val LOG_FILE_NAME = "conduit_log"
+        const val METHOD_FLUSH = "flush"
+        const val EXTRA_FLUSHED = "flushed"
 
         private const val TAG = "LoggingContentProvider"
         private const val LOG_FILE_SIZE = Constants.QUARTER_MB
         private const val LOG_FILE_COUNT = 2
         private const val AUTHORITY_SUFFIX = ".log"
         private const val PATH_INSERT_LOGS = "insert"
+        private const val PATH_COMMANDS = "commands"
         private const val MATCH_INSERT = 1
+        private const val MATCH_COMMANDS = 2
         private val uriMatcher = UriMatcher(UriMatcher.NO_MATCH)
         private val timestampFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")
@@ -88,6 +93,7 @@ class LoggingContentProvider : ContentProvider() {
         val providerContext = context ?: return false
         val authority = providerContext.packageName + AUTHORITY_SUFFIX
         uriMatcher.addURI(authority, PATH_INSERT_LOGS, MATCH_INSERT)
+        uriMatcher.addURI(authority, PATH_COMMANDS, MATCH_COMMANDS)
         return true
     }
 
@@ -124,6 +130,26 @@ class LoggingContentProvider : ContentProvider() {
             getLoggerLocked().log(record)
         }
         return uri
+    }
+
+    override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+        if (method != METHOD_FLUSH) {
+            return super.call(method, arg, extras)
+        }
+
+        var flushed = true
+        synchronized(loggerLock) {
+            logger?.handlers?.forEach { handler ->
+                try {
+                    handler.flush()
+                } catch (error: Exception) {
+                    Log.e(TAG, "Error flushing handler", error)
+                    flushed = false
+                }
+            }
+        }
+
+        return Bundle().apply { putBoolean(EXTRA_FLUSHED, flushed) }
     }
 
     private fun getLoggerLocked(): Logger {

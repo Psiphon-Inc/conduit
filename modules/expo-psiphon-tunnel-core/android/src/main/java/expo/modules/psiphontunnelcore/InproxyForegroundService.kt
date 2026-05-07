@@ -49,6 +49,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -147,6 +148,10 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         const val ACTION_PARAMS_CHANGED = "expo.modules.psiphontunnelcore.action.PARAMS_CHANGED"
         const val ACTION_STOP_INPROXY = "expo.modules.psiphontunnelcore.action.STOP_INPROXY"
         const val ACTION_START_INPROXY_WITH_LAST_PARAMS = "expo.modules.psiphontunnelcore.action.START_INPROXY_WITH_LAST_PARAMS"
+        const val SERVICE_STARTING_BROADCAST_INTENT =
+            "ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_INTENT"
+        const val SERVICE_STARTING_BROADCAST_PERMISSION =
+            "ca.psiphon.conduit.nativemodule.SERVICE_STARTING_BROADCAST_PERMISSION"
 
         private const val NOTIFICATION_CHANNEL_ID = "PsiphonTunnelCoreInproxyChannel"
         private const val NOTIFICATION_ID = 18489
@@ -453,10 +458,13 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     private val tag = "InproxyForegroundService"
     private val psiphonTunnel: PsiphonTunnel = PsiphonTunnel.newPsiphonTunnel(this)
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+    private val tunnelStopExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val isRunning = AtomicBoolean(false)
+    private val tunnelStopRequested = AtomicBoolean(false)
     private val clients = ConcurrentHashMap<IBinder, IConduitClientCallback>()
     private val clientsLock = Any()
     private val statsLock = Any()
+    @Volatile
     private var stopLatch: CountDownLatch? = null
     private var proxyActivityStats = ProxyActivityStats()
     private var personalProxyActivityStats = ProxyActivityStats()
@@ -483,6 +491,12 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     private var statsPersistenceDirty = false
     private var lastRegionalAccumulatorPersistMs = 0L
     private var lastActivityStatsEmitMs = 0L
+    @Volatile
+    private var regionalAccumulatorLoadFuture: Future<*>? = null
+    @Volatile
+    private var notificationChannelReady = false
+    @Volatile
+    private var cachedAppName: String? = null
 
     private fun logInfo(message: String) {
         AppLogStore.info(applicationContext, tag, message)
@@ -550,8 +564,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     override fun onCreate() {
         super.onCreate()
         logInfo("Inproxy foreground service created")
-        ensureNotificationChannel()
-        loadRegionalAccumulatorsFromDisk()
+        regionalAccumulatorLoadFuture = executor.submit {
+            loadRegionalAccumulatorsFromDisk()
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -560,36 +575,47 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             logWarn("Received start command without action")
             return START_NOT_STICKY
         }
-        when (action) {
+        val started = when (action) {
             ACTION_TOGGLE_INPROXY -> handleToggle(intent)
-            ACTION_PARAMS_CHANGED -> handleParamsChanged(intent)
-            ACTION_STOP_INPROXY -> stopInproxy("manual stop")
+            ACTION_PARAMS_CHANGED -> {
+                handleParamsChanged(intent)
+                false
+            }
+            ACTION_STOP_INPROXY -> {
+                stopInproxy("manual stop")
+                false
+            }
             ACTION_START_INPROXY_WITH_LAST_PARAMS -> handleStartWithLastParams()
-            else -> logWarn("Unknown action: $action")
+            else -> {
+                logWarn("Unknown action: $action")
+                false
+            }
         }
         if (!isRunning.get()) {
             stopSelf(startId)
         }
-        return START_NOT_STICKY
+        return if (started) START_REDELIVER_INTENT else START_NOT_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
         logInfo("Inproxy foreground service destroyed")
+        waitForRegionalAccumulatorLoad()
         maybePersistRegionalAccumulators(force = true)
         stopActivityEmitter()
         executor.shutdownNow()
+        tunnelStopExecutor.shutdownNow()
         synchronized(clientsLock) {
             clients.clear()
         }
     }
 
-    private fun handleToggle(intent: Intent) {
+    private fun handleToggle(intent: Intent): Boolean {
         logInfo("Received toggle action")
         if (isRunning.get()) {
             logInfo("Service is running; toggling off")
             stopInproxy("toggle stop")
-            return
+            return false
         }
         logInfo("Service is not running; starting with new parameters")
         val params = InproxyParameters.fromIntent(intent)
@@ -600,10 +626,10 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 message = "Invalid inproxy parameters",
                 notificationTextResId = R.string.notification_conduit_failed_to_start_text,
             )
-            return
+            return false
         }
         params.store(applicationContext)
-        startInproxy(params)
+        return startInproxy(params)
     }
 
     private fun handleParamsChanged(intent: Intent) {
@@ -642,31 +668,33 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         }
     }
 
-    private fun handleStartWithLastParams() {
+    private fun handleStartWithLastParams(): Boolean {
         if (isRunning.get()) {
             logInfo("Service is already running; ignoring start with last parameters action")
-            return
+            return false
         }
         logInfo("Service is stopped; starting with last known parameters")
         val params = InproxyParameters.load(applicationContext)
         if (params == null) {
             logWarn("No persisted inproxy parameters available")
-            return
+            return false
         }
-        startInproxy(params)
+        return startInproxy(params)
     }
 
-    private fun startInproxy(params: InproxyParameters) {
+    private fun startInproxy(params: InproxyParameters): Boolean {
         if (!isRunning.compareAndSet(false, true)) {
             logInfo("Service is not stopped; cannot start")
-            return
+            return false
         }
         logInfo("Starting inproxy")
+        sendBroadcast(
+            Intent(SERVICE_STARTING_BROADCAST_INTENT),
+            SERVICE_STARTING_BROADCAST_PERMISSION,
+        )
+        tunnelStopRequested.set(false)
 
         Utils.setServiceRunningFlag(applicationContext, true)
-        resetStats()
-        startActivityEmitter()
-
         state = ProxyState(Status.RUNNING, NetworkState.HAS_INTERNET)
         latestProxyState = state
 
@@ -679,17 +707,22 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             latestProxyState = state
             publishProxyState(state)
             stopSelf()
-            return
+            return false
         }
+
+        waitForRegionalAccumulatorLoad()
+        resetStats()
+        startActivityEmitter()
         publishProxyState(state)
         updateNotification()
 
-        stopLatch = CountDownLatch(1)
+        val latch = CountDownLatch(1)
+        stopLatch = latch
         executor.submit {
             try {
                 logInfo("Inproxy task started")
                 psiphonTunnel.startTunneling(Utils.getEmbeddedServers(this))
-                stopLatch?.await()
+                latch.await()
                 logInfo("Inproxy task stopping")
             } catch (e: PsiphonTunnel.Exception) {
                 logError("Failed to start inproxy", e)
@@ -702,7 +735,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 logWarn("Inproxy task interrupted", e)
                 Thread.currentThread().interrupt()
             } finally {
-                psiphonTunnel.stop()
+                stopTunnelOnce("worker cleanup")
                 isRunning.set(false)
                 stopActivityEmitter()
                 Utils.setServiceRunningFlag(applicationContext, false)
@@ -719,6 +752,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 stopSelf()
             }
         }
+        return true
     }
 
     private fun stopInproxy(reason: String) {
@@ -727,6 +761,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             return
         }
         logInfo("Stopping inproxy: $reason")
+        if (!claimTunnelStop("stop requested: $reason")) {
+            return
+        }
         synchronized(statsLock) {
             latestAnnouncingWorkers = 0
             latestConnectingClients = 0
@@ -753,10 +790,32 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             statsPersistenceDirty = true
             lastActivityStatsEmitMs = 0L
         }
-        maybeEmitActivityStats(latestStats, force = true)
-        maybePersistRegionalAccumulators(force = true)
         Utils.setServiceRunningFlag(applicationContext, false)
         stopLatch?.countDown()
+        val stoppedStats = latestStats
+        tunnelStopExecutor.submit {
+            stopTunnel()
+            maybeEmitActivityStats(stoppedStats, force = true)
+            maybePersistRegionalAccumulators(force = true)
+        }
+    }
+
+    private fun stopTunnelOnce(reason: String) {
+        if (!claimTunnelStop(reason)) {
+            return
+        }
+        stopTunnel()
+    }
+
+    private fun claimTunnelStop(reason: String): Boolean {
+        if (tunnelStopRequested.compareAndSet(false, true)) {
+            return true
+        }
+        logInfo("Tunnel stop already requested; skipping duplicate stop: $reason")
+        return false
+    }
+
+    private fun stopTunnel() {
         psiphonTunnel.stop()
     }
 
@@ -1100,6 +1159,18 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             logInfo("Loaded persisted regional breakdown state")
         } catch (e: Exception) {
             logWarn("Failed to load persisted regional breakdown state", e)
+        }
+    }
+
+    private fun waitForRegionalAccumulatorLoad() {
+        val future = regionalAccumulatorLoadFuture ?: return
+        try {
+            future.get()
+        } catch (error: InterruptedException) {
+            Thread.currentThread().interrupt()
+            logWarn("Interrupted while waiting for regional breakdown state load", error)
+        } catch (error: Exception) {
+            logWarn("Failed waiting for regional breakdown state load", error)
         }
     }
 
@@ -1658,6 +1729,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return true
         }
+        if (notificationChannelReady) {
+            return true
+        }
         val manager = getSystemService(NotificationManager::class.java) ?: return false
         return try {
             val channel = NotificationChannel(
@@ -1667,7 +1741,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             )
             channel.description = getString(R.string.conduit_service_channel_description)
             manager.createNotificationChannel(channel)
-            manager.getNotificationChannel(NOTIFICATION_CHANNEL_ID) != null
+            val ready = manager.getNotificationChannel(NOTIFICATION_CHANNEL_ID) != null
+            notificationChannelReady = ready
+            ready
         } catch (error: RuntimeException) {
             logError("Failed to create foreground notification channel", error)
             false
@@ -2146,7 +2222,10 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     private fun appName(): String {
-        return applicationInfo.loadLabel(packageManager).toString()
+        cachedAppName?.let { return it }
+        return applicationInfo.loadLabel(packageManager).toString().also {
+            cachedAppName = it
+        }
     }
 
     private fun previewCompartmentId(value: String?): String {
@@ -2163,7 +2242,11 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     override fun onApplicationParameters(`object`: Any?) {
         val params = `object` as? JSONObject ?: return
         val trustedSignatures = PackageHelper.parseTrustedAppsFromApplicationParameters(params)
-        PackageHelper.saveTrustedSignaturesToFile(applicationContext, trustedSignatures)
+        try {
+            PackageHelper.saveTrustedSignaturesToFile(applicationContext, trustedSignatures)
+        } catch (error: IOException) {
+            logError("Failed to persist trusted signatures; using in-memory values only", error)
+        }
         PackageHelper.configureRuntimeTrustedSignatures(trustedSignatures)
         logInfo("Updated runtime trusted signatures for ${trustedSignatures.size} package(s)")
     }

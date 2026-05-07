@@ -59,8 +59,8 @@ android {
       buildConfigField "String", "DEV_TRUSTED_SIGNATURES_JSON", escapeForBuildConfig("")
     }
   }
-  lintOptions {
-    abortOnError false
+  lint {
+    fatal 'StringFormatInvalid', 'StringFormatMatches'
   }
 }
 

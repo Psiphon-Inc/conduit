@@ -19,6 +19,7 @@ package expo.modules.psiphontunnelcore
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import org.json.JSONObject
 import java.io.File
 
@@ -37,13 +38,18 @@ data class InproxyParameters(
 ) {
     companion object {
         private const val FILE_NAME = "inproxy_params.json"
-        private const val LEGACY_PREFS_NAME = "PsiphonTunnelCoreInproxyParams"
+        private const val LEGACY_PREFS_NAME = "ConduitServiceParamsPrefs"
+        private const val LEGACY_SCHEMA_VERSION = 1
+        private const val KEY_SCHEMA_VERSION = "schemaVersion"
         private const val KEY_MAX_CLIENTS = "maxClients"
         private const val KEY_MAX_PERSONAL_CLIENTS = "maxPersonalClients"
         private const val KEY_PERSONAL_COMPARTMENT_ID = "personalCompartmentId"
         private const val KEY_LIMIT_UPSTREAM = "limitUpstreamBytesPerSecond"
         private const val KEY_LIMIT_DOWNSTREAM = "limitDownstreamBytesPerSecond"
         private const val KEY_PRIVATE_KEY = "privateKey"
+        private const val LEGACY_KEY_LIMIT_UPSTREAM = "limitUpstreamBytes"
+        private const val LEGACY_KEY_LIMIT_DOWNSTREAM = "limitDownstreamBytes"
+        private const val LEGACY_KEY_PRIVATE_KEY = "inProxyPrivateKey"
         private const val KEY_REDUCED_START = "reducedStartTime"
         private const val KEY_REDUCED_END = "reducedEndTime"
         private const val KEY_REDUCED_MAX_CLIENTS = "reducedMaxClients"
@@ -53,24 +59,28 @@ data class InproxyParameters(
             "reducedLimitDownstreamBytesPerSecond"
 
         fun fromMap(map: Map<String, Any?>): InproxyParameters? {
-            val maxClients = (map[KEY_MAX_CLIENTS] as? Number)?.toInt() ?: return null
-            val maxPersonalClients = (map[KEY_MAX_PERSONAL_CLIENTS] as? Number)?.toInt() ?: 0
+            val maxClients = parseRequiredInt(map, KEY_MAX_CLIENTS) ?: return null
+            val maxPersonalClients = if (map[KEY_MAX_PERSONAL_CLIENTS] != null) {
+                parseRequiredInt(map, KEY_MAX_PERSONAL_CLIENTS) ?: return null
+            } else {
+                0
+            }
             val personalCompartmentId =
                 (map[KEY_PERSONAL_COMPARTMENT_ID] as? String)
                     ?.trim()
                     ?.takeIf { it.isNotEmpty() }
-            val limitUpstream = (map[KEY_LIMIT_UPSTREAM] as? Number)?.toInt() ?: return null
-            val limitDownstream = (map[KEY_LIMIT_DOWNSTREAM] as? Number)?.toInt() ?: return null
+            val limitUpstream = parseRequiredInt(map, KEY_LIMIT_UPSTREAM) ?: return null
+            val limitDownstream = parseRequiredInt(map, KEY_LIMIT_DOWNSTREAM) ?: return null
             val privateKey = map[KEY_PRIVATE_KEY] as? String ?: return null
 
             val reducedStart = map[KEY_REDUCED_START] as? String
             val reducedEnd = map[KEY_REDUCED_END] as? String
-            val reducedMaxClients =
-                (map[KEY_REDUCED_MAX_CLIENTS] as? Number)?.toInt()
-            val reducedLimitUpstream =
-                (map[KEY_REDUCED_LIMIT_UPSTREAM] as? Number)?.toInt()
-            val reducedLimitDownstream =
-                (map[KEY_REDUCED_LIMIT_DOWNSTREAM] as? Number)?.toInt()
+            if (hasInvalidOptionalInt(map, KEY_REDUCED_MAX_CLIENTS)) return null
+            if (hasInvalidOptionalInt(map, KEY_REDUCED_LIMIT_UPSTREAM)) return null
+            if (hasInvalidOptionalInt(map, KEY_REDUCED_LIMIT_DOWNSTREAM)) return null
+            val reducedMaxClients = parseOptionalInt(map, KEY_REDUCED_MAX_CLIENTS)
+            val reducedLimitUpstream = parseOptionalInt(map, KEY_REDUCED_LIMIT_UPSTREAM)
+            val reducedLimitDownstream = parseOptionalInt(map, KEY_REDUCED_LIMIT_DOWNSTREAM)
 
             val params = InproxyParameters(
                 maxClients = maxClients,
@@ -86,6 +96,47 @@ data class InproxyParameters(
                 reducedLimitDownstreamBytesPerSecond = reducedLimitDownstream,
             )
             return if (params.isValid()) params else null
+        }
+
+        private fun parseRequiredInt(map: Map<String, Any?>, key: String): Int? {
+            return exactInt(map[key] as? Number ?: return null)
+        }
+
+        private fun parseOptionalInt(map: Map<String, Any?>, key: String): Int? {
+            val value = map[key] ?: return null
+            return exactInt(value as? Number ?: return null)
+        }
+
+        private fun hasInvalidOptionalInt(map: Map<String, Any?>, key: String): Boolean {
+            val value = map[key] ?: return false
+            return value !is Number || exactInt(value) == null
+        }
+
+        private fun exactInt(value: Number): Int? {
+            return when (value) {
+                is Byte, is Short, is Int -> value.toInt()
+                is Long -> value.takeIf {
+                    it in Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()
+                }?.toInt()
+                is java.math.BigInteger -> value.takeIf {
+                    it >= java.math.BigInteger.valueOf(Int.MIN_VALUE.toLong()) &&
+                        it <= java.math.BigInteger.valueOf(Int.MAX_VALUE.toLong())
+                }?.toInt()
+                is java.math.BigDecimal -> try {
+                    value.intValueExact()
+                } catch (_: ArithmeticException) {
+                    null
+                }
+                is Float -> value.toDouble().takeIf { it.isFinite() && it % 1.0 == 0.0 }
+                    ?.takeIf { it in Int.MIN_VALUE.toDouble()..Int.MAX_VALUE.toDouble() }
+                    ?.toInt()
+                is Double -> value.takeIf { it.isFinite() && it % 1.0 == 0.0 }
+                    ?.takeIf { it in Int.MIN_VALUE.toDouble()..Int.MAX_VALUE.toDouble() }
+                    ?.toInt()
+                else -> value.toDouble().takeIf { it.isFinite() && it % 1.0 == 0.0 }
+                    ?.takeIf { it in Int.MIN_VALUE.toDouble()..Int.MAX_VALUE.toDouble() }
+                    ?.toInt()
+            }
         }
 
         fun fromIntent(intent: Intent): InproxyParameters? {
@@ -142,6 +193,7 @@ data class InproxyParameters(
 
             val prefs =
                 context.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
+            migrateLegacyPrefs(prefs)
             if (
                 !prefs.contains(KEY_MAX_CLIENTS) ||
                     !prefs.contains(KEY_LIMIT_UPSTREAM) ||
@@ -152,36 +204,37 @@ data class InproxyParameters(
             }
 
             val params = InproxyParameters(
-                maxClients = prefs.getInt(KEY_MAX_CLIENTS, -1),
+                maxClients = prefs.getIntOrNull(KEY_MAX_CLIENTS) ?: return null,
                 maxPersonalClients = if (prefs.contains(KEY_MAX_PERSONAL_CLIENTS)) {
-                    prefs.getInt(KEY_MAX_PERSONAL_CLIENTS, 0)
+                    prefs.getIntOrNull(KEY_MAX_PERSONAL_CLIENTS) ?: return null
                 } else {
                     0
                 },
                 personalCompartmentId =
-                    prefs.getString(KEY_PERSONAL_COMPARTMENT_ID, null)
+                    prefs.getStringOrNull(KEY_PERSONAL_COMPARTMENT_ID)
                         ?.trim()
                         ?.takeIf { it.isNotEmpty() },
-                limitUpstreamBytesPerSecond = prefs.getInt(KEY_LIMIT_UPSTREAM, -1),
+                limitUpstreamBytesPerSecond =
+                    prefs.getIntOrNull(KEY_LIMIT_UPSTREAM) ?: return null,
                 limitDownstreamBytesPerSecond =
-                    prefs.getInt(KEY_LIMIT_DOWNSTREAM, -1),
-                privateKey = prefs.getString(KEY_PRIVATE_KEY, null) ?: return null,
-                reducedStartTime = prefs.getString(KEY_REDUCED_START, null),
-                reducedEndTime = prefs.getString(KEY_REDUCED_END, null),
+                    prefs.getIntOrNull(KEY_LIMIT_DOWNSTREAM) ?: return null,
+                privateKey = prefs.getStringOrNull(KEY_PRIVATE_KEY) ?: return null,
+                reducedStartTime = prefs.getStringOrNull(KEY_REDUCED_START),
+                reducedEndTime = prefs.getStringOrNull(KEY_REDUCED_END),
                 reducedMaxClients = if (prefs.contains(KEY_REDUCED_MAX_CLIENTS)) {
-                    prefs.getInt(KEY_REDUCED_MAX_CLIENTS, -1)
+                    prefs.getIntOrNull(KEY_REDUCED_MAX_CLIENTS) ?: return null
                 } else {
                     null
                 },
                 reducedLimitUpstreamBytesPerSecond =
                     if (prefs.contains(KEY_REDUCED_LIMIT_UPSTREAM)) {
-                        prefs.getInt(KEY_REDUCED_LIMIT_UPSTREAM, -1)
+                        prefs.getIntOrNull(KEY_REDUCED_LIMIT_UPSTREAM) ?: return null
                     } else {
                         null
                     },
                 reducedLimitDownstreamBytesPerSecond =
                     if (prefs.contains(KEY_REDUCED_LIMIT_DOWNSTREAM)) {
-                        prefs.getInt(KEY_REDUCED_LIMIT_DOWNSTREAM, -1)
+                        prefs.getIntOrNull(KEY_REDUCED_LIMIT_DOWNSTREAM) ?: return null
                     } else {
                         null
                     },
@@ -248,6 +301,48 @@ data class InproxyParameters(
 
         private fun fileForContext(context: Context): File {
             return File(context.applicationContext.filesDir, FILE_NAME)
+        }
+
+        private fun migrateLegacyPrefs(prefs: SharedPreferences) {
+            if ((prefs.getIntOrNull(KEY_SCHEMA_VERSION) ?: 0) >= LEGACY_SCHEMA_VERSION) {
+                return
+            }
+
+            val values = prefs.all
+            val editor = prefs.edit()
+            if (!prefs.contains(KEY_LIMIT_UPSTREAM)) {
+                (values[LEGACY_KEY_LIMIT_UPSTREAM] as? Int)?.let {
+                    editor.putInt(KEY_LIMIT_UPSTREAM, it)
+                }
+            }
+            if (!prefs.contains(KEY_LIMIT_DOWNSTREAM)) {
+                (values[LEGACY_KEY_LIMIT_DOWNSTREAM] as? Int)?.let {
+                    editor.putInt(KEY_LIMIT_DOWNSTREAM, it)
+                }
+            }
+            if (!prefs.contains(KEY_PRIVATE_KEY)) {
+                (values[LEGACY_KEY_PRIVATE_KEY] as? String)?.let {
+                    editor.putString(KEY_PRIVATE_KEY, it)
+                }
+            }
+            editor.putInt(KEY_SCHEMA_VERSION, LEGACY_SCHEMA_VERSION)
+            editor.apply()
+        }
+
+        private fun SharedPreferences.getIntOrNull(key: String): Int? {
+            return try {
+                if (contains(key)) getInt(key, -1) else null
+            } catch (_: ClassCastException) {
+                null
+            }
+        }
+
+        private fun SharedPreferences.getStringOrNull(key: String): String? {
+            return try {
+                getString(key, null)
+            } catch (_: ClassCastException) {
+                null
+            }
         }
 
         private fun clearLegacyPrefs(context: Context) {

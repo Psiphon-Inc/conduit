@@ -25,6 +25,7 @@ import android.os.Build
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.io.IOException
 import java.security.MessageDigest
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
@@ -85,9 +86,11 @@ object PackageHelper {
             val signatureText = if (signatures.isEmpty()) {
                 "none"
             } else {
-                signatures.joinToString(",")
+                signatures.sorted().joinToString(",") { signature ->
+                    if (signature.length <= 12) signature else signature.take(12)
+                }
             }
-            "$packageName($signatureText)"
+            "$packageName(signatures=${signatures.size}:$signatureText)"
         }
 
         return "uid=$uid packages=[${packageDescriptions.joinToString(";")}]"
@@ -169,20 +172,16 @@ object PackageHelper {
         }
     }
 
+    @Throws(IOException::class)
     fun saveTrustedSignaturesToFile(context: Context, signatures: Map<String, Set<String>>) {
         val finalFile = File(context.filesDir, SIGNATURES_JSON_FILE)
-        val tempFile = File(context.filesDir, "$SIGNATURES_JSON_FILE.tmp")
         val json = JSONObject()
         signatures.forEach { (pkg, sigs) ->
             json.put(pkg, JSONArray(sigs.toList()))
         }
 
         synchronized(this) {
-            tempFile.writeText(json.toString())
-            if (finalFile.exists()) {
-                finalFile.delete()
-            }
-            tempFile.renameTo(finalFile)
+            Utils.writeAtomicJson(finalFile, json)
         }
     }
 

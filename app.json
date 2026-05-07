@@ -2,7 +2,7 @@
     "expo": {
         "name": "conduit",
         "slug": "conduit",
-        "version": "2.1.0",
+        "version": "2.1.1",
         "orientation": "portrait",
         "scheme": "ca.psiphon.conduit",
         "userInterfaceStyle": "automatic",
@@ -10,7 +10,7 @@
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "ca.psiphon.conduit",
-            "buildNumber": "29",
+            "buildNumber": "30",
             "deploymentTarget": "15.1",
             "icon": "./assets/images/conduit-launcher.png",
             "infoPlist": {
@@ -19,7 +19,7 @@
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 78,
+            "versionCode": 79,
             "permissions": [
                 "android.permission.POST_NOTIFICATIONS",
                 "com.android.vending.BILLING"

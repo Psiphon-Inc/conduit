@@ -22,6 +22,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
 import android.os.Build
+import android.util.Log
 import androidx.work.Data
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -45,6 +46,7 @@ import java.util.TimeZone
 import java.util.TreeMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     companion object {
@@ -52,6 +54,7 @@ class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(contex
         const val INPUT_FEEDBACK_ID = "feedbackId"
         const val INPUT_FEEDBACK_TIMESTAMP = "feedbackTimestamp"
         const val INPUT_INPROXY_ID = "inproxyId"
+        const val FEEDBACK_ID_TAG_PREFIX = "feedbackId:"
         private const val TAG = "FeedbackWorker"
         private const val METADATA_VERSION = 2
 
@@ -63,8 +66,12 @@ class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(contex
                 .build()
         }
 
+        fun tagForFeedbackId(feedbackId: String): String {
+            return FEEDBACK_ID_TAG_PREFIX + feedbackId
+        }
+
         fun createFeedbackSnapshot(context: Context, feedbackId: String) {
-            AppLogStore.flush()
+            AppLogStore.flush(context)
             val dir = feedbackDirectoryForContext(context)
             val appLogFiles = AppLogStore.allLogFiles(context)
             if (appLogFiles.isEmpty()) {
@@ -100,13 +107,31 @@ class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(contex
             createFeedbackSnapshot(context, feedbackId)
         }
 
-        fun cleanupOldFeedbackFiles(context: Context, olderThanMillis: Long) {
+        fun cleanupOldFeedbackFiles(
+            context: Context,
+            olderThanMillis: Long,
+            activeFeedbackIds: Set<String> = emptySet(),
+        ) {
             val dir = feedbackDirectoryForContext(context)
             dir.listFiles()?.forEach { file ->
-                if (file.isFile && file.lastModified() < olderThanMillis) {
+                val shouldDelete = file.isFile &&
+                    file.lastModified() < olderThanMillis &&
+                    feedbackIdForSnapshot(file) !in activeFeedbackIds
+                if (shouldDelete) {
                     file.delete()
                 }
             }
+        }
+
+        private fun feedbackIdForSnapshot(file: File): String? {
+            val parts = file.name.split('.')
+            if (parts.size != 3 || parts[2] != "feedback") {
+                return null
+            }
+            if (parts[0] != "app" && parts[0] != "tunnelcore") {
+                return null
+            }
+            return parts[1]
         }
 
         private fun generateFeedbackId(): String {
@@ -174,26 +199,24 @@ class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(contex
     }
 
     override fun doWork(): Result {
+        val feedbackId = inputData.getString(INPUT_FEEDBACK_ID)
         if (runAttemptCount > 10) {
             AppLogStore.error(applicationContext, TAG, "Feedback upload exceeded retry limit")
+            feedbackId?.let { deleteFeedbackSnapshot(it) }
             return Result.failure()
         }
 
-        val feedbackId = inputData.getString(INPUT_FEEDBACK_ID)
         val feedbackTimestamp = inputData.getLong(INPUT_FEEDBACK_TIMESTAMP, 0)
         val inproxyId = inputData.getString(INPUT_INPROXY_ID) ?: "unknown"
 
         if (feedbackId.isNullOrBlank() || feedbackTimestamp <= 0L) {
             AppLogStore.error(applicationContext, TAG, "Feedback worker missing required input")
+            feedbackId?.let { deleteFeedbackSnapshot(it) }
             return Result.failure()
         }
 
         return try {
             ensureFeedbackSnapshot(applicationContext, feedbackId)
-            cleanupOldFeedbackFiles(
-                applicationContext,
-                System.currentTimeMillis() - TimeUnit.HOURS.toMillis(6),
-            )
 
             val psiphonConfig = JSONObject(
                 Utils.readRawResourceFileAsString(applicationContext, R.raw.android_psiphon_config),
@@ -205,9 +228,21 @@ class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(contex
             AppLogStore.info(applicationContext, TAG, "Feedback upload succeeded: $feedbackId")
             Result.success()
         } catch (error: Exception) {
-            AppLogStore.error(applicationContext, TAG, "Feedback upload failed: ${error.message}")
-            Result.failure()
+            if (error is InterruptedException) {
+                Thread.currentThread().interrupt()
+            }
+            AppLogStore.error(applicationContext, TAG, "Feedback upload failed: ${error.message}", error)
+            if (isInvalidInputFailure(error)) {
+                deleteFeedbackSnapshot(feedbackId)
+                Result.failure()
+            } else {
+                Result.retry()
+            }
         }
+    }
+
+    private fun isInvalidInputFailure(error: Exception): Boolean {
+        return error is IllegalArgumentException || error is JSONException
     }
 
     @Throws(Exception::class)
@@ -273,31 +308,57 @@ class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(contex
         val latch = CountDownLatch(1)
         var completedError: Exception? = null
         val feedback = PsiphonTunnel.PsiphonTunnelFeedback()
-
-        feedback.startSendFeedback(
-            applicationContext,
-            object : PsiphonTunnel.HostFeedbackHandler {
-                override fun sendFeedbackCompleted(e: Exception?) {
-                    completedError = e
-                    latch.countDown()
-                }
-            },
-            object : PsiphonTunnel.HostLogger {},
-            psiphonConfig,
-            feedbackPayload,
-            "",
-            "",
-            "",
-        )
-
-        if (!latch.await(10, TimeUnit.MINUTES)) {
-            feedback.shutdown()
-            throw IOException("Feedback upload timed out")
+        val shutdownComplete = AtomicBoolean(false)
+        val shutdownHook = Thread {
+            if (shutdownComplete.compareAndSet(false, true)) {
+                feedback.shutdown()
+            }
         }
+        var hookRegistered = false
 
-        feedback.shutdown()
-        if (completedError != null) {
-            throw completedError as Exception
+        try {
+            try {
+                Runtime.getRuntime().addShutdownHook(shutdownHook)
+                hookRegistered = true
+            } catch (error: IllegalStateException) {
+                Log.w(TAG, "Unable to register feedback shutdown hook", error)
+            } catch (error: SecurityException) {
+                Log.w(TAG, "Unable to register feedback shutdown hook", error)
+            }
+
+            feedback.startSendFeedback(
+                applicationContext,
+                object : PsiphonTunnel.HostFeedbackHandler {
+                    override fun sendFeedbackCompleted(e: Exception?) {
+                        completedError = e
+                        latch.countDown()
+                    }
+                },
+                object : PsiphonTunnel.HostLogger {},
+                psiphonConfig,
+                feedbackPayload,
+                "",
+                "",
+                "",
+            )
+
+            if (!latch.await(10, TimeUnit.MINUTES)) {
+                throw IOException("Feedback upload timed out")
+            }
+
+            if (completedError != null) {
+                throw completedError as Exception
+            }
+        } finally {
+            if (shutdownComplete.compareAndSet(false, true)) {
+                feedback.shutdown()
+            }
+            if (hookRegistered) {
+                try {
+                    Runtime.getRuntime().removeShutdownHook(shutdownHook)
+                } catch (_: IllegalStateException) {
+                }
+            }
         }
     }
 
@@ -331,8 +392,10 @@ class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(contex
         }
 
         BufferedReader(FileReader(file)).use { reader ->
+            var lineNumber = 0
             while (true) {
                 val line = reader.readLine() ?: break
+                lineNumber += 1
                 if (line.isBlank()) {
                     continue
                 }
@@ -355,7 +418,8 @@ class FeedbackWorker(context: Context, params: WorkerParameters) : Worker(contex
                     }
                     val list = logMap.getOrPut(timestamp) { mutableListOf() }
                     list.add(output)
-                } catch (_: Exception) {
+                } catch (error: Exception) {
+                    Log.w(TAG, "Skipping malformed feedback log entry in ${file.name}:$lineNumber", error)
                 }
             }
         }

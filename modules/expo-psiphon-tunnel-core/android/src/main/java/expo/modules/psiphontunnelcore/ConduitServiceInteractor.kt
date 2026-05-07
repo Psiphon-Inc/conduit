@@ -17,13 +17,16 @@
  */
 package expo.modules.psiphontunnelcore
 
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
 import android.os.RemoteException
+import androidx.core.content.ContextCompat
 import ca.psiphon.conduit.nativemodule.IConduitClientCallback
 import ca.psiphon.conduit.nativemodule.IConduitService
 
@@ -34,8 +37,23 @@ class ConduitServiceInteractor(private val context: Context) {
 
     private var isStopped = true
     private var isServiceBound = false
+    private var isReceiverRegistered = false
     private var conduitService: IConduitService? = null
     private var callback: ((String, Bundle) -> Unit)? = null
+
+    private val serviceStartingReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != InproxyForegroundService.SERVICE_STARTING_BROADCAST_INTENT) {
+                return
+            }
+            if (isStopped) {
+                return
+            }
+            logInfo("Received service starting broadcast; binding to InproxyForegroundService")
+            bindService()
+            registerClientIfReady("service starting broadcast")
+        }
+    }
 
     private fun logInfo(message: String) {
         AppLogStore.info(context, TAG, message)
@@ -88,6 +106,7 @@ class ConduitServiceInteractor(private val context: Context) {
         this.callback = callback
         isStopped = false
         logInfo("Interactor start")
+        registerServiceStartingReceiver()
         bindService()
         registerClientIfReady("observer start")
     }
@@ -118,6 +137,7 @@ class ConduitServiceInteractor(private val context: Context) {
         if (!isStopped) {
             onStop()
         }
+        unregisterServiceStartingReceiver()
     }
 
     private fun emitPendingProxyError() {
@@ -153,6 +173,33 @@ class ConduitServiceInteractor(private val context: Context) {
         if (!bound) {
             logWarn("bindService returned false")
         }
+    }
+
+    private fun registerServiceStartingReceiver() {
+        if (isReceiverRegistered) {
+            return
+        }
+        val filter = IntentFilter(InproxyForegroundService.SERVICE_STARTING_BROADCAST_INTENT)
+        ContextCompat.registerReceiver(
+            context,
+            serviceStartingReceiver,
+            filter,
+            InproxyForegroundService.SERVICE_STARTING_BROADCAST_PERMISSION,
+            null,
+            ContextCompat.RECEIVER_EXPORTED,
+        )
+        isReceiverRegistered = true
+    }
+
+    private fun unregisterServiceStartingReceiver() {
+        if (!isReceiverRegistered) {
+            return
+        }
+        try {
+            context.unregisterReceiver(serviceStartingReceiver)
+        } catch (_: IllegalArgumentException) {
+        }
+        isReceiverRegistered = false
     }
 
 }
