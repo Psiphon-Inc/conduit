@@ -181,12 +181,12 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         }
 
         Function("emitCurrentInproxyState") {
-            startInteractorIfNeeded()
-            conduitServiceInteractor.requestCurrentState()
+            requestCurrentInproxyStateIfReady()
         }
 
         OnStartObserving("inproxyEvent") {
             hasInproxyObservers = true
+            requestCurrentInproxyStateIfReady()
         }
 
         OnStopObserving("inproxyEvent") {
@@ -232,6 +232,14 @@ class ExpoPsiphonTunnelCoreModule : Module() {
         }
         conduitServiceInteractor.onStop()
         isInteractorStarted = false
+    }
+
+    private fun requestCurrentInproxyStateIfReady() {
+        if (!::conduitServiceInteractor.isInitialized) {
+            return
+        }
+        startInteractorIfNeeded()
+        conduitServiceInteractor.requestCurrentState()
     }
 
     private fun emitInproxyEvent(eventType: String, eventData: Bundle) {
