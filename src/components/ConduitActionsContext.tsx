@@ -44,6 +44,8 @@ export interface ConduitActionsContextValue {
     personalCompartmentId: string | null;
     /** True when hosted personal pairing is still being provisioned */
     isPersonalPairingPreparing: boolean;
+    /** True when personal pairing can be shown as a share action */
+    isPersonalPairingShareReady: boolean;
     /** The hosted Ryve claim material for the first conduit that has one */
     hostedRyveClaim: RyveClaimMaterial | undefined;
 }
@@ -90,14 +92,18 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
     );
     const personalCompartmentId =
         Platform.OS === "ios"
-            ? hostedPersonalPairing.ready
-                ? hostedPersonalPairing.hostedPersonalCompartmentId
-                : null
+            ? hostedPersonalPairing.hostedPersonalCompartmentId
             : (hostedPersonalPairing.hostedPersonalCompartmentId ??
               androidPersonalCompartmentId ??
               null);
+    const isPersonalPairingShareReady =
+        Platform.OS === "ios"
+            ? hostedPersonalPairing.ready
+            : personalCompartmentId != null;
     const isPersonalPairingPreparing =
-        Platform.OS === "ios" && hostedPersonalPairing.preparing;
+        Platform.OS === "ios" &&
+        hostedPersonalPairing.preparing &&
+        !isPersonalPairingShareReady;
     const personalPairingWrapperBaseUrl =
         state.session?.personalPairingWrapperBaseUrl ?? null;
 
@@ -124,9 +130,6 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
     );
 
     const openPersonalPairingModal = React.useCallback(() => {
-        if (!personalCompartmentId) {
-            return;
-        }
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         openModal(
             <PersonalPairingShareModal
@@ -142,6 +145,7 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
             openPersonalPairingModal,
             personalCompartmentId,
             isPersonalPairingPreparing,
+            isPersonalPairingShareReady,
             hostedRyveClaim,
         }),
         [
@@ -149,6 +153,7 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
             openPersonalPairingModal,
             personalCompartmentId,
             isPersonalPairingPreparing,
+            isPersonalPairingShareReady,
             hostedRyveClaim,
         ],
     );

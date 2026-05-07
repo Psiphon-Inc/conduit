@@ -179,6 +179,32 @@ describe("hosted client contracts", () => {
         );
     });
 
+    it("deletes the current hosted account with bearer auth", async () => {
+        const fetchImpl = jest.fn().mockResolvedValue({
+            ok: true,
+            status: 204,
+            text: async () => "",
+        });
+        const client = createHostedClient({
+            baseUrl: "https://hcb.example.test",
+            fetchImpl,
+        });
+
+        await expect(
+            client.deleteAccount("access-token"),
+        ).resolves.toBeUndefined();
+
+        expect(fetchImpl).toHaveBeenCalledWith(
+            "https://hcb.example.test/v1/account",
+            expect.objectContaining({
+                method: "DELETE",
+                headers: expect.objectContaining({
+                    authorization: "Bearer access-token",
+                }),
+            }),
+        );
+    });
+
     it("surfaces profile conflicts with the current server profile", async () => {
         const fetchImpl = jest.fn().mockResolvedValue({
             ok: false,

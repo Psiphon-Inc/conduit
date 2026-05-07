@@ -41,6 +41,8 @@ import {
 } from "@/src/hosted/experience/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
+type AccountActionVariant = "primary" | "secondary" | "danger";
+
 export function HostedConduitSettingsCard() {
     const { t } = useTranslation();
     const router = useRouter();
@@ -50,6 +52,8 @@ export function HostedConduitSettingsCard() {
 
     const [expanded, setExpanded] = React.useState(false);
     const [actionError, setActionError] = React.useState<string | null>(null);
+    const [actionNotice, setActionNotice] = React.useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = React.useState(false);
 
     const entitlementSnapshot =
         (state.conduitsSnapshot?.entitlement as Record<string, unknown>) ??
@@ -73,6 +77,8 @@ export function HostedConduitSettingsCard() {
         },
         onMutate: () => {
             setActionError(null);
+            setActionNotice(null);
+            setConfirmDelete(false);
         },
         onError: (error) => {
             setActionError(toErrorString(error));
@@ -85,6 +91,7 @@ export function HostedConduitSettingsCard() {
         },
         onMutate: () => {
             setActionError(null);
+            setActionNotice(null);
         },
         onError: (error) => {
             setActionError(toErrorString(error));
@@ -100,6 +107,47 @@ export function HostedConduitSettingsCard() {
         },
         onMutate: () => {
             setActionError(null);
+            setActionNotice(null);
+        },
+        onError: (error) => {
+            setActionError(toErrorString(error));
+        },
+    });
+    const restorePurchasesMutation = useMutation({
+        mutationFn: async () => {
+            await actions.restorePurchases();
+        },
+        onMutate: () => {
+            setActionError(null);
+            setActionNotice(null);
+        },
+        onSuccess: () => {
+            setActionNotice(
+                t("PURCHASES_RESTORED_I18N.string", {
+                    defaultValue: "Purchases restored.",
+                }),
+            );
+        },
+        onError: (error) => {
+            setActionError(toErrorString(error));
+        },
+    });
+    const deleteAccountMutation = useMutation({
+        mutationFn: async () => {
+            await actions.deleteAccount();
+        },
+        onMutate: () => {
+            setActionError(null);
+            setActionNotice(null);
+        },
+        onSuccess: () => {
+            setConfirmDelete(false);
+            setExpanded(false);
+            setActionNotice(
+                t("ACCOUNT_DELETED_I18N.string", {
+                    defaultValue: "Account deleted.",
+                }),
+            );
         },
         onError: (error) => {
             setActionError(toErrorString(error));
@@ -109,11 +157,18 @@ export function HostedConduitSettingsCard() {
     const isExpired =
         effectiveStatus === "expired" || effectiveStatus === "inactive";
     const showRenew = effectiveStatus === "canceled_not_expired";
+    const isEntitlementLinked =
+        effectiveStatus === "active" ||
+        effectiveStatus === "grace" ||
+        effectiveStatus === "canceled_not_expired";
+    const showRestorePurchases = !isEntitlementLinked;
 
     const actionPending =
         signOutMutation.isPending ||
         resetHcbStateMutation.isPending ||
-        renewMutation.isPending;
+        renewMutation.isPending ||
+        restorePurchasesMutation.isPending ||
+        deleteAccountMutation.isPending;
 
     const rowStyle = {
         flexDirection: "row" as const,
@@ -139,6 +194,64 @@ export function HostedConduitSettingsCard() {
                 : undefined;
 
     const isSignedOut = state.authPhase === "signed_out";
+
+    function renderAccountAction({
+        label,
+        onPress,
+        disabled = false,
+        pending = false,
+        variant = "secondary",
+    }: {
+        label: string;
+        onPress: () => void;
+        disabled?: boolean;
+        pending?: boolean;
+        variant?: AccountActionVariant;
+    }) {
+        const isDanger = variant === "danger";
+        const isPrimary = variant === "primary";
+        const borderColor = isDanger ? palette.red : palette.purple;
+        const backgroundColor = disabled
+            ? isDanger
+                ? palette.redTint5
+                : palette.fadedMauve
+            : isPrimary
+              ? palette.purpleTint3
+              : palette.white;
+        const textColor = isDanger ? palette.red : palette.black;
+
+        return (
+            <Pressable
+                onPress={onPress}
+                disabled={disabled}
+                style={{
+                    borderWidth: 1,
+                    borderColor,
+                    borderRadius: 12,
+                    minHeight: 44,
+                    paddingHorizontal: 14,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor,
+                    opacity: disabled ? 0.65 : 1,
+                }}
+            >
+                {pending ? (
+                    <ActivityIndicator size="small" color={textColor} />
+                ) : (
+                    <Text
+                        style={[
+                            ss.bodyFont,
+                            ss.centeredText,
+                            { color: textColor, fontSize: 14 },
+                        ]}
+                    >
+                        {label}
+                    </Text>
+                )}
+            </Pressable>
+        );
+    }
 
     return (
         <View style={[ss.column, { gap: 2 }]}>
@@ -249,53 +362,19 @@ export function HostedConduitSettingsCard() {
                 </Pressable>
             )}
 
-            {!isSignedOut && showRenew ? (
-                <Pressable
-                    onPress={() => {
-                        renewMutation.mutate();
-                    }}
-                    disabled={actionPending}
-                    style={{
-                        flexDirection: "row",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: 10,
-                        paddingVertical: 12,
-                        paddingHorizontal: 24,
-                        backgroundColor: palette.purple,
-                        borderRadius: 12,
-                        alignSelf: "stretch",
-                        marginTop: 10,
-                        opacity: actionPending ? 0.5 : 1,
-                    }}
+            {actionNotice ? (
+                <Text
+                    style={[
+                        ss.tinyFont,
+                        ss.blackText,
+                        { opacity: 0.7, paddingTop: 4 },
+                    ]}
                 >
-                    {renewMutation.isPending ? (
-                        <ActivityIndicator size="small" color={palette.white} />
-                    ) : (
-                        <>
-                            <Text
-                                style={[
-                                    ss.bodyFont,
-                                    {
-                                        color: palette.white,
-                                        fontSize: 14,
-                                        letterSpacing: 0.5,
-                                    },
-                                ]}
-                            >
-                                {t("RENEW_SUBSCRIPTION_I18N.string")}
-                            </Text>
-                            <Icon
-                                name="right-arrow"
-                                color={palette.white}
-                                size={14}
-                            />
-                        </>
-                    )}
-                </Pressable>
+                    {actionNotice}
+                </Text>
             ) : null}
 
-            {!isSignedOut && actionError ? (
+            {actionError ? (
                 <Text
                     style={[ss.tinyFont, { color: palette.red, paddingTop: 4 }]}
                 >
@@ -304,95 +383,154 @@ export function HostedConduitSettingsCard() {
             ) : null}
 
             {!isSignedOut && expanded ? (
-                <View>
-                    {expiresAt ? (
+                <View
+                    style={{
+                        backgroundColor: "rgba(255, 255, 255, 0.42)",
+                        borderWidth: 1,
+                        borderColor: palette.thinPurple,
+                        borderRadius: 16,
+                        padding: 12,
+                        marginTop: 8,
+                        gap: 12,
+                    }}
+                >
+                    <View>
+                        {expiresAt ? (
+                            <View style={rowStyle}>
+                                <Text style={labelStyle}>
+                                    {t("RENEWS_EXPIRES_I18N.string")}
+                                </Text>
+                                <Text style={valueStyle}>
+                                    {formatExpiresAt(expiresAt)}
+                                </Text>
+                            </View>
+                        ) : null}
+
                         <View style={rowStyle}>
                             <Text style={labelStyle}>
-                                {t("RENEWS_EXPIRES_I18N.string")}
+                                {t("ACCOUNT_I18N.string")}
                             </Text>
-                            <Text style={valueStyle}>
-                                {formatExpiresAt(expiresAt)}
+                            <Text
+                                numberOfLines={1}
+                                style={[
+                                    ...valueStyle,
+                                    {
+                                        fontSize: 11,
+                                        fontFamily: "JuraRegular",
+                                    },
+                                ]}
+                            >
+                                {state.session?.accountId ?? "\u2014"}
                             </Text>
                         </View>
-                    ) : null}
-
-                    <View style={rowStyle}>
-                        <Text style={labelStyle}>
-                            {t("ACCOUNT_I18N.string")}
-                        </Text>
-                        <Text
-                            numberOfLines={1}
-                            style={[
-                                ...valueStyle,
-                                { fontSize: 11, fontFamily: "JuraRegular" },
-                            ]}
-                        >
-                            {state.session?.accountId ?? "\u2014"}
-                        </Text>
                     </View>
 
                     <View
                         style={{
-                            flexDirection: "row",
-                            justifyContent: "flex-end",
-                            alignItems: "center",
-                            paddingTop: 8,
-                            gap: 16,
+                            gap: 8,
                         }}
                     >
-                        {manageBillingUrl ? (
-                            <Pressable
-                                onPress={() => {
-                                    void Linking.openURL(
-                                        manageBillingUrl,
-                                    ).catch((error) => {
-                                        setActionError(toErrorString(error));
-                                    });
+                        {showRenew
+                            ? renderAccountAction({
+                                  label: t("RENEW_SUBSCRIPTION_I18N.string"),
+                                  onPress: () => {
+                                      renewMutation.mutate();
+                                  },
+                                  disabled: actionPending,
+                                  pending: renewMutation.isPending,
+                                  variant: "primary",
+                              })
+                            : null}
+                        {manageBillingUrl
+                            ? renderAccountAction({
+                                  label: t(
+                                      "HOSTED_MANAGE_OPEN_BILLING_I18N.string",
+                                  ),
+                                  onPress: () => {
+                                      void Linking.openURL(
+                                          manageBillingUrl,
+                                      ).catch((error) => {
+                                          setActionError(toErrorString(error));
+                                      });
+                                  },
+                                  disabled: actionPending,
+                              })
+                            : null}
+                        {showRestorePurchases
+                            ? renderAccountAction({
+                                  label: t("RESTORE_PURCHASES_I18N.string", {
+                                      defaultValue: "Restore Purchases",
+                                  }),
+                                  onPress: () => {
+                                      restorePurchasesMutation.mutate();
+                                  },
+                                  disabled: actionPending,
+                                  pending: restorePurchasesMutation.isPending,
+                              })
+                            : null}
+                        {renderAccountAction({
+                            label: t("SIGN_OUT_I18N.string"),
+                            onPress: () => {
+                                signOutMutation.mutate();
+                            },
+                            disabled:
+                                actionPending ||
+                                state.authPhase === "signed_out",
+                            pending: signOutMutation.isPending,
+                        })}
+                    </View>
+
+                    <View style={{ gap: 8 }}>
+                        {confirmDelete ? (
+                            <View
+                                style={{
+                                    borderWidth: 1,
+                                    borderColor: palette.red,
+                                    borderRadius: 10,
+                                    padding: 10,
+                                    gap: 10,
+                                    backgroundColor: palette.redTint5,
                                 }}
-                                disabled={actionPending}
                             >
-                                <Text
-                                    style={[
-                                        ss.tinyFont,
-                                        ss.purpleText,
-                                        {
-                                            textDecorationLine: "underline",
-                                            opacity: actionPending ? 0.5 : 1,
-                                        },
-                                    ]}
-                                >
+                                <Text style={[ss.tinyFont, ss.blackText]}>
                                     {t(
-                                        "HOSTED_MANAGE_OPEN_BILLING_I18N.string",
+                                        "DELETE_ACCOUNT_CONFIRMATION_I18N.string",
+                                        {
+                                            defaultValue:
+                                                "This deletes your Hosted Conduit account from this app and signs you out.",
+                                        },
                                     )}
                                 </Text>
-                            </Pressable>
-                        ) : null}
-                        <Pressable
-                            onPress={() => {
-                                signOutMutation.mutate();
-                            }}
-                            disabled={
-                                actionPending ||
-                                state.authPhase === "signed_out"
-                            }
-                        >
-                            <Text
-                                style={[
-                                    ss.tinyFont,
-                                    ss.blackText,
-                                    {
-                                        textDecorationLine: "underline",
-                                        opacity:
-                                            actionPending ||
-                                            state.authPhase === "signed_out"
-                                                ? 0.4
-                                                : 0.7,
+                                {renderAccountAction({
+                                    label: t(
+                                        "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N.string",
+                                        {
+                                            defaultValue: "Delete account",
+                                        },
+                                    ),
+                                    onPress: () => {
+                                        deleteAccountMutation.mutate();
                                     },
-                                ]}
-                            >
-                                {t("SIGN_OUT_I18N.string")}
-                            </Text>
-                        </Pressable>
+                                    disabled: actionPending,
+                                    pending: deleteAccountMutation.isPending,
+                                    variant: "danger",
+                                })}
+                                {renderAccountAction({
+                                    label: t("CANCEL_I18N.string"),
+                                    onPress: () => setConfirmDelete(false),
+                                    disabled: actionPending,
+                                })}
+                            </View>
+                        ) : (
+                            renderAccountAction({
+                                label: t("DELETE_ACCOUNT_I18N.string", {
+                                    defaultValue: "Delete account",
+                                }),
+                                onPress: () => setConfirmDelete(true),
+                                disabled: actionPending,
+                                variant: "danger",
+                            })
+                        )}
                     </View>
                 </View>
             ) : null}

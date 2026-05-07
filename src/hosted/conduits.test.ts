@@ -161,4 +161,39 @@ describe("hosted conduits", () => {
             "Common hosted conduit",
         );
     });
+
+    it("parses optional hosted host state", () => {
+        const snapshot = normalizeConduitsSnapshot({
+            entitlement: {
+                status: "active",
+            },
+            conduits: [
+                {
+                    conduit_id: "cond_123",
+                    proxy_id: "proxy_123",
+                    status: "provisioning",
+                    host_state: {
+                        status: "provisioning",
+                        counts: {
+                            active: 0,
+                            provisioning: 1,
+                            deleting: 0,
+                            error: 0,
+                        },
+                        updated_at: "2026-02-18T15:06:12Z",
+                        future_server_field: "ignored",
+                    },
+                },
+                {
+                    conduit_id: "cond_without_host_state",
+                    proxy_id: "proxy_without_host_state",
+                    status: "active",
+                },
+            ],
+        });
+
+        expect(snapshot.conduits[0].host_state?.status).toBe("provisioning");
+        expect(snapshot.conduits[0].host_state?.counts.provisioning).toBe(1);
+        expect(snapshot.conduits[1].host_state).toBeUndefined();
+    });
 });

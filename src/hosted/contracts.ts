@@ -145,6 +145,29 @@ export const ConduitStatusSchema = z.enum([
 ]);
 export type ConduitStatus = z.infer<typeof ConduitStatusSchema>;
 
+export const HostedHostStatusSchema = z.enum([
+    "none",
+    "provisioning",
+    "active",
+    "deleting",
+    "error",
+]);
+export type HostedHostStatus = z.infer<typeof HostedHostStatusSchema>;
+
+export const HostedHostStateSchema = z
+    .object({
+        status: HostedHostStatusSchema,
+        counts: z.object({
+            active: z.number().int().nonnegative(),
+            provisioning: z.number().int().nonnegative(),
+            deleting: z.number().int().nonnegative(),
+            error: z.number().int().nonnegative(),
+        }),
+        updated_at: z.string().min(1).optional(),
+    })
+    .passthrough();
+export type HostedHostState = z.infer<typeof HostedHostStateSchema>;
+
 export const HostedRyveClaimSchema = z.object({
     version: z.number().int().positive(),
     key: z.string().min(1),
@@ -161,6 +184,7 @@ export const ConduitViewSchema = z.object({
     personal_compartment_id: z.string().min(1).optional(),
     common_compartment_id: z.string().min(1).optional(),
     inproxy_public_key: z.string().min(1).optional(),
+    host_state: HostedHostStateSchema.optional(),
     ryve_claim: HostedRyveClaimSchema.optional(),
     poll_after_seconds: z.number().int().positive().optional(),
 });

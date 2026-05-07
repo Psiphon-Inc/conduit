@@ -49,6 +49,7 @@ import {
     OrbScene,
     OrbSceneActivityLane,
     OrbSceneHostedOrbPressEvent,
+    OrbSceneProvisioningMarker,
     OrbVisualMode,
 } from "@/src/components/orb-scene/OrbScene";
 import {
@@ -78,6 +79,10 @@ import {
     useHostedExperienceState,
 } from "@/src/hosted/experience/hooks";
 import { isEntitlementAllowed } from "@/src/hosted/experience/stateMachine";
+import {
+    OrbHostedTrack,
+    deriveHostedProvisioningMarkers,
+} from "@/src/hosted/homeOrbScene";
 import { createHostedSessionClient } from "@/src/hosted/sessionClient";
 import { useHostedHomeWidgetStats } from "@/src/hosted/statsQueries";
 import { useInproxyContext } from "@/src/inproxy/context";
@@ -91,11 +96,6 @@ import {
     useInproxyTotalBytesTransferred,
 } from "@/src/inproxy/hooks";
 import { getProxyId } from "@/src/inproxy/utils";
-
-interface OrbHostedTrack {
-    id: string;
-    connectedCount: number;
-}
 
 export default function HomeScreen() {
     const router = useRouter();
@@ -203,6 +203,17 @@ export default function HomeScreen() {
         hostedCallToAction;
     const hostedCallToActionMode: HostedCallToActionMode =
         hostedCallToAction.mode;
+    const hostedProvisioningReason =
+        state.revenuecatPhase === "purchase_pending"
+            ? "purchase_pending"
+            : state.revenuecatPhase === "restore_pending"
+              ? "restore_pending"
+              : entitlementAllowed && state.stationPhase === "none"
+                ? "station_none"
+                : entitlementAllowed && state.stationPhase === "provisioning"
+                  ? "station_provisioning"
+                  : null;
+    const showHostedProvisioningAction = hostedProvisioningReason != null;
 
     const showLocalExperience = Platform.OS !== "ios";
     const isIosNoSubscriptionState =
@@ -278,9 +289,13 @@ export default function HomeScreen() {
     const personalPairingStatusMetricsPending =
         localStatusMetricsPending || hostedStatusMetricsPending;
     const localSceneConnectedPeers = localRunning ? localConnectedPeers : 0;
-    const personalPairingConnected = showLocalExperience
-        ? localPersonalConnected + personalConnected
-        : personalConnected;
+    const localPersonalPairingConnected =
+        showLocalExperience && localRunning ? localPersonalConnected : 0;
+    const hostedPersonalPairingConnected = showHostedSummary
+        ? personalConnected
+        : 0;
+    const personalPairingConnected =
+        localPersonalPairingConnected + hostedPersonalPairingConnected;
     const localStationName =
         conduitName && conduitName.trim().length > 0
             ? conduitName.trim()
@@ -319,6 +334,8 @@ export default function HomeScreen() {
                 return {
                     id: conduit.conduit_id,
                     connectedCount,
+                    conduitStatus: conduit.status,
+                    hostStatus: conduit.host_state?.status,
                 };
             }),
         [hostedConduitsForScene, personalConnected, publicConnected],
@@ -351,10 +368,12 @@ export default function HomeScreen() {
             {
                 id: "dev-sim-hosted-primary",
                 connectedCount: cycleA[indexA],
+                conduitStatus: "active",
             },
             {
                 id: "dev-sim-hosted-secondary",
                 connectedCount: cycleB[indexB],
+                conduitStatus: "active",
             },
         ];
     }, [simulatedHostedTick, useSimulatedSceneData]);
@@ -534,6 +553,14 @@ export default function HomeScreen() {
         );
         return lane?.orbIndex ?? null;
     }, [orbActivityLanes, selectedHostedConduitId]);
+    const provisioningMarkers = React.useMemo<OrbSceneProvisioningMarker[]>(
+        () =>
+            deriveHostedProvisioningMarkers(
+                orbSceneHostedTracks,
+                orbActivityLanes,
+            ),
+        [orbActivityLanes, orbSceneHostedTracks],
+    );
 
     const orbVisualModes = React.useMemo(() => {
         if (isIosNoSubscriptionState) {
@@ -857,6 +884,7 @@ export default function HomeScreen() {
                                 themeLevel={skyBoxGradientState}
                                 pressHint={showDefaultOrbHint}
                                 activityLanes={orbActivityLanes}
+                                provisioningMarkers={provisioningMarkers}
                                 orbModes={orbVisualModes}
                                 localOrbIndex={localOrbIndex}
                                 highlightedOrbIndex={selectedHostedOrbIndex}
@@ -926,14 +954,10 @@ export default function HomeScreen() {
                         width={totalUsableWidth}
                         height={actionsAreaHeight}
                         hostedCallToActionMode={hostedCallToActionMode}
-                        hasRecentHostedSignIn={lastAuthProvider != null}
-                        showProvisioning={
-                            (entitlementAllowed &&
-                                (state.stationPhase === "none" ||
-                                    state.stationPhase === "provisioning")) ||
-                            state.revenuecatPhase === "purchase_pending" ||
-                            state.revenuecatPhase === "restore_pending"
+                        hasRecentHostedSignIn={
+                            !hasHostedSession && lastAuthProvider != null
                         }
+                        showProvisioning={showHostedProvisioningAction}
                         showRenew={
                             state.entitlementSnapshot === "canceled_not_expired"
                         }

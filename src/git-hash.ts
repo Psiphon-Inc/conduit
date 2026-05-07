@@ -1,1 +1,1 @@
-export const GIT_HASH = "v2.0.6";
+export const GIT_HASH = "v2.1.0";
