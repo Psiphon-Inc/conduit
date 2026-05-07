@@ -493,7 +493,9 @@ export function HostedConduitSettingsCard() {
                                 }}
                             >
                                 <Text style={[ss.tinyFont, ss.blackText]}>
-                                    {t("DELETE_ACCOUNT_CONFIRMATION_I18N.string")}
+                                    {t(
+                                        "DELETE_ACCOUNT_CONFIRMATION_I18N.string",
+                                    )}
                                 </Text>
                                 {renderAccountAction({
                                     label: t(
