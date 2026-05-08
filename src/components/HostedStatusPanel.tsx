@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -28,10 +27,9 @@ import {
     TimeseriesPlot,
     TimeseriesSeries,
 } from "@/src/components/TimeseriesPlot";
-import { ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY } from "@/src/constants";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
-type HostedStatusMode = "bytes" | "connected";
+export type HostedStatusMode = "bytes" | "connected";
 
 interface HostedStatusSeriesSplit {
     personal: TimeseriesDataPoint[];
@@ -46,6 +44,8 @@ export interface HostedStatusPanelTimeseries {
 
 export function HostedStatusPanel({
     timeseries,
+    mode,
+    onModeChange,
     statusNotice,
     chartNotice,
     onChartNoticePress,
@@ -53,6 +53,8 @@ export function HostedStatusPanel({
     isLoading = false,
 }: {
     timeseries?: HostedStatusPanelTimeseries;
+    mode: HostedStatusMode;
+    onModeChange: (mode: HostedStatusMode) => void;
     statusNotice?: string | null;
     chartNotice?: string | null;
     onChartNoticePress?: () => void;
@@ -62,23 +64,8 @@ export function HostedStatusPanel({
     isLoading?: boolean;
 }) {
     const { t } = useTranslation();
-    const [mode, setModeState] = React.useState<HostedStatusMode>("bytes");
     const [plotWidth, setPlotWidth] = React.useState(0);
 
-    const setMode = React.useCallback((next: HostedStatusMode) => {
-        setModeState(next);
-        void AsyncStorage.setItem(ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY, next);
-    }, []);
-
-    React.useEffect(() => {
-        void AsyncStorage.getItem(ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY).then(
-            (stored) => {
-                if (stored === "bytes" || stored === "connected") {
-                    setModeState(stored);
-                }
-            },
-        );
-    }, []);
     const activeSeries = React.useMemo<TimeseriesSeries[]>(() => {
         if (!timeseries) {
             return [];
@@ -133,12 +120,12 @@ export function HostedStatusPanel({
                 <HostedStatusModeButton
                     label={t("CONNECTED_I18N.string")}
                     selected={mode === "connected"}
-                    onPress={() => setMode("connected")}
+                    onPress={() => onModeChange("connected")}
                 />
                 <HostedStatusModeButton
                     label={t("BYTES_I18N.string")}
                     selected={mode === "bytes"}
-                    onPress={() => setMode("bytes")}
+                    onPress={() => onModeChange("bytes")}
                 />
             </View>
             {statusNotice ? (

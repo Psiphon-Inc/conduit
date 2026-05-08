@@ -57,10 +57,11 @@ import Animated, {
 import { toErrorString } from "@/src/common/errors";
 import { formatBytesWithUnit } from "@/src/common/formatters";
 import { HostedConduitCard } from "@/src/components/HostedConduitCard";
-import {
-    HostedStatusPanel,
+import type {
+    HostedStatusMode,
     HostedStatusPanelTimeseries,
 } from "@/src/components/HostedStatusPanel";
+import { HostedStatusPanel } from "@/src/components/HostedStatusPanel";
 import { Icon } from "@/src/components/Icon";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { StatsSyncStatusRow } from "@/src/components/StatsSyncStatusRow";
@@ -69,6 +70,7 @@ import {
     APP_MAX_CONTENT_WIDTH,
     ASYNCSTORAGE_DASHBOARD_RECENT_WINDOW_KEY,
     ASYNCSTORAGE_DASHBOARD_STATION_MODE_KEY,
+    ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY,
 } from "@/src/constants";
 import { createHostedClient } from "@/src/hosted/client";
 import {
@@ -128,6 +130,7 @@ import {
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
     useInproxyActivitySegments,
+    useInproxyActivityStatsReady,
     useInproxyRegionalBreakdownByWindow,
     useInproxyStatus,
 } from "@/src/inproxy/hooks";
@@ -157,10 +160,13 @@ export default function HostedDashboardScreen() {
         React.useState<RecentWindow>("5m");
     const [stationMode, setStationModeState] =
         React.useState<DashboardStationMode>("hosted");
+    const [statusMode, setStatusModeState] =
+        React.useState<HostedStatusMode>("bytes");
     const [windowResolved, setWindowResolved] = React.useState(false);
     const [stationModeResolved, setStationModeResolved] = React.useState(
         !supportsLocalDashboard,
     );
+    const [statusModeResolved, setStatusModeResolved] = React.useState(false);
     const setRecentWindow = React.useCallback((window: RecentWindow) => {
         setRecentWindowState(window);
         void AsyncStorage.setItem(
@@ -173,7 +179,7 @@ export default function HostedDashboardScreen() {
     const [appState, setAppState] = React.useState<AppStateStatus>(
         AppState.currentState,
     );
-    const [heavyContentReady, setHeavyContentReady] = React.useState(true);
+    const [heavyContentReady, setHeavyContentReady] = React.useState(false);
     const scrollViewRef = React.useRef<ScrollView>(null);
     const [conduitsExpanded, setConduitsExpanded] = React.useState(false);
     const chevronRotation = useSharedValue(0);
@@ -207,6 +213,25 @@ export default function HostedDashboardScreen() {
         void AsyncStorage.setItem(
             ASYNCSTORAGE_DASHBOARD_STATION_MODE_KEY,
             next,
+        );
+    }, []);
+
+    const setStatusMode = React.useCallback((next: HostedStatusMode) => {
+        setStatusModeState(next);
+        void AsyncStorage.setItem(ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY, next);
+    }, []);
+
+    React.useEffect(() => {
+        void AsyncStorage.getItem(ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY).then(
+            (stored) => {
+                if (stored === "bytes" || stored === "connected") {
+                    setStatusModeState(stored);
+                }
+                setStatusModeResolved(true);
+            },
+            () => {
+                setStatusModeResolved(true);
+            },
         );
     }, []);
 
@@ -263,6 +288,7 @@ export default function HostedDashboardScreen() {
     );
 
     const localSegmentsQuery = useInproxyActivitySegments();
+    const localActivityStatsReadyQuery = useInproxyActivityStatsReady();
     const localRegionalBreakdownByWindowQuery =
         useInproxyRegionalBreakdownByWindow();
     const localStatusQuery = useInproxyStatus();
@@ -295,7 +321,8 @@ export default function HostedDashboardScreen() {
         }),
         [config.baseUrl, hostedClient, sessionClient, statsDataSource],
     );
-    const dashboardStateResolved = windowResolved && stationModeResolved;
+    const dashboardStateResolved =
+        windowResolved && stationModeResolved && statusModeResolved;
     const statsEnabled =
         dashboardStateResolved && canContinue && Boolean(config.baseUrl);
     const statsSessionQuery = useHostedStatsSessionQuery(
@@ -550,7 +577,40 @@ export default function HostedDashboardScreen() {
         (liveQuery.isFetching ||
             regionalRecentQuery.isFetching ||
             recentQuery.isFetching ||
-            summaryQuery.isFetching);
+            summaryQuery.isFetching ||
+            summaryThirtyDayQuery.isFetching);
+    const dashboardStatsError =
+        statsSessionQuery.error ??
+        summaryQuery.error ??
+        summaryThirtyDayQuery.error ??
+        recentQuery.error ??
+        regionalRecentQuery.error ??
+        liveQuery.error;
+    const hasNoAuthorizedTargets =
+        !usingMockStats &&
+        statsSessionQuery.isSuccess &&
+        !statsSessionQuery.data;
+    const hostedInitialStatsReady =
+        showingLocalDashboard ||
+        !statsEnabled ||
+        Boolean(dashboardStatsError) ||
+        hasNoAuthorizedTargets ||
+        (statsSessionQuery.isSuccess &&
+            summaryQuery.isSuccess &&
+            summaryThirtyDayQuery.isSuccess &&
+            recentQuery.isSuccess &&
+            regionalRecentQuery.isSuccess &&
+            liveQuery.isSuccess);
+    const localInitialStatsReady =
+        !showingLocalDashboard ||
+        localStatusQuery.data !== "RUNNING" ||
+        localActivityStatsReadyQuery.data;
+    const dashboardInitialRenderReady =
+        dashboardStateResolved &&
+        heavyDashboardContentReady &&
+        (showingLocalDashboard
+            ? localInitialStatsReady
+            : hostedInitialStatsReady);
 
     const statusTimeseries = showingLocalDashboard
         ? localStatusTimeseries
@@ -616,39 +676,13 @@ export default function HostedDashboardScreen() {
         };
     }, []);
 
-    if (!dashboardStateResolved) {
-        return (
-            <View
-                style={{
-                    flex: 1,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: "#FFFFFF",
-                }}
-            >
-                <ActivityIndicator size="small" color={palette.black} />
-            </View>
-        );
+    if (!dashboardInitialRenderReady) {
+        return <DashboardLoadingScreen width={win.width} height={win.height} />;
     }
 
     return (
         <View style={{ flex: 1 }}>
-            <Canvas
-                style={{
-                    position: "absolute",
-                    width: win.width,
-                    height: win.height,
-                }}
-            >
-                <SkiaRect x={0} y={0} width={win.width} height={win.height}>
-                    <SkiaLinearGradient
-                        start={vec(0, win.height)}
-                        end={vec(0, 0)}
-                        colors={["#FCDFD7", "#F0E0EB", "#E8DFF2", "#FFFFFF"]}
-                        positions={[0.08, 0.19, 0.33, 0.78]}
-                    />
-                </SkiaRect>
-            </Canvas>
+            <DashboardBackground width={win.width} height={win.height} />
             <SafeAreaView includeBottomInset={false}>
                 <ScrollView
                     ref={scrollViewRef}
@@ -772,45 +806,27 @@ export default function HostedDashboardScreen() {
                                 DEV: using mock stats source.
                             </Text>
                         ) : !showingLocalDashboard &&
-                          statsSessionQuery.data ? null : !showingLocalDashboard ? (
+                          !dashboardStatsError &&
+                          !hasNoAuthorizedTargets &&
+                          !statsSessionQuery.data ? (
                             <Text style={[ss.tinyFont, ss.blackText]}>
                                 {t("DASHBOARD_NOT_READY_I18N.string")}
                             </Text>
                         ) : null}
 
-                        {!showingLocalDashboard &&
-                        statsSessionQuery.error &&
-                        !usingMockStats ? (
+                        {!showingLocalDashboard && dashboardStatsError ? (
                             <Text style={[ss.tinyFont, ss.blackText]}>
-                                Error: {toErrorString(statsSessionQuery.error)}
+                                Error: {toErrorString(dashboardStatsError)}
                             </Text>
                         ) : null}
-                        {!showingLocalDashboard &&
-                        (summaryQuery.error ||
-                            recentQuery.error ||
-                            liveQuery.error) ? (
-                            <Text style={[ss.tinyFont, ss.blackText]}>
-                                Error:{" "}
-                                {toErrorString(
-                                    summaryQuery.error ??
-                                        recentQuery.error ??
-                                        liveQuery.error,
-                                )}
-                            </Text>
-                        ) : null}
-                        {!showingLocalDashboard &&
-                        statsSessionQuery.isSuccess &&
-                        !statsSessionQuery.data &&
-                        !usingMockStats ? (
+                        {!showingLocalDashboard && hasNoAuthorizedTargets ? (
                             <Text style={[ss.tinyFont, ss.blackText]}>
                                 {t("NO_AUTHORIZED_TARGETS_I18N.string")}
                             </Text>
                         ) : null}
                     </View>
 
-                    {!heavyDashboardContentReady ? (
-                        <DashboardHeavyContentPlaceholder />
-                    ) : dashboardCurrentCounts && statusTimeseries ? (
+                    {dashboardCurrentCounts && statusTimeseries ? (
                         <>
                             <View
                                 style={{
@@ -820,6 +836,8 @@ export default function HostedDashboardScreen() {
                             >
                                 <HostedStatusPanel
                                     timeseries={statusTimeseries}
+                                    mode={statusMode}
+                                    onModeChange={setStatusMode}
                                     statusNotice={dashboardStatusNotice}
                                     chartNotice={dashboardChartNotice}
                                     onChartNoticePress={
@@ -854,9 +872,7 @@ export default function HostedDashboardScreen() {
                         </>
                     ) : null}
 
-                    {heavyDashboardContentReady &&
-                    !showingLocalDashboard &&
-                    conduits.length > 0 ? (
+                    {!showingLocalDashboard && conduits.length > 0 ? (
                         <View
                             style={[
                                 ss.column,
@@ -913,6 +929,58 @@ export default function HostedDashboardScreen() {
                 </ScrollView>
             </SafeAreaView>
         </View>
+    );
+}
+
+function DashboardLoadingScreen({
+    width,
+    height,
+}: {
+    width: number;
+    height: number;
+}) {
+    return (
+        <View style={{ flex: 1 }}>
+            <DashboardBackground width={width} height={height} />
+            <SafeAreaView includeBottomInset={false}>
+                <View
+                    style={{
+                        flex: 1,
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <ActivityIndicator size="small" color={palette.black} />
+                </View>
+            </SafeAreaView>
+        </View>
+    );
+}
+
+function DashboardBackground({
+    width,
+    height,
+}: {
+    width: number;
+    height: number;
+}) {
+    return (
+        <Canvas
+            style={{
+                position: "absolute",
+                width,
+                height,
+            }}
+        >
+            <SkiaRect x={0} y={0} width={width} height={height}>
+                <SkiaLinearGradient
+                    start={vec(0, height)}
+                    end={vec(0, 0)}
+                    colors={["#FCDFD7", "#F0E0EB", "#E8DFF2", "#FFFFFF"]}
+                    positions={[0.08, 0.19, 0.33, 0.78]}
+                />
+            </SkiaRect>
+        </Canvas>
     );
 }
 
@@ -1378,29 +1446,6 @@ function DashboardSectionDivider() {
                 width: "100%",
             }}
         />
-    );
-}
-
-function DashboardHeavyContentPlaceholder() {
-    return (
-        <View
-            style={{
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-            }}
-        >
-            <View
-                style={{
-                    borderRadius: 12,
-                    backgroundColor: "rgba(25, 18, 36, 0.04)",
-                    minHeight: 260,
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
-            >
-                <ActivityIndicator size="small" color={palette.midGrey} />
-            </View>
-        </View>
     );
 }
 
