@@ -48,6 +48,7 @@ import { useOptionalHostedAuthService } from "@/src/hosted/auth/provider";
 import { createStubHostedAuthService } from "@/src/hosted/auth/service";
 import {
     HostedAuthService,
+    HostedAuthServiceError,
     HostedAuthSignInResult,
 } from "@/src/hosted/auth/types";
 import {
@@ -117,6 +118,7 @@ export interface HostedExperienceContextValue extends HostedExperienceActions {
     state: HostedExperienceState;
     initialSessionResolved: boolean;
     hostedSnapshotBootstrapPending: boolean;
+    revenueCatNativeActionPending: boolean;
     lastAuthProvider: OAuthProvider | null;
 }
 
@@ -273,6 +275,23 @@ function HostedExperienceProviderInner(
         },
     });
 
+    const rememberAuthProvider = React.useCallback(
+        async (provider: OAuthProvider) => {
+            queryClient.setQueryData(
+                hostedQueryKeys.authProviderHint(baseUrl),
+                provider,
+            );
+            try {
+                await persistHostedLastAuthProvider(baseUrl, provider);
+            } catch (error) {
+                timedLog(
+                    `Hosted auth provider hint persistence deferred: ${toErrorMessage(error)}`,
+                );
+            }
+        },
+        [baseUrl, queryClient],
+    );
+
     const completeHostedAuth = React.useCallback(
         async (
             authResult: HostedAuthSignInResult,
@@ -326,14 +345,7 @@ function HostedExperienceProviderInner(
             }
 
             if (options.persistAuthProviderHint) {
-                await persistHostedLastAuthProvider(
-                    baseUrl,
-                    authResult.provider,
-                );
-                queryClient.setQueryData(
-                    hostedQueryKeys.authProviderHint(baseUrl),
-                    authResult.provider,
-                );
+                await rememberAuthProvider(authResult.provider);
             }
             await queryClient.fetchQuery({
                 queryKey: hostedQueryKeys.revenueCat(
@@ -368,6 +380,7 @@ function HostedExperienceProviderInner(
             props.revenueCat,
             props.revenueCatPublicKeys,
             queryClient,
+            rememberAuthProvider,
             sessionClient,
             sessionDeps,
         ],
@@ -380,8 +393,27 @@ function HostedExperienceProviderInner(
                 persistAuthProviderHint: true,
             });
         },
-        onMutate: () => {
+        onMutate: async (provider) => {
+            const previousAuthProvider = authProviderHintQuery.data ?? null;
             setRevenuecatNotice(null);
+            await rememberAuthProvider(provider);
+            return { previousAuthProvider };
+        },
+        onError: async (error, _provider, context) => {
+            if (
+                error instanceof HostedAuthServiceError &&
+                error.code === "cancelled"
+            ) {
+                if (context?.previousAuthProvider) {
+                    await rememberAuthProvider(context.previousAuthProvider);
+                    return;
+                }
+                await clearHostedLastAuthProvider();
+                queryClient.setQueryData(
+                    hostedQueryKeys.authProviderHint(baseUrl),
+                    null,
+                );
+            }
         },
     });
     const restoreSignInMutation = useMutation({
@@ -404,11 +436,19 @@ function HostedExperienceProviderInner(
     const [purchaseInflight, setPurchaseInflight] = React.useState(false);
     const [purchaseNeedsFreshEntitlement, setPurchaseNeedsFreshEntitlement] =
         React.useState(false);
+    const [revenueCatNativeActionPending, setRevenueCatNativeActionPending] =
+        React.useState(false);
     const purchaseMutation = useMutation({
         mutationFn: async (aPackage: PurchasesPackage) => {
             const previousEntitlementStatus = currentEntitlementStatus;
-            const purchaseResult =
-                await props.revenueCat.purchasePackage(aPackage);
+            let purchaseResult;
+            setRevenueCatNativeActionPending(true);
+            try {
+                purchaseResult =
+                    await props.revenueCat.purchasePackage(aPackage);
+            } finally {
+                setRevenueCatNativeActionPending(false);
+            }
             const session = await ensureHostedSession(queryClient, sessionDeps);
             queryClient.setQueryData(
                 hostedQueryKeys.revenueCat(baseUrl, session.accountId),
@@ -457,7 +497,13 @@ function HostedExperienceProviderInner(
     const [restoreInflight, setRestoreInflight] = React.useState(false);
     const restoreMutation = useMutation({
         mutationFn: async () => {
-            const restoreResult = await props.revenueCat.restorePurchases();
+            let restoreResult;
+            setRevenueCatNativeActionPending(true);
+            try {
+                restoreResult = await props.revenueCat.restorePurchases();
+            } finally {
+                setRevenueCatNativeActionPending(false);
+            }
             const session = await ensureHostedSession(queryClient, sessionDeps);
             queryClient.setQueryData(
                 hostedQueryKeys.revenueCat(baseUrl, session.accountId),
@@ -694,6 +740,7 @@ function HostedExperienceProviderInner(
         purchaseMutation.reset();
         restoreMutation.reset();
         updateAccountAliasMutation.reset();
+        setRevenueCatNativeActionPending(false);
         setPurchaseInflight(false);
         setPurchaseNeedsFreshEntitlement(false);
         setRestoreInflight(false);
@@ -739,6 +786,7 @@ function HostedExperienceProviderInner(
             state,
             initialSessionResolved,
             hostedSnapshotBootstrapPending,
+            revenueCatNativeActionPending,
             lastAuthProvider,
             signIn,
             signOut,
@@ -759,6 +807,7 @@ function HostedExperienceProviderInner(
             lastAuthProvider,
             pollConduitsOnce,
             purchaseMutation,
+            revenueCatNativeActionPending,
             refreshSession,
             refreshSessionIfNeeded,
             restoreMutation,

@@ -17,7 +17,6 @@
  *
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import React from "react";
@@ -127,7 +126,7 @@ const LANGUAGE_COPY: Record<string, LanguageCopy> = {
     },
 };
 
-const PRIMARY_GRADIENT_COLORS = ["#A475E3", "rgba(156, 129, 201, 0.69)"];
+const PRIMARY_CTA_PURPLE = "#A475E3";
 
 export function PersonalPairingShareModal({
     personalCompartmentId,
@@ -141,7 +140,6 @@ export function PersonalPairingShareModal({
     const { closeModal, pushModal } = useModal();
 
     const [selectedLanguage, setSelectedLanguageState] = React.useState("en");
-    const [shareButtonWidth, setShareButtonWidth] = React.useState(0);
     const [notice, setNotice] = React.useState<string | null>(null);
 
     const normalizedName = normalizeNickname(storedConduitName ?? "");
@@ -403,11 +401,6 @@ export function PersonalPairingShareModal({
                             }}
                         >
                             <Pressable
-                                onLayout={(event) => {
-                                    setShareButtonWidth(
-                                        event.nativeEvent.layout.width,
-                                    );
-                                }}
                                 disabled={!canSharePairingLink}
                                 onPress={() => {
                                     void sharePairingLink();
@@ -419,7 +412,7 @@ export function PersonalPairingShareModal({
                                     {
                                         alignSelf: "stretch",
                                         borderRadius: 12,
-                                        backgroundColor: palette.transparent,
+                                        backgroundColor: PRIMARY_CTA_PURPLE,
                                         height: 52,
                                         marginTop: 4,
                                         overflow: "hidden",
@@ -427,34 +420,6 @@ export function PersonalPairingShareModal({
                                     },
                                 ]}
                             >
-                                <View
-                                    style={[ss.absoluteFill]}
-                                    pointerEvents="none"
-                                >
-                                    <Canvas style={{ flex: 1 }}>
-                                        <Rect
-                                            x={0}
-                                            y={0}
-                                            width={Math.max(
-                                                1,
-                                                shareButtonWidth,
-                                            )}
-                                            height={52}
-                                        >
-                                            <LinearGradient
-                                                start={vec(0, 26)}
-                                                end={vec(
-                                                    Math.max(
-                                                        1,
-                                                        shareButtonWidth,
-                                                    ),
-                                                    26,
-                                                )}
-                                                colors={PRIMARY_GRADIENT_COLORS}
-                                            />
-                                        </Rect>
-                                    </Canvas>
-                                </View>
                                 <Image
                                     source={require("@/assets/images/icons/share.svg")}
                                     tintColor={palette.white}

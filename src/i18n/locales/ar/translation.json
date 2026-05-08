@@ -505,6 +505,26 @@
         "string": "تسجيل الخروج",
         "developer_comment": "Button label to sign out of the account."
     },
+    "DELETE_ACCOUNT_I18N": {
+        "string": "حذف الحساب",
+        "developer_comment": "Button label to initiate account deletion."
+    },
+    "DELETE_ACCOUNT_CONFIRMATION_I18N": {
+        "string": "سيؤدي حذف الحساب إلى حذف Conduit المستضاف الخاص بك وإزالة حسابك من خوادمنا. إذا كان لديك حاليًا اشتراك نشط، فقد يستمر تحصيل رسوم اشتراكك إلى أن تلغيه من خلال App Store أو Google Play.",
+        "developer_comment": "Confirmation warning shown before deleting an account with an active subscription."
+    },
+    "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N": {
+        "string": "حذف الحساب",
+        "developer_comment": "Final confirmation button for account deletion."
+    },
+    "ACCOUNT_DELETED_I18N": {
+        "string": "تم حذف الحساب.",
+        "developer_comment": "Confirmation shown after account deletion succeeds."
+    },
+    "PURCHASES_RESTORED_I18N": {
+        "string": "تمت استعادة المشتريات.",
+        "developer_comment": "Confirmation shown after purchases restore successfully."
+    },
     "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
         "string": "إغلاق تفاصيل conduit",
         "developer_comment": "Accessibility label for the close button in the hosted conduit modal."
@@ -632,6 +652,10 @@
     "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
         "string": "كرة conduit المستضاف. اضغط للتفاصيل",
         "developer_comment": "Accessibility label for the hosted conduit orb."
+    },
+    "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N": {
+        "string": "Conduit مستضاف، جارٍ تجهيز المضيف",
+        "developer_comment": "Accessibility label for a hosted conduit orb whose host is still provisioning."
     },
     "SIGN_IN_TO_SYNC_I18N": {
         "string": "سجّل الدخول لمزامنة حسابك المستضاف",

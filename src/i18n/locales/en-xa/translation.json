@@ -455,6 +455,21 @@
     "SIGN_OUT_I18N": {
         "string": "Şīīɠƞ ǿǿŭŭŧ"
     },
+    "DELETE_ACCOUNT_I18N": {
+        "string": "Ḓḗḗŀḗḗŧḗḗ ȧȧƈƈǿǿŭŭƞŧ"
+    },
+    "DELETE_ACCOUNT_CONFIRMATION_I18N": {
+        "string": "Ḓḗḗŀḗḗŧḗḗ ȧȧƈƈǿǿŭŭƞŧ ẇīīŀŀ ḓḗḗŀḗḗŧḗḗ ẏǿǿŭŭř Ħǿǿşŧḗḗḓ Ƈǿǿƞḓŭŭīīŧ ȧȧƞḓ řḗḗḿǿǿṽḗḗ ẏǿǿŭŭř ȧȧƈƈǿǿŭŭƞŧ ƒřǿǿḿ ǿǿŭŭř şḗḗřṽḗḗřş. Īīƒ ẏǿǿŭŭ ƈŭŭřřḗḗƞŧŀẏ ħȧȧṽḗḗ ȧȧƞ ȧȧƈŧīīṽḗḗ şŭŭƀşƈřīīƥŧīīǿǿƞ, ẏǿǿŭŭř şŭŭƀşƈřīīƥŧīīǿǿƞ ḿȧȧẏ ƈǿǿƞŧīīƞŭŭḗḗ ƀīīŀŀīīƞɠ ŭŭƞŧīīŀ ẏǿǿŭŭ ƈȧȧƞƈḗḗŀ īīŧ ŧħřǿǿŭŭɠħ ŧħḗḗ Ȧȧƥƥ Şŧǿǿřḗḗ ǿǿř Ɠǿǿǿǿɠŀḗḗ Ƥŀȧȧẏ."
+    },
+    "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N": {
+        "string": "Ḓḗḗŀḗḗŧḗḗ ȧȧƈƈǿǿŭŭƞŧ"
+    },
+    "ACCOUNT_DELETED_I18N": {
+        "string": "Ȧȧƈƈǿǿŭŭƞŧ ḓḗḗŀḗḗŧḗḗḓ."
+    },
+    "PURCHASES_RESTORED_I18N": {
+        "string": "Ƥŭŭřƈħȧȧşḗḗş řḗḗşŧǿǿřḗḗḓ."
+    },
     "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
         "string": "Ƈŀǿǿşḗḗ ƈǿǿƞḓŭŭīīŧ ḓḗḗŧȧȧīīŀş"
     },
@@ -551,6 +566,9 @@
     "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
         "string": "Ħǿǿşŧḗḗḓ ƈǿǿƞḓŭŭīīŧ ǿǿřƀ. Ŧȧȧƥ ƒǿǿř ḓḗḗŧȧȧīīŀş"
     },
+    "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N": {
+        "string": "Ħǿǿşŧḗḗḓ Ƈǿǿƞḓŭŭīīŧ, ƥřǿǿṽīīşīīǿǿƞīīƞɠ ħǿǿşŧ"
+    },
     "SIGN_IN_TO_SYNC_I18N": {
         "string": "Şīīɠƞ īīƞ ŧǿǿ şẏƞƈ ẏǿǿŭŭř ħǿǿşŧḗḗḓ ȧȧƈƈǿǿŭŭƞŧ"
     },
@@ -588,7 +606,7 @@
         "string": "Ħǿǿşŧḗḗḓ ƈǿǿƞḓŭŭīīŧ şƈḗḗƞḗḗ ƀŭŭŧŧǿǿƞ"
     },
     "PREPARING_HOSTED_CONDUIT_I18N": {
-        "string": "Ƥřḗḗƥȧȧřīīƞɠ ẏǿǿŭŭř Ħǿǿşŧḗḗḓ Ƈǿǿƞḓŭŭīīŧ..."
+        "string": "Ƥřḗḗƥȧȧřīīƞɠ Ħǿǿşŧḗḗḓ Ƈǿǿƞḓŭŭīīŧ"
     },
     "PREPARING_I18N": {
         "string": "Ƥřḗḗƥȧȧřīīƞɠ..."
@@ -600,7 +618,22 @@
         "string": "Şḗḗŧŧīīƞɠ ŭŭƥ ẏǿǿŭŭř īīƞƒřȧȧşŧřŭŭƈŧŭŭřḗḗ..."
     },
     "PROVISIONING_LEAVE_HINT_I18N": {
-        "string": "Ẏǿǿŭŭ ḿȧȧẏ ŀḗḗȧȧṽḗḗ ŧħīīş şƈřḗḗḗḗƞ ẇħīīŀḗḗ ẏǿǿŭŭř īīƞƒřȧȧşŧřŭŭƈŧŭŭřḗḗ īīş ƥřǿǿṽīīşīīǿǿƞīīƞɠ."
+        "string": "Ẏǿǿŭŭ ḿȧȧẏ ŀḗḗȧȧṽḗḗ ŧħīīş ƥȧȧɠḗḗ ẇħīīŀḗḗ ŧħḗḗ ħǿǿşŧ īīş ƥřǿǿṽīīşīīǿǿƞḗḗḓ."
+    },
+    "HOSTED_PROVISIONING_CONFIRMING_I18N": {
+        "string": "Ƈǿǿƞƒīīřḿīīƞɠ..."
+    },
+    "HOSTED_PROVISIONING_LAUNCHING_I18N": {
+        "string": "Ŀȧȧŭŭƞƈħīīƞɠ Ħǿǿşŧḗḗḓ Ƈǿǿƞḓŭŭīīŧ..."
+    },
+    "HOSTED_PROVISIONING_WAITING_PROVIDER_I18N": {
+        "string": "Ẇȧȧīīŧīīƞɠ ƒǿǿř Ħǿǿşŧīīƞɠ Ƥřǿǿṽīīḓḗḗř..."
+    },
+    "HOSTED_PROVISIONING_PROVISIONING_I18N": {
+        "string": "Ƥřǿǿṽīīşīīǿǿƞīīƞɠ Ħǿǿşŧḗḗḓ Ƈǿǿƞḓŭŭīīŧ..."
+    },
+    "HOSTED_PROVISIONING_WAITING_METRICS_I18N": {
+        "string": "Ẇȧȧīīŧīīƞɠ ƒǿǿř Ḿḗḗŧřīīƈş..."
     },
     "OPENING_YOUR_DASHBOARD_I18N": {
         "string": "Ǿǿƥḗḗƞīīƞɠ ẏǿǿŭŭř ḓȧȧşħƀǿǿȧȧřḓ..."

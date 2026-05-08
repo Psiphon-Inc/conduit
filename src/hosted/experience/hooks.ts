@@ -76,6 +76,10 @@ export function useHostedExperienceSnapshotBootstrapPending(): boolean {
     return useHostedExperienceContext().hostedSnapshotBootstrapPending;
 }
 
+export function useHostedExperienceRevenueCatNativeActionPending(): boolean {
+    return useHostedExperienceContext().revenueCatNativeActionPending;
+}
+
 export function useHostedExperienceLastAuthProvider(): OAuthProvider | null {
     return useHostedExperienceContext().lastAuthProvider;
 }

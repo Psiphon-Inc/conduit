@@ -16,13 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import {
-    Canvas,
-    Group,
-    LinearGradient,
-    Rect,
-    vec,
-} from "@shopify/react-native-skia";
+import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Image as ExpoImage } from "expo-image";
 import * as Linking from "expo-linking";
@@ -39,14 +33,18 @@ import {
     View,
     useWindowDimensions,
 } from "react-native";
-import { useSharedValue, withTiming } from "react-native-reanimated";
 
 import { toErrorString } from "@/src/common/errors";
 import { timedLog } from "@/src/common/utils";
+import {
+    AnimatedProvisioningStatusText,
+    HostedProvisioningHero,
+    useHostedProvisioningStages,
+    useSharedHostedProvisioningStatusStartedAtMs,
+} from "@/src/components/HostedProvisioningScene";
 import { HostedSetupSignInHero } from "@/src/components/HostedSetupSignInHero";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
-import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
 import {
     APPLE_STANDARD_EULA_URL,
     APP_MAX_CONTENT_WIDTH,
@@ -73,6 +71,7 @@ import {
     useHostedExperienceActions,
     useHostedExperienceInitialSessionResolved,
     useHostedExperienceLastAuthProvider,
+    useHostedExperienceRevenueCatNativeActionPending,
     useHostedExperienceState,
 } from "@/src/hosted/experience/hooks";
 import { shouldRouteToHostedActiveExperience } from "@/src/hosted/experience/navigation";
@@ -102,6 +101,7 @@ const APPLE_SIGN_IN_ICON = require("../../../assets/images/apple.png");
 const NO_NETWORK_ICON = require("@/assets/images/icons/no-network.svg");
 const HOSTED_PRIMARY_GRADIENT_START = "#7E5CB8";
 const HOSTED_PRIMARY_GRADIENT_END = "rgba(156, 129, 201, 0.69)";
+const PROVISIONING_STATUS_BACKGROUND = "#0B58A4";
 
 export default function HostedSetupScreen() {
     const { t } = useTranslation();
@@ -115,6 +115,8 @@ export default function HostedSetupScreen() {
     );
     const state = useHostedExperienceState();
     const initialSessionResolved = useHostedExperienceInitialSessionResolved();
+    const revenueCatNativeActionPending =
+        useHostedExperienceRevenueCatNativeActionPending();
     const lastAuthProvider = useHostedExperienceLastAuthProvider();
     const actions = useHostedExperienceActions();
     const revenueCat = useRevenueCatContext();
@@ -147,11 +149,6 @@ export default function HostedSetupScreen() {
         [isOffline, lastAuthProvider, state, t],
     );
     const conduits = state.conduitsSnapshot?.conduits ?? [];
-    const sceneViewIndex = React.useMemo(
-        () => toSceneViewIndex(onboarding.primaryAction),
-        [onboarding.primaryAction],
-    );
-    const sceneView = useSharedValue(sceneViewIndex);
     const attentionLogSignatureRef = React.useRef<string | null>(null);
 
     React.useEffect(() => {
@@ -216,10 +213,6 @@ export default function HostedSetupScreen() {
         state.stationError,
         state.stationPhase,
     ]);
-
-    React.useEffect(() => {
-        sceneView.value = withTiming(sceneViewIndex, { duration: 600 });
-    }, [sceneView, sceneViewIndex]);
 
     const bootstrapConduitsQuery = useQuery({
         queryKey: ["hosted", "bootstrap-conduits", state.session?.accountId],
@@ -430,11 +423,6 @@ export default function HostedSetupScreen() {
         purchaseMutation.isPending ||
         restorePurchasesMutation.isPending;
     const recoverActionPending = recoverAccessMutation.isPending;
-    const activationInFlight =
-        purchaseMutation.isPending ||
-        restorePurchasesMutation.isPending ||
-        state.revenuecatPhase === "purchase_pending" ||
-        state.revenuecatPhase === "restore_pending";
     const setupReady = hasBaseUrl && hasClerkKey && hasRevenueCatKeyForPlatform;
     const storyParagraph = `${onboarding.detail} ${onboarding.helper}`;
     // Keep the loading spinner visible until both the persisted session AND the
@@ -451,27 +439,26 @@ export default function HostedSetupScreen() {
         !initialSessionResolved || awaitingBootstrapAfterSessionLoad;
     const showTransitionLoading =
         state.authPhase === "authenticating" || signInMutation.isPending;
-    // Keep the provisioning screen visible when a purchase or restore mutation
-    // just succeeded but the conduits query observer hasn't propagated the
-    // final poll data yet.  Without this guard there is a 1-frame render gap
-    // where the state falls back to "plan selection" before the redirect fires.
-    const purchaseSucceededAwaitingSync =
-        purchaseMutation.isSuccess && !canContinue;
+    // Do not mount the animated provisioning scene under RevenueCat's native
+    // purchase/restore UI. Only show it for an explicit hosted provisioning
+    // status or a resolved wait state after activation, not generic bootstrap
+    // or plan-loading waits.
+    const resolvedInfrastructureWait =
+        onboarding.primaryAction === "wait" && state.conduitsSnapshot !== null;
     const showProvisioningScreen =
-        onboarding.primaryAction === "wait" ||
-        (activationInFlight &&
-            (onboarding.primaryAction !== "share_or_manage" ||
-                isRenewIntent)) ||
-        purchaseSucceededAwaitingSync;
+        !revenueCatNativeActionPending &&
+        (state.stationPhase === "provisioning" || resolvedInfrastructureWait);
     const loadingMessage = t("CONNECTING_TO_YOUR_HOSTED_CONDUIT_I18N.string");
     const showPlanSelectionScreen =
-        onboarding.primaryAction === "activate_or_restore" || isRenewIntent;
+        onboarding.primaryAction === "activate_or_restore" ||
+        isRenewIntent ||
+        revenueCatNativeActionPending;
+    const primaryActionForControls =
+        isRenewIntent || revenueCatNativeActionPending
+            ? "activate_or_restore"
+            : onboarding.primaryAction;
     const showHostedSignInHero =
         !showPlanSelectionScreen && onboarding.primaryAction === "sign_in";
-    const showSkiaScene =
-        !showPlanSelectionScreen &&
-        onboarding.primaryAction !== "share_or_manage" &&
-        onboarding.primaryAction !== "sign_in";
     const bootstrapRefreshError = bootstrapConduitsQuery.error
         ? `Failed to refresh hosted setup status: ${toErrorString(bootstrapConduitsQuery.error)}`
         : null;
@@ -488,14 +475,14 @@ export default function HostedSetupScreen() {
             ? null
             : actionError;
 
-    const contentWidth = Math.min(window.width, APP_MAX_CONTENT_WIDTH);
     const centeredContentStyle = {
         width: "100%" as const,
         maxWidth: APP_MAX_CONTENT_WIDTH,
         alignSelf: "center" as const,
     };
-    const sceneWidth = Math.max(240, Math.min(contentWidth - 32, 520));
-    const sceneHeight = Math.max(220, Math.min(window.height * 0.32, 320));
+    const provisioningStages = useHostedProvisioningStages();
+    const provisioningStatusStartedAtMs =
+        useSharedHostedProvisioningStatusStartedAtMs(showProvisioningScreen);
 
     if (showInitialLoading || showTransitionLoading) {
         return (
@@ -600,6 +587,75 @@ export default function HostedSetupScreen() {
     if (showProvisioningScreen) {
         return (
             <SafeAreaView includeBottomInset={false}>
+                <View style={[ss.flex, { backgroundColor: palette.black }]}>
+                    <HostedProvisioningHero
+                        width={window.width}
+                        height={window.height}
+                        stages={provisioningStages}
+                        statusStartedAtMs={provisioningStatusStartedAtMs}
+                        fullBleed={true}
+                        showStatus={false}
+                    />
+                    <View
+                        pointerEvents="box-none"
+                        style={{
+                            position: "absolute",
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            paddingHorizontal: 16,
+                            paddingTop: 28,
+                            paddingBottom: 18,
+                        }}
+                    >
+                        <Text
+                            style={[
+                                ss.extraLargeFont,
+                                ss.centeredText,
+                                {
+                                    color: palette.purple,
+                                    textShadowColor: "rgba(255,255,255,0.72)",
+                                    textShadowOffset: { width: 0, height: 1 },
+                                    textShadowRadius: 8,
+                                },
+                            ]}
+                        >
+                            {t("PREPARING_HOSTED_CONDUIT_I18N.string")}
+                        </Text>
+                        <View
+                            style={{
+                                position: "absolute",
+                                left: 16,
+                                right: 16,
+                                bottom: Math.max(164, window.height * 0.23),
+                                backgroundColor: PROVISIONING_STATUS_BACKGROUND,
+                                borderRadius: 16,
+                                paddingHorizontal: 18,
+                                paddingVertical: 12,
+                            }}
+                        >
+                            <AnimatedProvisioningStatusText
+                                stages={provisioningStages}
+                                startedAtMs={provisioningStatusStartedAtMs}
+                                textStyle={{
+                                    color: palette.white,
+                                    textShadowColor: "transparent",
+                                    textShadowRadius: 0,
+                                }}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    if (onboarding.primaryAction === "wait") {
+        return (
+            <SafeAreaView includeBottomInset={false}>
                 <View
                     style={[
                         ss.flex,
@@ -607,40 +663,13 @@ export default function HostedSetupScreen() {
                         ss.alignCenter,
                         ss.justifyCenter,
                         centeredContentStyle,
-                        { padding: 24, gap: 16 },
+                        { backgroundColor: palette.white, padding: 24 },
                     ]}
                 >
                     <ActivityIndicator size="small" color={palette.purple} />
-                    <Text style={[ss.largeFont, ss.blackText]}>
-                        {t("SETTING_UP_INFRASTRUCTURE_I18N.string")}
+                    <Text style={[ss.bodyFont, ss.blackText]}>
+                        {loadingMessage}
                     </Text>
-                    <Text
-                        style={[
-                            ss.bodyFont,
-                            {
-                                color: palette.grey,
-                                textAlign: "center",
-                                marginTop: 8,
-                            },
-                        ]}
-                    >
-                        {t("PROVISIONING_LEAVE_HINT_I18N.string")}
-                    </Text>
-                    <Pressable
-                        onPress={() => router.replace("/(app)")}
-                        style={{
-                            borderWidth: 1,
-                            borderColor: palette.purple,
-                            borderRadius: 12,
-                            paddingHorizontal: 32,
-                            paddingVertical: 10,
-                            marginTop: 4,
-                        }}
-                    >
-                        <Text style={[ss.bodyFont, ss.purpleText]}>
-                            {t("CLOSE_I18N.string")}
-                        </Text>
-                    </Pressable>
                 </View>
             </SafeAreaView>
         );
@@ -701,29 +730,6 @@ export default function HostedSetupScreen() {
                                         body={storyParagraph}
                                         width={window.width}
                                     />
-                                </View>
-                            ) : null}
-                            {showSkiaScene ? (
-                                <View
-                                    style={{
-                                        width: "100%",
-                                        height: sceneHeight,
-                                        borderWidth: 1,
-                                        borderColor: palette.thinPurple,
-                                        borderRadius: 16,
-                                        overflow: "hidden",
-                                        backgroundColor: palette.white,
-                                    }}
-                                >
-                                    <Canvas style={{ flex: 1 }}>
-                                        <Group>
-                                            <OnboardingScene
-                                                currentView={sceneView}
-                                                sceneWidth={sceneWidth}
-                                                sceneHeight={sceneHeight}
-                                            />
-                                        </Group>
-                                    </Canvas>
                                 </View>
                             ) : null}
                             {onboarding.primaryAction !== "sign_in" ? (
@@ -850,11 +856,7 @@ export default function HostedSetupScreen() {
                     ) : null}
 
                     <PrimaryActionBlock
-                        onboardingAction={
-                            isRenewIntent
-                                ? "activate_or_restore"
-                                : onboarding.primaryAction
-                        }
+                        onboardingAction={primaryActionForControls}
                         setupReady={setupReady}
                         authPhase={state.authPhase}
                         actionPending={primaryActionPending}
@@ -1218,22 +1220,6 @@ function HostedPaywallLegalLinks() {
             </Pressable>
         </View>
     );
-}
-
-function toSceneViewIndex(action: HostedOnboardingPrimaryAction): number {
-    switch (action) {
-        case "sign_in":
-            return 0;
-        case "offline":
-        case "share_or_manage":
-            return 1;
-        case "wait":
-            return 2;
-        case "activate_or_restore":
-        case "restore_or_manage":
-        default:
-            return 3;
-    }
 }
 
 function hasRevenueCatPublicKeyForPlatform(

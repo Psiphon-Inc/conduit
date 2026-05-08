@@ -45,7 +45,6 @@ import { DropdownSection } from "@/src/components/DropdownSection";
 import { EditableConduitAlias } from "@/src/components/EditableConduitAlias";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
 import { GitHash } from "@/src/components/GitHash";
-import { HostedConduitSettingsCard } from "@/src/components/HostedConduitSettingsCard";
 import { Icon } from "@/src/components/Icon";
 import { ReducedUsageWindow } from "@/src/components/ReducedUsageWindow";
 import { RyveCallToAction } from "@/src/components/RyveCallToAction";
@@ -1048,10 +1047,19 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         />
                     ) : null}
 
-                    {/* Account */}
-                    <View style={[...settingsPaddedStyle, { minHeight: 60 }]}>
-                        <HostedConduitSettingsCard />
-                    </View>
+                    {renderSettingsAction({
+                        icon: (
+                            <ExpoImage
+                                source={require("@/assets/images/icons/account.svg")}
+                                tintColor={palette.black}
+                                style={{ width: 20, height: 20 }}
+                                contentFit="contain"
+                            />
+                        ),
+                        label: t("ACCOUNT_I18N.string"),
+                        subtitle: t("ACCOUNT_SETTINGS_DESCRIPTION_I18N.string"),
+                        onPress: () => router.push("/(app)/account"),
+                    })}
 
                     {renderSettingsAction({
                         icon: (
