@@ -101,8 +101,8 @@ android {
         applicationId 'ca.psiphon.conduit'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 79
-        versionName "2.1.1"
+        versionCode 80
+        versionName "2.1.2"
     }
     signingConfigs {
         if (hasCustomKeystoreProperties) {
