@@ -505,6 +505,26 @@
         "string": "साइन आउट करें",
         "developer_comment": "Button label to sign out of the account."
     },
+    "DELETE_ACCOUNT_I18N": {
+        "string": "खाता हटाएं",
+        "developer_comment": "Button label to initiate account deletion."
+    },
+    "DELETE_ACCOUNT_CONFIRMATION_I18N": {
+        "string": "खाता हटाने से आपका होस्टेड कान्डूइट हट जाएगा और आपका खाता हमारे सर्वर से हटा दिया जाएगा। यदि आपके पास अभी सक्रिय सदस्यता है, तो आपकी सदस्यता का बिल तब तक जारी रह सकता है जब तक आप उसे App Store या Google Play के माध्यम से रद्द नहीं करते।",
+        "developer_comment": "Confirmation warning shown before deleting an account with an active subscription."
+    },
+    "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N": {
+        "string": "खाता हटाएं",
+        "developer_comment": "Final confirmation button for account deletion."
+    },
+    "ACCOUNT_DELETED_I18N": {
+        "string": "खाता हटाया गया।",
+        "developer_comment": "Confirmation shown after account deletion succeeds."
+    },
+    "PURCHASES_RESTORED_I18N": {
+        "string": "खरीदारी पुनर्स्थापित हुई।",
+        "developer_comment": "Confirmation shown after purchases restore successfully."
+    },
     "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
         "string": "कान्डूइट विवरण बंद करें",
         "developer_comment": "Accessibility label for the close button in the hosted conduit modal."
@@ -632,6 +652,10 @@
     "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
         "string": "होस्टेड कान्डूइट ऑर्ब। विवरण के लिए टैप करें",
         "developer_comment": "Accessibility label for the hosted conduit orb."
+    },
+    "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N": {
+        "string": "होस्टेड कान्डूइट, होस्ट का प्रावधान हो रहा है",
+        "developer_comment": "Accessibility label for a hosted conduit orb whose host is still provisioning."
     },
     "SIGN_IN_TO_SYNC_I18N": {
         "string": "अपना होस्टेड खाता सिंक करने के लिए साइन इन करें",

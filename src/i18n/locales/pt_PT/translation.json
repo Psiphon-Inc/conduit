@@ -505,6 +505,26 @@
         "string": "Terminar sessão",
         "developer_comment": "Button label to sign out of the account."
     },
+    "DELETE_ACCOUNT_I18N": {
+        "string": "Eliminar conta",
+        "developer_comment": "Button label to initiate account deletion."
+    },
+    "DELETE_ACCOUNT_CONFIRMATION_I18N": {
+        "string": "Eliminar a conta irá eliminar o seu Conduit alojado e remover a sua conta dos nossos servidores. Se tiver uma subscrição ativa atualmente, a cobrança da sua subscrição poderá continuar até a cancelar através da App Store ou do Google Play.",
+        "developer_comment": "Confirmation warning shown before deleting an account with an active subscription."
+    },
+    "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N": {
+        "string": "Eliminar conta",
+        "developer_comment": "Final confirmation button for account deletion."
+    },
+    "ACCOUNT_DELETED_I18N": {
+        "string": "Conta eliminada.",
+        "developer_comment": "Confirmation shown after account deletion succeeds."
+    },
+    "PURCHASES_RESTORED_I18N": {
+        "string": "Compras restauradas.",
+        "developer_comment": "Confirmation shown after purchases restore successfully."
+    },
     "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
         "string": "Fechar detalhes do conduit",
         "developer_comment": "Accessibility label for the close button in the hosted conduit modal."
@@ -632,6 +652,10 @@
     "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
         "string": "Orbe Conduit alojado. Toque para detalhes",
         "developer_comment": "Accessibility label for the hosted conduit orb."
+    },
+    "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N": {
+        "string": "Conduit alojado, host a ser provisionado",
+        "developer_comment": "Accessibility label for a hosted conduit orb whose host is still provisioning."
     },
     "SIGN_IN_TO_SYNC_I18N": {
         "string": "Inicie sessão para sincronizar a sua conta alojada",

@@ -682,6 +682,87 @@ describe("hosted experience context", () => {
         expect(contextValue!.lastAuthProvider).toBe("google");
     });
 
+    it("persists the auth provider hint before hosted login completes", async () => {
+        const signInDeferred =
+            createDeferred<Awaited<ReturnType<HostedAuthService["signIn"]>>>();
+        const session = makeSession({
+            accessToken: "access.login",
+            accessTokenExpiresAtMs: 90_000,
+            refreshTokenExpiresAtMs: 1_000_000,
+        });
+        const authService = makeAuthService({
+            signIn: jest.fn().mockReturnValue(signInDeferred.promise),
+        });
+        const sessionClient = makeSessionClient({
+            loadHostedSession: jest.fn().mockResolvedValue(null),
+            login: jest.fn().mockResolvedValue(session),
+        });
+        const hostedClient = makeHostedClient({
+            getConduitsSnapshot: jest.fn().mockResolvedValue({
+                entitlement: {
+                    status: "inactive",
+                    product_id: "test.product.primary",
+                },
+                conduits: [],
+            }),
+        });
+
+        let contextValue: HostedExperienceContextValue | null = null;
+        function Consumer() {
+            contextValue = useHostedExperienceContext();
+            return null;
+        }
+
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 10_000,
+                    authService,
+                    sessionClient,
+                    hostedClient,
+                    revenueCat: makeRevenueCatContext(),
+                },
+                <Consumer />,
+            );
+        });
+
+        let signInPromise: Promise<void> | null = null;
+        await act(async () => {
+            signInPromise = contextValue!.signIn("google");
+            await flushPromises();
+        });
+
+        await waitFor(() => {
+            expect(contextValue!.lastAuthProvider).toBe("google");
+        });
+        await expect(
+            SecureStore.getItemAsync(SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY),
+        ).resolves.toContain('"provider":"google"');
+        expect(sessionClient.login).not.toHaveBeenCalled();
+
+        await act(async () => {
+            signInDeferred.resolve({
+                provider: "google",
+                tokenType: "clerk_broker_jwt",
+                brokerToken: "clerk.broker.jwt",
+                platform: "android",
+                clientVersion: "2.0.0",
+            });
+            await signInPromise!;
+        });
+
+        expect(sessionClient.login).toHaveBeenCalledWith({
+            token_type: "clerk_broker_jwt",
+            broker_token: "clerk.broker.jwt",
+            platform: "android",
+            client_version: "2.0.0",
+        });
+        await waitFor(() => {
+            expect(contextValue!.state.authPhase).toBe("authenticated");
+        });
+    });
+
     it("clears the auth hint and upstream auth session on explicit sign out", async () => {
         const session = makeSession({
             accessToken: "access.login",
@@ -1734,6 +1815,20 @@ async function waitFor(assertion: () => void): Promise<void> {
     }
 
     throw lastError;
+}
+
+function createDeferred<T>(): {
+    promise: Promise<T>;
+    resolve(value: T): void;
+    reject(error: unknown): void;
+} {
+    let resolve!: (value: T) => void;
+    let reject!: (error: unknown) => void;
+    const promise = new Promise<T>((promiseResolve, promiseReject) => {
+        resolve = promiseResolve;
+        reject = promiseReject;
+    });
+    return { promise, resolve, reject };
 }
 
 function makeRevenueCatContext(

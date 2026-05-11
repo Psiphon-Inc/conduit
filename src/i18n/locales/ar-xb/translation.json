@@ -455,6 +455,21 @@
     "SIGN_OUT_I18N": {
         "string": "‮Sıƃu‬ ‮onʇ‬"
     },
+    "DELETE_ACCOUNT_I18N": {
+        "string": "‮pǝʅǝʇǝ‬ ‮ɐɔɔonuʇ‬"
+    },
+    "DELETE_ACCOUNT_CONFIRMATION_I18N": {
+        "string": "‮pǝʅǝʇǝ‬ ‮ɐɔɔonuʇ‬ ‮ʍıʅʅ‬ ‮pǝʅǝʇǝ‬ ‮ʎonɹ‬ ‮Hosʇǝp‬ ‮Ↄoupnıʇ‬ ‮ɐup‬ ‮ɹǝɯoʌǝ‬ ‮ʎonɹ‬ ‮ɐɔɔonuʇ‬ ‮ɟɹoɯ‬ ‮onɹ‬ ‮sǝɹʌǝɹs‬. ‮Iɟ‬ ‮ʎon‬ ‮ɔnɹɹǝuʇʅʎ‬ ‮ɥɐʌǝ‬ ‮ɐu‬ ‮ɐɔʇıʌǝ‬ ‮snqsɔɹıdʇıou‬, ‮ʎonɹ‬ ‮snqsɔɹıdʇıou‬ ‮ɯɐʎ‬ ‮ɔouʇıunǝ‬ ‮qıʅʅıuƃ‬ ‮nuʇıʅ‬ ‮ʎon‬ ‮ɔɐuɔǝʅ‬ ‮ıʇ‬ ‮ʇɥɹonƃɥ‬ ‮ʇɥǝ‬ ‮∀dd‬ ‮Sʇoɹǝ‬ ‮oɹ‬ ‮פooƃʅǝ‬ ‮Ԁʅɐʎ‬."
+    },
+    "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N": {
+        "string": "‮pǝʅǝʇǝ‬ ‮ɐɔɔonuʇ‬"
+    },
+    "ACCOUNT_DELETED_I18N": {
+        "string": "‮∀ɔɔonuʇ‬ ‮pǝʅǝʇǝp‬."
+    },
+    "PURCHASES_RESTORED_I18N": {
+        "string": "‮Ԁnɹɔɥɐsǝs‬ ‮ɹǝsʇoɹǝp‬."
+    },
     "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
         "string": "‮Ↄʅosǝ‬ ‮ɔoupnıʇ‬ ‮pǝʇɐıʅs‬"
     },
@@ -551,6 +566,9 @@
     "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
         "string": "‮Hosʇǝp‬ ‮ɔoupnıʇ‬ ‮oɹq‬. ‮⊥ɐd‬ ‮ɟoɹ‬ ‮pǝʇɐıʅs‬"
     },
+    "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N": {
+        "string": "‮Hosʇǝp‬ ‮Ↄoupnıʇ‬, ‮dɹoʌısıouıuƃ‬ ‮ɥosʇ‬"
+    },
     "SIGN_IN_TO_SYNC_I18N": {
         "string": "‮Sıƃu‬ ‮ıu‬ ‮ʇo‬ ‮sʎuɔ‬ ‮ʎonɹ‬ ‮ɥosʇǝp‬ ‮ɐɔɔonuʇ‬"
     },
@@ -588,7 +606,7 @@
         "string": "‮Hosʇǝp‬ ‮ɔoupnıʇ‬ ‮sɔǝuǝ‬ ‮qnʇʇou‬"
     },
     "PREPARING_HOSTED_CONDUIT_I18N": {
-        "string": "‮Ԁɹǝdɐɹıuƃ‬ ‮ʎonɹ‬ ‮Hosʇǝp‬ ‮Ↄoupnıʇ‬..."
+        "string": "‮Ԁɹǝdɐɹıuƃ‬ ‮Hosʇǝp‬ ‮Ↄoupnıʇ‬"
     },
     "PREPARING_I18N": {
         "string": "‮Ԁɹǝdɐɹıuƃ‬..."
@@ -600,7 +618,22 @@
         "string": "‮Sǝʇʇıuƃ‬ ‮nd‬ ‮ʎonɹ‬ ‮ıuɟɹɐsʇɹnɔʇnɹǝ‬..."
     },
     "PROVISIONING_LEAVE_HINT_I18N": {
-        "string": "‮ʎon‬ ‮ɯɐʎ‬ ‮ʅǝɐʌǝ‬ ‮ʇɥıs‬ ‮sɔɹǝǝu‬ ‮ʍɥıʅǝ‬ ‮ʎonɹ‬ ‮ıuɟɹɐsʇɹnɔʇnɹǝ‬ ‮ıs‬ ‮dɹoʌısıouıuƃ‬."
+        "string": "‮ʎon‬ ‮ɯɐʎ‬ ‮ʅǝɐʌǝ‬ ‮ʇɥıs‬ ‮dɐƃǝ‬ ‮ʍɥıʅǝ‬ ‮ʇɥǝ‬ ‮ɥosʇ‬ ‮ıs‬ ‮dɹoʌısıouǝp‬."
+    },
+    "HOSTED_PROVISIONING_CONFIRMING_I18N": {
+        "string": "‮Ↄouɟıɹɯıuƃ‬..."
+    },
+    "HOSTED_PROVISIONING_LAUNCHING_I18N": {
+        "string": "‮˥ɐnuɔɥıuƃ‬ ‮Hosʇǝp‬ ‮Ↄoupnıʇ‬..."
+    },
+    "HOSTED_PROVISIONING_WAITING_PROVIDER_I18N": {
+        "string": "‮Ｍɐıʇıuƃ‬ ‮ɟoɹ‬ ‮Hosʇıuƃ‬ ‮Ԁɹoʌıpǝɹ‬..."
+    },
+    "HOSTED_PROVISIONING_PROVISIONING_I18N": {
+        "string": "‮Ԁɹoʌısıouıuƃ‬ ‮Hosʇǝp‬ ‮Ↄoupnıʇ‬..."
+    },
+    "HOSTED_PROVISIONING_WAITING_METRICS_I18N": {
+        "string": "‮Ｍɐıʇıuƃ‬ ‮ɟoɹ‬ ‮Wǝʇɹıɔs‬..."
     },
     "OPENING_YOUR_DASHBOARD_I18N": {
         "string": "‮Odǝuıuƃ‬ ‮ʎonɹ‬ ‮pɐsɥqoɐɹp‬..."

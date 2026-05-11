@@ -485,6 +485,46 @@
         "string": "Account",
         "developer_comment": "Header label for the account section."
     },
+    "ACCOUNT_SETTINGS_DESCRIPTION_I18N": {
+        "string": "Manage your account settings",
+        "developer_comment": "Settings row subtitle for the account screen."
+    },
+    "ACCOUNT_SUBSCRIPTION_I18N": {
+        "string": "Subscription",
+        "developer_comment": "Account screen row label for subscription management."
+    },
+    "ACCOUNT_STATUS_ACTIVE_I18N": {
+        "string": "Active",
+        "developer_comment": "Subscription status chip for an active hosted subscription."
+    },
+    "ACCOUNT_STATUS_EXPIRES_SOON_I18N": {
+        "string": "Expires soon",
+        "developer_comment": "Subscription status chip for a hosted subscription that is ending soon."
+    },
+    "ACCOUNT_STATUS_EXPIRED_I18N": {
+        "string": "Expired",
+        "developer_comment": "Subscription status chip for an expired hosted subscription."
+    },
+    "ACCOUNT_RENEWS_DATE_I18N": {
+        "string": "Renews {{date}}",
+        "developer_comment": "Subscription status chip showing an upcoming renewal date."
+    },
+    "ACCOUNT_RENEWS_ON_I18N": {
+        "string": "Renews {{date}}",
+        "developer_comment": "Subscription detail text showing the renewal date."
+    },
+    "ACCOUNT_EXPIRES_ON_I18N": {
+        "string": "Expires {{date}}",
+        "developer_comment": "Subscription detail text showing the expiration date."
+    },
+    "ACCOUNT_PLAN_YEARLY_I18N": {
+        "string": "Yearly",
+        "developer_comment": "Subscription billing interval label for yearly plans."
+    },
+    "ACCOUNT_PLAN_MONTHLY_I18N": {
+        "string": "Monthly",
+        "developer_comment": "Subscription billing interval label for monthly plans."
+    },
     "RENEW_SUBSCRIPTION_I18N": {
         "string": "Renew Subscription",
         "developer_comment": "Button label to renew a subscription."
@@ -510,7 +550,7 @@
         "developer_comment": "Button label to initiate account deletion."
     },
     "DELETE_ACCOUNT_CONFIRMATION_I18N": {
-        "string": "You currently have an active subscription. Delete account will delete your hosted servers, but your subscription may continue billing until you cancel it through the App Store or Google Play.",
+        "string": "Delete account will delete your Hosted Conduit and remove your account from our servers. If you currently have an active subscription, your subscription may continue billing until you cancel it through the App Store or Google Play.",
         "developer_comment": "Confirmation warning shown before deleting an account with an active subscription."
     },
     "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N": {
@@ -520,10 +560,6 @@
     "ACCOUNT_DELETED_I18N": {
         "string": "Account deleted.",
         "developer_comment": "Confirmation shown after account deletion succeeds."
-    },
-    "RESTORE_PURCHASES_I18N": {
-        "string": "Restore Purchases",
-        "developer_comment": "Button label for restoring App Store or Play Store purchases."
     },
     "PURCHASES_RESTORED_I18N": {
         "string": "Purchases restored.",
@@ -708,8 +744,8 @@
         "developer_comment": "Accessibility label for the hosted conduit scene selector."
     },
     "PREPARING_HOSTED_CONDUIT_I18N": {
-        "string": "Preparing your Hosted Conduit...",
-        "developer_comment": "Loading message during hosted conduit setup."
+        "string": "Preparing Hosted Conduit",
+        "developer_comment": "Title shown on the hosted conduit provisioning screen."
     },
     "PREPARING_I18N": {
         "string": "Preparing...",
@@ -724,8 +760,28 @@
         "developer_comment": "Loading message while hosted infrastructure is being provisioned."
     },
     "PROVISIONING_LEAVE_HINT_I18N": {
-        "string": "You may leave this screen while your infrastructure is provisioning.",
+        "string": "You may leave this page while the host is provisioned.",
         "developer_comment": "Helper text on the provisioning screen indicating the user does not need to wait."
+    },
+    "HOSTED_PROVISIONING_CONFIRMING_I18N": {
+        "string": "Confirming...",
+        "developer_comment": "Animated provisioning status message shown for the initial confirmation step."
+    },
+    "HOSTED_PROVISIONING_LAUNCHING_I18N": {
+        "string": "Launching Hosted Conduit...",
+        "developer_comment": "Animated provisioning status message shown while the hosted conduit launch animation is playing."
+    },
+    "HOSTED_PROVISIONING_WAITING_PROVIDER_I18N": {
+        "string": "Waiting for Hosting Provider...",
+        "developer_comment": "Animated provisioning status message shown while waiting for the hosting provider."
+    },
+    "HOSTED_PROVISIONING_PROVISIONING_I18N": {
+        "string": "Provisioning Hosted Conduit...",
+        "developer_comment": "Animated provisioning status message shown while hosted conduit infrastructure is provisioning."
+    },
+    "HOSTED_PROVISIONING_WAITING_METRICS_I18N": {
+        "string": "Waiting for Metrics...",
+        "developer_comment": "Animated provisioning status message shown after provisioning while waiting for metrics."
     },
     "OPENING_YOUR_DASHBOARD_I18N": {
         "string": "Opening your dashboard...",
@@ -912,7 +968,7 @@
         "developer_comment": "Hosted onboarding helper when the plan needs reactivation."
     },
     "HOSTED_ONBOARDING_WAIT_HEADLINE_I18N": {
-        "string": "We are preparing your secure infrastructure",
+        "string": "Preparing your infrastructure",
         "developer_comment": "Hosted onboarding headline while setup is in progress."
     },
     "HOSTED_ONBOARDING_WAIT_DETAIL_I18N": {

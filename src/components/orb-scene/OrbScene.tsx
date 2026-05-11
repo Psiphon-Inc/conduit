@@ -577,19 +577,26 @@ function OrbGestureOverlay({
         [longPressGesture, tapGesture],
     );
 
-    return (
-        <GestureDetector gesture={gesture}>
-            <Animated.View
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={
-                    accessibilityLabel ??
-                    t("CONDUIT_ORB_TAP_ACCESSIBILITY_I18N.string")
-                }
-                style={[animatedStyle, highlightStyle]}
-            />
-        </GestureDetector>
+    const overlay = (
+        <Animated.View
+            accessible={enabled}
+            accessibilityRole={enabled ? "button" : undefined}
+            accessibilityLabel={
+                enabled
+                    ? (accessibilityLabel ??
+                      t("CONDUIT_ORB_TAP_ACCESSIBILITY_I18N.string"))
+                    : undefined
+            }
+            pointerEvents={enabled ? "auto" : "none"}
+            style={[animatedStyle, highlightStyle]}
+        />
     );
+
+    if (!enabled) {
+        return highlighted ? overlay : null;
+    }
+
+    return <GestureDetector gesture={gesture}>{overlay}</GestureDetector>;
 }
 
 interface ProvisioningMarkerProps {

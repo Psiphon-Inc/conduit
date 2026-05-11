@@ -64,6 +64,7 @@ export default function AppLayout() {
                                         <Stack.Screen name="hosted-setup" />
                                         <Stack.Screen name="hosted-dashboard" />
                                         <Stack.Screen name="settings" />
+                                        <Stack.Screen name="account" />
                                         <Stack.Screen name="sso-callback" />
                                     </Stack>
                                 </View>

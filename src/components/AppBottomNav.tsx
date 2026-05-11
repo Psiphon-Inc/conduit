@@ -46,7 +46,10 @@ export function AppBottomNav() {
         pathname.startsWith("/hosted-dashboard") ||
         pathname.startsWith("/(app)/hosted-dashboard");
     const isSettingsActive =
-        pathname === "/settings" || pathname === "/(app)/settings";
+        pathname === "/settings" ||
+        pathname === "/(app)/settings" ||
+        pathname === "/account" ||
+        pathname === "/(app)/account";
 
     const items: BottomNavItem[] = [
         {
