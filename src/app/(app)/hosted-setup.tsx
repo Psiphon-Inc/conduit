@@ -36,12 +36,6 @@ import {
 
 import { toErrorString } from "@/src/common/errors";
 import { timedLog } from "@/src/common/utils";
-import {
-    AnimatedProvisioningStatusText,
-    HostedProvisioningHero,
-    useHostedProvisioningStages,
-    useSharedHostedProvisioningStatusStartedAtMs,
-} from "@/src/components/HostedProvisioningScene";
 import { HostedSetupSignInHero } from "@/src/components/HostedSetupSignInHero";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
@@ -101,7 +95,6 @@ const APPLE_SIGN_IN_ICON = require("../../../assets/images/apple.png");
 const NO_NETWORK_ICON = require("@/assets/images/icons/no-network.svg");
 const HOSTED_PRIMARY_GRADIENT_START = "#7E5CB8";
 const HOSTED_PRIMARY_GRADIENT_END = "rgba(156, 129, 201, 0.69)";
-const PROVISIONING_STATUS_BACKGROUND = "#0B58A4";
 
 export default function HostedSetupScreen() {
     const { t } = useTranslation();
@@ -480,9 +473,6 @@ export default function HostedSetupScreen() {
         maxWidth: APP_MAX_CONTENT_WIDTH,
         alignSelf: "center" as const,
     };
-    const provisioningStages = useHostedProvisioningStages();
-    const provisioningStatusStartedAtMs =
-        useSharedHostedProvisioningStatusStartedAtMs(showProvisioningScreen);
 
     if (showInitialLoading || showTransitionLoading) {
         return (
@@ -587,67 +577,65 @@ export default function HostedSetupScreen() {
     if (showProvisioningScreen) {
         return (
             <SafeAreaView includeBottomInset={false}>
-                <View style={[ss.flex, { backgroundColor: palette.black }]}>
-                    <HostedProvisioningHero
-                        width={window.width}
-                        height={window.height}
-                        stages={provisioningStages}
-                        statusStartedAtMs={provisioningStatusStartedAtMs}
-                        fullBleed={true}
-                        showStatus={false}
-                    />
+                <View
+                    style={[
+                        ss.flex,
+                        ss.column,
+                        ss.alignCenter,
+                        ss.justifyCenter,
+                        centeredContentStyle,
+                        { padding: 24, gap: 16 },
+                    ]}
+                >
                     <View
-                        pointerEvents="box-none"
                         style={{
-                            position: "absolute",
-                            left: 0,
-                            right: 0,
-                            top: 0,
-                            bottom: 0,
-                            justifyContent: "space-between",
+                            flexDirection: "row",
                             alignItems: "center",
-                            paddingHorizontal: 16,
-                            paddingTop: 28,
-                            paddingBottom: 18,
+                            justifyContent: "center",
+                            gap: 10,
                         }}
                     >
+                        <ActivityIndicator
+                            size="small"
+                            color={palette.purple}
+                        />
                         <Text
                             style={[
-                                ss.extraLargeFont,
-                                ss.centeredText,
-                                {
-                                    color: palette.purple,
-                                    textShadowColor: "rgba(255,255,255,0.72)",
-                                    textShadowOffset: { width: 0, height: 1 },
-                                    textShadowRadius: 8,
-                                },
+                                ss.largeFont,
+                                ss.blackText,
+                                { flexShrink: 1, textAlign: "center" },
                             ]}
                         >
-                            {t("PREPARING_HOSTED_CONDUIT_I18N.string")}
+                            {t("SETTING_UP_INFRASTRUCTURE_I18N.string")}
                         </Text>
-                        <View
-                            style={{
-                                position: "absolute",
-                                left: 16,
-                                right: 16,
-                                bottom: Math.max(164, window.height * 0.23),
-                                backgroundColor: PROVISIONING_STATUS_BACKGROUND,
-                                borderRadius: 16,
-                                paddingHorizontal: 18,
-                                paddingVertical: 12,
-                            }}
-                        >
-                            <AnimatedProvisioningStatusText
-                                stages={provisioningStages}
-                                startedAtMs={provisioningStatusStartedAtMs}
-                                textStyle={{
-                                    color: palette.white,
-                                    textShadowColor: "transparent",
-                                    textShadowRadius: 0,
-                                }}
-                            />
-                        </View>
                     </View>
+                    <Text
+                        style={[
+                            ss.bodyFont,
+                            {
+                                color: palette.grey,
+                                textAlign: "center",
+                                marginTop: 8,
+                            },
+                        ]}
+                    >
+                        {t("PROVISIONING_LEAVE_HINT_I18N.string")}
+                    </Text>
+                    <Pressable
+                        onPress={() => router.replace("/(app)")}
+                        style={{
+                            borderWidth: 1,
+                            borderColor: palette.purple,
+                            borderRadius: 12,
+                            paddingHorizontal: 32,
+                            paddingVertical: 10,
+                            marginTop: 4,
+                        }}
+                    >
+                        <Text style={[ss.bodyFont, ss.purpleText]}>
+                            {t("CLOSE_I18N.string")}
+                        </Text>
+                    </Pressable>
                 </View>
             </SafeAreaView>
         );

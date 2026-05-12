@@ -763,26 +763,6 @@
         "string": "You may leave this page while the host is provisioned.",
         "developer_comment": "Helper text on the provisioning screen indicating the user does not need to wait."
     },
-    "HOSTED_PROVISIONING_CONFIRMING_I18N": {
-        "string": "Confirming...",
-        "developer_comment": "Animated provisioning status message shown for the initial confirmation step."
-    },
-    "HOSTED_PROVISIONING_LAUNCHING_I18N": {
-        "string": "Launching Hosted Conduit...",
-        "developer_comment": "Animated provisioning status message shown while the hosted conduit launch animation is playing."
-    },
-    "HOSTED_PROVISIONING_WAITING_PROVIDER_I18N": {
-        "string": "Waiting for Hosting Provider...",
-        "developer_comment": "Animated provisioning status message shown while waiting for the hosting provider."
-    },
-    "HOSTED_PROVISIONING_PROVISIONING_I18N": {
-        "string": "Provisioning Hosted Conduit...",
-        "developer_comment": "Animated provisioning status message shown while hosted conduit infrastructure is provisioning."
-    },
-    "HOSTED_PROVISIONING_WAITING_METRICS_I18N": {
-        "string": "Waiting for Metrics...",
-        "developer_comment": "Animated provisioning status message shown after provisioning while waiting for metrics."
-    },
     "OPENING_YOUR_DASHBOARD_I18N": {
         "string": "Opening your dashboard...",
         "developer_comment": "Loading message while dashboard is being opened."
