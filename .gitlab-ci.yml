@@ -1,0 +1,75 @@
+stages:
+  - build
+
+variables:
+  ANDROID_CI_IMAGE: "docker.psiphon.io/conduit/android-ci:node20-android35"
+  GIT_DEPTH: "1"
+  GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+
+android:aab:
+  stage: build
+  image:
+    name: "$ANDROID_CI_IMAGE"
+    docker:
+      platform: linux/amd64
+  tags:
+    - docker
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^release-android-/'
+  cache:
+    key:
+      files:
+        - package-lock.json
+        - android/gradle/wrapper/gradle-wrapper.properties
+    paths:
+      - .npm/
+      - .gradle/caches/
+      - .gradle/wrapper/
+  script:
+    - |
+      set -eu
+
+      : "${OP_SERVICE_ACCOUNT_TOKEN:?Set OP_SERVICE_ACCOUNT_TOKEN as a protected GitLab CI/CD variable}"
+
+      umask 077
+      RELEASE_NAME="${CI_COMMIT_TAG#release-android-}"
+
+      npm ci --prefer-offline
+
+      printf "export const GIT_HASH = '%s';\n" "$RELEASE_NAME" > src/git-hash.ts
+
+      HOSTED_BASE_URL="$(op read 'op://Jenkins/Conduit Hosted Config/hosted_base_url')"
+      CLERK_PUBLISHABLE_KEY="$(op read 'op://Jenkins/Conduit Hosted Config/clerk_publishable_key')"
+      CLERK_HCB_JWT_TEMPLATE="$(op read 'op://Jenkins/Conduit Hosted Config/clerk_hcb_jwt_template')"
+      REVENUECAT_ANDROID_PUBLIC_KEY="$(op read 'op://Jenkins/Conduit Hosted Config/revenuecat_android_public_key')"
+
+      {
+        printf 'EXPO_PUBLIC_HOSTED_BASE_URL=%s\n' "$HOSTED_BASE_URL"
+        printf 'EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=%s\n' "$CLERK_PUBLISHABLE_KEY"
+        printf 'EXPO_PUBLIC_CLERK_HCB_JWT_TEMPLATE=%s\n' "$CLERK_HCB_JWT_TEMPLATE"
+        printf 'EXPO_PUBLIC_REVENUECAT_IOS_PUBLIC_KEY=...\n'
+        printf 'EXPO_PUBLIC_REVENUECAT_ANDROID_PUBLIC_KEY=%s\n' "$REVENUECAT_ANDROID_PUBLIC_KEY"
+      } > .env.production
+
+      mkdir -p modules/expo-psiphon-tunnel-core/android/src/main/res/raw
+      op read 'op://Jenkins/Conduit Psiphon Config/android_psiphon_config' > modules/expo-psiphon-tunnel-core/android/src/main/res/raw/android_psiphon_config
+      op read 'op://Jenkins/Conduit Psiphon Config/android_embedded_server_entries' > modules/expo-psiphon-tunnel-core/android/src/main/res/raw/android_embedded_server_entries
+      op read 'op://Jenkins/Conduit Upload Signing Key/upload-keystore.jks.base64' > android/app/upload-keystore.jks.base64
+      base64 -d android/app/upload-keystore.jks.base64 > android/app/upload-keystore.jks
+      rm -f android/app/upload-keystore.jks.base64
+      op read 'op://Jenkins/Conduit Upload Signing Key/keystore.properties' > android/keystore.properties
+
+      cd android
+      ./gradlew --no-daemon clean bundleRelease
+      mv app/build/outputs/bundle/release/app-release.aab "app/build/outputs/bundle/release/conduit-${RELEASE_NAME}.aab"
+  after_script:
+    - rm -f .env.production
+    - rm -f android/app/upload-keystore.jks android/app/upload-keystore.jks.base64 android/keystore.properties
+    - rm -f modules/expo-psiphon-tunnel-core/android/src/main/res/raw/android_psiphon_config
+    - rm -f modules/expo-psiphon-tunnel-core/android/src/main/res/raw/android_embedded_server_entries
+  artifacts:
+    name: "conduit-${CI_COMMIT_TAG}"
+    expire_in: 30 days
+    paths:
+      - android/app/build/outputs/bundle/release/*.aab

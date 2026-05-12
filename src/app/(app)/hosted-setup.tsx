@@ -432,15 +432,20 @@ export default function HostedSetupScreen() {
         !initialSessionResolved || awaitingBootstrapAfterSessionLoad;
     const showTransitionLoading =
         state.authPhase === "authenticating" || signInMutation.isPending;
-    // Do not mount the animated provisioning scene under RevenueCat's native
-    // purchase/restore UI. Only show it for an explicit hosted provisioning
-    // status or a resolved wait state after activation, not generic bootstrap
-    // or plan-loading waits.
+    const activationInFlight =
+        revenueCatNativeActionPending ||
+        purchaseMutation.isPending ||
+        restorePurchasesMutation.isPending ||
+        state.revenuecatPhase === "purchase_pending" ||
+        state.revenuecatPhase === "restore_pending";
+    // Once activation starts, leave the plan selector immediately and keep the
+    // spinner visible while RevenueCat and hosted status propagation catch up.
     const resolvedInfrastructureWait =
         onboarding.primaryAction === "wait" && state.conduitsSnapshot !== null;
     const showProvisioningScreen =
-        !revenueCatNativeActionPending &&
-        (state.stationPhase === "provisioning" || resolvedInfrastructureWait);
+        activationInFlight ||
+        state.stationPhase === "provisioning" ||
+        resolvedInfrastructureWait;
     const loadingMessage = t("CONNECTING_TO_YOUR_HOSTED_CONDUIT_I18N.string");
     const showPlanSelectionScreen =
         onboarding.primaryAction === "activate_or_restore" ||
