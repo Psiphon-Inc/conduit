@@ -620,21 +620,6 @@
     "PROVISIONING_LEAVE_HINT_I18N": {
         "string": "‮ʎon‬ ‮ɯɐʎ‬ ‮ʅǝɐʌǝ‬ ‮ʇɥıs‬ ‮dɐƃǝ‬ ‮ʍɥıʅǝ‬ ‮ʇɥǝ‬ ‮ɥosʇ‬ ‮ıs‬ ‮dɹoʌısıouǝp‬."
     },
-    "HOSTED_PROVISIONING_CONFIRMING_I18N": {
-        "string": "‮Ↄouɟıɹɯıuƃ‬..."
-    },
-    "HOSTED_PROVISIONING_LAUNCHING_I18N": {
-        "string": "‮˥ɐnuɔɥıuƃ‬ ‮Hosʇǝp‬ ‮Ↄoupnıʇ‬..."
-    },
-    "HOSTED_PROVISIONING_WAITING_PROVIDER_I18N": {
-        "string": "‮Ｍɐıʇıuƃ‬ ‮ɟoɹ‬ ‮Hosʇıuƃ‬ ‮Ԁɹoʌıpǝɹ‬..."
-    },
-    "HOSTED_PROVISIONING_PROVISIONING_I18N": {
-        "string": "‮Ԁɹoʌısıouıuƃ‬ ‮Hosʇǝp‬ ‮Ↄoupnıʇ‬..."
-    },
-    "HOSTED_PROVISIONING_WAITING_METRICS_I18N": {
-        "string": "‮Ｍɐıʇıuƃ‬ ‮ɟoɹ‬ ‮Wǝʇɹıɔs‬..."
-    },
     "OPENING_YOUR_DASHBOARD_I18N": {
         "string": "‮Odǝuıuƃ‬ ‮ʎonɹ‬ ‮pɐsɥqoɐɹp‬..."
     },

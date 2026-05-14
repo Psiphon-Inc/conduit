@@ -28,11 +28,6 @@ import {
 } from "react-native";
 import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
-import {
-    AnimatedProvisioningStatusText,
-    useHostedProvisioningStages,
-    useSharedHostedProvisioningStatusStartedAtMs,
-} from "@/src/components/HostedProvisioningScene";
 import { Icon } from "@/src/components/Icon";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
@@ -208,27 +203,29 @@ export function ActionsArea({
 }
 
 function ProvisioningStatusLine() {
-    const provisioningStages = useHostedProvisioningStages();
-    const statusStartedAtMs = useSharedHostedProvisioningStatusStartedAtMs();
+    const { t } = useTranslation();
 
     return (
         <View
             style={{
+                flexDirection: "row",
                 width: "100%",
                 alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 20,
+                borderWidth: 2,
+                borderColor: palette.purple,
+                backgroundColor: "rgba(255, 255, 255, 0.35)",
                 paddingVertical: 10,
-                paddingHorizontal: 14,
+                paddingHorizontal: 20,
+                gap: 10,
+                opacity: 0.75,
             }}
         >
-            <AnimatedProvisioningStatusText
-                stages={provisioningStages}
-                startedAtMs={statusStartedAtMs}
-                compact={true}
-                textStyle={{
-                    fontSize: 17,
-                    lineHeight: 22,
-                }}
-            />
+            <ActivityIndicator size="small" color={palette.purple} />
+            <Text style={[ss.purpleText, ss.bodyFont, { fontSize: 17 }]}>
+                {t("SETTING_UP_INFRASTRUCTURE_I18N.string")}
+            </Text>
         </View>
     );
 }
