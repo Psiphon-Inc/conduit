@@ -36,6 +36,7 @@ import translationSW from "@/src/i18n/locales/sw/translation.json";
 import translationTR from "@/src/i18n/locales/tr/translation.json";
 import translationUR from "@/src/i18n/locales/ur/translation.json";
 import translationVI from "@/src/i18n/locales/vi/translation.json";
+import translationZHTW from "@/src/i18n/locales/zh_TW/translation.json";
 
 const resources = {
     ar: {
@@ -79,6 +80,15 @@ const resources = {
     },
     vi: {
         translation: translationVI,
+    },
+    "zh-TW": {
+        translation: translationZHTW,
+    },
+    "zh-Hant": {
+        translation: translationZHTW,
+    },
+    "zh-Hant-TW": {
+        translation: translationZHTW,
     },
     // en-XA and ar-XB are Pseudolocales for testing.
     "en-XA": {

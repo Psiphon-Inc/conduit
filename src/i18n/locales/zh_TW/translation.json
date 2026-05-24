@@ -1,0 +1,974 @@
+{
+    "LOADING_I18N": {
+        "string": "載入中…",
+        "developer_comment": "Text displayed when the app is loading content."
+    },
+    "TAP_TO_TURN_ON_I18N": {
+        "string": "點按以開啟",
+        "developer_comment": "Text displayed on a button to turn on a feature."
+    },
+    "YOUR_CONDUIT_ID_I18N": {
+        "string": "Conduit ID",
+        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
+    },
+    "TOTAL_BYTES_TRANSFERRED_I18N": {
+        "string": "已傳輸 {{ niceBytes }}"
+    },
+    "CONNECTED_PEERS_I18N": {
+        "string": "{{ peers }} 個節點已連線"
+    },
+    "CONNECTING_PEERS_I18N": {
+        "string": "{{ peers }} 個節點連線中"
+    },
+    "CANCEL_I18N": {
+        "string": "取消"
+    },
+    "CONFIRM_I18N": {
+        "string": "確認"
+    },
+    "MAX_PEERS_I18N": {
+        "string": "節點數上限"
+    },
+    "MAX_PUBLIC_PEERS_I18N": {
+        "string": "公開節點數上限",
+        "developer_comment": "Label for the maximum number of public peers allowed."
+    },
+    "MAX_PERSONAL_PEERS_I18N": {
+        "string": "個人節點數上限",
+        "developer_comment": "Label for the maximum number of personal peers allowed."
+    },
+    "MAX_TOTAL_PEERS_NOTE_I18N": {
+        "string": "公開節點與個人節點共用 {{max}} 的總數上限。",
+        "developer_comment": "Helper text explaining the combined public and personal peer cap."
+    },
+    "MAX_TOTAL_PEERS_ERROR_I18N": {
+        "string": "請減少公開或個人節點數，使合計不超過 {{max}}。",
+        "developer_comment": "Validation message shown when the combined public and personal peer limit is exceeded."
+    },
+    "MAX_MBPS_PER_PEER_I18N": {
+        "string": "每個節點最大 MB/s"
+    },
+    "REQUIRED_BANDWIDTH_I18N": {
+        "string": "所需頻寬"
+    },
+    "SEND_DIAGNOSTIC_I18N": {
+        "string": "傳送診斷報告"
+    },
+    "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
+        "string": "變更 Conduit 設定需要重新啟動 Conduit Station，所有已連線的使用者將會中斷連線。"
+    },
+    "CONFIRM_CHANGES_I18N": {
+        "string": "確認變更並立即重新啟動？"
+    },
+    "NOTIFICATIONS_I18N": {
+        "string": "通知"
+    },
+    "ENABLE_I18N": {
+        "string": "啟用"
+    },
+    "ENABLED_I18N": {
+        "string": "已啟用"
+    },
+    "CONDUIT_STATION_I18N": {
+        "string": "Conduit Station"
+    },
+    "LOCAL_CONDUIT_I18N": {
+        "string": "本機 Conduit",
+        "developer_comment": "Title for the local conduit details modal."
+    },
+    "RUNNING_I18N": {
+        "string": "執行中"
+    },
+    "STOPPED_I18N": {
+        "string": "已停止"
+    },
+    "UNKNOWN_I18N": {
+        "string": "未知"
+    },
+    "SETTINGS_I18N": {
+        "string": "設定"
+    },
+    "PRIVACY_POLICY_I18N": {
+        "string": "隱私權政策"
+    },
+    "SENT_THANK_YOU_I18N": {
+        "string": "已傳送，感謝！"
+    },
+    "TRY_AGAIN_I18N": {
+        "string": "重試",
+        "developer_comment": "Button label to retry a failed or offline operation."
+    },
+    "HOLD_TO_TURN_OFF_I18N": {
+        "string": "長按以關閉"
+    },
+    "CHANGES_PENDING_I18N": {
+        "string": "變更待套用"
+    },
+    "CLOSE_TO_APPLY_I18N": {
+        "string": "關閉以套用"
+    },
+    "ONBOARDING_WELCOME_HEADER_I18N": {
+        "string": "歡迎使用 Conduit！"
+    },
+    "ONBOARDING_WELCOME_BODY_I18N": {
+        "string": "將裝置化為網路自由的燈塔！\n\n透過 Psiphon 網路，協助世界各地的人們突破網路封鎖，安全地連上全球網際網路。"
+    },
+    "ONBOARDING_WELCOME_BODY_IOS_I18N": {
+        "string": "為網路自由貢獻力量！\n\n透過 Psiphon 網路，協助世界各地的人們突破網路封鎖，安全地連上全球網際網路。"
+    },
+    "ONBOARDING_WELCOME_BUTTON_I18N": {
+        "string": "下一步"
+    },
+    "ONBOARDING_INFO_1_HEADER_I18N": {
+        "string": "什麼是 Conduit？"
+    },
+    "ONBOARDING_INFO_1_BODY_I18N": {
+        "string": "Conduit 是一款開放原始碼應用程式，可讓全球 Psiphon 使用者經由你的裝置中繼連線至 Psiphon 網路。\n\nConduit Station 越多，Psiphon 就越強大，網路也就越開放。"
+    },
+    "ONBOARDING_INFO_1_BODY_IOS_I18N": {
+        "string": "iOS 版 Conduit 讓你建立並管理雲端託管的 Conduit Station，協助 Psiphon 使用者連上 Psiphon 網路。\n\n你的裝置用於管理 Station，而 Station 本身在雲端執行。"
+    },
+    "ONBOARDING_INFO_1_BUTTON_I18N": {
+        "string": "下一步"
+    },
+    "ONBOARDING_PERMISSIONS_HEADER_I18N": {
+        "string": "允許通知"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_I18N": {
+        "string": "Conduit 建議啟用通知功能，以便提供有關 Conduit Station 的重要更新。\n\n準備好開始了嗎？"
+    },
+    "ONBOARDING_PERMISSIONS_BODY_IOS_I18N": {
+        "string": "Conduit 建議啟用通知功能，以便提供有關帳號、訂閱及託管 Conduit Station 的重要更新。\n\n準備好開始了嗎？"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_I18N": {
+        "string": "託管 Conduit"
+    },
+    "ONBOARDING_PERMISSIONS_BUTTON_IOS_I18N": {
+        "string": "開始使用"
+    },
+    "ONBOARDING_HOSTED_HEADER_I18N": {
+        "string": "託管 Conduit"
+    },
+    "ONBOARDING_HOSTED_BODY_I18N": {
+        "string": "除了在裝置上直接執行 Conduit 之外，你還可以訂閱託管 Station 以獲得全天候運作。\n\n託管 Conduit 在雲端執行你的 Station，即使裝置離線也能保持 24/7 運作。"
+    },
+    "ONBOARDING_HOSTED_BODY_IOS_I18N": {
+        "string": "在 iOS 上，Conduit Station 採用雲端託管。\n\n訂閱後，你的 Station 將在雲端 24/7 全天候執行，即使裝置離線也不受影響。"
+    },
+    "ONBOARDING_HOSTED_BUTTON_I18N": {
+        "string": "下一步"
+    },
+    "ONBOARDING_PRIVACY_POLICY_HEADER_I18N": {
+        "string": "隱私權政策"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_I18N": {
+        "string": "我們不會向 Conduit 使用者收集個人身分識別資訊。所有傳輸的資料皆經過加密，你和 Psiphon 均無法存取。已連線使用者無法以任何方式存取你的裝置。\n\n使用 Conduit 即表示接受我們的隱私權政策，請參閱下方連結。"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BODY_IOS_I18N": {
+        "string": "我們不會向 Conduit 使用者收集個人身分識別資訊。iOS 應用程式傳送的資料在傳輸過程中會加密處理，其他使用者不會透過此應用程式存取你的裝置。\n\n使用 Conduit 即表示接受我們的隱私權政策，請參閱下方連結。"
+    },
+    "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
+        "string": "接受"
+    },
+    "REPLAY_INTRO_I18N": {
+        "string": "重播介紹"
+    },
+    "UPGRADE_REQUIRED_I18N": {
+        "string": "請升級應用程式"
+    },
+    "WAITING_FOR_PEERS_I18N": {
+        "string": "等待節點連線"
+    },
+    "LEARN_MORE_I18N": {
+        "string": "瞭解更多"
+    },
+    "CONDUIT_NAME_I18N": {
+        "string": "Conduit 名稱"
+    },
+    "NAME_YOUR_CONDUIT_I18N": {
+        "string": "為 Conduit 命名"
+    },
+    "INPUT_YOUR_CONDUIT_NAME_I18N": {
+        "string": "請輸入 Conduit 名稱"
+    },
+    "SAVE_I18N": {
+        "string": "儲存"
+    },
+    "ID_I18N": {
+        "string": "ID"
+    },
+    "ALIAS_I18N": {
+        "string": "Conduit 名稱"
+    },
+    "ALIAS_VISIBILITY_HINT_I18N": {
+        "string": "任何收到個人配對分享的人都會看到這段文字"
+    },
+    "CLAIM_REWARDS_IN_RYVE_I18N": {
+        "string": "在 Ryve 中領取獎勵"
+    },
+    "CLAIM_HOSTED_REWARDS_I18N": {
+        "string": "領取託管獎勵",
+        "developer_comment": "Label for claiming hosted conduit rewards from settings."
+    },
+    "CLAIM_LOCAL_REWARDS_I18N": {
+        "string": "領取本機獎勵",
+        "developer_comment": "Label for claiming local conduit rewards from settings on Android."
+    },
+    "SCAN_THIS_FROM_RYVE_APP_I18N": {
+        "string": "請掃描此 QR 碼以將此 Conduit Station 連結至 Ryve 帳號"
+    },
+    "CLOSE_I18N": {
+        "string": "關閉"
+    },
+    "TURN_OFF_I18N": {
+        "string": "關閉",
+        "developer_comment": "Button label for turning off the local conduit."
+    },
+    "EDIT_I18N": {
+        "string": "編輯"
+    },
+    "HIDE_I18N": {
+        "string": "隱藏"
+    },
+    "INVALID_QR_CODE_I18N": {
+        "string": "無效的 QR 碼"
+    },
+    "ANALYTICS_I18N": {
+        "string": "統計分析"
+    },
+    "GET_RYVE_I18N": {
+        "string": "取得 Ryve"
+    },
+    "REVEAL_I18N": {
+        "string": "顯示"
+    },
+    "REVEAL_QR_I18N": {
+        "string": "顯示 QR 碼"
+    },
+    "REDUCED_USAGE_WINDOW_I18N": {
+        "string": "降低用量時段"
+    },
+    "REDUCED_WINDOW_DESCRIPTION_I18N": {
+        "string": "在每日特定時段設定較低的使用量上限。例如，在白天需要保留頻寬和電量的時候。"
+    },
+    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
+        "string": "當地時間"
+    },
+    "REDUCED_WINDOW_CONFIGURE_I18N": {
+        "string": "設定使用時段"
+    },
+    "REDUCED_WINDOW_CLEAR_I18N": {
+        "string": "清除"
+    },
+    "REDUCED_WINDOW_NOT_CONFIGURED_I18N": {
+        "string": "尚未設定"
+    },
+    "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
+        "string": "降低用量啟用中"
+    },
+    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
+        "string": "當地時間"
+    },
+    "REDUCED_START_TIME_I18N": {
+        "string": "開始時間"
+    },
+    "REDUCED_END_TIME_I18N": {
+        "string": "結束時間"
+    },
+    "REDUCED_WINDOW_NOTE_I18N": {
+        "string": "請以 30 分鐘為單位選擇開始與結束時間。"
+    },
+    "REDUCED_TIME_FORMAT_I18N": {
+        "string": "請使用 HH:MM 格式"
+    },
+    "REDUCED_TIME_RANGE_I18N": {
+        "string": "開始與結束時間不得相同"
+    },
+    "REDUCED_MAX_PEERS_I18N": {
+        "string": "降低用量時段節點數上限"
+    },
+    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
+        "string": "降低用量時段每個節點最大 MB/s"
+    },
+    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
+        "string": "降低用量時段所需頻寬"
+    },
+    "HOSTED_CALL_TO_ACTION_I18N": {
+        "string": "託管你的雲端 Conduit"
+    },
+    "SHARE_PERSONAL_PAIRING_I18N": {
+        "string": "分享個人配對"
+    },
+    "SETTINGS_PERSONAL_PAIRING_I18N": {
+        "string": "個人配對",
+        "developer_comment": "Settings row label for opening personal pairing."
+    },
+    "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "讓他人直接連線至你的 Conduit",
+        "developer_comment": "Settings row subtitle for personal pairing."
+    },
+    "SHARE_PERSONAL_PAIRING_LINK_I18N": {
+        "string": "分享個人配對連結",
+        "developer_comment": "Home screen CTA button label for sharing the Personal Pairing link."
+    },
+    "PREPARING_PERSONAL_PAIRING_I18N": {
+        "string": "正在準備個人配對…"
+    },
+    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
+        "string": "貢獻影響力（過去 30 天）"
+    },
+    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
+        "string": "正在載入影響力摘要…"
+    },
+    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
+        "string": "影響力摘要無法使用，因為此帳號未傳回任何授權的統計目標。"
+    },
+    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
+        "string": "過去 30 天的連線使用者尖峰數"
+    },
+    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
+        "string": "過去 30 天的傳輸位元組數"
+    },
+    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
+        "string": "訂閱與帳號"
+    },
+    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
+        "string": "訂閱狀態：{{status}}"
+    },
+    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
+        "string": "方案：{{productId}}"
+    },
+    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
+        "string": "續訂／到期時間：{{expiresAt}}"
+    },
+    "HOSTED_MANAGE_OPEN_BILLING_I18N": {
+        "string": "管理帳單"
+    },
+    "DASHBOARD_I18N": {
+        "string": "儀表板"
+    },
+    "DASHBOARD_LOCAL_STATION_I18N": {
+        "string": "本機",
+        "developer_comment": "Label for selecting local station stats on the dashboard."
+    },
+    "DASHBOARD_HOSTED_STATION_I18N": {
+        "string": "託管",
+        "developer_comment": "Label for selecting hosted station stats on the dashboard."
+    },
+    "LOCAL_DASHBOARD_STATUS_I18N": {
+        "string": "本機 Conduit：{{status}}",
+        "developer_comment": "Status label shown on the local dashboard header row."
+    },
+    "LOCAL_DASHBOARD_HISTORY_START_PROMPT_I18N": {
+        "string": "請啟動本機 Conduit 以載入歷史紀錄。",
+        "developer_comment": "Chart notice shown when the local dashboard has no cached history because the local conduit is stopped."
+    },
+    "HOST_A_STATION_I18N": {
+        "string": "託管 Conduit"
+    },
+    "HOST_A_STATION_IOS_I18N": {
+        "string": "建立託管 Conduit",
+        "developer_comment": "Title for the iOS hosted conduit setup CTA."
+    },
+    "VIEW_YOUR_CONDUIT_I18N": {
+        "string": "檢視 Conduit",
+        "developer_comment": "Title for the hosted conduit action card when the user has signed in before and needs to get back to their existing setup."
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N": {
+        "string": "建立 Psiphon 託管的 Conduit Station，讓你的 Conduit Station 更穩定且易於連線"
+    },
+    "CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_IOS_I18N": {
+        "string": "建立在雲端執行的 Psiphon 託管 Conduit Station。",
+        "developer_comment": "Description for the iOS hosted conduit setup CTA, where there is no local runner."
+    },
+    "VIEW_YOUR_CONDUIT_DESCRIPTION_I18N": {
+        "string": "重新登入以檢視託管設定，並從上次中斷的地方繼續。",
+        "developer_comment": "Description for the hosted conduit action card when the user has signed in before and needs to access an existing setup."
+    },
+    "CLAIM_REWARDS_I18N": {
+        "string": "領取獎勵"
+    },
+    "SET_AS_MAIN_ORB_I18N": {
+        "string": "設為主要"
+    },
+    "OR_I18N": {
+        "string": "或"
+    },
+    "OPEN_IN_RYVE_I18N": {
+        "string": "在 Ryve 中開啟"
+    },
+    "STATION_NAME_REQUIRED_I18N": {
+        "string": "請輸入 Station 名稱。",
+        "developer_comment": "Hint shown in the Personal Pairing share modal when the user has not yet set a valid conduit station name."
+    },
+    "PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "將此連結分享給親朋好友，他們就能連線至你的 Conduit Station。他們需要將此連結貼到 Psiphon 應用程式中。",
+        "developer_comment": "Description text shown in the Personal Pairing share modal."
+    },
+    "DEFAULT_CONDUIT_NAME_I18N": {
+        "string": "我的託管 Conduit",
+        "developer_comment": "Default fallback name for a hosted conduit station."
+    },
+    "PERSONAL_PAIRING_NOT_READY_I18N": {
+        "string": "個人配對尚未就緒。",
+        "developer_comment": "Notice shown when personal pairing compartment is not available."
+    },
+    "PERSONAL_PAIRING_INVALID_NAME_I18N": {
+        "string": "請先設定有效的 Conduit 名稱（3–32 個字元）再進行分享。",
+        "developer_comment": "Notice shown when conduit name is invalid for sharing."
+    },
+    "SHARE_UNAVAILABLE_TOKEN_COPIED_I18N": {
+        "string": "分享功能無法使用，已改為複製配對權杖。",
+        "developer_comment": "Fallback notice when native share sheet is unavailable."
+    },
+    "CLOSE_PERSONAL_PAIRING_ACCESSIBILITY_I18N": {
+        "string": "關閉個人配對",
+        "developer_comment": "Accessibility label for the close button in the personal pairing modal."
+    },
+    "PERSONAL_PAIRING_TITLE_I18N": {
+        "string": "個人配對",
+        "developer_comment": "Label for Personal Pairing in status summaries."
+    },
+    "PERSONAL_PAIRING_SHARE_MODAL_TITLE_I18N": {
+        "string": "個人配對連結",
+        "developer_comment": "Title of the personal pairing share modal."
+    },
+    "SHARE_IN_I18N": {
+        "string": "以此語言傳送連結",
+        "developer_comment": "Label next to the language picker in the personal pairing share modal."
+    },
+    "SHARE_LINK_I18N": {
+        "string": "分享連結",
+        "developer_comment": "Label for the share link button."
+    },
+    "MBPS_PER_PEER_I18N": {
+        "string": "每個節點 MB/s",
+        "developer_comment": "Label for the megabits per second per peer setting."
+    },
+    "MAX_BANDWIDTH_USAGE_I18N": {
+        "string": "最大頻寬用量",
+        "developer_comment": "Label for the maximum bandwidth usage setting."
+    },
+    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
+        "string": "直接與親朋好友分享你的連線",
+        "developer_comment": "Description text for the personal pairing share action in settings."
+    },
+    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
+        "string": "在 Ryve 中領取託管獎勵",
+        "developer_comment": "Label for claiming hosted conduit rewards in the Ryve app."
+    },
+    "REWARDS_I18N": {
+        "string": "獎勵",
+        "developer_comment": "Settings row label for Ryve rewards."
+    },
+    "HOSTED_REWARDS_I18N": {
+        "string": "託管獎勵",
+        "developer_comment": "Android settings row label for hosted Ryve rewards."
+    },
+    "LOCAL_REWARDS_I18N": {
+        "string": "本機獎勵",
+        "developer_comment": "Android settings row label for local Ryve rewards."
+    },
+    "LEGAL_I18N": {
+        "string": "法律條款",
+        "developer_comment": "Settings section label for legal links."
+    },
+    "TERMS_OF_USE_I18N": {
+        "string": "使用條款",
+        "developer_comment": "Settings row label for terms of use."
+    },
+    "MORE_INFO_I18N": {
+        "string": "更多資訊",
+        "developer_comment": "Settings row label for replaying onboarding information screens."
+    },
+    "ACCOUNT_I18N": {
+        "string": "帳號",
+        "developer_comment": "Header label for the account section."
+    },
+    "ACCOUNT_SETTINGS_DESCRIPTION_I18N": {
+        "string": "管理帳號設定",
+        "developer_comment": "Settings row subtitle for the account screen."
+    },
+    "ACCOUNT_SUBSCRIPTION_I18N": {
+        "string": "訂閱",
+        "developer_comment": "Account screen row label for subscription management."
+    },
+    "ACCOUNT_STATUS_ACTIVE_I18N": {
+        "string": "啟用中",
+        "developer_comment": "Subscription status chip for an active hosted subscription."
+    },
+    "ACCOUNT_STATUS_EXPIRES_SOON_I18N": {
+        "string": "即將到期",
+        "developer_comment": "Subscription status chip for a hosted subscription that is ending soon."
+    },
+    "ACCOUNT_STATUS_EXPIRED_I18N": {
+        "string": "已過期",
+        "developer_comment": "Subscription status chip for an expired hosted subscription."
+    },
+    "ACCOUNT_RENEWS_DATE_I18N": {
+        "string": "{{date}} 續訂",
+        "developer_comment": "Subscription status chip showing an upcoming renewal date."
+    },
+    "ACCOUNT_RENEWS_ON_I18N": {
+        "string": "{{date}} 續訂",
+        "developer_comment": "Subscription detail text showing the renewal date."
+    },
+    "ACCOUNT_EXPIRES_ON_I18N": {
+        "string": "{{date}} 到期",
+        "developer_comment": "Subscription detail text showing the expiration date."
+    },
+    "ACCOUNT_PLAN_YEARLY_I18N": {
+        "string": "年繳",
+        "developer_comment": "Subscription billing interval label for yearly plans."
+    },
+    "ACCOUNT_PLAN_MONTHLY_I18N": {
+        "string": "月繳",
+        "developer_comment": "Subscription billing interval label for monthly plans."
+    },
+    "RENEW_SUBSCRIPTION_I18N": {
+        "string": "續訂",
+        "developer_comment": "Button label to renew a subscription."
+    },
+    "RENEW_SUBSCRIPTION_DESCRIPTION_I18N": {
+        "string": "託管 Conduit 將於 {{ expiresAt }} 關閉",
+        "developer_comment": "Subtitle shown on the home screen renew button when the subscription is canceled but not yet expired."
+    },
+    "RENEWS_EXPIRES_I18N": {
+        "string": "續訂／到期",
+        "developer_comment": "Label for the subscription renewal/expiry date."
+    },
+    "SIGN_IN_I18N": {
+        "string": "登入",
+        "developer_comment": "Button label to sign in to an account."
+    },
+    "SIGN_OUT_I18N": {
+        "string": "登出",
+        "developer_comment": "Button label to sign out of the account."
+    },
+    "DELETE_ACCOUNT_I18N": {
+        "string": "刪除帳號",
+        "developer_comment": "Button label to initiate account deletion."
+    },
+    "DELETE_ACCOUNT_CONFIRMATION_I18N": {
+        "string": "刪除帳號會移除託管 Conduit，並從我們的伺服器刪除帳號資料。若目前有有效訂閱，在透過 App Store 或 Google Play 取消之前，訂閱可能會持續扣款。",
+        "developer_comment": "Confirmation warning shown before deleting an account with an active subscription."
+    },
+    "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N": {
+        "string": "刪除帳號",
+        "developer_comment": "Final confirmation button for account deletion."
+    },
+    "ACCOUNT_DELETED_I18N": {
+        "string": "帳號已刪除。",
+        "developer_comment": "Confirmation shown after account deletion succeeds."
+    },
+    "PURCHASES_RESTORED_I18N": {
+        "string": "已恢復購買紀錄。",
+        "developer_comment": "Confirmation shown after purchases restore successfully."
+    },
+    "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N": {
+        "string": "關閉 Conduit 詳細資料",
+        "developer_comment": "Accessibility label for the close button in the hosted conduit modal."
+    },
+    "SCOPE_PERSONAL_I18N": {
+        "string": "個人",
+        "developer_comment": "Label for the personal scope of a hosted conduit compartment."
+    },
+    "HOSTED_PERSONAL_SCOPE_I18N": {
+        "string": "託管個人",
+        "developer_comment": "Label for the hosted personal conduit scope on Android."
+    },
+    "SCOPE_COMMON_I18N": {
+        "string": "公開",
+        "developer_comment": "Label for the common/public scope of a hosted conduit compartment."
+    },
+    "HOSTED_PUBLIC_SCOPE_I18N": {
+        "string": "託管公開",
+        "developer_comment": "Label for the hosted public conduit scope on Android."
+    },
+    "HOSTED_CONDUIT_FALLBACK_I18N": {
+        "string": "託管 Conduit",
+        "developer_comment": "Fallback display name for a hosted conduit."
+    },
+    "LOADING_HOSTED_STATUS_I18N": {
+        "string": "正在載入託管狀態…",
+        "developer_comment": "Text shown while hosted conduit status is loading."
+    },
+    "RESTORE_YOUR_CONDUIT_I18N": {
+        "string": "恢復你的 Conduit",
+        "developer_comment": "Title for the restore conduit action card."
+    },
+    "RESTORE_CONDUIT_DESCRIPTION_I18N": {
+        "string": "重新連結託管訂閱並恢復安全基礎架構。",
+        "developer_comment": "Description for the restore conduit action card."
+    },
+    "CONDUIT_ALIAS_VALIDATION_ERROR_I18N": {
+        "string": "3–{{ maxLength }} 個字元，僅限字母、數字、空格及 .-_",
+        "developer_comment": "Validation error shown when the conduit alias doesn't meet requirements."
+    },
+    "CLOSE_RYVE_MODAL_ACCESSIBILITY_I18N": {
+        "string": "關閉 Ryve 視窗",
+        "developer_comment": "Accessibility label for the close button in the Ryve modal."
+    },
+    "LOADING_CONDUIT_DATA_I18N": {
+        "string": "正在載入 Conduit 資料…",
+        "developer_comment": "Text shown while conduit data is loading in the Ryve modal."
+    },
+    "ERROR_FORMATTING_KEYDATA_I18N": {
+        "string": "金鑰資料格式化錯誤",
+        "developer_comment": "Error message when key data cannot be formatted."
+    },
+    "CONNECTED_COUNT_I18N": {
+        "string": "已連線：{{ count }}",
+        "developer_comment": "Label showing the number of connected peers on a hosted conduit card."
+    },
+    "NO_RECENT_DATA_YET_I18N": {
+        "string": "目前尚無近期資料",
+        "developer_comment": "Placeholder shown in a timeseries plot when there is no recent data."
+    },
+    "NO_DATA_YET_I18N": {
+        "string": "目前尚無資料",
+        "developer_comment": "Placeholder shown in a timeseries plot when there is no data."
+    },
+    "TRANSFERRED_PER_INTERVAL_I18N": {
+        "string": "每時段傳輸量",
+        "developer_comment": "Y-axis label for the bytes transferred chart."
+    },
+    "CONNECTED_USERS_I18N": {
+        "string": "已連線使用者",
+        "developer_comment": "Y-axis label for the connected users chart."
+    },
+    "CONNECTING_USERS_I18N": {
+        "string": "連線中使用者",
+        "developer_comment": "Y-axis label for the connecting users chart."
+    },
+    "CONNECTED_I18N": {
+        "string": "已連線",
+        "developer_comment": "Label for the connected metric tab."
+    },
+    "CONNECTING_I18N": {
+        "string": "連線中",
+        "developer_comment": "Label for the connecting metric tab."
+    },
+    "BYTES_I18N": {
+        "string": "位元組",
+        "developer_comment": "Label for the bytes transferred metric tab."
+    },
+    "SYNCING_I18N": {
+        "string": "同步中…",
+        "developer_comment": "Text shown while stats are syncing."
+    },
+    "MINI_ORB_STATUS_I18N": {
+        "string": "已連線 {{ connected }} | 連線中 {{ connecting }}",
+        "developer_comment": "Status text on the hosted mini orb showing connected and connecting counts."
+    },
+    "HOME_I18N": {
+        "string": "首頁",
+        "developer_comment": "Label for the Home tab in bottom navigation."
+    },
+    "ERROR_I18N": {
+        "string": "錯誤",
+        "developer_comment": "Generic error text."
+    },
+    "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
+        "string": "前往隱私權政策連結",
+        "developer_comment": "Accessibility label for the privacy policy link."
+    },
+    "LINK_TO_INFO_WEBSITE_ACCESSIBILITY_I18N": {
+        "string": "前往資訊網站連結",
+        "developer_comment": "Accessibility label for the learn more link."
+    },
+    "CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
+        "string": "Conduit 光球，點按以互動。",
+        "developer_comment": "Accessibility label for the main conduit orb."
+    },
+    "LOCAL_CONDUIT_ORB_ACCESSIBILITY_I18N": {
+        "string": "本機 Conduit 光球",
+        "developer_comment": "Accessibility label for the local conduit orb."
+    },
+    "CONDUIT_ORB_ACCESSIBILITY_I18N": {
+        "string": "Conduit 光球",
+        "developer_comment": "Accessibility label for a generic conduit orb."
+    },
+    "HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N": {
+        "string": "託管 Conduit 光球，點按檢視詳細資料",
+        "developer_comment": "Accessibility label for the hosted conduit orb."
+    },
+    "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N": {
+        "string": "託管 Conduit，正在佈建主機",
+        "developer_comment": "Accessibility label for a hosted conduit orb whose host is still provisioning."
+    },
+    "SIGN_IN_TO_SYNC_I18N": {
+        "string": "請登入以同步託管帳號",
+        "developer_comment": "Hint shown when user needs to sign in for hosted account sync."
+    },
+    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
+        "string": "已傳輸 {{ bytes }}{{ window }}",
+        "developer_comment": "Metric text showing bytes transferred with optional time window suffix."
+    },
+    "N_HOSTED_PEERS_ONLINE_I18N": {
+        "string": "{{ count }} 個託管節點在線上",
+        "developer_comment": "Metric text showing the number of hosted peers currently online."
+    },
+    "HOME_SUMMARY_PEER_COUNT_I18N": {
+        "string": "{{count}} 個節點",
+        "developer_comment": "Peer count text shown on the simplified home summary rows."
+    },
+    "HOME_SUMMARY_OFFLINE_I18N": {
+        "string": "離線",
+        "developer_comment": "Status text shown for the local conduit row when it is not running."
+    },
+    "PUBLIC_PEERS_ONLINE_I18N": {
+        "string": "個公開節點在線上"
+    },
+    "PERSONAL_PEERS_ONLINE_I18N": {
+        "string": "個人節點在線上"
+    },
+    "SYNCING_HOSTED_USAGE_METRICS_I18N": {
+        "string": "正在同步託管使用量指標…",
+        "developer_comment": "Hint shown while hosted usage metrics are being synced."
+    },
+    "UPGRADE_REQUIRED_LOCAL_CONDUIT_I18N": {
+        "string": "本機 Conduit 需要升級",
+        "developer_comment": "Hint shown when a local conduit requires an app upgrade."
+    },
+    "HOLD_ORB_TO_TURN_OFF_I18N": {
+        "string": "有節點連線時，請長按光球以關閉",
+        "developer_comment": "Hint shown when user taps orb while peers are connected."
+    },
+    "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
+        "string": "本機 Conduit 場景按鈕",
+        "developer_comment": "Accessibility label for the local conduit scene selector."
+    },
+    "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
+        "string": "託管 Conduit 場景按鈕",
+        "developer_comment": "Accessibility label for the hosted conduit scene selector."
+    },
+    "PREPARING_HOSTED_CONDUIT_I18N": {
+        "string": "正在準備託管 Conduit",
+        "developer_comment": "Title shown on the hosted conduit provisioning screen."
+    },
+    "PREPARING_I18N": {
+        "string": "準備中…",
+        "developer_comment": "Generic loading message shown while a feature is preparing."
+    },
+    "CONNECTING_TO_YOUR_HOSTED_CONDUIT_I18N": {
+        "string": "正在連線至託管 Conduit…",
+        "developer_comment": "Loading message shown while the initial hosted session and conduits snapshot are being loaded."
+    },
+    "SETTING_UP_INFRASTRUCTURE_I18N": {
+        "string": "正在建立基礎架構…",
+        "developer_comment": "Loading message while hosted infrastructure is being provisioned."
+    },
+    "PROVISIONING_LEAVE_HINT_I18N": {
+        "string": "主機佈建期間可以離開此頁面。",
+        "developer_comment": "Helper text on the provisioning screen indicating the user does not need to wait."
+    },
+    "OPENING_YOUR_DASHBOARD_I18N": {
+        "string": "正在開啟儀表板…",
+        "developer_comment": "Loading message while dashboard is being opened."
+    },
+    "UNAVAILABLE_I18N": {
+        "string": "無法使用",
+        "developer_comment": "Label shown when a feature or resource is unavailable."
+    },
+    "SETUP_INCOMPLETE_I18N": {
+        "string": "此版本的設定不完整。請檢查託管 URL、Clerk 金鑰及 RevenueCat 金鑰。",
+        "developer_comment": "Status message shown when hosted setup configuration is incomplete."
+    },
+    "CHOOSE_A_PLAN_I18N": {
+        "string": "選擇方案",
+        "developer_comment": "Header text for the subscription plan selection screen."
+    },
+    "RETRY_PLAN_LOAD_I18N": {
+        "string": "重新載入方案",
+        "developer_comment": "Button label to retry loading subscription plans."
+    },
+    "SIGN_IN_WITH_GOOGLE_I18N": {
+        "string": "使用 Google 登入",
+        "developer_comment": "Button label for Google sign-in."
+    },
+    "SIGN_IN_WITH_APPLE_I18N": {
+        "string": "使用 Apple 登入",
+        "developer_comment": "Button label for Apple sign-in."
+    },
+    "CONTINUE_I18N": {
+        "string": "繼續",
+        "developer_comment": "Button label to continue to the next step."
+    },
+    "RESTORE_PURCHASES_I18N": {
+        "string": "恢復購買紀錄",
+        "developer_comment": "Button label to restore previous in-app purchases."
+    },
+    "CONTINUE_RETRY_INFRA_CHECK_I18N": {
+        "string": "繼續：重新檢查基礎架構",
+        "developer_comment": "Button label to retry infrastructure verification."
+    },
+    "MANAGE_SETUP_DETAILS_I18N": {
+        "string": "管理設定詳細資料",
+        "developer_comment": "Button label to manage hosted setup details."
+    },
+    "LAST_30D_SUFFIX_I18N": {
+        "string": "（近 30 天）",
+        "developer_comment": "Suffix appended to dashboard labels indicating a 30-day window."
+    },
+    "DASHBOARD_NOT_READY_I18N": {
+        "string": "儀表板尚未就緒，請重新整理設定狀態後再試一次。",
+        "developer_comment": "Message shown when dashboard data is not yet available."
+    },
+    "NO_AUTHORIZED_TARGETS_I18N": {
+        "string": "尚無授權的儀表板目標。",
+        "developer_comment": "Message shown when there are no authorized stats targets."
+    },
+    "YOUR_CONDUITS_I18N": {
+        "string": "我的 Conduit",
+        "developer_comment": "Header for the list of user's conduits on the dashboard."
+    },
+    "WHO_ARE_YOU_HELPING_I18N": {
+        "string": "你正在幫助哪些人？",
+        "developer_comment": "Header for the top helped countries section on the dashboard."
+    },
+    "OPEN_REGIONAL_BREAKDOWN_I18N": {
+        "string": "開啟區域分佈",
+        "developer_comment": "Accessibility label for opening the regional activity modal from the dashboard map."
+    },
+    "TAP_MAP_FOR_COUNTRY_DETAILS_I18N": {
+        "string": "點按地圖檢視國家詳細資料",
+        "developer_comment": "Hint shown above the dashboard map to explain the interaction."
+    },
+    "REGIONAL_ACTIVITY_BY_BYTES_I18N": {
+        "string": "各區域活動量（依傳輸位元組）",
+        "developer_comment": "Title shown in the dashboard regional breakdown modal."
+    },
+    "TOP_HELPED_COUNTRIES_I18N": {
+        "string": "依 {{ metric }} 排名的受助國家（{{ window }}）",
+        "developer_comment": "Subheader describing the top helped countries chart."
+    },
+    "BYTES_TRANSFERRED_LABEL_I18N": {
+        "string": "傳輸位元組",
+        "developer_comment": "Label for the bytes transferred metric."
+    },
+    "CONNECTED_USERS_LABEL_I18N": {
+        "string": "已連線使用者",
+        "developer_comment": "Label for the connected users metric."
+    },
+    "TAP_TO_SWITCH_METRIC_I18N": {
+        "string": "點按區塊以切換指標",
+        "developer_comment": "Hint text telling users to tap to switch between metrics."
+    },
+    "COMPLETING_SIGN_IN_I18N": {
+        "string": "正在完成登入…",
+        "developer_comment": "Text shown during SSO callback while sign-in is being completed."
+    },
+    "ONBOARDING_INFO_ACCESSIBILITY_I18N": {
+        "string": "引導說明資訊，即將更新",
+        "developer_comment": "Accessibility label for the onboarding info section."
+    },
+    "HOSTED_ONBOARDING_STEP_SIGN_IN_TITLE_I18N": {
+        "string": "登入",
+        "developer_comment": "Hosted onboarding step title for account sign-in."
+    },
+    "HOSTED_ONBOARDING_STEP_SIGN_IN_HELPER_I18N": {
+        "string": "請使用帳號登入，以確保託管設定保有隱私，日後也能復原。",
+        "developer_comment": "Hosted onboarding step helper for account sign-in."
+    },
+    "HOSTED_ONBOARDING_STEP_ACTIVATE_TITLE_I18N": {
+        "string": "啟用託管存取",
+        "developer_comment": "Hosted onboarding step title for plan activation."
+    },
+    "HOSTED_ONBOARDING_STEP_ACTIVATE_HELPER_I18N": {
+        "string": "你的方案可維持服務持續運作並解鎖安全設定。",
+        "developer_comment": "Hosted onboarding step helper for plan activation."
+    },
+    "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_TITLE_I18N": {
+        "string": "準備安全基礎架構",
+        "developer_comment": "Hosted onboarding step title for infrastructure provisioning."
+    },
+    "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_HELPER_I18N": {
+        "string": "我們會建立並驗證你的託管 Conduit，完成後即可開始分享。",
+        "developer_comment": "Hosted onboarding step helper for infrastructure provisioning."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_HEADLINE_I18N": {
+        "string": "沒有網路連線",
+        "developer_comment": "Hosted onboarding headline shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_DETAIL_I18N": {
+        "string": "目前無法連線至伺服器，請檢查網路連線後再試一次。",
+        "developer_comment": "Hosted onboarding detail shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_OFFLINE_HELPER_I18N": {
+        "string": "裝置重新連上網路後，系統會自動重新連線。",
+        "developer_comment": "Hosted onboarding helper shown when the device is offline."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HEADLINE_I18N": {
+        "string": "請登入以檢視託管 Conduit",
+        "developer_comment": "Hosted onboarding headline for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_DETAIL_I18N": {
+        "string": "系統會重新連結現有的託管設定及帳號狀態。",
+        "developer_comment": "Hosted onboarding detail for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HELPER_I18N": {
+        "string": "若工作階段已過期，請重新登入以檢視儀表板、管理方案或繼續設定。",
+        "developer_comment": "Hosted onboarding helper for returning signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_HEADLINE_I18N": {
+        "string": "請登入以開始託管設定",
+        "developer_comment": "Hosted onboarding headline for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_DETAIL_I18N": {
+        "string": "登入後即可從任何裝置管理你的託管 Conduit。",
+        "developer_comment": "Hosted onboarding detail for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_SIGN_IN_NEW_HELPER_I18N": {
+        "string": "帳號會連結你的 Conduit，方便在不同裝置上監控、設定及分享。",
+        "developer_comment": "Hosted onboarding helper for new signed-out users."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_HEADLINE_I18N": {
+        "string": "託管設定需要處理",
+        "developer_comment": "Hosted onboarding headline when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_DETAIL_I18N": {
+        "string": "請恢復存取權限以維持託管 Conduit 的運作。",
+        "developer_comment": "Hosted onboarding detail when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_NEEDS_ATTENTION_HELPER_I18N": {
+        "string": "已儲存的設定仍連結至此帳號，無需從頭開始即可復原。",
+        "developer_comment": "Hosted onboarding helper when an existing setup needs attention."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_HEADLINE_I18N": {
+        "string": "請重新啟用託管方案以繼續",
+        "developer_comment": "Hosted onboarding headline when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_DETAIL_I18N": {
+        "string": "Conduit 仍連結至此帳號，但在方案重新啟用前，存取權限暫時中止。",
+        "developer_comment": "Hosted onboarding detail when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_REACTIVATE_HELPER_I18N": {
+        "string": "請選擇方案以恢復分享及儀表板存取。",
+        "developer_comment": "Hosted onboarding helper when the plan needs reactivation."
+    },
+    "HOSTED_ONBOARDING_WAIT_HEADLINE_I18N": {
+        "string": "正在準備基礎架構",
+        "developer_comment": "Hosted onboarding headline while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_WAIT_DETAIL_I18N": {
+        "string": "正在完成帳號及 Station 的檢查作業，可能需要稍候片刻。",
+        "developer_comment": "Hosted onboarding detail while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_WAIT_HELPER_I18N": {
+        "string": "系統會即時更新進度，隨時可重新整理而不會遺失進度。",
+        "developer_comment": "Hosted onboarding helper while setup is in progress."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_HEADLINE_I18N": {
+        "string": "請啟用託管方案以繼續",
+        "developer_comment": "Hosted onboarding headline for initial plan activation."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_DETAIL_I18N": {
+        "string": "啟用後將解鎖託管 Conduit，讓你能夠支援開放網路存取。",
+        "developer_comment": "Hosted onboarding detail for initial plan activation."
+    },
+    "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
+        "string": "請選擇方案以繼續設定並解鎖分享功能。",
+        "developer_comment": "Hosted onboarding helper for initial plan activation."
+    }
+}

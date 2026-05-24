@@ -65,6 +65,7 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     { code: "sw", label: "Kiswahili" },
     { code: "ur", label: "اردو" },
     { code: "vi", label: "Tiếng Việt" },
+    { code: "zh-TW", label: "繁體中文（台灣）" },
 ];
 
 const LANGUAGE_COPY: Record<string, LanguageCopy> = {
@@ -123,6 +124,10 @@ const LANGUAGE_COPY: Record<string, LanguageCopy> = {
     vi: {
         shareMessage:
             "Mở liên kết này để kết nối với một trạm Conduit đáng tin cậy. Nếu liên kết bị chặn, hãy sao chép và dán vào tiện ích Personal Pairing trong ứng dụng Psiphon.",
+    },
+    "zh-TW": {
+        shareMessage:
+            "開啟此連結即可連線至可信任的 Conduit Station。如果連結遭封鎖，請複製連結，並貼到 Psiphon App 的個人配對小工具中。",
     },
 };
 
