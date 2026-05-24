@@ -53,6 +53,14 @@ describe("i18n service", () => {
         expect(i18n.hasResourceBundle("ar-XB", "translation")).toBe(true);
     });
 
+    test("has zh-TW resources", () => {
+        expect(i18n.hasResourceBundle("zh-TW", "translation")).toBe(true);
+    });
+
+    test("has zh-Hant-TW resources", () => {
+        expect(i18n.hasResourceBundle("zh-Hant-TW", "translation")).toBe(true);
+    });
+
     test("does not initialize twice", () => {
         i18nService.initI18n();
         expect(getLocales).toHaveBeenCalledTimes(1);
