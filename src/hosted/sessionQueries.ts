@@ -92,21 +92,48 @@ export async function ensureHostedSession(
     return refreshHostedSession(queryClient, input);
 }
 
+// Deduplicates concurrent refresh calls for the same queryClient+baseUrl so
+// that parallel queries racing on an expiring token only trigger one network
+// request. WeakMap keying avoids cross-test pollution.
+const inflightRefreshes = new WeakMap<
+    QueryClient,
+    Map<string, Promise<HostedSession>>
+>();
+
 export async function refreshHostedSession(
     queryClient: QueryClient,
     input: HostedSessionDependencies,
 ): Promise<HostedSession> {
-    try {
-        const refreshed = await input.sessionClient.refresh();
-        await setHostedSessionState(queryClient, input, refreshed);
-        return refreshed;
-    } catch (error) {
-        if (error instanceof HostedApiRequestError && error.status === 401) {
-            await clearHostedSessionState(queryClient, input);
-            throw new Error("Hosted session expired; please sign in again");
-        }
-        throw error;
+    let byUrl = inflightRefreshes.get(queryClient);
+    if (!byUrl) {
+        byUrl = new Map();
+        inflightRefreshes.set(queryClient, byUrl);
     }
+
+    const existing = byUrl.get(input.baseUrl);
+    if (existing) return existing;
+
+    const promise = (async () => {
+        try {
+            const refreshed = await input.sessionClient.refresh();
+            await setHostedSessionState(queryClient, input, refreshed);
+            return refreshed;
+        } catch (error) {
+            if (
+                error instanceof HostedApiRequestError &&
+                error.status === 401
+            ) {
+                await clearHostedSessionState(queryClient, input);
+                throw new Error("Hosted session expired; please sign in again");
+            }
+            throw error;
+        } finally {
+            byUrl.delete(input.baseUrl);
+        }
+    })();
+
+    byUrl.set(input.baseUrl, promise);
+    return promise;
 }
 
 export async function withHostedSessionRecovery<T>(
