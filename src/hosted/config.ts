@@ -19,7 +19,7 @@
 import { OAuthProvider } from "@/src/hosted/contracts";
 import { RevenueCatPublicKeys } from "@/src/hosted/revenuecatClient";
 
-export interface HostedRuntimeConfig {
+interface HostedRuntimeConfig {
     baseUrl: string;
     revenueCatPublicKeys?: RevenueCatPublicKeys;
     defaultProvider: OAuthProvider;
@@ -55,11 +55,14 @@ function readRevenueCatPublicKeys(): RevenueCatPublicKeys | undefined {
     const android = trimOrUndefined(
         process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_PUBLIC_KEY,
     );
-    if (!ios && !android) {
+    const web = trimOrUndefined(
+        process.env.EXPO_PUBLIC_REVENUECAT_WEB_PUBLIC_KEY,
+    );
+    if (!ios && !android && !web) {
         return undefined;
     }
 
-    return { ios, android };
+    return { ios, android, web };
 }
 
 function trimOrEmpty(value: string | undefined): string {

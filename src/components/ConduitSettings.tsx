@@ -19,6 +19,7 @@
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import * as Linking from "expo-linking";
+import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -152,6 +153,7 @@ function LocalConduitSettingsCard({
         >
             <View style={[ss.column, { gap: 2 }]}>
                 <Pressable
+                    testID="settings-local-expand"
                     onPress={() => setExpanded((v) => !v)}
                     style={{
                         flexDirection: "row",
@@ -772,15 +774,18 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
         subtitle,
         onPress,
         disabled = false,
+        testID,
     }: {
         icon: React.ReactNode;
         label: string;
         subtitle?: string;
         onPress: () => void;
         disabled?: boolean;
+        testID?: string;
     }) {
         return (
             <Pressable
+                testID={testID}
                 onPress={onPress}
                 disabled={disabled}
                 style={[
@@ -872,6 +877,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                             ]}
                         >
                             <Pressable
+                                testID="settings-save"
                                 onPress={() => void onSavePress()}
                                 disabled={!canSaveChanges}
                                 style={({ pressed }) => [
@@ -988,13 +994,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                               ),
                               label: t("SETTINGS_PERSONAL_PAIRING_I18N.string"),
                               subtitle: isPersonalPairingPreparing
-                                  ? t(
-                                        "PREPARING_PERSONAL_PAIRING_I18N.string",
-                                        {
-                                            defaultValue:
-                                                "Preparing personal pairing...",
-                                        },
-                                    )
+                                  ? t("PREPARING_PERSONAL_PAIRING_I18N.string")
                                   : t(
                                         "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N.string",
                                     ),
@@ -1058,7 +1058,8 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         ),
                         label: t("ACCOUNT_I18N.string"),
                         subtitle: t("ACCOUNT_SETTINGS_DESCRIPTION_I18N.string"),
-                        onPress: () => router.push("/(app)/account"),
+                        onPress: () => router.push("/(app)/account" as Href),
+                        testID: "settings-account",
                     })}
 
                     {renderSettingsAction({
@@ -1071,6 +1072,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         ),
                         label: t("MORE_INFO_I18N.string"),
                         onPress: () => router.push("/(app)/onboarding"),
+                        testID: "settings-more-info",
                     })}
 
                     {Platform.OS !== "ios"
@@ -1087,6 +1089,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                                   : t("SEND_DIAGNOSTIC_I18N.string"),
                               onPress: onSendDiagnosticPress,
                               disabled: showDiagnosticThanks,
+                              testID: "settings-diagnostic",
                           })
                         : null}
 

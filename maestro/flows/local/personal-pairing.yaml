@@ -1,0 +1,25 @@
+# Flow: local/personal-pairing
+appId: ca.psiphon.conduit
+tags:
+    - local
+    - requires-hosted-state
+    - android
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- runFlow: ../../subflows/wait-for-local-pairing-ready.yaml
+- tapOn:
+      id: "orb-primary"
+- extendedWaitUntil:
+      visible:
+          id: "conduit-running"
+      timeout: 180000
+- tapOn:
+      id: "orb-primary"
+- extendedWaitUntil:
+      visible:
+          id: "local-modal-share"
+      timeout: 30000
+- tapOn:
+      id: "local-modal-share"

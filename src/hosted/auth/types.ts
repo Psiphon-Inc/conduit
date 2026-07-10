@@ -19,9 +19,7 @@
 import { z } from "zod";
 
 import {
-    HostedBrokerTokenType,
     HostedBrokerTokenTypeSchema,
-    OAuthPlatform,
     OAuthPlatformSchema,
     OAuthProvider,
     OAuthProviderSchema,
@@ -33,14 +31,11 @@ export const HostedAuthAdapterResultSchema = z.object({
     platform: OAuthPlatformSchema,
     clientVersion: z.string().min(1),
 });
-export type HostedAuthAdapterResult = z.infer<
-    typeof HostedAuthAdapterResultSchema
->;
+type HostedAuthAdapterResult = z.infer<typeof HostedAuthAdapterResultSchema>;
 
-export const HostedAuthSignInResultSchema =
-    HostedAuthAdapterResultSchema.extend({
-        provider: OAuthProviderSchema,
-    });
+const HostedAuthSignInResultSchema = HostedAuthAdapterResultSchema.extend({
+    provider: OAuthProviderSchema,
+});
 export type HostedAuthSignInResult = z.infer<
     typeof HostedAuthSignInResultSchema
 >;
@@ -56,19 +51,21 @@ export interface HostedAuthAdapterMap {
 
 export interface HostedAuthService {
     signIn(provider: OAuthProvider): Promise<HostedAuthSignInResult>;
+    startEmailCodeSignIn?(email: string): Promise<void>;
+    completeEmailCodeSignIn?(code: string): Promise<HostedAuthSignInResult>;
     restoreSignIn(
         provider: OAuthProvider,
     ): Promise<HostedAuthSignInResult | null>;
     signOut(): Promise<void>;
 }
 
-export const HostedAuthServiceErrorCodeSchema = z.enum([
+const HostedAuthServiceErrorCodeSchema = z.enum([
     "cancelled",
     "unavailable",
     "invalid_response",
     "unknown",
 ]);
-export type HostedAuthServiceErrorCode = z.infer<
+type HostedAuthServiceErrorCode = z.infer<
     typeof HostedAuthServiceErrorCodeSchema
 >;
 
@@ -89,13 +86,4 @@ export class HostedAuthServiceError extends Error {
         this.userMessage = input.userMessage;
         this.cause = input.cause;
     }
-}
-
-export interface HostedAuthAdapterStubConfig {
-    signInImpl?: () => Promise<{
-        tokenType: HostedBrokerTokenType;
-        brokerToken: string;
-        platform: OAuthPlatform;
-        clientVersion: string;
-    }>;
 }

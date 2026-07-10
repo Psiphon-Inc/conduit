@@ -23,7 +23,7 @@ import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_CLIENTS_TOTAL_MAX,
 } from "@/src/constants";
-import { PersonalCompartmentIdSchema } from "@/src/hosted/contracts";
+import { PersonalCompartmentIdSchema } from "@/src/pairing/compartmentId";
 
 export const InproxyStatusEnumSchema = z.enum([
     "RUNNING",

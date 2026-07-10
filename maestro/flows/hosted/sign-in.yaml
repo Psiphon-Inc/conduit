@@ -1,0 +1,24 @@
+# Flow: hosted/sign-in
+appId: ca.psiphon.conduit
+tags:
+    - hosted
+    - smoke
+    - destructive
+    - android
+    - ios
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- tapOn:
+      id: "hosted-cta"
+- extendedWaitUntil:
+      visible:
+          id: "hosted-setup-ready"
+      timeout: 60000
+- runFlow: ../../subflows/sign-in-e2e.yaml
+- extendedWaitUntil:
+      visible:
+          id: "hosted-purchase"
+      timeout: 60000
+- runFlow: ../../subflows/delete-account.yaml

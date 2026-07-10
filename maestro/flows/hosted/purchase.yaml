@@ -1,0 +1,44 @@
+# Flow: hosted/purchase
+appId: ca.psiphon.conduit
+tags:
+    - hosted
+    - destructive
+    - android
+    - ios
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- tapOn:
+      id: "hosted-cta"
+- extendedWaitUntil:
+      visible:
+          id: "hosted-setup-ready"
+      timeout: 60000
+- runFlow: ../../subflows/sign-in-e2e.yaml
+- extendedWaitUntil:
+      visible:
+          id: "hosted-purchase"
+      timeout: 60000
+- runFlow: ../../subflows/purchase-plan.yaml
+- runFlow:
+      file: ../../subflows/go-to.yaml
+      env:
+          DEST: dashboard
+- tapOn:
+      id: "dash-window-5m"
+- tapOn:
+      id: "dash-window-48h"
+- tapOn:
+      id: "dash-window-7d"
+- tapOn:
+      id: "dash-window-30d"
+- runFlow:
+      when:
+          visible:
+              id: "dash-conduits-expand"
+      commands:
+          - tapOn:
+                id: "dash-conduits-expand"
+# delete-account.yaml handles its own navigation (settings -> account).
+- runFlow: ../../subflows/delete-account.yaml

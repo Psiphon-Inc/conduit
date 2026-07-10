@@ -17,7 +17,6 @@
  *
  */
 import type { RecentWindow, SummaryWindow } from "@/src/hosted/contracts";
-import { palette } from "@/src/styles";
 
 /**
  * Maps a RecentWindow to the corresponding SummaryWindow.
@@ -41,21 +40,4 @@ export function toRegionalBreakdownWindow(window: RecentWindow): RecentWindow {
         return "48h";
     }
     return window;
-}
-
-/**
- * Generates a style object for a selectable window button based on selected state.
- */
-export function buttonStyle(selected?: boolean) {
-    return {
-        borderRadius: 8,
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-        minWidth: 68,
-        alignItems: "center" as const,
-        justifyContent: "center" as const,
-        backgroundColor: selected
-            ? palette.selectedPurple
-            : "rgba(25, 18, 36, 0.08)",
-    };
 }

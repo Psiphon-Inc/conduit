@@ -1,0 +1,37 @@
+# Reusable subflow: delete the current hosted account through the real UI.
+# Tolerates starting anywhere: re-tapping the Settings tab keeps the nested
+# stack where it was, so if a previous step already opened the Account
+# subscreen, `settings-account` is not visible and the tap is skipped.
+appId: ca.psiphon.conduit
+---
+- runFlow:
+      file: go-to.yaml
+      env:
+          DEST: settings
+- runFlow:
+      when:
+          visible:
+              id: "settings-account"
+      commands:
+          - tapOn:
+                id: "settings-account"
+- extendedWaitUntil:
+      visible:
+          id: "account-delete"
+      timeout: 30000
+- tapOn:
+      id: "account-delete"
+- extendedWaitUntil:
+      visible:
+          id: "account-delete-confirm"
+      timeout: 30000
+- tapOn:
+      id: "account-delete-confirm"
+- extendedWaitUntil:
+      notVisible:
+          id: "account-delete-confirm"
+      timeout: 120000
+- extendedWaitUntil:
+      visible:
+          id: "app-ready"
+      timeout: 120000

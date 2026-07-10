@@ -19,7 +19,7 @@
 import { isEntitlementAllowed } from "@/src/hosted/experience/stateMachine";
 import { HostedExperienceState } from "@/src/hosted/experience/types";
 
-export type HostedOnboardingStepStatus = "complete" | "current" | "up_next";
+type HostedOnboardingStepStatus = "complete" | "current" | "up_next";
 
 export type HostedOnboardingPrimaryAction =
     | "offline"
@@ -29,14 +29,14 @@ export type HostedOnboardingPrimaryAction =
     | "share_or_manage"
     | "restore_or_manage";
 
-export interface HostedOnboardingStep {
+interface HostedOnboardingStep {
     key: "sign_in" | "activate" | "infrastructure";
     title: string;
     helper: string;
     status: HostedOnboardingStepStatus;
 }
 
-export interface HostedOnboardingViewModel {
+interface HostedOnboardingViewModel {
     headline: string;
     detail: string;
     helper: string;
@@ -46,21 +46,13 @@ export interface HostedOnboardingViewModel {
 
 type HostedOnboardingTranslator = (key: string) => string;
 
-function translate(
-    t: HostedOnboardingTranslator | undefined,
-    key: string,
-    fallback: string,
-): string {
-    return t?.(`${key}.string`) ?? fallback;
-}
-
 export function createHostedOnboardingViewModel(
     state: HostedExperienceState,
     options: {
         hasRecentSignIn?: boolean;
         isOffline?: boolean;
-        t?: HostedOnboardingTranslator;
-    } = {},
+        t: HostedOnboardingTranslator;
+    },
 ): HostedOnboardingViewModel {
     const signedIn = state.authPhase === "authenticated";
     const hasRecentSignIn = options.hasRecentSignIn === true;
@@ -102,43 +94,21 @@ export function createHostedOnboardingViewModel(
     const steps: HostedOnboardingStep[] = [
         {
             key: "sign_in",
-            title: translate(
-                t,
-                "HOSTED_ONBOARDING_STEP_SIGN_IN_TITLE_I18N",
-                "Sign in",
-            ),
-            helper: translate(
-                t,
-                "HOSTED_ONBOARDING_STEP_SIGN_IN_HELPER_I18N",
-                "Use your account so we can keep your hosted setup private and recoverable.",
-            ),
+            title: t("HOSTED_ONBOARDING_STEP_SIGN_IN_TITLE_I18N.string"),
+            helper: t("HOSTED_ONBOARDING_STEP_SIGN_IN_HELPER_I18N.string"),
             status: signInStatus,
         },
         {
             key: "activate",
-            title: translate(
-                t,
-                "HOSTED_ONBOARDING_STEP_ACTIVATE_TITLE_I18N",
-                "Activate hosted access",
-            ),
-            helper: translate(
-                t,
-                "HOSTED_ONBOARDING_STEP_ACTIVATE_HELPER_I18N",
-                "Your plan keeps the service running and unlocks secure setup.",
-            ),
+            title: t("HOSTED_ONBOARDING_STEP_ACTIVATE_TITLE_I18N.string"),
+            helper: t("HOSTED_ONBOARDING_STEP_ACTIVATE_HELPER_I18N.string"),
             status: activateStatus,
         },
         {
             key: "infrastructure",
-            title: translate(
-                t,
-                "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_TITLE_I18N",
-                "Prepare your secure infrastructure",
-            ),
-            helper: translate(
-                t,
-                "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_HELPER_I18N",
-                "We create and verify your hosted conduit, then you can share it.",
+            title: t("HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_TITLE_I18N.string"),
+            helper: t(
+                "HOSTED_ONBOARDING_STEP_INFRASTRUCTURE_HELPER_I18N.string",
             ),
             status: infrastructureStatus,
         },
@@ -146,21 +116,9 @@ export function createHostedOnboardingViewModel(
 
     if (isOffline) {
         return {
-            headline: translate(
-                t,
-                "HOSTED_ONBOARDING_OFFLINE_HEADLINE_I18N",
-                "No internet connection",
-            ),
-            detail: translate(
-                t,
-                "HOSTED_ONBOARDING_OFFLINE_DETAIL_I18N",
-                "We can't reach the server right now. Check your connection and try again.",
-            ),
-            helper: translate(
-                t,
-                "HOSTED_ONBOARDING_OFFLINE_HELPER_I18N",
-                "We'll reconnect as soon as your device is back online.",
-            ),
+            headline: t("HOSTED_ONBOARDING_OFFLINE_HEADLINE_I18N.string"),
+            detail: t("HOSTED_ONBOARDING_OFFLINE_DETAIL_I18N.string"),
+            helper: t("HOSTED_ONBOARDING_OFFLINE_HELPER_I18N.string"),
             primaryAction: "offline",
             steps,
         };
@@ -169,20 +127,14 @@ export function createHostedOnboardingViewModel(
     if (!signedIn) {
         if (hasRecentSignIn) {
             return {
-                headline: translate(
-                    t,
-                    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HEADLINE_I18N",
-                    "Sign in to view your hosted conduit",
+                headline: t(
+                    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HEADLINE_I18N.string",
                 ),
-                detail: translate(
-                    t,
-                    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_DETAIL_I18N",
-                    "We'll reconnect you to your existing hosted setup and current account state.",
+                detail: t(
+                    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_DETAIL_I18N.string",
                 ),
-                helper: translate(
-                    t,
-                    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HELPER_I18N",
-                    "If your session expired, sign back in to view your dashboard, manage your plan, or continue setup.",
+                helper: t(
+                    "HOSTED_ONBOARDING_SIGN_IN_RETURNING_HELPER_I18N.string",
                 ),
                 primaryAction: "sign_in",
                 steps,
@@ -190,21 +142,9 @@ export function createHostedOnboardingViewModel(
         }
 
         return {
-            headline: translate(
-                t,
-                "HOSTED_ONBOARDING_SIGN_IN_NEW_HEADLINE_I18N",
-                "Sign in to start your hosted setup",
-            ),
-            detail: translate(
-                t,
-                "HOSTED_ONBOARDING_SIGN_IN_NEW_DETAIL_I18N",
-                "Sign in to manage your hosted conduit from any device.",
-            ),
-            helper: translate(
-                t,
-                "HOSTED_ONBOARDING_SIGN_IN_NEW_HELPER_I18N",
-                "Your account links your conduit so you can monitor, configure, and share it across devices.",
-            ),
+            headline: t("HOSTED_ONBOARDING_SIGN_IN_NEW_HEADLINE_I18N.string"),
+            detail: t("HOSTED_ONBOARDING_SIGN_IN_NEW_DETAIL_I18N.string"),
+            helper: t("HOSTED_ONBOARDING_SIGN_IN_NEW_HELPER_I18N.string"),
             primaryAction: "sign_in",
             steps,
         };
@@ -212,21 +152,11 @@ export function createHostedOnboardingViewModel(
 
     if (needsAttention) {
         return {
-            headline: translate(
-                t,
-                "HOSTED_ONBOARDING_NEEDS_ATTENTION_HEADLINE_I18N",
-                "Your hosted setup needs attention",
+            headline: t(
+                "HOSTED_ONBOARDING_NEEDS_ATTENTION_HEADLINE_I18N.string",
             ),
-            detail: translate(
-                t,
-                "HOSTED_ONBOARDING_NEEDS_ATTENTION_DETAIL_I18N",
-                "Restore access to keep your hosted conduit available.",
-            ),
-            helper: translate(
-                t,
-                "HOSTED_ONBOARDING_NEEDS_ATTENTION_HELPER_I18N",
-                "Your saved setup stays linked to this account, so you can recover without starting over.",
-            ),
+            detail: t("HOSTED_ONBOARDING_NEEDS_ATTENTION_DETAIL_I18N.string"),
+            helper: t("HOSTED_ONBOARDING_NEEDS_ATTENTION_HELPER_I18N.string"),
             primaryAction: "restore_or_manage",
             steps,
         };
@@ -234,21 +164,9 @@ export function createHostedOnboardingViewModel(
 
     if (needsReactivation) {
         return {
-            headline: translate(
-                t,
-                "HOSTED_ONBOARDING_REACTIVATE_HEADLINE_I18N",
-                "Reactivate your hosted plan to continue",
-            ),
-            detail: translate(
-                t,
-                "HOSTED_ONBOARDING_REACTIVATE_DETAIL_I18N",
-                "Your conduit is still linked to this account, but access is paused until your plan is active again.",
-            ),
-            helper: translate(
-                t,
-                "HOSTED_ONBOARDING_REACTIVATE_HELPER_I18N",
-                "Choose a plan to resume sharing and dashboard access.",
-            ),
+            headline: t("HOSTED_ONBOARDING_REACTIVATE_HEADLINE_I18N.string"),
+            detail: t("HOSTED_ONBOARDING_REACTIVATE_DETAIL_I18N.string"),
+            helper: t("HOSTED_ONBOARDING_REACTIVATE_HELPER_I18N.string"),
             primaryAction: "activate_or_restore",
             steps,
         };
@@ -256,7 +174,7 @@ export function createHostedOnboardingViewModel(
 
     if (isReady) {
         return {
-            headline: translate(t, "YOUR_CONDUITS_I18N", "Your Conduits"),
+            headline: t("YOUR_CONDUITS_I18N.string"),
             detail: "",
             helper: "",
             primaryAction: "share_or_manage",
@@ -270,42 +188,18 @@ export function createHostedOnboardingViewModel(
         isPreparingInfrastructure
     ) {
         return {
-            headline: translate(
-                t,
-                "HOSTED_ONBOARDING_WAIT_HEADLINE_I18N",
-                "We are preparing your secure infrastructure",
-            ),
-            detail: translate(
-                t,
-                "HOSTED_ONBOARDING_WAIT_DETAIL_I18N",
-                "This can take a moment while we finish account and station checks.",
-            ),
-            helper: translate(
-                t,
-                "HOSTED_ONBOARDING_WAIT_HELPER_I18N",
-                "We'll keep progress current; you can refresh at any time without losing your place.",
-            ),
+            headline: t("HOSTED_ONBOARDING_WAIT_HEADLINE_I18N.string"),
+            detail: t("HOSTED_ONBOARDING_WAIT_DETAIL_I18N.string"),
+            helper: t("HOSTED_ONBOARDING_WAIT_HELPER_I18N.string"),
             primaryAction: "wait",
             steps,
         };
     }
 
     return {
-        headline: translate(
-            t,
-            "HOSTED_ONBOARDING_ACTIVATE_HEADLINE_I18N",
-            "Activate your hosted plan to continue",
-        ),
-        detail: translate(
-            t,
-            "HOSTED_ONBOARDING_ACTIVATE_DETAIL_I18N",
-            "Activation unlocks your hosted conduit so you can support open internet access.",
-        ),
-        helper: translate(
-            t,
-            "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N",
-            "Choose a plan to continue setup and unlock sharing.",
-        ),
+        headline: t("HOSTED_ONBOARDING_ACTIVATE_HEADLINE_I18N.string"),
+        detail: t("HOSTED_ONBOARDING_ACTIVATE_DETAIL_I18N.string"),
+        helper: t("HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N.string"),
         primaryAction: "activate_or_restore",
         steps,
     };

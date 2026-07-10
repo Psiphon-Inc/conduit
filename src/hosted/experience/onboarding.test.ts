@@ -22,6 +22,7 @@ import {
 } from "@/src/hosted/experience/onboarding";
 import { createInitialHostedExperienceState } from "@/src/hosted/experience/stateMachine";
 import { HostedExperienceState } from "@/src/hosted/experience/types";
+import englishStrings from "@/src/i18n/locales/en/translation.json";
 
 describe("hosted onboarding view model", () => {
     it("maps signed out users to sign-in guidance", () => {
@@ -31,6 +32,7 @@ describe("hosted onboarding view model", () => {
     it("updates signed-out copy when the user has signed in before", () => {
         const viewModel = createHostedOnboardingViewModel(makeState({}), {
             hasRecentSignIn: true,
+            t: testT,
         });
 
         expect(viewModel.headline).toBe("Sign in to view your hosted conduit");
@@ -40,6 +42,7 @@ describe("hosted onboarding view model", () => {
     it("maps offline state to the dedicated offline screen", () => {
         const viewModel = createHostedOnboardingViewModel(makeState({}), {
             isOffline: true,
+            t: testT,
         });
 
         expect(viewModel.primaryAction).toBe("offline");
@@ -169,8 +172,19 @@ function expectPrimaryAction(
     expectedAction: HostedOnboardingPrimaryAction,
 ) {
     const state = makeState(partialState);
-    const viewModel = createHostedOnboardingViewModel(state);
+    const viewModel = createHostedOnboardingViewModel(state, { t: testT });
     expect(viewModel.primaryAction).toBe(expectedAction);
+}
+
+function testT(key: string): string {
+    const [resourceKey, field] = key.split(".");
+    if (field !== "string") {
+        return key;
+    }
+    const resource = (
+        englishStrings as Record<string, { string?: string } | undefined>
+    )[resourceKey];
+    return resource?.string ?? key;
 }
 
 function makeState(

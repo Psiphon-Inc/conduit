@@ -1,0 +1,35 @@
+# Reusable subflow: select ALL text in a field, leaving the platform's
+# selection + edit menu active so the caller can tap "Copy" or press Backspace.
+# Maestro cannot write the OS clipboard directly, so copy-based flows stage the
+# value in a real field and use the native selection toolbar.
+#
+# Requires (passed by the caller via `env:`):
+#   FIELD_ID - the testID of the text field to select within.
+#
+# The gesture differs by platform:
+#   - Android: long-press, then "Select all" (shown only on some states).
+#   - iOS:     triple-tap. long-press/double-tap do NOT surface a
+#              Maestro-reachable edit menu; a triple-tap selects the whole line
+#              and opens the Cut/Copy/Paste menu.
+appId: ca.psiphon.conduit
+---
+- runFlow:
+      when:
+          platform: Android
+      commands:
+          - longPressOn:
+                id: "${FIELD_ID}"
+          - runFlow:
+                when:
+                    visible: "(?i)select all"
+                commands:
+                    - tapOn:
+                          text: "(?i)select all"
+- runFlow:
+      when:
+          platform: iOS
+      commands:
+          - tapOn:
+                id: "${FIELD_ID}"
+                repeat: 3
+                delay: 150

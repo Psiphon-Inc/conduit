@@ -1,15 +1,7 @@
 {
-    "LOADING_I18N": {
-        "string": "Memuat...",
-        "developer_comment": "Text displayed when the app is loading content."
-    },
     "TAP_TO_TURN_ON_I18N": {
         "string": "Ketuk untuk Mengaktifkan",
         "developer_comment": "Text displayed on a button to turn on a feature."
-    },
-    "YOUR_CONDUIT_ID_I18N": {
-        "string": "ID Conduit Anda",
-        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
     },
     "TOTAL_BYTES_TRANSFERRED_I18N": {
         "string": "{{ niceBytes }} ditransfer"
@@ -17,17 +9,11 @@
     "CONNECTED_PEERS_I18N": {
         "string": "{{ peers }} rekan yang terhubung"
     },
-    "CONNECTING_PEERS_I18N": {
-        "string": "{{ peers }} terhubung"
-    },
     "CANCEL_I18N": {
         "string": "Batalkan"
     },
     "CONFIRM_I18N": {
         "string": "Konfirmasi"
-    },
-    "MAX_PEERS_I18N": {
-        "string": "Maks Rekan"
     },
     "MAX_PUBLIC_PEERS_I18N": {
         "string": "Maks Rekan Publik",
@@ -60,15 +46,6 @@
     "CONFIRM_CHANGES_I18N": {
         "string": "Konfirmasi Perubahan dan Mulai Ulang Sekarang?"
     },
-    "NOTIFICATIONS_I18N": {
-        "string": "Notifikasi"
-    },
-    "ENABLE_I18N": {
-        "string": "Aktifkan"
-    },
-    "ENABLED_I18N": {
-        "string": "Diaktifkan"
-    },
     "CONDUIT_STATION_I18N": {
         "string": "Conduit Station"
     },
@@ -97,15 +74,6 @@
     "TRY_AGAIN_I18N": {
         "string": "Coba lagi",
         "developer_comment": "Button label to retry a failed or offline operation."
-    },
-    "HOLD_TO_TURN_OFF_I18N": {
-        "string": "Tahan untuk Menonaktifkan"
-    },
-    "CHANGES_PENDING_I18N": {
-        "string": "perubahan tertunda"
-    },
-    "CLOSE_TO_APPLY_I18N": {
-        "string": "tutup untuk menerapkan"
     },
     "ONBOARDING_WELCOME_HEADER_I18N": {
         "string": "Selamat datang di Conduit!"
@@ -170,20 +138,8 @@
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Setuju"
     },
-    "REPLAY_INTRO_I18N": {
-        "string": "Putar ulang Intro"
-    },
-    "UPGRADE_REQUIRED_I18N": {
-        "string": "Mutakhirkan aplikasinya"
-    },
-    "WAITING_FOR_PEERS_I18N": {
-        "string": "Menunggu rekan"
-    },
     "LEARN_MORE_I18N": {
         "string": "Pelajari Lebih Lanjut"
-    },
-    "CONDUIT_NAME_I18N": {
-        "string": "Nama Conduit"
     },
     "NAME_YOUR_CONDUIT_I18N": {
         "string": "Namai Conduit Anda"
@@ -194,9 +150,6 @@
     "SAVE_I18N": {
         "string": "Simpan"
     },
-    "ID_I18N": {
-        "string": "ID"
-    },
     "ALIAS_I18N": {
         "string": "Alias"
     },
@@ -205,10 +158,6 @@
     },
     "CLAIM_REWARDS_IN_RYVE_I18N": {
         "string": "Klaim hadiah di Ryve"
-    },
-    "CLAIM_HOSTED_REWARDS_I18N": {
-        "string": "Klaim hadiah yang dihosting",
-        "developer_comment": "Label for claiming hosted conduit rewards from settings."
     },
     "CLAIM_LOCAL_REWARDS_I18N": {
         "string": "Klaim hadiah lokal",
@@ -233,14 +182,8 @@
     "INVALID_QR_CODE_I18N": {
         "string": "kode QR tidak valid"
     },
-    "ANALYTICS_I18N": {
-        "string": "Analitik"
-    },
     "GET_RYVE_I18N": {
         "string": "Dapatkan Ryve"
-    },
-    "REVEAL_I18N": {
-        "string": "Tampilkan"
     },
     "REVEAL_QR_I18N": {
         "string": "Tampilkan QR"
@@ -251,12 +194,6 @@
     "REDUCED_WINDOW_DESCRIPTION_I18N": {
         "string": "Atur batas penggunaan yang lebih rendah selama jendela harian. Misalnya, pada siang hari saat Anda perlu agar bandwidth dan baterai tahan lama."
     },
-    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
-        "string": "Waktu lokal"
-    },
-    "REDUCED_WINDOW_CONFIGURE_I18N": {
-        "string": "Atur Jendela Penggunaan"
-    },
     "REDUCED_WINDOW_CLEAR_I18N": {
         "string": "Hapus"
     },
@@ -266,35 +203,17 @@
     "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
         "string": "Penggunaan rendah antara"
     },
-    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
-        "string": "waktu lokal"
-    },
     "REDUCED_START_TIME_I18N": {
         "string": "Waktu mulai"
     },
     "REDUCED_END_TIME_I18N": {
         "string": "Waktu akhir"
     },
-    "REDUCED_WINDOW_NOTE_I18N": {
-        "string": "Pilih waktu mulai dan akhir dengan langkah 30 menit."
-    },
     "REDUCED_TIME_FORMAT_I18N": {
         "string": "Gunakan HH:MM"
     },
     "REDUCED_TIME_RANGE_I18N": {
         "string": "Waktu mulai dan akhir harus berbeda"
-    },
-    "REDUCED_MAX_PEERS_I18N": {
-        "string": "Maks Rekan Dikurangi"
-    },
-    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
-        "string": "Maks MB/dtk Per Rekan Dikurangi"
-    },
-    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
-        "string": "Bandwidth yang Diperlukan Dikurangi"
-    },
-    "HOSTED_CALL_TO_ACTION_I18N": {
-        "string": "Hosting Conduit cloud Anda sendiri"
     },
     "SHARE_PERSONAL_PAIRING_I18N": {
         "string": "Bagikan pemasangan pribadi"
@@ -313,33 +232,6 @@
     },
     "PREPARING_PERSONAL_PAIRING_I18N": {
         "string": "Menyiapkan pemasangan pribadi..."
-    },
-    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
-        "string": "Dampak Anda (30 hari terakhir)"
-    },
-    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
-        "string": "Memuat ringkasan dampak..."
-    },
-    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
-        "string": "Ringkasan dampak tidak tersedia karena tidak ada target statistik resmi yang dikembalikan untuk akun ini."
-    },
-    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
-        "string": "Puncak pengguna terhubung dalam 30 hari terakhir"
-    },
-    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
-        "string": "Byte yang ditransfer dalam 30 hari terakhir"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
-        "string": "Langganan dan akun"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
-        "string": "Status langganan: {{status}}"
-    },
-    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
-        "string": "Produk: {{productId}}"
-    },
-    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
-        "string": "Diperpanjang/berakhir pada: {{expiresAt}}"
     },
     "HOSTED_MANAGE_OPEN_BILLING_I18N": {
         "string": "Kelola penagihan"
@@ -440,22 +332,6 @@
     "SHARE_LINK_I18N": {
         "string": "Bagikan tautan",
         "developer_comment": "Label for the share link button."
-    },
-    "MBPS_PER_PEER_I18N": {
-        "string": "MBPS per rekan",
-        "developer_comment": "Label for the megabits per second per peer setting."
-    },
-    "MAX_BANDWIDTH_USAGE_I18N": {
-        "string": "Penggunaan bandwidth maksimum",
-        "developer_comment": "Label for the maximum bandwidth usage setting."
-    },
-    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
-        "string": "Bagikan koneksi Anda langsung dengan teman dan keluarga",
-        "developer_comment": "Description text for the personal pairing share action in settings."
-    },
-    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
-        "string": "Klaim hadiah yang dihosting di Ryve",
-        "developer_comment": "Label for claiming hosted conduit rewards in the Ryve app."
     },
     "REWARDS_I18N": {
         "string": "Hadiah",
@@ -597,17 +473,9 @@
         "string": "Pengguna Terhubung",
         "developer_comment": "Y-axis label for the connected users chart."
     },
-    "CONNECTING_USERS_I18N": {
-        "string": "Pengguna Menghubungkan",
-        "developer_comment": "Y-axis label for the connecting users chart."
-    },
     "CONNECTED_I18N": {
         "string": "Terhubung",
         "developer_comment": "Label for the connected metric tab."
-    },
-    "CONNECTING_I18N": {
-        "string": "Menghubungkan",
-        "developer_comment": "Label for the connecting metric tab."
     },
     "BYTES_I18N": {
         "string": "Byte",
@@ -624,10 +492,6 @@
     "HOME_I18N": {
         "string": "Beranda",
         "developer_comment": "Label for the Home tab in bottom navigation."
-    },
-    "ERROR_I18N": {
-        "string": "Kesalahan",
-        "developer_comment": "Generic error text."
     },
     "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
         "string": "Tautan ke kebijakan privasi",
@@ -657,18 +521,6 @@
         "string": "Conduit yang dihosting, host sedang diprovisikan",
         "developer_comment": "Accessibility label for a hosted conduit orb whose host is still provisioning."
     },
-    "SIGN_IN_TO_SYNC_I18N": {
-        "string": "Masuk untuk menyinkronkan akun yang dihosting",
-        "developer_comment": "Hint shown when user needs to sign in for hosted account sync."
-    },
-    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
-        "string": "{{ bytes }} ditransfer{{ window }}",
-        "developer_comment": "Metric text showing bytes transferred with optional time window suffix."
-    },
-    "N_HOSTED_PEERS_ONLINE_I18N": {
-        "string": "{{ count }} rekan yang dihosting online",
-        "developer_comment": "Metric text showing the number of hosted peers currently online."
-    },
     "HOME_SUMMARY_PEER_COUNT_I18N": {
         "string": "{{count}} rekan",
         "developer_comment": "Peer count text shown on the simplified home summary rows."
@@ -676,12 +528,6 @@
     "HOME_SUMMARY_OFFLINE_I18N": {
         "string": "OFFLINE",
         "developer_comment": "Status text shown for the local conduit row when it is not running."
-    },
-    "PUBLIC_PEERS_ONLINE_I18N": {
-        "string": "rekan publik online"
-    },
-    "PERSONAL_PEERS_ONLINE_I18N": {
-        "string": "rekan pribadi online"
     },
     "SYNCING_HOSTED_USAGE_METRICS_I18N": {
         "string": "Menyinkronkan metrik penggunaan yang dihosting...",
@@ -691,10 +537,6 @@
         "string": "Peningkatan diperlukan untuk conduit lokal",
         "developer_comment": "Hint shown when a local conduit requires an app upgrade."
     },
-    "HOLD_ORB_TO_TURN_OFF_I18N": {
-        "string": "Tahan orb untuk menonaktifkan saat rekan terhubung",
-        "developer_comment": "Hint shown when user taps orb while peers are connected."
-    },
     "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "Tombol adegan conduit lokal",
         "developer_comment": "Accessibility label for the local conduit scene selector."
@@ -702,10 +544,6 @@
     "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "Tombol adegan conduit yang dihosting",
         "developer_comment": "Accessibility label for the hosted conduit scene selector."
-    },
-    "PREPARING_HOSTED_CONDUIT_I18N": {
-        "string": "Menyiapkan Conduit Anda yang Dihosting...",
-        "developer_comment": "Loading message during hosted conduit setup."
     },
     "PREPARING_I18N": {
         "string": "Menyiapkan...",
@@ -799,21 +637,9 @@
         "string": "Aktivitas regional berdasarkan byte yang ditransfer",
         "developer_comment": "Title shown in the dashboard regional breakdown modal."
     },
-    "TOP_HELPED_COUNTRIES_I18N": {
-        "string": "Negara yang paling terbantu berdasarkan {{ metric }} ({{ window }})",
-        "developer_comment": "Subheader describing the top helped countries chart."
-    },
     "BYTES_TRANSFERRED_LABEL_I18N": {
         "string": "byte yang ditransfer",
         "developer_comment": "Label for the bytes transferred metric."
-    },
-    "CONNECTED_USERS_LABEL_I18N": {
-        "string": "pengguna terhubung",
-        "developer_comment": "Label for the connected users metric."
-    },
-    "TAP_TO_SWITCH_METRIC_I18N": {
-        "string": "Ketuk bagian untuk mengganti metrik",
-        "developer_comment": "Hint text telling users to tap to switch between metrics."
     },
     "COMPLETING_SIGN_IN_I18N": {
         "string": "Menyelesaikan masuk...",
@@ -930,5 +756,13 @@
     "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
         "string": "Pilih paket untuk melanjutkan pengaturan dan membuka berbagi.",
         "developer_comment": "Hosted onboarding helper for initial plan activation."
+    },
+    "PERSONAL_PAIRING_SHARE_MESSAGE_I18N": {
+        "string": "Buka tautan ini untuk terhubung ke stasiun Conduit tepercaya. Jika tautan diblokir, salin lalu tempelkan ke widget Personal Pairing di aplikasi Psiphon.",
+        "developer_comment": "Message shared with a personal pairing link. 'Conduit', 'Psiphon', and 'Personal Pairing' are product/feature names."
+    },
+    "UPDATED_AT_I18N": {
+        "string": "Updated at {{time}}",
+        "developer_comment": "Label showing when stats were last refreshed. {{time}} is a localized time, or \"--\" when unknown."
     }
 }

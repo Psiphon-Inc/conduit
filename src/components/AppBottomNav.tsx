@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { InteractionManager, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { isE2E } from "@/src/common/e2e";
 import { Icon } from "@/src/components/Icon";
 import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
 import { palette, sharedStyles as ss } from "@/src/styles";
@@ -33,6 +34,7 @@ type BottomNavItem = {
     label: string;
     href: Href;
     isActive: boolean;
+    testID: string;
 };
 
 export function AppBottomNav() {
@@ -58,6 +60,7 @@ export function AppBottomNav() {
             label: t("HOME_I18N.string"),
             href: "/(app)",
             isActive: isHomeActive,
+            testID: "nav-home",
         },
         {
             key: "analytics",
@@ -65,6 +68,7 @@ export function AppBottomNav() {
             label: t("DASHBOARD_I18N.string"),
             href: "/(app)/hosted-dashboard",
             isActive: isAnalyticsActive,
+            testID: "nav-dashboard",
         },
         {
             key: "settings",
@@ -72,6 +76,7 @@ export function AppBottomNav() {
             label: t("SETTINGS_I18N.string"),
             href: "/(app)/settings",
             isActive: isSettingsActive,
+            testID: "nav-settings",
         },
     ];
 
@@ -135,13 +140,16 @@ export function AppBottomNav() {
                     return (
                         <Pressable
                             key={item.key}
+                            testID={item.testID}
                             accessibilityRole="button"
                             accessibilityLabel={item.label}
-                            onPressIn={() => {
+                            onPress={() => {
                                 if (!item.isActive) {
-                                    void Haptics.impactAsync(
-                                        Haptics.ImpactFeedbackStyle.Light,
-                                    );
+                                    if (!isE2E()) {
+                                        void Haptics.impactAsync(
+                                            Haptics.ImpactFeedbackStyle.Light,
+                                        );
+                                    }
                                     router.replace(item.href);
                                 }
                             }}

@@ -25,13 +25,11 @@ import {
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
-import { useRouter } from "expo-router";
+import { useRootNavigationState, useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
-    AppState,
-    AppStateStatus,
     InteractionManager,
     LayoutAnimation,
     Modal,
@@ -54,8 +52,9 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
+import { isE2E } from "@/src/common/e2e";
 import { toErrorString } from "@/src/common/errors";
-import { formatBytesWithUnit } from "@/src/common/formatters";
+import { formatBytes } from "@/src/common/formatters";
 import { HostedConduitCard } from "@/src/components/HostedConduitCard";
 import type {
     HostedStatusMode,
@@ -65,33 +64,17 @@ import { HostedStatusPanel } from "@/src/components/HostedStatusPanel";
 import { Icon } from "@/src/components/Icon";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { StatsSyncStatusRow } from "@/src/components/StatsSyncStatusRow";
-import { TimeseriesDataPoint } from "@/src/components/TimeseriesPlot";
 import {
     APP_MAX_CONTENT_WIDTH,
     ASYNCSTORAGE_DASHBOARD_RECENT_WINDOW_KEY,
     ASYNCSTORAGE_DASHBOARD_STATION_MODE_KEY,
     ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY,
 } from "@/src/constants";
-import { createHostedClient } from "@/src/hosted/client";
 import {
     orderedConduitsForDisplay,
     resolveConnectedCount,
 } from "@/src/hosted/conduitDisplay";
-import { readHostedRuntimeConfig } from "@/src/hosted/config";
 import { ConduitView, RecentWindow } from "@/src/hosted/contracts";
-import {
-    DashboardLiveRegionMetric,
-    DashboardRecentData,
-    DashboardSummaryAggregate,
-    aggregateDashboardSummaries,
-    toDashboardSummaryAggregateFromLive,
-    toPersonalActiveUsersTimeseries,
-    toPersonalBytesTransferredTimeseries,
-    toPersonalConnectingUsersTimeseries,
-    toPublicActiveUsersTimeseries,
-    toPublicBytesTransferredTimeseries,
-    toPublicConnectingUsersTimeseries,
-} from "@/src/hosted/dashboard";
 import {
     RegionalMapGlyph,
     RegionalWorldMap,
@@ -102,31 +85,42 @@ import {
     summaryAggregateToVector,
     summaryVectorToAggregate,
 } from "@/src/hosted/dashboard/animation";
+import { useHostedDashboardStatsQueries } from "@/src/hosted/dashboard/hooks";
 import {
-    buildMockDashboardLiveData,
-    buildMockDashboardRecentData,
-    buildMockDashboardSummaryData,
-} from "@/src/hosted/dashboard/mockData";
+    hasLocalDashboardHistory,
+    sumRegionActivityBytes,
+    sumTransferredFromSegment,
+    toDashboardRegionMetrics,
+    toLocalRegionalWindowKey,
+    toLocalStatusTimeseries,
+    toLocalSummaryAggregate,
+} from "@/src/hosted/dashboard/localTransforms";
 import {
     RegionalImpactRow,
     mergeRegionalActivity,
     toRegionLabel,
 } from "@/src/hosted/dashboard/regional";
 import {
-    buttonStyle,
+    DashboardRecentData,
+    DashboardSummaryAggregate,
+    aggregateDashboardSummaries,
+    toDashboardSummaryAggregateFromLive,
+    toPersonalActiveUsersTimeseries,
+    toPersonalBytesTransferredTimeseries,
+    toPersonalConnectingUsersTimeseries,
+    toPublicActiveUsersTimeseries,
+    toPublicBytesTransferredTimeseries,
+    toPublicConnectingUsersTimeseries,
+} from "@/src/hosted/dashboard/transforms";
+import {
     toRegionalBreakdownWindow,
     toSummaryWindow,
 } from "@/src/hosted/dashboard/windowMapping";
-import { useHostedExperienceState } from "@/src/hosted/experience/hooks";
-import { shouldRouteToHostedActiveExperience } from "@/src/hosted/experience/navigation";
-import { HostedStatsDataSource } from "@/src/hosted/queryKeys";
-import { createHostedSessionClient } from "@/src/hosted/sessionClient";
 import {
-    useHostedStatsLiveQuery,
-    useHostedStatsRecentQuery,
-    useHostedStatsSessionQuery,
-    useHostedStatsSummaryQuery,
-} from "@/src/hosted/statsQueries";
+    useHostedExperienceInitialSessionResolved,
+    useHostedExperienceState,
+} from "@/src/hosted/experience/hooks";
+import { shouldRouteToHostedActiveExperience } from "@/src/hosted/experience/navigation";
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
     useInproxyActivitySegments,
@@ -134,13 +128,6 @@ import {
     useInproxyRegionalBreakdownByWindow,
     useInproxyStatus,
 } from "@/src/inproxy/hooks";
-import {
-    InproxyActivityByPeriod,
-    InproxyActivityRegion,
-    InproxyActivitySegment,
-    InproxyActivitySegments,
-    InproxyRegionalBreakdownByWindow,
-} from "@/src/inproxy/types";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 type DashboardStationMode = "hosted" | "local";
@@ -148,9 +135,10 @@ const SUMMARY_ANIMATION_STEPS = 12;
 
 export default function HostedDashboardScreen() {
     const router = useRouter();
+    const rootNavigationState = useRootNavigationState();
     const win = useWindowDimensions();
     const state = useHostedExperienceState();
-    const config = React.useMemo(readHostedRuntimeConfig, []);
+    const initialSessionResolved = useHostedExperienceInitialSessionResolved();
     const isFocused = useIsFocused();
     const { t } = useTranslation();
     const supportsLocalDashboard = Platform.OS === "android";
@@ -174,11 +162,6 @@ export default function HostedDashboardScreen() {
             window,
         );
     }, []);
-    const [statsDataSource, setStatsDataSource] =
-        React.useState<HostedStatsDataSource>("api");
-    const [appState, setAppState] = React.useState<AppStateStatus>(
-        AppState.currentState,
-    );
     const [heavyContentReady, setHeavyContentReady] = React.useState(false);
     const scrollViewRef = React.useRef<ScrollView>(null);
     const [conduitsExpanded, setConduitsExpanded] = React.useState(false);
@@ -274,9 +257,6 @@ export default function HostedDashboardScreen() {
     const showingLocalDashboard =
         supportsLocalDashboard && effectiveStationMode === "local";
     const conduits = state.conduitsSnapshot?.conduits ?? [];
-    const shouldPoll = isFocused && appState === "active";
-    const usingMockStats = __DEV__ && statsDataSource === "mock";
-    const livePollIntervalMs = 10_000;
     const dashboardValueAnimationMs = 1_200;
     const summaryWindow = React.useMemo(
         () => toSummaryWindow(recentWindow),
@@ -304,88 +284,24 @@ export default function HostedDashboardScreen() {
         }
     }, [localStatusQuery.data, t]);
 
-    const hostedClient = React.useMemo(() => {
-        return createHostedClient({ baseUrl: config.baseUrl });
-    }, [config.baseUrl]);
-    const sessionClient = React.useMemo(
-        () => createHostedSessionClient({ baseUrl: config.baseUrl }),
-        [config.baseUrl],
-    );
-    const statsDeps = React.useMemo(
-        () => ({
-            baseUrl: config.baseUrl,
-            now: () => Date.now(),
-            sessionClient,
-            hostedClient,
-            dataSource: statsDataSource,
-        }),
-        [config.baseUrl, hostedClient, sessionClient, statsDataSource],
-    );
     const dashboardStateResolved =
         windowResolved && stationModeResolved && statusModeResolved;
-    const statsEnabled =
-        dashboardStateResolved && canContinue && Boolean(config.baseUrl);
-    const statsSessionQuery = useHostedStatsSessionQuery(
-        statsDeps,
+    const {
         statsEnabled,
-    );
-    const summaryQuery = useHostedStatsSummaryQuery(
-        statsDeps,
-        statsSessionQuery.data,
-        summaryWindow,
-        statsEnabled,
-        usingMockStats
-            ? async () => buildMockDashboardSummaryData(summaryWindow)
-            : undefined,
-    );
-    const summaryThirtyDayQuery = useHostedStatsSummaryQuery(
-        statsDeps,
-        statsSessionQuery.data,
-        "30d",
-        statsEnabled,
-        usingMockStats
-            ? async () => buildMockDashboardSummaryData("30d")
-            : undefined,
-    );
-    const recentQuery = useHostedStatsRecentQuery(
-        statsDeps,
-        statsSessionQuery.data,
+        shouldPoll,
+        statsSessionQuery,
+        summaryQuery,
+        summaryThirtyDayQuery,
+        recentQuery,
+        regionalRecentQuery,
+        liveQuery,
+    } = useHostedDashboardStatsQueries({
+        enabled: dashboardStateResolved && canContinue,
+        isFocused,
         recentWindow,
-        statsEnabled,
-        shouldPoll
-            ? usingMockStats
-                ? 5_000
-                : recentWindow === "5m"
-                  ? 10_000
-                  : 60_000
-            : false,
-        usingMockStats
-            ? async () => buildMockDashboardRecentData(recentWindow)
-            : undefined,
-    );
-    const regionalRecentQuery = useHostedStatsRecentQuery(
-        statsDeps,
-        statsSessionQuery.data,
+        summaryWindow,
         regionalBreakdownWindow,
-        statsEnabled,
-        shouldPoll
-            ? usingMockStats
-                ? 5_000
-                : regionalBreakdownWindow === "5m"
-                  ? 10_000
-                  : 60_000
-            : false,
-        usingMockStats
-            ? async () => buildMockDashboardRecentData(regionalBreakdownWindow)
-            : undefined,
-    );
-    const liveQuery = useHostedStatsLiveQuery(
-        statsDeps,
-        statsSessionQuery.data,
-        statsEnabled,
-        shouldPoll ? livePollIntervalMs : false,
-        usingMockStats ? async () => buildMockDashboardLiveData() : undefined,
-    );
+    });
 
     React.useEffect(() => {
         if (!dashboardStateResolved || !isFocused) {
@@ -587,9 +503,7 @@ export default function HostedDashboardScreen() {
         regionalRecentQuery.error ??
         liveQuery.error;
     const hasNoAuthorizedTargets =
-        !usingMockStats &&
-        statsSessionQuery.isSuccess &&
-        !statsSessionQuery.data;
+        statsSessionQuery.isSuccess && !statsSessionQuery.data;
     const hostedInitialStatsReady =
         showingLocalDashboard ||
         !statsEnabled ||
@@ -664,17 +578,21 @@ export default function HostedDashboardScreen() {
     }, [hostedAvailable, setStationMode, stationMode, supportsLocalDashboard]);
 
     React.useEffect(() => {
-        if (!canContinue && !supportsLocalDashboard) {
+        if (
+            rootNavigationState?.key &&
+            initialSessionResolved &&
+            !canContinue &&
+            !supportsLocalDashboard
+        ) {
             router.replace("/(app)/hosted-setup");
         }
-    }, [canContinue, router, supportsLocalDashboard]);
-
-    React.useEffect(() => {
-        const subscription = AppState.addEventListener("change", setAppState);
-        return () => {
-            subscription.remove();
-        };
-    }, []);
+    }, [
+        canContinue,
+        initialSessionResolved,
+        rootNavigationState?.key,
+        router,
+        supportsLocalDashboard,
+    ]);
 
     if (!dashboardInitialRenderReady) {
         return <DashboardLoadingScreen width={win.width} height={win.height} />;
@@ -735,9 +653,10 @@ export default function HostedDashboardScreen() {
                                     { fontSize: 34, flexShrink: 1 },
                                 ]}
                             >
-                                {formatBytesWithUnit(
-                                    dashboardTotalBytesTransferred,
-                                )}
+                                {formatBytes(dashboardTotalBytesTransferred, {
+                                    precision: "fixed",
+                                    maxUnit: "GB",
+                                })}
                                 <Text style={[ss.tinyFont, ss.blackText]}>
                                     {" "}
                                     {t("LAST_30D_SUFFIX_I18N.string")}
@@ -781,34 +700,34 @@ export default function HostedDashboardScreen() {
                             }}
                         >
                             <RecentWindowButton
+                                testID="dash-window-5m"
                                 label="5m"
                                 selected={recentWindow === "5m"}
                                 onPress={() => setRecentWindow("5m")}
                             />
                             <RecentWindowButton
+                                testID="dash-window-48h"
                                 label="48h"
                                 selected={recentWindow === "48h"}
                                 onPress={() => setRecentWindow("48h")}
                             />
                             <RecentWindowButton
+                                testID="dash-window-7d"
                                 label="7d"
                                 selected={recentWindow === "7d"}
                                 onPress={() => setRecentWindow("7d")}
                             />
                             <RecentWindowButton
+                                testID="dash-window-30d"
                                 label="30d"
                                 selected={recentWindow === "30d"}
                                 onPress={() => setRecentWindow("30d")}
                             />
                         </View>
-                        {!showingLocalDashboard && usingMockStats ? (
-                            <Text style={[ss.tinyFont, ss.blackText]}>
-                                DEV: using mock stats source.
-                            </Text>
-                        ) : !showingLocalDashboard &&
-                          !dashboardStatsError &&
-                          !hasNoAuthorizedTargets &&
-                          !statsSessionQuery.data ? (
+                        {!showingLocalDashboard &&
+                        !dashboardStatsError &&
+                        !hasNoAuthorizedTargets &&
+                        !statsSessionQuery.data ? (
                             <Text style={[ss.tinyFont, ss.blackText]}>
                                 {t("DASHBOARD_NOT_READY_I18N.string")}
                             </Text>
@@ -884,6 +803,7 @@ export default function HostedDashboardScreen() {
                             ]}
                         >
                             <Pressable
+                                testID="dash-conduits-expand"
                                 onPress={toggleConduitsExpanded}
                                 style={[
                                     ss.row,
@@ -915,15 +835,6 @@ export default function HostedDashboardScreen() {
                                     }
                                 />
                             ) : null}
-                        </View>
-                    ) : null}
-
-                    {__DEV__ && false ? (
-                        <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
-                            <DevStatsDataSourceToggle
-                                source={statsDataSource}
-                                onChange={setStatsDataSource}
-                            />
                         </View>
                     ) : null}
                 </ScrollView>
@@ -984,277 +895,21 @@ function DashboardBackground({
     );
 }
 
-function toLocalRegionalWindowKey(
-    window: RecentWindow,
-): keyof InproxyRegionalBreakdownByWindow {
-    switch (window) {
-        case "7d":
-            return "7d";
-        case "30d":
-            return "30d";
-        case "48h":
-            return "48h";
-        case "5m":
-        default:
-            return "48h";
-    }
-}
-
-function toDashboardRegionMetrics(
-    regionActivity: InproxyActivityRegion[],
-): DashboardLiveRegionMetric[] {
-    return regionActivity.map((region) => ({
-        region: region.region,
-        connectedUsers: region.connectedClients,
-        connectingUsers: region.connectingClients,
-        bytesUpTotal: region.bytesUp,
-        bytesDownTotal: region.bytesDown,
-    }));
-}
-
-function hasLocalDashboardHistory(segments: InproxyActivitySegments): boolean {
-    return (
-        hasSegmentHistory(segments.personal) ||
-        hasSegmentHistory(segments.common) ||
-        hasSegmentHistory(segments.total)
-    );
-}
-
-function hasSegmentHistory(segment: InproxyActivitySegment): boolean {
-    if (
-        segment.totalBytesUp > 0 ||
-        segment.totalBytesDown > 0 ||
-        segment.currentConnectedClients > 0 ||
-        segment.currentConnectingClients > 0
-    ) {
-        return true;
-    }
-
-    return (
-        hasPeriodHistory(segment.dataByPeriod["1000ms"]) ||
-        (segment.dataByPeriod["3600000ms"]
-            ? hasPeriodHistory(segment.dataByPeriod["3600000ms"])
-            : false)
-    );
-}
-
-function hasPeriodHistory(period: InproxyActivityByPeriod): boolean {
-    return (
-        period.bytesUp.some((value) => value > 0) ||
-        period.bytesDown.some((value) => value > 0) ||
-        period.connectedClients.some((value) => value > 0) ||
-        period.connectingClients.some((value) => value > 0)
-    );
-}
-
-function toLocalStatusTimeseries(input: {
-    segments: InproxyActivitySegments;
-    window: RecentWindow;
-}): HostedStatusPanelTimeseries {
-    const periodKey = input.window === "5m" ? "1000ms" : "3600000ms";
-    const periodMs = periodKey === "1000ms" ? 1_000 : 3_600_000;
-    const nowMs = Date.now();
-    const personal = slicePeriodToWindow(
-        getSegmentPeriod(input.segments.personal, periodKey),
-        input.window,
-        periodKey,
-    );
-    const common = slicePeriodToWindow(
-        getSegmentPeriod(input.segments.common, periodKey),
-        input.window,
-        periodKey,
-    );
-
+/**
+ * Generates a style object for a selectable window button based on selected state.
+ */
+function buttonStyle(selected?: boolean) {
     return {
-        bytesTransferred: {
-            personal: toTimeseriesPoints(
-                combineTransferred(personal),
-                periodMs,
-                nowMs,
-            ),
-            public: toTimeseriesPoints(
-                combineTransferred(common),
-                periodMs,
-                nowMs,
-            ),
-        },
-        connectedUsers: {
-            personal: toTimeseriesPoints(
-                personal.connectedClients,
-                periodMs,
-                nowMs,
-            ),
-            public: toTimeseriesPoints(
-                common.connectedClients,
-                periodMs,
-                nowMs,
-            ),
-        },
-        connectingUsers: {
-            personal: toTimeseriesPoints(
-                personal.connectingClients,
-                periodMs,
-                nowMs,
-            ),
-            public: toTimeseriesPoints(
-                common.connectingClients,
-                periodMs,
-                nowMs,
-            ),
-        },
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        minWidth: 68,
+        alignItems: "center" as const,
+        justifyContent: "center" as const,
+        backgroundColor: selected
+            ? palette.selectedPurple
+            : "rgba(25, 18, 36, 0.08)",
     };
-}
-
-function getSegmentPeriod(
-    segment: InproxyActivitySegment,
-    period: "1000ms" | "3600000ms",
-): InproxyActivityByPeriod {
-    if (period === "1000ms") {
-        return segment.dataByPeriod["1000ms"];
-    }
-
-    const hourly = segment.dataByPeriod["3600000ms"];
-    if (hourly) {
-        return hourly;
-    }
-
-    const numBuckets = 720;
-    return {
-        bytesUp: new Array(numBuckets).fill(0),
-        bytesDown: new Array(numBuckets).fill(0),
-        announcingWorkers: new Array(numBuckets).fill(0),
-        connectingClients: new Array(numBuckets).fill(0),
-        connectedClients: new Array(numBuckets).fill(0),
-        numBuckets,
-    };
-}
-
-function slicePeriodToWindow(
-    period: InproxyActivityByPeriod,
-    window: RecentWindow,
-    periodKey: "1000ms" | "3600000ms",
-): InproxyActivityByPeriod {
-    const maxBuckets = localWindowBucketCount(window, periodKey);
-    if (maxBuckets >= period.numBuckets) {
-        return period;
-    }
-
-    return {
-        bytesUp: sliceTail(period.bytesUp, maxBuckets),
-        bytesDown: sliceTail(period.bytesDown, maxBuckets),
-        announcingWorkers: sliceTail(period.announcingWorkers, maxBuckets),
-        connectingClients: sliceTail(period.connectingClients, maxBuckets),
-        connectedClients: sliceTail(period.connectedClients, maxBuckets),
-        numBuckets: maxBuckets,
-    };
-}
-
-function localWindowBucketCount(
-    window: RecentWindow,
-    periodKey: "1000ms" | "3600000ms",
-): number {
-    if (periodKey === "1000ms") {
-        return 300;
-    }
-
-    switch (window) {
-        case "48h":
-            return 48;
-        case "7d":
-            return 7 * 24;
-        case "30d":
-            return 30 * 24;
-        case "5m":
-        default:
-            return 48;
-    }
-}
-
-function sliceTail(values: number[], count: number): number[] {
-    if (count <= 0) {
-        return [];
-    }
-    if (values.length <= count) {
-        return values;
-    }
-    return values.slice(values.length - count);
-}
-
-function toTimeseriesPoints(
-    values: number[],
-    periodMs: number,
-    nowMs: number,
-): TimeseriesDataPoint[] {
-    if (values.length === 0) {
-        return [];
-    }
-    const startMs = nowMs - (values.length - 1) * periodMs;
-    return values.map((value, index) => ({
-        time: new Date(startMs + index * periodMs),
-        value,
-    }));
-}
-
-function combineTransferred(period: InproxyActivityByPeriod): number[] {
-    const size = Math.min(period.bytesUp.length, period.bytesDown.length);
-    const output = new Array<number>(size);
-    for (let index = 0; index < size; index += 1) {
-        output[index] = period.bytesUp[index] + period.bytesDown[index];
-    }
-    return output;
-}
-
-function toLocalSummaryAggregate(
-    segments: InproxyActivitySegments,
-): DashboardSummaryAggregate {
-    const personal = {
-        connectedUsers: segments.personal.currentConnectedClients,
-        connectingUsers: segments.personal.currentConnectingClients,
-        bytesTransferred:
-            segments.personal.totalBytesUp + segments.personal.totalBytesDown,
-    };
-    const publicSegment = {
-        connectedUsers: segments.common.currentConnectedClients,
-        connectingUsers: segments.common.currentConnectingClients,
-        bytesTransferred:
-            segments.common.totalBytesUp + segments.common.totalBytesDown,
-    };
-
-    return {
-        personal,
-        public: publicSegment,
-        total: {
-            connectedUsers:
-                segments.total.currentConnectedClients ||
-                personal.connectedUsers + publicSegment.connectedUsers,
-            connectingUsers:
-                segments.total.currentConnectingClients ||
-                personal.connectingUsers + publicSegment.connectingUsers,
-            bytesTransferred:
-                segments.total.totalBytesUp + segments.total.totalBytesDown,
-        },
-    };
-}
-
-function sumTransferredFromSegment(
-    segment: InproxyActivitySegment,
-    period: "1000ms" | "3600000ms",
-): number {
-    const buckets = getSegmentPeriod(segment, period);
-    const size = Math.min(buckets.bytesUp.length, buckets.bytesDown.length);
-    let sum = 0;
-    for (let index = 0; index < size; index += 1) {
-        sum += buckets.bytesUp[index] + buckets.bytesDown[index];
-    }
-    return sum;
-}
-
-function sumRegionActivityBytes(regions: InproxyActivityRegion[]): number {
-    let sum = 0;
-    for (const region of regions) {
-        sum += region.bytesUp + region.bytesDown;
-    }
-    return sum;
 }
 
 function DashboardStationSelector({
@@ -1273,8 +928,11 @@ function DashboardStationSelector({
     return (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <Pressable
+                testID="dash-station-local"
                 onPress={() => {
-                    Haptics.selectionAsync();
+                    if (!isE2E()) {
+                        Haptics.selectionAsync();
+                    }
                     onSelect("local");
                 }}
                 style={buttonStyle(mode === "local")}
@@ -1295,9 +953,12 @@ function DashboardStationSelector({
                 </Text>
             </Pressable>
             <Pressable
+                testID="dash-station-hosted"
                 disabled={!hostedEnabled}
                 onPress={() => {
-                    Haptics.selectionAsync();
+                    if (!isE2E()) {
+                        Haptics.selectionAsync();
+                    }
                     onSelect("hosted");
                 }}
                 style={[
@@ -1351,92 +1012,6 @@ function DashboardStationSelector({
     );
 }
 
-function DevStatsDataSourceToggle({
-    source,
-    onChange,
-}: {
-    source: HostedStatsDataSource;
-    onChange: (source: HostedStatsDataSource) => void;
-}) {
-    const apiSelected = source === "api";
-    const mockSelected = source === "mock";
-
-    return (
-        <View
-            style={{
-                flexDirection: "row",
-                alignItems: "center",
-                alignSelf: "flex-start",
-                borderWidth: 1,
-                borderColor: palette.thinPurple,
-                borderRadius: 999,
-                overflow: "hidden",
-                backgroundColor: "rgba(255, 255, 255, 0.4)",
-            }}
-        >
-            <Text
-                style={[
-                    ss.tinyFont,
-                    ss.blackText,
-                    { paddingLeft: 10, paddingRight: 6 },
-                ]}
-            >
-                Stats
-            </Text>
-            <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected: apiSelected }}
-                onPress={() => {
-                    onChange("api");
-                }}
-                style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderLeftWidth: 1,
-                    borderLeftColor: palette.thinPurple,
-                    backgroundColor: apiSelected
-                        ? palette.purple
-                        : palette.white,
-                }}
-            >
-                <Text
-                    style={[
-                        ss.tinyFont,
-                        apiSelected ? ss.whiteText : ss.blackText,
-                    ]}
-                >
-                    API
-                </Text>
-            </Pressable>
-            <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ selected: mockSelected }}
-                onPress={() => {
-                    onChange("mock");
-                }}
-                style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 4,
-                    borderLeftWidth: 1,
-                    borderLeftColor: palette.thinPurple,
-                    backgroundColor: mockSelected
-                        ? palette.purple
-                        : palette.white,
-                }}
-            >
-                <Text
-                    style={[
-                        ss.tinyFont,
-                        mockSelected ? ss.whiteText : ss.blackText,
-                    ]}
-                >
-                    Mock
-                </Text>
-            </Pressable>
-        </View>
-    );
-}
-
 function DashboardSectionDivider() {
     return (
         <View
@@ -1453,16 +1028,21 @@ function RecentWindowButton({
     label,
     selected,
     onPress,
+    testID,
 }: {
     label: RecentWindow;
     selected: boolean;
     onPress: () => void;
+    testID?: string;
 }) {
     return (
         <Pressable
+            testID={testID}
             style={buttonStyle(selected)}
             onPress={() => {
-                Haptics.selectionAsync();
+                if (!isE2E()) {
+                    Haptics.selectionAsync();
+                }
                 onPress();
             }}
         >
@@ -1615,9 +1195,6 @@ function RegionalBreakdownPanel({
                     accessibilityRole="button"
                     accessibilityLabel={t(
                         "OPEN_REGIONAL_BREAKDOWN_I18N.string",
-                        {
-                            defaultValue: "Open regional breakdown",
-                        },
                     )}
                     onPress={() => setDetailsVisible(true)}
                     style={{ gap: 8 }}
@@ -1632,10 +1209,7 @@ function RegionalBreakdownPanel({
                             },
                         ]}
                     >
-                        {t("TAP_MAP_FOR_COUNTRY_DETAILS_I18N.string", {
-                            defaultValue:
-                                "Tap the map for the country breakdown.",
-                        })}
+                        {t("TAP_MAP_FOR_COUNTRY_DETAILS_I18N.string")}
                     </Text>
                 </Pressable>
             </View>
@@ -1670,7 +1244,7 @@ function RegionalBreakdownModal({
     rows: RegionalImpactRow[];
     window: RecentWindow;
 }) {
-    const { t } = useTranslation();
+    const { i18n, t } = useTranslation();
     const visibleRows = React.useMemo(
         () =>
             [...rows]
@@ -1742,8 +1316,6 @@ function RegionalBreakdownModal({
                             </Text>
                             <Text style={[ss.tinyFont, ss.blackText]}>
                                 {t("REGIONAL_ACTIVITY_BY_BYTES_I18N.string", {
-                                    defaultValue:
-                                        "Regional activity by {{metric}} in {{window}}",
                                     metric: t(
                                         "BYTES_TRANSFERRED_LABEL_I18N.string",
                                     ),
@@ -1825,7 +1397,10 @@ function RegionalBreakdownModal({
                                                     { fontSize: 16 },
                                                 ]}
                                             >
-                                                {toRegionLabel(row.region)}
+                                                {toRegionLabel(
+                                                    row.region,
+                                                    i18n.language,
+                                                )}
                                             </Text>
                                             <Text
                                                 numberOfLines={1}
@@ -1838,7 +1413,10 @@ function RegionalBreakdownModal({
                                                     },
                                                 ]}
                                             >
-                                                {formatBytesWithUnit(value)}
+                                                {formatBytes(value, {
+                                                    precision: "fixed",
+                                                    maxUnit: "GB",
+                                                })}
                                             </Text>
                                         </View>
                                     </View>

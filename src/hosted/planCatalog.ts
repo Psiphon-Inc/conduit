@@ -22,7 +22,7 @@ import {
     HostedPlanCatalogResponse,
 } from "@/src/hosted/contracts";
 
-export interface RevenueCatPackageCandidate<TPackage = unknown> {
+interface RevenueCatPackageCandidate<TPackage = unknown> {
     packageId: string;
     productId: string;
     productTitle?: string;
@@ -43,7 +43,7 @@ export interface HostedPlanOption<TPackage = unknown> {
     isGenericFallback: boolean;
 }
 
-export interface ResolveHostedPlanOptionsInput<TPackage = unknown> {
+interface ResolveHostedPlanOptionsInput<TPackage = unknown> {
     revenueCatPackages: RevenueCatPackageCandidate<TPackage>[];
     catalog: HostedPlanCatalogResponse;
     platform: HostedCatalogPlatform;
@@ -51,7 +51,7 @@ export interface ResolveHostedPlanOptionsInput<TPackage = unknown> {
     country?: string;
 }
 
-export interface ResolveHostedPlanOptionsResult<TPackage = unknown> {
+interface ResolveHostedPlanOptionsResult<TPackage = unknown> {
     options: HostedPlanOption<TPackage>[];
     blockingError: string | null;
     unmatchedPackageIds: string[];

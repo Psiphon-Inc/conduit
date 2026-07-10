@@ -1,0 +1,23 @@
+# Flow: first-run onboarding
+appId: ca.psiphon.conduit
+tags:
+    - onboarding
+    - smoke
+    - android
+    - ios
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- runFlow:
+      when:
+          platform: Android
+      commands:
+          - assertVisible:
+                id: "orb-primary"
+- runFlow:
+      when:
+          platform: iOS
+      commands:
+          - assertVisible:
+                id: "nav-home"

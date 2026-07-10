@@ -16,7 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { useRouter } from "expo-router";
+import { useRootNavigationState, useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
@@ -27,10 +28,15 @@ import { sharedStyles as ss } from "@/src/styles";
 export default function SSOCallbackScreen() {
     const { t } = useTranslation();
     const router = useRouter();
+    const rootNavigationState = useRootNavigationState();
 
     React.useEffect(() => {
+        WebBrowser.maybeCompleteAuthSession();
+        if (!rootNavigationState?.key) {
+            return;
+        }
         router.replace("/(app)/hosted-setup");
-    }, [router]);
+    }, [rootNavigationState?.key, router]);
 
     return (
         <SafeAreaView>

@@ -20,8 +20,7 @@ import React from "react";
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 
-// @ts-ignore (this file is gitignored)
-import { GIT_HASH } from "@/src/git-hash";
+import { getDisplayBuildVersion } from "@/src/buildInfo";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function GitHash() {
@@ -39,7 +38,7 @@ export function GitHash() {
                     { color: palette.lightGrey, fontSize: 14 },
                 ]}
             >
-                {GIT_HASH.substring(0, 12)}
+                {getDisplayBuildVersion()}
             </Animated.Text>
         </View>
     );

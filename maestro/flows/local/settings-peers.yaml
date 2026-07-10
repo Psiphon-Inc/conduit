@@ -1,0 +1,17 @@
+# Flow: local/settings-peers
+appId: ca.psiphon.conduit
+tags:
+    - local
+    - android
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- runFlow:
+      file: ../../subflows/go-to.yaml
+      env:
+          DEST: settings
+- tapOn:
+      id: "settings-local-expand"
+- assertVisible:
+      id: "settings-save"

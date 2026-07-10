@@ -16,14 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { base64nopad } from "@scure/base";
 import { z } from "zod";
 
+import { PersonalCompartmentIdSchema } from "@/src/pairing/compartmentId";
+
+/** Broker authentication and session exchange payloads consumed by the frontend. */
 export const OAuthProviderSchema = z.enum(["google", "apple"]);
 export type OAuthProvider = z.infer<typeof OAuthProviderSchema>;
 
-export const OAuthPlatformSchema = z.enum(["android", "ios"]);
-export type OAuthPlatform = z.infer<typeof OAuthPlatformSchema>;
+export const OAuthPlatformSchema = z.enum(["android", "ios", "web"]);
 
 export const HostedBrokerTokenTypeSchema = z.enum(["clerk_broker_jwt"]);
 export type HostedBrokerTokenType = z.infer<typeof HostedBrokerTokenTypeSchema>;
@@ -36,60 +37,9 @@ export const HostedLoginRequestSchema = z.object({
 });
 export type HostedLoginRequest = z.infer<typeof HostedLoginRequestSchema>;
 
-export const PersonalCompartmentIdSchema = z
-    .string()
-    .regex(/^[A-Za-z0-9+/]{43}$/)
-    .refine((value) => {
-        try {
-            return base64nopad.decode(value).length === 32;
-        } catch {
-            return false;
-        }
-    });
-export type PersonalCompartmentId = z.infer<typeof PersonalCompartmentIdSchema>;
-
-export const SessionTokenResponseSchema = z.object({
-    account_id: z.string().min(1),
-    access_token: z.string().min(1),
-    access_token_expires_in_seconds: z.number().int().positive(),
-    refresh_token: z.string().min(1),
-    refresh_token_expires_in_seconds: z.number().int().positive(),
-    personal_pairing_wrapper_base_url: z.string().min(1).optional(),
-    account: z
-        .object({
-            account_id: z.string().min(1).optional(),
-            alias: z.string(),
-            alias_is_default: z.boolean(),
-            alias_updated_at: z.string().min(1).optional(),
-            profile_version: z.number().int().nonnegative(),
-        })
-        .optional(),
-});
-export type SessionTokenResponse = z.infer<typeof SessionTokenResponseSchema>;
-
-export const RefreshRequestSchema = z.object({
-    refresh_token: z.string().min(1),
-});
-export type RefreshRequest = z.infer<typeof RefreshRequestSchema>;
-
-export const RefreshResponseSchema = z.object({
-    access_token: z.string().min(1),
-    access_token_expires_in_seconds: z.number().int().positive(),
-    refresh_token: z.string().min(1).optional(),
-    refresh_token_expires_in_seconds: z.number().int().positive().optional(),
-    personal_pairing_wrapper_base_url: z.string().min(1).optional(),
-    account: z
-        .object({
-            account_id: z.string().min(1).optional(),
-            alias: z.string(),
-            alias_is_default: z.boolean(),
-            alias_updated_at: z.string().min(1).optional(),
-            profile_version: z.number().int().nonnegative(),
-        })
-        .optional(),
-});
-export type RefreshResponse = z.infer<typeof RefreshResponseSchema>;
-
+/** Account identity and editable alias state shared by session and account APIs.
+ * `alias_updated_at` is accepted as opaque host metadata and is unused here.
+ */
 export const AccountProfileSchema = z.object({
     account_id: z.string().min(1).optional(),
     alias: z.string(),
@@ -99,6 +49,30 @@ export const AccountProfileSchema = z.object({
 });
 export type AccountProfile = z.infer<typeof AccountProfileSchema>;
 
+export const SessionTokenResponseSchema = z.object({
+    account_id: z.string().min(1),
+    access_token: z.string().min(1),
+    access_token_expires_in_seconds: z.number().int().positive(),
+    refresh_token: z.string().min(1),
+    refresh_token_expires_in_seconds: z.number().int().positive(),
+    personal_pairing_wrapper_base_url: z.string().min(1).optional(),
+    account: AccountProfileSchema.optional(),
+});
+export type SessionTokenResponse = z.infer<typeof SessionTokenResponseSchema>;
+
+export const RefreshRequestSchema = z.object({
+    refresh_token: z.string().min(1),
+});
+
+export const RefreshResponseSchema = z.object({
+    access_token: z.string().min(1),
+    access_token_expires_in_seconds: z.number().int().positive(),
+    refresh_token: z.string().min(1).optional(),
+    refresh_token_expires_in_seconds: z.number().int().positive().optional(),
+    personal_pairing_wrapper_base_url: z.string().min(1).optional(),
+    account: AccountProfileSchema.optional(),
+});
+
 export const UpdateAccountProfileRequestSchema = z.object({
     alias: z.string(),
     expected_profile_version: z.number().int().nonnegative(),
@@ -107,37 +81,43 @@ export type UpdateAccountProfileRequest = z.infer<
     typeof UpdateAccountProfileRequestSchema
 >;
 
+/** HTTPS destination returned when the frontend opens hosted billing management. */
+export const BillingPortalResponseSchema = z.object({
+    url: z
+        .string()
+        .url()
+        .refine((value) => {
+            try {
+                return new URL(value).protocol === "https:";
+            } catch {
+                return false;
+            }
+        }, "Billing portal URL must use HTTPS"),
+});
+export type BillingPortalResponse = z.infer<typeof BillingPortalResponseSchema>;
+
 export const HostedApiErrorSchema = z.object({
     error: z.object({
         code: z.string().min(1),
         message: z.string().min(1),
     }),
 });
-export type HostedApiError = z.infer<typeof HostedApiErrorSchema>;
 
+/** Personal compartment synchronization payloads, including conflict recovery. */
 export const SetPersonalCompartmentIdRequestSchema = z.object({
     personal_compartment_id: PersonalCompartmentIdSchema,
 });
-export type SetPersonalCompartmentIdRequest = z.infer<
-    typeof SetPersonalCompartmentIdRequestSchema
->;
 
 export const SetPersonalCompartmentIdResponseSchema = z.object({
     personal_compartment_id: PersonalCompartmentIdSchema,
 });
-export type SetPersonalCompartmentIdResponse = z.infer<
-    typeof SetPersonalCompartmentIdResponseSchema
->;
 
 export const SetPersonalCompartmentIdConflictResponseSchema = z.object({
     error: HostedApiErrorSchema.shape.error,
     current_personal_compartment_id: PersonalCompartmentIdSchema,
 });
-export type SetPersonalCompartmentIdConflictResponse = z.infer<
-    typeof SetPersonalCompartmentIdConflictResponseSchema
->;
 
-export const ConduitStatusSchema = z.enum([
+const ConduitStatusSchema = z.enum([
     "none",
     "provisioning",
     "active",
@@ -145,7 +125,7 @@ export const ConduitStatusSchema = z.enum([
 ]);
 export type ConduitStatus = z.infer<typeof ConduitStatusSchema>;
 
-export const HostedHostStatusSchema = z.enum([
+const HostedHostStatusSchema = z.enum([
     "none",
     "provisioning",
     "active",
@@ -154,7 +134,7 @@ export const HostedHostStatusSchema = z.enum([
 ]);
 export type HostedHostStatus = z.infer<typeof HostedHostStatusSchema>;
 
-export const HostedHostStateSchema = z
+const HostedHostStateSchema = z
     .object({
         status: HostedHostStatusSchema,
         counts: z.object({
@@ -166,16 +146,14 @@ export const HostedHostStateSchema = z
         updated_at: z.string().min(1).optional(),
     })
     .passthrough();
-export type HostedHostState = z.infer<typeof HostedHostStateSchema>;
 
-export const HostedRyveClaimSchema = z.object({
+const HostedRyveClaimSchema = z.object({
     version: z.number().int().positive(),
     key: z.string().min(1),
     default_name: z.string().min(1).optional(),
 });
-export type HostedRyveClaim = z.infer<typeof HostedRyveClaimSchema>;
 
-export const ConduitViewSchema = z.object({
+const ConduitViewSchema = z.object({
     conduit_id: z.string().min(1),
     proxy_id: z.string().min(1),
     role: z.enum(["personal", "common", "public"]).optional(),
@@ -190,6 +168,10 @@ export const ConduitViewSchema = z.object({
 });
 export type ConduitView = z.infer<typeof ConduitViewSchema>;
 
+/** Account, entitlement, and conduit state polled as one frontend snapshot.
+ * Entitlement `expires_at` is parsed and displayed; host-state `updated_at` is
+ * accepted as opaque host metadata and is unused here.
+ */
 export const ConduitsSnapshotSchema = z.object({
     account: AccountProfileSchema.optional(),
     entitlement: z
@@ -205,15 +187,16 @@ export const ConduitsSnapshotSchema = z.object({
 });
 export type ConduitsSnapshot = z.infer<typeof ConduitsSnapshotSchema>;
 
-export const HostedCatalogPlatformSchema = z.enum(["ios", "android"]);
+const HostedCatalogPlatformSchema = z.enum(["ios", "android", "web"]);
 export type HostedCatalogPlatform = z.infer<typeof HostedCatalogPlatformSchema>;
 
-export const HostedPlanCatalogConstraintPlatformSchema = z.enum([
+const HostedPlanCatalogConstraintPlatformSchema = z.enum([
     "ios",
     "android",
     "web",
 ]);
 
+/** Frontend catalog request context used to select eligible hosted plans. */
 export const HostedPlanCatalogQuerySchema = z.object({
     platform: HostedCatalogPlatformSchema,
     locale: z.string().min(1),
@@ -225,35 +208,26 @@ export type HostedPlanCatalogQuery = z.infer<
     typeof HostedPlanCatalogQuerySchema
 >;
 
-export const HostedPlanCatalogFallbackPolicySchema = z.enum([
+const HostedPlanCatalogFallbackPolicySchema = z.enum([
     "show_generic",
     "hide",
     "error",
 ]);
-export type HostedPlanCatalogFallbackPolicy = z.infer<
-    typeof HostedPlanCatalogFallbackPolicySchema
->;
 
-export const HostedPlanCatalogStatusSchema = z.enum([
+const HostedPlanCatalogStatusSchema = z.enum([
     "active",
     "deprecated",
     "hidden",
 ]);
-export type HostedPlanCatalogStatus = z.infer<
-    typeof HostedPlanCatalogStatusSchema
->;
 
-export const HostedPlanCatalogBillingCadenceSchema = z.enum([
+const HostedPlanCatalogBillingCadenceSchema = z.enum([
     "monthly",
     "yearly",
     "lifetime",
     "other",
 ]);
-export type HostedPlanCatalogBillingCadence = z.infer<
-    typeof HostedPlanCatalogBillingCadenceSchema
->;
 
-export const HostedPlanCatalogPlanSchema = z.object({
+const HostedPlanCatalogPlanSchema = z.object({
     id: z.string().min(1),
     status: HostedPlanCatalogStatusSchema,
     sortOrder: z.number().int(),
@@ -289,6 +263,7 @@ export const HostedPlanCatalogPlanSchema = z.object({
 });
 export type HostedPlanCatalogPlan = z.infer<typeof HostedPlanCatalogPlanSchema>;
 
+/** Hosted plan presentation and RevenueCat mappings consumed by the frontend. */
 export const HostedPlanCatalogResponseSchema = z.object({
     catalogVersion: z.string().min(1),
     generatedAt: z.string().min(1),
@@ -302,21 +277,22 @@ export type HostedPlanCatalogResponse = z.infer<
     typeof HostedPlanCatalogResponseSchema
 >;
 
+/** Stats token, summary, recent-series, and live metric API contracts.
+ * Stats `generated_at` and recent bucket `ts` values are parsed for chart
+ * timeline alignment.
+ */
 export const StatsSessionRequestSchema = z.object({
     local_proxy_ids: z.array(z.string().min(1)).max(10).optional(),
 });
 export type StatsSessionRequest = z.infer<typeof StatsSessionRequestSchema>;
 
-export const StatsSessionTargetSourceSchema = z.enum([
+const StatsSessionTargetSourceSchema = z.enum([
     "hosted",
     "local",
     "local_dev_assigned",
 ]);
-export type StatsSessionTargetSource = z.infer<
-    typeof StatsSessionTargetSourceSchema
->;
 
-export const StatsSessionTargetSchema = z.object({
+const StatsSessionTargetSchema = z.object({
     proxy_id: z.string().min(1),
     source: StatsSessionTargetSourceSchema,
     requested_proxy_id: z.string().min(1).optional(),
@@ -330,17 +306,17 @@ export const StatsSessionResponseSchema = z.object({
 });
 export type StatsSessionResponse = z.infer<typeof StatsSessionResponseSchema>;
 
-export const SummaryWindowSchema = z.enum(["24h", "7d", "30d"]);
+const SummaryWindowSchema = z.enum(["24h", "7d", "30d"]);
 export type SummaryWindow = z.infer<typeof SummaryWindowSchema>;
 
-export const StatsSegmentSchema = z.object({
+const StatsSegmentSchema = z.object({
     active_users: z.number().int().nonnegative(),
     connecting_users: z.number().int().nonnegative(),
     bytes_up: z.number().int().nonnegative(),
     bytes_down: z.number().int().nonnegative(),
 });
 
-export const StatsRegionActivitySchema = z.object({
+const StatsRegionActivitySchema = z.object({
     region: z.string().regex(/^[A-Z]{2}$/),
     connected_users: z.number().int().nonnegative(),
     connecting_users: z.number().int().nonnegative(),
@@ -361,7 +337,7 @@ export const StatsSummaryResponseSchema = z.object({
 });
 export type StatsSummaryResponse = z.infer<typeof StatsSummaryResponseSchema>;
 
-export const RecentWindowSchema = z.union([
+const RecentWindowSchema = z.union([
     z.literal("5m"),
     z.literal("48h"),
     z.literal("7d"),
@@ -369,7 +345,7 @@ export const RecentWindowSchema = z.union([
 ]);
 export type RecentWindow = z.infer<typeof RecentWindowSchema>;
 
-export const StatsRecentBucketSchema = z.object({
+const StatsRecentBucketSchema = z.object({
     ts: z.string().min(1),
     personal_active_users: z.number().int().nonnegative(),
     public_active_users: z.number().int().nonnegative(),
@@ -392,14 +368,14 @@ export const StatsRecentResponseSchema = z.object({
 });
 export type StatsRecentResponse = z.infer<typeof StatsRecentResponseSchema>;
 
-export const StatsLiveSegmentSchema = z.object({
+const StatsLiveSegmentSchema = z.object({
     connected_users: z.number().int().nonnegative(),
     connecting_users: z.number().int().nonnegative(),
     bytes_up_total: z.number().int().nonnegative(),
     bytes_down_total: z.number().int().nonnegative(),
 });
 
-export const StatsLiveRegionMetricSchema = StatsRegionActivitySchema;
+const StatsLiveRegionMetricSchema = StatsRegionActivitySchema;
 
 export const StatsLiveResponseSchema = z.object({
     generated_at: z.string().min(1),

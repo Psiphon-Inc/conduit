@@ -24,12 +24,13 @@ import {
     Group,
     Paint,
     RadialGradient,
+    rect,
     vec,
 } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     Easing,
@@ -40,7 +41,7 @@ import Animated, {
     useAnimatedReaction,
     useAnimatedStyle,
     useDerivedValue,
-    useReducedMotion,
+    useFrameCallback,
     useSharedValue,
     withDelay,
     withRepeat,
@@ -50,11 +51,23 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { multiplyColorAlpha, rgbaFromRgb } from "@/src/common/colorUtils";
+import { isE2E } from "@/src/common/e2e";
 import { ConduitConnectionLight } from "@/src/components/canvas/ConduitConnectionLight";
+import {
+    ConnectionLightMotionSpec,
+    connectionLightSeed,
+    createConnectionLightMotionPlan,
+    evaluateConnectionLightMotionBuffer,
+} from "@/src/components/canvas/connectionLightMotion";
+import {
+    calculateOrbGlowGradientStops,
+    calculateOrbMorphClipBounds,
+} from "@/src/components/orb-scene/orbSceneMath";
 import {
     clampLights,
     modeMultiplier,
 } from "@/src/components/orb-scene/orbUtils";
+import { useAppIsActive, useReducedMotionPreference } from "@/src/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export type OrbEvolutionLevel = 0 | 1 | 2 | 3;
@@ -95,6 +108,7 @@ export interface OrbSceneProps {
     pressDisabled?: boolean;
     applyBlur?: boolean;
     accessibilityLabel?: string;
+    testID?: string;
     activityLanes?: OrbSceneActivityLane[];
     provisioningMarkers?: OrbSceneProvisioningMarker[];
     orbModes?: OrbVisualMode[];
@@ -113,21 +127,19 @@ interface OrbGestureOverlayProps {
     enabled: boolean;
     highlighted?: boolean;
     accessibilityLabel?: string;
+    testID?: string;
     onTapAction?: () => void;
     onLongPressAction?: () => void;
 }
 
 const THEME_LEVELS: OrbEvolutionLevel[] = [0, 1, 2, 3];
 const HOSTED_ORB_THEME_LEVEL: OrbEvolutionLevel = 3;
-
-/** DJB2 hash producing a stable unsigned-integer seed for a light instance. */
-function lightSeed(key: string): number {
-    let hash = 5381;
-    for (let i = 0; i < key.length; i++) {
-        hash = ((hash << 5) + hash + key.charCodeAt(i)) | 0;
-    }
-    return hash >>> 0;
-}
+const DEFAULT_ORB_SLOT_MAP = [0, 1, 2];
+const MAIN_ORB_GLOW_SIGMA = 18;
+const MORPH_BLUR_RADIUS = 5;
+const MORPH_BLUR_SUPPORT = MORPH_BLUR_RADIUS * 3;
+const MORPH_AA_PADDING = 2;
+const CONNECTION_LIGHT_MID_POINT = vec(0, 0);
 
 function clampNumber(value: number, min: number, max: number): number {
     "worklet";
@@ -135,7 +147,7 @@ function clampNumber(value: number, min: number, max: number): number {
 }
 
 function seededTopRightPhase(id: string): number {
-    return 0.82 + ((lightSeed(id) % 1000) / 1000) * 0.12;
+    return 0.82 + ((connectionLightSeed(id) % 1000) / 1000) * 0.12;
 }
 
 function normalizeProvisioningMarkers(
@@ -166,6 +178,52 @@ interface OrbAnimatedTheme {
     radialOuter: SharedValue<string>;
     innerShadowBR: SharedValue<string>;
     outerGlow: SharedValue<string>;
+}
+
+interface OrbGlowProps {
+    center: SharedValue<{ x: number; y: number }>;
+    centerX: SharedValue<number>;
+    centerY: SharedValue<number>;
+    radius: SharedValue<number>;
+    color: SharedValue<string>;
+}
+
+const MAIN_ORB_GLOW_ALPHA_MULTIPLIERS = calculateOrbGlowGradientStops(
+    0,
+    MAIN_ORB_GLOW_SIGMA,
+).alphaMultipliers;
+
+function OrbGlow({ center, centerX, centerY, radius, color }: OrbGlowProps) {
+    const gradientStops = useDerivedValue(
+        () => calculateOrbGlowGradientStops(radius.value, MAIN_ORB_GLOW_SIGMA),
+        [radius],
+    );
+    const outerRadius = useDerivedValue(
+        () => gradientStops.value.outerRadius,
+        [gradientStops],
+    );
+    const positions = useDerivedValue(
+        () => gradientStops.value.positions,
+        [gradientStops],
+    );
+    const colors = useDerivedValue(
+        () =>
+            MAIN_ORB_GLOW_ALPHA_MULTIPLIERS.map((multiplier) =>
+                multiplyColorAlpha(color.value, multiplier),
+            ),
+        [color],
+    );
+
+    return (
+        <Circle cx={centerX} cy={centerY} r={outerRadius}>
+            <RadialGradient
+                c={center}
+                r={outerRadius}
+                colors={colors}
+                positions={positions}
+            />
+        </Circle>
+    );
 }
 
 function useInterpolatedOrbTheme(
@@ -299,6 +357,29 @@ interface OrbDefinition {
     cxRatio: number;
     cyRatio: number;
     radiusRatio: number;
+}
+
+interface OrbGeometry {
+    index: number;
+    cx: number;
+    cy: number;
+    baseRadius: number;
+    radius: SharedValue<number>;
+}
+
+interface OrbSceneLightSpec extends ConnectionLightMotionSpec {
+    index: number;
+    motionIndex: number;
+    seed: number;
+}
+
+interface OrbSceneLaneLightSpec {
+    id: string;
+    orbIndex: number;
+    effectiveRadius: number;
+    secondLastPoint: { x: number; y: number };
+    endPoint: { x: number; y: number };
+    lights: OrbSceneLightSpec[];
 }
 
 interface OrbTone {
@@ -460,10 +541,12 @@ function OrbGestureOverlay({
     enabled,
     highlighted = false,
     accessibilityLabel,
+    testID,
     onTapAction,
     onLongPressAction,
 }: OrbGestureOverlayProps) {
     const { t } = useTranslation();
+    const e2e = isE2E();
     const onTapActionRef = React.useRef(onTapAction);
     const onLongPressActionRef = React.useRef(onLongPressAction);
 
@@ -528,12 +611,14 @@ function OrbGestureOverlay({
                         return;
                     }
                     animateGiggle();
-                    runOnJS(Haptics.impactAsync)(
-                        Haptics.ImpactFeedbackStyle.Medium,
-                    );
+                    if (!e2e) {
+                        runOnJS(Haptics.impactAsync)(
+                            Haptics.ImpactFeedbackStyle.Medium,
+                        );
+                    }
                     runOnJS(runTapAction)();
                 }),
-        [animateGiggle, enabled, runTapAction],
+        [animateGiggle, e2e, enabled, runTapAction],
     );
 
     const longPressEnabled = Boolean(onLongPressAction) && enabled;
@@ -547,17 +632,21 @@ function OrbGestureOverlay({
                     radius.value = withTiming(baseRadius * 0.85, {
                         duration: 1200,
                     });
-                    runOnJS(Haptics.impactAsync)(
-                        Haptics.ImpactFeedbackStyle.Soft,
-                    );
+                    if (!e2e) {
+                        runOnJS(Haptics.impactAsync)(
+                            Haptics.ImpactFeedbackStyle.Soft,
+                        );
+                    }
                 })
                 .onStart(() => {
                     if (!longPressEnabled) {
                         return;
                     }
-                    runOnJS(Haptics.impactAsync)(
-                        Haptics.ImpactFeedbackStyle.Heavy,
-                    );
+                    if (!e2e) {
+                        runOnJS(Haptics.impactAsync)(
+                            Haptics.ImpactFeedbackStyle.Heavy,
+                        );
+                    }
                     runOnJS(runLongPressAction)();
                 })
                 .onFinalize(() => {
@@ -566,6 +655,7 @@ function OrbGestureOverlay({
         [
             animateGiggle,
             baseRadius,
+            e2e,
             longPressEnabled,
             radius,
             runLongPressAction,
@@ -577,16 +667,22 @@ function OrbGestureOverlay({
         [longPressGesture, tapGesture],
     );
 
+    const accessibilityProps = enabled
+        ? {
+              accessible: true,
+              accessibilityRole: "button" as const,
+              accessibilityLabel:
+                  accessibilityLabel ??
+                  t("CONDUIT_ORB_TAP_ACCESSIBILITY_I18N.string"),
+          }
+        : {
+              accessible: false,
+          };
+
     const overlay = (
         <Animated.View
-            accessible={enabled}
-            accessibilityRole={enabled ? "button" : undefined}
-            accessibilityLabel={
-                enabled
-                    ? (accessibilityLabel ??
-                      t("CONDUIT_ORB_TAP_ACCESSIBILITY_I18N.string"))
-                    : undefined
-            }
+            testID={e2e ? undefined : testID}
+            {...(!e2e ? accessibilityProps : { accessible: false })}
             pointerEvents={enabled ? "auto" : "none"}
             style={[animatedStyle, highlightStyle]}
         />
@@ -594,6 +690,26 @@ function OrbGestureOverlay({
 
     if (!enabled) {
         return highlighted ? overlay : null;
+    }
+
+    if (e2e && testID) {
+        return (
+            <Pressable
+                testID={testID}
+                {...accessibilityProps}
+                onPress={runTapAction}
+                onLongPress={onLongPressAction ? runLongPressAction : undefined}
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                }}
+            >
+                {overlay}
+            </Pressable>
+        );
     }
 
     return <GestureDetector gesture={gesture}>{overlay}</GestureDetector>;
@@ -619,7 +735,6 @@ function OrbProvisioningMarker({
     const orbit = useSharedValue(0);
     const opacity = useSharedValue(0);
     const scale = useSharedValue(0.55);
-    const pulse = useSharedValue(1);
     const phaseOffset = React.useMemo(
         () => seededTopRightPhase(marker.id),
         [marker.id],
@@ -646,19 +761,9 @@ function OrbProvisioningMarker({
 
     React.useEffect(() => {
         cancelAnimation(orbit);
-        cancelAnimation(pulse);
         if (reducedMotion) {
             orbit.value = 0;
-            pulse.value = withRepeat(
-                withTiming(0.6, {
-                    duration: 1600,
-                    easing: Easing.inOut(Easing.quad),
-                }),
-                -1,
-                true,
-            );
         } else {
-            pulse.value = 1;
             orbit.value = 0;
             orbit.value = withRepeat(
                 withTiming(1, {
@@ -672,9 +777,8 @@ function OrbProvisioningMarker({
 
         return () => {
             cancelAnimation(orbit);
-            cancelAnimation(pulse);
         };
-    }, [orbit, pulse, reducedMotion]);
+    }, [orbit, reducedMotion]);
 
     const markerCenter = useDerivedValue(() => {
         const phase = reducedMotion ? 0.875 : (orbit.value + phaseOffset) % 1;
@@ -692,10 +796,7 @@ function OrbProvisioningMarker({
         () => clampNumber(radius.value * 0.18, 11, 24) * scale.value,
         [radius, scale],
     );
-    const markerOpacity = useDerivedValue(() => {
-        const pulseMultiplier = reducedMotion ? 0.72 + pulse.value * 0.28 : 1;
-        return opacity.value * pulseMultiplier;
-    }, [opacity, pulse, reducedMotion]);
+    const markerOpacity = useDerivedValue(() => opacity.value, [opacity]);
 
     return (
         <Group
@@ -734,17 +835,18 @@ export function OrbScene(props: OrbSceneProps) {
         pressDisabled = false,
         applyBlur = false,
         accessibilityLabel,
+        testID,
         activityLanes,
         provisioningMarkers,
         orbModes,
         localOrbIndex,
         highlightedOrbIndex,
-        statusOpacity = 1,
         statusTopRatio = 0.68,
         orbSlotMap,
     } = props;
     const { t } = useTranslation();
-    const reducedMotion = useReducedMotion();
+    const appIsActive = useAppIsActive();
+    const reducedMotion = useReducedMotionPreference() || isE2E();
     const targetThemeLevel = themeLevel ?? evolutionLevel;
     const sceneTheme = SCENE_THEMES[targetThemeLevel];
     const sceneScale = Math.min(width, height);
@@ -760,6 +862,21 @@ export function OrbScene(props: OrbSceneProps) {
             : Math.max(0.4, resolvedOrbRadiusScale ** 1.6);
 
     const colorLfo = useSharedValue(0);
+    const sceneBlurRadius = useSharedValue(applyBlur ? 6 : 0);
+    const sceneLightElapsedMs = useSharedValue(0);
+    const updateSceneLightClock = React.useCallback(
+        (frameInfo: { timeSincePreviousFrame: number | null }) => {
+            "worklet";
+            if (frameInfo.timeSincePreviousFrame != null) {
+                sceneLightElapsedMs.value += frameInfo.timeSincePreviousFrame;
+            }
+        },
+        [sceneLightElapsedMs],
+    );
+    const sceneLightFrameCallback = useFrameCallback(
+        updateSceneLightClock,
+        false,
+    );
     const entryOpacity = useSharedValue(0);
     const orbRadius0 = useSharedValue(0);
     const orbRadius1 = useSharedValue(0);
@@ -770,8 +887,14 @@ export function OrbScene(props: OrbSceneProps) {
     const orbCy1 = useSharedValue(0);
     const orbCx2 = useSharedValue(0);
     const orbCy2 = useSharedValue(0);
-    const orbCxValues = [orbCx0, orbCx1, orbCx2];
-    const orbCyValues = [orbCy0, orbCy1, orbCy2];
+    const orbCxValues = React.useMemo(
+        () => [orbCx0, orbCx1, orbCx2],
+        [orbCx0, orbCx1, orbCx2],
+    );
+    const orbCyValues = React.useMemo(
+        () => [orbCy0, orbCy1, orbCy2],
+        [orbCy0, orbCy1, orbCy2],
+    );
     // Swap animation: a single progress value (0→1) drives smooth
     // sine-based arcing paths for both swapping orbs.
     const swapT = useSharedValue(0);
@@ -796,8 +919,10 @@ export function OrbScene(props: OrbSceneProps) {
     const orbColorIndex0 = useSharedValue(0);
     const orbColorIndex1 = useSharedValue(0);
     const orbColorIndex2 = useSharedValue(0);
-    const orbRadiusValues = [orbRadius0, orbRadius1, orbRadius2];
-    const statusFader = useSharedValue(statusOpacity);
+    const orbRadiusValues = React.useMemo(
+        () => [orbRadius0, orbRadius1, orbRadius2],
+        [orbRadius0, orbRadius1, orbRadius2],
+    );
     const localOrbThemeProgress = useSharedValue<number>(targetThemeLevel);
     const hostedOrbThemeProgress = useSharedValue<number>(
         HOSTED_ORB_THEME_LEVEL,
@@ -814,6 +939,15 @@ export function OrbScene(props: OrbSceneProps) {
                 active: true,
             })),
         );
+
+    React.useEffect(() => {
+        sceneLightFrameCallback.setActive(appIsActive && !reducedMotion);
+        return () => sceneLightFrameCallback.setActive(false);
+    }, [appIsActive, reducedMotion, sceneLightFrameCallback]);
+
+    React.useEffect(() => {
+        sceneBlurRadius.value = applyBlur ? 6 : 0;
+    }, [applyBlur, sceneBlurRadius]);
 
     React.useEffect(() => {
         const nextMarkers = normalizeProvisioningMarkers(provisioningMarkers);
@@ -847,29 +981,31 @@ export function OrbScene(props: OrbSceneProps) {
 
     React.useEffect(() => {
         entryOpacity.value = withDelay(80, withTiming(1, { duration: 720 }));
-        colorLfo.value = withRepeat(
-            withTiming(1, { duration: 4200 }),
-            -1,
-            true,
-        );
         return () => {
             cancelAnimation(entryOpacity);
-            cancelAnimation(colorLfo);
             cancelAnimation(orbColorIndex0);
             cancelAnimation(orbColorIndex1);
             cancelAnimation(orbColorIndex2);
         };
-    }, [
-        colorLfo,
-        entryOpacity,
-        orbColorIndex0,
-        orbColorIndex1,
-        orbColorIndex2,
-    ]);
+    }, [entryOpacity, orbColorIndex0, orbColorIndex1, orbColorIndex2]);
+
+    const hasAnnouncingMode =
+        (orbModes?.[0] ?? "off") === "announcing" ||
+        (orbModes?.[1] ?? "off") === "announcing" ||
+        (orbModes?.[2] ?? "off") === "announcing";
 
     React.useEffect(() => {
-        statusFader.value = withTiming(statusOpacity, { duration: 350 });
-    }, [statusFader, statusOpacity]);
+        cancelAnimation(colorLfo);
+        colorLfo.value = 0;
+        if (hasAnnouncingMode) {
+            colorLfo.value = withRepeat(
+                withTiming(1, { duration: 4200 }),
+                -1,
+                true,
+            );
+        }
+        return () => cancelAnimation(colorLfo);
+    }, [colorLfo, hasAnnouncingMode]);
 
     React.useEffect(() => {
         localOrbThemeProgress.value = withTiming(targetThemeLevel, {
@@ -933,21 +1069,36 @@ export function OrbScene(props: OrbSceneProps) {
         orbPalette2.glow,
     ];
 
-    const orbLayout = ORB_LAYOUTS[evolutionLevel].slice(
-        0,
-        resolvedMaxVisibleOrbs,
+    const orbLayout = React.useMemo(
+        () => ORB_LAYOUTS[evolutionLevel].slice(0, resolvedMaxVisibleOrbs),
+        [evolutionLevel, resolvedMaxVisibleOrbs],
     );
-    const orbGeometries = orbLayout.map((orb, index) => ({
-        index,
-        cx: width * orb.cxRatio,
-        cy: height * orb.cyRatio,
-        baseRadius: sceneScale * orb.radiusRatio * resolvedOrbRadiusScale,
-        radius: orbRadiusValues[index],
-    }));
+    const orbGeometries = React.useMemo<OrbGeometry[]>(
+        () =>
+            orbLayout.map((orb, index) => ({
+                index,
+                cx: width * orb.cxRatio,
+                cy: height * orb.cyRatio,
+                baseRadius:
+                    sceneScale * orb.radiusRatio * resolvedOrbRadiusScale,
+                radius: orbRadiusValues[index],
+            })),
+        [
+            height,
+            orbLayout,
+            orbRadiusValues,
+            resolvedOrbRadiusScale,
+            sceneScale,
+            width,
+        ],
+    );
     const orbCenter0 = useDerivedValue(() => vec(orbCx0.value, orbCy0.value));
     const orbCenter1 = useDerivedValue(() => vec(orbCx1.value, orbCy1.value));
     const orbCenter2 = useDerivedValue(() => vec(orbCx2.value, orbCy2.value));
-    const orbCenterValues = [orbCenter0, orbCenter1, orbCenter2];
+    const orbCenterValues = React.useMemo(
+        () => [orbCenter0, orbCenter1, orbCenter2],
+        [orbCenter0, orbCenter1, orbCenter2],
+    );
 
     const orbLightTransform0 = useDerivedValue(() => [
         { translateX: orbCx0.value },
@@ -961,11 +1112,10 @@ export function OrbScene(props: OrbSceneProps) {
         { translateX: orbCx2.value },
         { translateY: orbCy2.value },
     ]);
-    const orbLightTransformValues = [
-        orbLightTransform0,
-        orbLightTransform1,
-        orbLightTransform2,
-    ];
+    const orbLightTransformValues = React.useMemo(
+        () => [orbLightTransform0, orbLightTransform1, orbLightTransform2],
+        [orbLightTransform0, orbLightTransform1, orbLightTransform2],
+    );
 
     const orbShadowCenter0 = useDerivedValue(() =>
         vec(
@@ -1025,14 +1175,24 @@ export function OrbScene(props: OrbSceneProps) {
     const orb1BaseRadius = orbGeometries[1]?.baseRadius ?? 0;
     const orb2BaseRadius = orbGeometries[2]?.baseRadius ?? 0;
 
-    const effectiveSlotMap = orbSlotMap ?? [0, 1, 2];
+    const orbSlotMapKey = (orbSlotMap ?? DEFAULT_ORB_SLOT_MAP).join(",");
+    const effectiveSlotMap = React.useMemo(
+        () => [...(orbSlotMap ?? DEFAULT_ORB_SLOT_MAP)],
+        // The semantic map, rather than a polling-created array, drives swaps.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [orbSlotMapKey],
+    );
 
     // Effective base radius per orb, resolved through the slot map so
     // lights scale to the correct orb size after a swap.
-    const orbEffectiveBaseRadius = orbGeometries.map((orb, index) => {
-        const slot = effectiveSlotMap[index] ?? index;
-        return orbGeometries[slot]?.baseRadius ?? orb.baseRadius;
-    });
+    const orbEffectiveBaseRadius = React.useMemo(
+        () =>
+            orbGeometries.map((orb, index) => {
+                const slot = effectiveSlotMap[index] ?? index;
+                return orbGeometries[slot]?.baseRadius ?? orb.baseRadius;
+            }),
+        [effectiveSlotMap, orbGeometries],
+    );
 
     // Per-frame arc computation driven by swapT (0→1).
     // position(t) = lerp(from, to, t) + perp * sin(π·t) * arcScale
@@ -1237,12 +1397,131 @@ export function OrbScene(props: OrbSceneProps) {
         orbGeometries,
     ]);
 
-    const activeLanes = (activityLanes ?? []).filter((lane) => {
-        if (lane.orbIndex < 0 || lane.orbIndex >= orbGeometries.length) {
-            return false;
+    const activityLaneKey = JSON.stringify(
+        (activityLanes ?? []).map((lane) => [
+            lane.id,
+            lane.orbIndex,
+            lane.connectedCount,
+        ]),
+    );
+    const activeLanes = React.useMemo(
+        () =>
+            (activityLanes ?? []).filter((lane) => {
+                if (
+                    lane.orbIndex < 0 ||
+                    lane.orbIndex >= orbGeometries.length
+                ) {
+                    return false;
+                }
+                return clampLights(lane.connectedCount) > 0;
+            }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [activityLaneKey, orbGeometries.length],
+    );
+    const laneLightSpecs = React.useMemo<OrbSceneLaneLightSpec[]>(() => {
+        let motionIndex = 0;
+        return activeLanes.map((lane) => {
+            const effectiveRadius =
+                orbEffectiveBaseRadius[lane.orbIndex] ??
+                orbGeometries[lane.orbIndex]?.baseRadius ??
+                0;
+            const orbSizeRatio =
+                effectiveRadius /
+                Math.max(sceneScale * resolvedOrbRadiusScale, 1);
+            const verticalBias =
+                lane.id !== "local"
+                    ? Math.max(0, Math.min(1, (0.12 - orbSizeRatio) / 0.05))
+                    : 0;
+            const exitDistance =
+                lane.id === "local"
+                    ? effectiveRadius * 2
+                    : effectiveRadius * 1.8;
+            const secondLastPoint = { x: 0, y: -exitDistance * 0.5 };
+            const endPoint = { x: 0, y: -exitDistance };
+            const lights = Array.from(
+                { length: clampLights(lane.connectedCount) },
+                (_, index) => {
+                    const seed = connectionLightSeed(`${lane.id}-${index}`);
+                    return {
+                        index,
+                        motionIndex: motionIndex++,
+                        seed,
+                        motionPlan: createConnectionLightMotionPlan(
+                            seed,
+                            effectiveRadius,
+                            lightSpawnXRangeScale,
+                            verticalBias,
+                        ),
+                        orbRadius: effectiveRadius,
+                        midPoint: CONNECTION_LIGHT_MID_POINT,
+                        secondLastPoint,
+                        endPoint,
+                    };
+                },
+            );
+            return {
+                id: lane.id,
+                orbIndex: lane.orbIndex,
+                effectiveRadius,
+                secondLastPoint,
+                endPoint,
+                lights,
+            };
+        });
+    }, [
+        activeLanes,
+        lightSpawnXRangeScale,
+        orbEffectiveBaseRadius,
+        orbGeometries,
+        resolvedOrbRadiusScale,
+        sceneScale,
+    ]);
+    const sceneLightSpecs = React.useMemo(
+        () => laneLightSpecs.flatMap((lane) => lane.lights),
+        [laneLightSpecs],
+    );
+    const sceneLightMotionBuffer = useDerivedValue(
+        () =>
+            evaluateConnectionLightMotionBuffer(
+                sceneLightSpecs,
+                sceneLightElapsedMs.value,
+            ),
+        [sceneLightElapsedMs, sceneLightSpecs],
+    );
+    const proxyReachByOrb = React.useMemo(() => {
+        const reaches = orbGeometries.map(() => 0);
+        for (const lane of laneLightSpecs) {
+            // The envelope reaches zero before the furthest inbound/outbound
+            // path points; 2r plus the proxy circle is conservative.
+            reaches[lane.orbIndex] = Math.max(
+                reaches[lane.orbIndex] ?? 0,
+                lane.effectiveRadius * 2 + lane.effectiveRadius / 8,
+            );
         }
-        return clampLights(lane.connectedCount) > 0;
-    });
+        return reaches;
+    }, [laneLightSpecs, orbGeometries]);
+    const morphClip = useDerivedValue(() => {
+        const bounds = calculateOrbMorphClipBounds(
+            width,
+            height,
+            orbGeometries.map((orb, index) => ({
+                centerX: orbCxValues[index].value,
+                centerY: orbCyValues[index].value,
+                radius: orb.radius.value,
+                proxyReach: proxyReachByOrb[index] ?? 0,
+            })),
+            MORPH_BLUR_SUPPORT,
+            MORPH_AA_PADDING,
+        );
+        return rect(bounds.x, bounds.y, bounds.width, bounds.height);
+    }, [
+        height,
+        orbCxValues,
+        orbCyValues,
+        orbGeometries,
+        proxyReachByOrb,
+        width,
+    ]);
     const visibleProvisioningMarkers = renderedProvisioningMarkers.filter(
         (marker) =>
             marker.orbIndex >= 0 && marker.orbIndex < orbGeometries.length,
@@ -1256,7 +1535,7 @@ export function OrbScene(props: OrbSceneProps) {
     const morphLayer = React.useMemo(() => {
         return (
             <Paint>
-                <Blur blur={5} />
+                <Blur blur={MORPH_BLUR_RADIUS} />
                 <ColorMatrix
                     // prettier-ignore
                     matrix={[
@@ -1269,296 +1548,228 @@ export function OrbScene(props: OrbSceneProps) {
             </Paint>
         );
     }, []);
+    const sceneLayer = React.useMemo(
+        () => (
+            <Paint>
+                <Blur blur={sceneBlurRadius} />
+            </Paint>
+        ),
+        [sceneBlurRadius],
+    );
 
-    return (
-        <View style={{ width, height, backgroundColor: "transparent" }}>
-            <Canvas style={[ss.flex]}>
-                <Group
-                    layer={
-                        <Paint>{applyBlur ? <Blur blur={6} /> : null}</Paint>
-                    }
-                >
-                    <Group>
-                        <Group
-                            opacity={entryOpacity}
-                            layer={
-                                <Paint>
-                                    <Blur blur={18} />
-                                </Paint>
-                            }
-                        >
-                            {orbGeometries.map((orb, index) => {
-                                const orbGlow = orbGlowValues[index];
+    function renderGlow() {
+        return (
+            <Group opacity={entryOpacity}>
+                {orbGeometries.map((orb, index) => {
+                    const orbGlow = orbGlowValues[index];
 
-                                return (
+                    return (
+                        <OrbGlow
+                            key={`orb-glow-${index}`}
+                            center={orbCenterValues[index]}
+                            centerX={orbCxValues[index]}
+                            centerY={orbCyValues[index]}
+                            radius={orb.radius}
+                            color={orbGlow}
+                        />
+                    );
+                })}
+            </Group>
+        );
+    }
+
+    function renderMorphAndVisibleLights() {
+        return (
+            <>
+                <Group clip={morphClip}>
+                    <Group layer={morphLayer} opacity={entryOpacity}>
+                        {orbGeometries.map((orb, index) => {
+                            const orbEdgeColor = orbEdgeColorValues[index];
+                            const orbGradient = orbGradientValues[index];
+                            const ringR = orbRingRValues[index];
+
+                            return (
+                                <Group key={`orb-morph-${index}`}>
                                     <Circle
-                                        key={`orb-glow-${index}`}
                                         cx={orbCxValues[index]}
                                         cy={orbCyValues[index]}
                                         r={orb.radius}
-                                        color={orbGlow}
-                                    />
-                                );
-                            })}
-                        </Group>
-
-                        <Group layer={morphLayer} opacity={entryOpacity}>
-                            {orbGeometries.map((orb, index) => {
-                                const orbEdgeColor = orbEdgeColorValues[index];
-                                const orbGradient = orbGradientValues[index];
-                                const ringR = orbRingRValues[index];
-
-                                return (
-                                    <Group key={`orb-morph-${index}`}>
-                                        <Circle
-                                            cx={orbCxValues[index]}
-                                            cy={orbCyValues[index]}
+                                    >
+                                        <RadialGradient
+                                            c={orbCenterValues[index]}
                                             r={orb.radius}
-                                        >
-                                            <RadialGradient
-                                                c={orbCenterValues[index]}
-                                                r={orb.radius}
-                                                colors={orbGradient}
-                                            />
-                                        </Circle>
-                                        <Circle
-                                            cx={orbCxValues[index]}
-                                            cy={orbCyValues[index]}
-                                            r={orb.radius}
-                                            style="stroke"
-                                            strokeWidth={1.2}
-                                            color={orbEdgeColor}
-                                            opacity={0.42}
+                                            colors={orbGradient}
                                         />
-                                        {/* Morph ring: a soft alpha halo
-                                            just outside the orb that the
-                                            blur+threshold goo turns into
-                                            an organic living edge. */}
-                                        <Circle
-                                            cx={orbCxValues[index]}
-                                            cy={orbCyValues[index]}
+                                    </Circle>
+                                    <Circle
+                                        cx={orbCxValues[index]}
+                                        cy={orbCyValues[index]}
+                                        r={orb.radius}
+                                        style="stroke"
+                                        strokeWidth={1.2}
+                                        color={orbEdgeColor}
+                                        opacity={0.42}
+                                    />
+                                    {/* Morph ring: a soft alpha halo just
+                                    outside the orb that the blur+threshold goo
+                                    turns into an organic living edge. */}
+                                    <Circle
+                                        cx={orbCxValues[index]}
+                                        cy={orbCyValues[index]}
+                                        r={ringR}
+                                    >
+                                        <RadialGradient
+                                            c={orbCenterValues[index]}
                                             r={ringR}
-                                        >
-                                            <RadialGradient
-                                                c={orbCenterValues[index]}
-                                                r={ringR}
-                                                colors={[
-                                                    "rgba(0,0,0,0)",
-                                                    "rgba(255,230,218,0.22)",
-                                                    "rgba(0,0,0,0)",
-                                                ]}
-                                                positions={[0.65, 0.82, 1.0]}
-                                            />
-                                        </Circle>
-                                    </Group>
-                                );
-                            })}
-                            {/* Lights inside the morph layer: their alpha
-                                participates in the blur+threshold compositing
-                                directly with the orb, producing organic goo
-                                merging as they flow through. Seeds match the
-                                visible copies outside the morph layer. */}
-                            {activeLanes.map((lane) => {
-                                const effRadius =
-                                    orbEffectiveBaseRadius[lane.orbIndex] ??
-                                    orbGeometries[lane.orbIndex]?.baseRadius ??
-                                    0;
-                                const lightsToRender = clampLights(
-                                    lane.connectedCount,
-                                );
-                                const orbSizeRatio =
-                                    effRadius /
-                                    Math.max(
-                                        sceneScale * resolvedOrbRadiusScale,
-                                        1,
-                                    );
-                                const isHostedLane = lane.id !== "local";
-                                const hostedVerticalBias = isHostedLane
-                                    ? Math.max(
-                                          0,
-                                          Math.min(
-                                              1,
-                                              (0.12 - orbSizeRatio) / 0.05,
-                                          ),
-                                      )
-                                    : 0;
-                                const exitDistance =
-                                    lane.id === "local"
-                                        ? effRadius * 2.0
-                                        : effRadius * 1.8;
-                                const endPoint = vec(0, -exitDistance);
-                                const secondLastPoint = vec(
-                                    0,
-                                    -exitDistance * 0.5,
-                                );
-
-                                return (
-                                    <Group
-                                        key={`morph-lane-${lane.id}`}
-                                        transform={
-                                            orbLightTransformValues[
-                                                lane.orbIndex
-                                            ]
-                                        }
-                                    >
-                                        {Array.from(
-                                            { length: lightsToRender },
-                                            (_, lightIndex) => (
-                                                <ConduitConnectionLight
-                                                    key={`morph-${lane.id}-${lightIndex}-${Math.round(effRadius)}`}
-                                                    active={true}
-                                                    canvasWidth={width}
-                                                    orbRadius={effRadius}
-                                                    spawnXRangeScale={
-                                                        lightSpawnXRangeScale
-                                                    }
-                                                    verticalBias={
-                                                        hostedVerticalBias
-                                                    }
-                                                    midPoint={vec(0, 0)}
-                                                    secondLastPoint={
-                                                        secondLastPoint
-                                                    }
-                                                    endPoint={endPoint}
-                                                    randomize={true}
-                                                    deterministicSeed={lightSeed(
-                                                        `${lane.id}-${lightIndex}`,
-                                                    )}
-                                                />
-                                            ),
-                                        )}
-                                    </Group>
-                                );
-                            })}
-                        </Group>
-
-                        {/* Lights rendered outside the morph layer so the
-                            alpha-threshold goo effect doesn't clip them to
-                            the orb boundaries. */}
-                        <Group opacity={entryOpacity}>
-                            {activeLanes.map((lane) => {
-                                const effRadius =
-                                    orbEffectiveBaseRadius[lane.orbIndex] ??
-                                    orbGeometries[lane.orbIndex]?.baseRadius ??
-                                    0;
-                                const lightsToRender = clampLights(
-                                    lane.connectedCount,
-                                );
-                                const orbSizeRatio =
-                                    effRadius /
-                                    Math.max(
-                                        sceneScale * resolvedOrbRadiusScale,
-                                        1,
-                                    );
-                                const isHostedLane = lane.id !== "local";
-                                const hostedVerticalBias = isHostedLane
-                                    ? Math.max(
-                                          0,
-                                          Math.min(
-                                              1,
-                                              (0.12 - orbSizeRatio) / 0.05,
-                                          ),
-                                      )
-                                    : 0;
-                                const exitDistance =
-                                    lane.id === "local"
-                                        ? effRadius * 2.0
-                                        : effRadius * 1.8;
-                                const endPoint = vec(0, -exitDistance);
-                                const secondLastPoint = vec(
-                                    0,
-                                    -exitDistance * 0.5,
-                                );
-
-                                return (
-                                    <Group
-                                        key={`lane-${lane.id}`}
-                                        transform={
-                                            orbLightTransformValues[
-                                                lane.orbIndex
-                                            ]
-                                        }
-                                    >
-                                        {Array.from(
-                                            { length: lightsToRender },
-                                            (_, lightIndex) => (
-                                                <ConduitConnectionLight
-                                                    key={`lane-${lane.id}-light-${lightIndex}-${Math.round(effRadius)}`}
-                                                    active={true}
-                                                    canvasWidth={width}
-                                                    orbRadius={effRadius}
-                                                    spawnXRangeScale={
-                                                        lightSpawnXRangeScale
-                                                    }
-                                                    verticalBias={
-                                                        hostedVerticalBias
-                                                    }
-                                                    midPoint={vec(0, 0)}
-                                                    secondLastPoint={
-                                                        secondLastPoint
-                                                    }
-                                                    endPoint={endPoint}
-                                                    randomize={true}
-                                                    deterministicSeed={lightSeed(
-                                                        `${lane.id}-${lightIndex}`,
-                                                    )}
-                                                />
-                                            ),
-                                        )}
-                                    </Group>
-                                );
-                            })}
-                        </Group>
-
-                        <Group opacity={entryOpacity}>
-                            {orbGeometries.map((orb, index) => {
-                                const orbInnerShadowGradient =
-                                    orbInnerShadowGradientValues[index];
-                                const orbShadowCenter =
-                                    orbShadowCenterValues[index];
-                                const orbShadowRadius =
-                                    orbShadowRadiusValues[index];
-
-                                return (
-                                    <Group key={`orb-shadow-${index}`}>
-                                        <Circle
-                                            cx={orbCxValues[index]}
-                                            cy={orbCyValues[index]}
-                                            r={orb.radius}
-                                        >
-                                            <RadialGradient
-                                                c={orbShadowCenter}
-                                                r={orbShadowRadius}
-                                                colors={orbInnerShadowGradient}
-                                                positions={[0.66, 1]}
-                                            />
-                                        </Circle>
-                                    </Group>
-                                );
-                            })}
-                        </Group>
-
-                        <Group>
-                            {visibleProvisioningMarkers.map((marker) => (
-                                <OrbProvisioningMarker
-                                    key={`provisioning-marker-${marker.id}`}
-                                    marker={marker}
-                                    centerX={orbCxValues[marker.orbIndex]}
-                                    centerY={orbCyValues[marker.orbIndex]}
-                                    radius={orbRadiusValues[marker.orbIndex]}
-                                    reducedMotion={reducedMotion}
-                                    onExited={handleProvisioningMarkerExited}
-                                />
-                            ))}
-                        </Group>
+                                            colors={[
+                                                "rgba(0,0,0,0)",
+                                                "rgba(255,230,218,0.22)",
+                                                "rgba(0,0,0,0)",
+                                            ]}
+                                            positions={[0.65, 0.82, 1.0]}
+                                        />
+                                    </Circle>
+                                </Group>
+                            );
+                        })}
+                        {/* Both copies select the same scene motion slot. */}
+                        {laneLightSpecs.map((lane) => {
+                            return (
+                                <Group
+                                    key={`morph-lane-${lane.id}`}
+                                    transform={
+                                        orbLightTransformValues[lane.orbIndex]
+                                    }
+                                >
+                                    {lane.lights.map((light) => (
+                                        <ConduitConnectionLight
+                                            key={`morph-${lane.id}-${light.index}-${Math.round(lane.effectiveRadius)}`}
+                                            active={true}
+                                            orbRadius={lane.effectiveRadius}
+                                            midPoint={
+                                                CONNECTION_LIGHT_MID_POINT
+                                            }
+                                            secondLastPoint={
+                                                lane.secondLastPoint
+                                            }
+                                            endPoint={lane.endPoint}
+                                            randomize={true}
+                                            asMorphProxy={true}
+                                            sharedMotionBuffer={
+                                                sceneLightMotionBuffer
+                                            }
+                                            sharedMotionIndex={
+                                                light.motionIndex
+                                            }
+                                        />
+                                    ))}
+                                </Group>
+                            );
+                        })}
                     </Group>
                 </Group>
+
+                {/* Visible lights stay above the thresholded morph layer. */}
+                <Group opacity={entryOpacity}>
+                    {laneLightSpecs.map((lane) => {
+                        return (
+                            <Group
+                                key={`lane-${lane.id}`}
+                                transform={
+                                    orbLightTransformValues[lane.orbIndex]
+                                }
+                            >
+                                {lane.lights.map((light) => (
+                                    <ConduitConnectionLight
+                                        key={`lane-${lane.id}-light-${light.index}-${Math.round(lane.effectiveRadius)}`}
+                                        active={true}
+                                        orbRadius={lane.effectiveRadius}
+                                        midPoint={CONNECTION_LIGHT_MID_POINT}
+                                        secondLastPoint={lane.secondLastPoint}
+                                        endPoint={lane.endPoint}
+                                        randomize={true}
+                                        sharedMotionBuffer={
+                                            sceneLightMotionBuffer
+                                        }
+                                        sharedMotionIndex={light.motionIndex}
+                                    />
+                                ))}
+                            </Group>
+                        );
+                    })}
+                </Group>
+            </>
+        );
+    }
+
+    function renderDetail() {
+        return (
+            <>
+                <Group opacity={entryOpacity}>
+                    {orbGeometries.map((orb, index) => {
+                        const orbInnerShadowGradient =
+                            orbInnerShadowGradientValues[index];
+                        const orbShadowCenter = orbShadowCenterValues[index];
+                        const orbShadowRadius = orbShadowRadiusValues[index];
+
+                        return (
+                            <Group key={`orb-shadow-${index}`}>
+                                <Circle
+                                    cx={orbCxValues[index]}
+                                    cy={orbCyValues[index]}
+                                    r={orb.radius}
+                                >
+                                    <RadialGradient
+                                        c={orbShadowCenter}
+                                        r={orbShadowRadius}
+                                        colors={orbInnerShadowGradient}
+                                        positions={[0.66, 1]}
+                                    />
+                                </Circle>
+                            </Group>
+                        );
+                    })}
+                </Group>
+
+                <Group>
+                    {visibleProvisioningMarkers.map((marker) => (
+                        <OrbProvisioningMarker
+                            key={`provisioning-marker-${marker.id}`}
+                            marker={marker}
+                            centerX={orbCxValues[marker.orbIndex]}
+                            centerY={orbCyValues[marker.orbIndex]}
+                            radius={orbRadiusValues[marker.orbIndex]}
+                            reducedMotion={reducedMotion}
+                            onExited={handleProvisioningMarkerExited}
+                        />
+                    ))}
+                </Group>
+            </>
+        );
+    }
+
+    const sceneContent = (
+        <Group>
+            {renderGlow()}
+            {renderMorphAndVisibleLights()}
+            {renderDetail()}
+        </Group>
+    );
+
+    return (
+        <View style={{ width, height, backgroundColor: "transparent" }}>
+            <Canvas style={ss.flex}>
+                <Group layer={sceneLayer}>{sceneContent}</Group>
             </Canvas>
 
             {orbGeometries.map((orb) => {
                 const isLocalOrb =
                     localOrbIndex != null && orb.index === localOrbIndex;
                 const isPrimaryOffOrb = evolutionLevel === 0 && orb.index === 0;
+                const isPrimaryTestOrb =
+                    isLocalOrb ||
+                    isPrimaryOffOrb ||
+                    (localOrbIndex == null && orb.index === 0);
                 const tapAction =
                     isLocalOrb || isPrimaryOffOrb
                         ? onPress
@@ -1584,10 +1795,6 @@ export function OrbScene(props: OrbSceneProps) {
                       : isHostedProvisioningOrb
                         ? t(
                               "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N.string",
-                              {
-                                  defaultValue:
-                                      "Hosted Conduit, provisioning host",
-                              },
                           )
                         : t("HOSTED_CONDUIT_ORB_TAP_ACCESSIBILITY_I18N.string");
 
@@ -1607,6 +1814,7 @@ export function OrbScene(props: OrbSceneProps) {
                                 ? `${accessibilityLabel} - ${orbLabel}`
                                 : orbLabel
                         }
+                        testID={isPrimaryTestOrb ? testID : undefined}
                         onTapAction={tapAction}
                         onLongPressAction={longPressAction}
                     />

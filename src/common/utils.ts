@@ -18,40 +18,12 @@
  */
 import { ScaledSize } from "react-native";
 
-import { wrapError } from "@/src/common/errors";
-
 export function byteArraysAreEqual(a: Uint8Array, b: Uint8Array): boolean {
     if (!a || !b || a.length !== b.length) {
         return false;
     }
 
     return a.every((val, i) => val === b[i]);
-}
-
-export function jsonObjectToUint8Array(obj: any): Uint8Array {
-    return new TextEncoder().encode(JSON.stringify(obj));
-}
-
-export function uint8ArrayToJsonObject(arr: Uint8Array): any {
-    return JSON.parse(new TextDecoder().decode(arr));
-}
-
-export function niceBytes(
-    bytes: number,
-    errorHandler: (error: Error) => void,
-): string {
-    let units = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB"];
-    let unit = units.shift() as string;
-    try {
-        while (units.length > 0 && bytes >= 1000) {
-            bytes /= 1000;
-            unit = units.shift() as string;
-        }
-    } catch (error) {
-        errorHandler(wrapError(error, "Error converting number to niceBytes"));
-    }
-
-    return `${bytes.toFixed(bytes > 0 ? 1 : 0)} ${unit}`;
 }
 
 export function bytesToMB(bytes: number): number {
@@ -141,7 +113,7 @@ export function hueFunction(hueConfig: number[], originalHue: number) {
           originalHue;
 }
 
-export function decToHex(v: number): string {
+function decToHex(v: number): string {
     v |= 0; // Ensure integer value
     return v < 0
         ? "00"
@@ -152,7 +124,7 @@ export function decToHex(v: number): string {
             : "ff";
 }
 
-export function hueToRgb(m1: number, m2: number, h: number): string {
+function hueToRgb(m1: number, m2: number, h: number): string {
     h = h < 0 ? h + 6 : h > 6 ? h - 6 : h;
     return decToHex(
         255 *
@@ -166,11 +138,7 @@ export function hueToRgb(m1: number, m2: number, h: number): string {
     );
 }
 
-export function hsl(
-    hue: number,
-    saturation: number,
-    lightness: number,
-): string {
+function hsl(hue: number, saturation: number, lightness: number): string {
     let result;
 
     if (saturation == 0) {

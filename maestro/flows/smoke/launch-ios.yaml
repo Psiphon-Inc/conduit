@@ -1,0 +1,15 @@
+# Flow: launch-ios (smoke)
+# Cold-starts a fresh install on iOS (hosted-only) and confirms the app reaches
+# an interactive shell. iOS reset also clears the Keychain (see reset-app).
+appId: ca.psiphon.conduit
+tags:
+    - smoke
+    - ios
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- assertVisible:
+      id: "app-ready"
+- assertVisible:
+      id: "nav-home"

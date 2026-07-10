@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import type { DashboardSummaryAggregate } from "@/src/hosted/dashboard";
+import type { DashboardSummaryAggregate } from "@/src/hosted/dashboard/transforms";
 
-export interface SummaryAggregateVector {
+interface SummaryAggregateVector {
     personalConnected: number;
     personalConnecting: number;
     personalBytes: number;

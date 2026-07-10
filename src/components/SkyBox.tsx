@@ -174,7 +174,7 @@ export function InproxyStatusColorCanvas({
                 },
             ]}
         >
-            <Canvas style={[ss.flex]}>
+            <Canvas style={ss.flex}>
                 <Rect x={0} y={0} width={width} height={height}>
                     <LinearGradient
                         start={vec(width / 2, height)}

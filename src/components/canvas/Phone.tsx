@@ -156,7 +156,6 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
             >
                 <ConduitConnectionLight
                     active={true}
-                    canvasWidth={sceneWidth}
                     orbRadius={sceneHeight / 3}
                     midPoint={vec(0, 0)}
                     secondLastPoint={vec(sceneWidth / 4, 0)}

@@ -24,8 +24,6 @@ import {
 } from "@/src/constants";
 import { RecentWindow, SummaryWindow } from "@/src/hosted/contracts";
 
-export type HostedStatsDataSource = "api" | "mock";
-
 export const hostedQueryKeys = {
     root: (baseUrl: string) => [QUERYKEY_HOSTED_STATION, baseUrl] as const,
     session: (baseUrl: string) =>
@@ -42,46 +40,37 @@ export const hostedQueryKeys = {
         ] as const,
     conduits: (baseUrl: string, accountId: string | null) =>
         [...hostedQueryKeys.root(baseUrl), "conduits", accountId] as const,
-    statsSession: (
-        baseUrl: string,
-        accountId: string | null,
-        dataSource: HostedStatsDataSource = "api",
-    ) =>
+    statsSession: (baseUrl: string, accountId: string | null) =>
         [
             ...hostedQueryKeys.root(baseUrl),
             "stats-session",
-            dataSource,
+            "api",
             accountId,
         ] as const,
     statsSummary: (
-        dataSource: HostedStatsDataSource,
         statsToken: string | null,
         proxyId: string | null,
         window: SummaryWindow,
     ) =>
         [
             QUERYKEY_HOSTED_STATS_SUMMARY,
-            dataSource,
+            "api",
             statsToken,
             proxyId,
             window,
         ] as const,
     statsRecent: (
-        dataSource: HostedStatsDataSource,
         statsToken: string | null,
         proxyId: string | null,
         window: RecentWindow,
     ) =>
         [
             QUERYKEY_HOSTED_STATS_RECENT,
-            dataSource,
+            "api",
             statsToken,
             proxyId,
             window,
         ] as const,
-    statsLive: (
-        dataSource: HostedStatsDataSource,
-        statsToken: string | null,
-        proxyId: string | null,
-    ) => [QUERYKEY_HOSTED_STATS_LIVE, dataSource, statsToken, proxyId] as const,
+    statsLive: (statsToken: string | null, proxyId: string | null) =>
+        [QUERYKEY_HOSTED_STATS_LIVE, "api", statsToken, proxyId] as const,
 };

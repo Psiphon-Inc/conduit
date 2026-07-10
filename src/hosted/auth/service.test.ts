@@ -16,27 +16,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { createHostedAppleAuthAdapter } from "@/src/hosted/auth/apple";
-import { createHostedGoogleAuthAdapter } from "@/src/hosted/auth/google";
 import {
     createHostedAuthService,
     createStubHostedAuthService,
 } from "@/src/hosted/auth/service";
-import { HostedAuthServiceError } from "@/src/hosted/auth/types";
+import {
+    HostedAuthAdapter,
+    HostedAuthServiceError,
+} from "@/src/hosted/auth/types";
+
+const unusedAppleAdapter: HostedAuthAdapter = {
+    signIn: async () => {
+        throw new Error("apple adapter should not be invoked in this test");
+    },
+};
 
 describe("hosted auth service", () => {
     it("returns provider payload without mutating broker token", async () => {
         const service = createHostedAuthService({
             adapters: {
-                google: createHostedGoogleAuthAdapter({
-                    signInImpl: async () => ({
+                google: {
+                    signIn: async () => ({
                         tokenType: "clerk_broker_jwt",
                         brokerToken: "broker.jwt.token.abc",
                         platform: "android",
                         clientVersion: "1.2.3",
                     }),
-                }),
-                apple: createHostedAppleAuthAdapter(),
+                },
+                apple: unusedAppleAdapter,
             },
         });
 
@@ -52,15 +59,15 @@ describe("hosted auth service", () => {
     it("maps invalid adapter payloads to user-safe invalid_response errors", async () => {
         const service = createHostedAuthService({
             adapters: {
-                google: createHostedGoogleAuthAdapter({
-                    signInImpl: async () => ({
+                google: {
+                    signIn: async () => ({
                         tokenType: "clerk_broker_jwt",
                         brokerToken: "",
                         platform: "android",
                         clientVersion: "1.2.3",
                     }),
-                }),
-                apple: createHostedAppleAuthAdapter(),
+                },
+                apple: unusedAppleAdapter,
             },
         });
 
@@ -77,8 +84,8 @@ describe("hosted auth service", () => {
     it("maps cancellation-like errors from providers", async () => {
         const service = createHostedAuthService({
             adapters: {
-                google: createHostedGoogleAuthAdapter({
-                    signInImpl: async () => {
+                google: {
+                    signIn: async () => {
                         throw Object.assign(
                             new Error("Flow cancelled by user"),
                             {
@@ -86,8 +93,8 @@ describe("hosted auth service", () => {
                             },
                         );
                     },
-                }),
-                apple: createHostedAppleAuthAdapter(),
+                },
+                apple: unusedAppleAdapter,
             },
         });
 

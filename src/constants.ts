@@ -39,8 +39,6 @@ export const RYVE_APP_LISTING_GOOGLE =
 
 export const RYVE_CLAIM_DEEP_LINK = "network.ryve.app://(app)/conduits?claim=";
 
-// Window height cutoff used to render smaller text in Skia Paragraphs
-export const WINDOW_HEIGHT_FONT_SIZE_CUTOFF = 800;
 export const APP_MAX_CONTENT_WIDTH = 600;
 
 // Used to track storage migration success
@@ -49,6 +47,8 @@ export const CURRENT_STORAGE_VERSION = 3;
 // AsyncStorage keys, centralized to prevent accidental collision
 export const ASYNCSTORAGE_STORAGE_VERSION_KEY = "storageVersion";
 export const ASYNCSTORAGE_HAS_ONBOARDED_KEY = "hasOnboarded";
+export const ASYNCSTORAGE_WEB_ADD_TO_HOME_SCREEN_PROMPT_SEEN_KEY =
+    "webAddToHomeScreenPromptSeen";
 export const ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY = "MockInproxyRunning";
 export const ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY = "InproxyMaxClients";
 export const ASYNCSTORAGE_INPROXY_MAX_PERSONAL_CLIENTS_KEY =
@@ -86,16 +86,9 @@ export const QUERYKEY_INPROXY_KEYPAIR = "conduitKeyPair";
 export const QUERYKEY_INPROXY_STATUS = "inproxyStatus";
 export const QUERYKEY_INPROXY_ACTIVITY_STATS_READY =
     "inproxyActivityStatsReady";
-export const QUERYKEY_INPROXY_ACTIVITY_BY_1000MS = "inproxyActivityBy1000ms";
-export const QUERYKEY_INPROXY_ACTIVITY_BY_3600000MS =
-    "inproxyActivityBy3600000ms";
 export const QUERYKEY_INPROXY_ACTIVITY_SEGMENTS = "inproxyActivitySegments";
 export const QUERYKEY_INPROXY_REGIONAL_BREAKDOWN_BY_WINDOW =
     "inproxyRegionalBreakdownByWindow";
-export const QUERYKEY_INPROXY_PERSONAL_REGION_ACTIVITY =
-    "inproxyPersonalRegionActivity";
-export const QUERYKEY_INPROXY_COMMON_REGION_ACTIVITY =
-    "inproxyCommonRegionActivity";
 export const QUERYKEY_INPROXY_CURRENT_CONNECTED_CLIENTS =
     "inproxyCurrentConnectedClients";
 export const QUERYKEY_INPROXY_CURRENT_PERSONAL_CONNECTED_CLIENTS =

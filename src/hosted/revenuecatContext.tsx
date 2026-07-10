@@ -17,12 +17,6 @@
  *
  */
 import React from "react";
-import {
-    CustomerInfo,
-    CustomerInfoUpdateListener,
-    PurchasesOfferings,
-    PurchasesPackage,
-} from "react-native-purchases";
 
 import {
     RevenueCatClient,
@@ -32,23 +26,29 @@ import {
     RevenueCatRestoreResult,
     createRevenueCatClient,
 } from "@/src/hosted/revenuecatClient";
+import {
+    HostedCustomerInfo,
+    HostedCustomerInfoListener,
+    HostedRevenueCatOfferings,
+    HostedRevenueCatPackage,
+} from "@/src/hosted/revenuecatTypes";
 
-export interface RevenueCatInitializeInput {
+interface RevenueCatInitializeInput {
     publicKeys: RevenueCatPublicKeys;
     accountId?: string;
     platformOs?: string;
 }
 
 export interface RevenueCatContextValue {
-    customerInfo: CustomerInfo | null;
+    customerInfo: HostedCustomerInfo | null;
     configure(input: RevenueCatConfigureInput): void;
-    initialize(input: RevenueCatInitializeInput): Promise<CustomerInfo>;
-    logIn(accountId: string): Promise<CustomerInfo>;
-    refreshCustomerInfo(): Promise<CustomerInfo>;
-    getOfferings(): Promise<PurchasesOfferings>;
+    initialize(input: RevenueCatInitializeInput): Promise<HostedCustomerInfo>;
+    logIn(accountId: string): Promise<HostedCustomerInfo>;
+    refreshCustomerInfo(): Promise<HostedCustomerInfo>;
+    getOfferings(): Promise<HostedRevenueCatOfferings>;
     restorePurchases(): Promise<RevenueCatRestoreResult>;
     purchasePackage(
-        aPackage: PurchasesPackage,
+        aPackage: HostedRevenueCatPackage,
     ): Promise<RevenueCatPurchaseResult>;
 }
 
@@ -67,7 +67,7 @@ export function useRevenueCatContext(): RevenueCatContextValue {
     return value;
 }
 
-export interface RevenueCatProviderProps extends React.PropsWithChildren {
+interface RevenueCatProviderProps extends React.PropsWithChildren {
     client?: RevenueCatClient;
 }
 
@@ -76,18 +76,17 @@ export function RevenueCatProvider(props: RevenueCatProviderProps) {
         () => props.client ?? createRevenueCatClient(),
         [props.client],
     );
-    const [customerInfo, setCustomerInfo] = React.useState<CustomerInfo | null>(
-        null,
-    );
+    const [customerInfo, setCustomerInfo] =
+        React.useState<HostedCustomerInfo | null>(null);
 
     React.useEffect(() => {
-        const listener: CustomerInfoUpdateListener = (nextCustomerInfo) => {
+        const listener: HostedCustomerInfoListener = (nextCustomerInfo) => {
             setCustomerInfo(nextCustomerInfo);
         };
         return client.addCustomerInfoListener(listener);
     }, [client]);
 
-    async function logIn(accountId: string): Promise<CustomerInfo> {
+    async function logIn(accountId: string): Promise<HostedCustomerInfo> {
         const nextCustomerInfo = await client.logIn(accountId);
         setCustomerInfo(nextCustomerInfo);
         return nextCustomerInfo;
@@ -95,7 +94,7 @@ export function RevenueCatProvider(props: RevenueCatProviderProps) {
 
     async function initialize(
         input: RevenueCatInitializeInput,
-    ): Promise<CustomerInfo> {
+    ): Promise<HostedCustomerInfo> {
         client.configure({
             publicKeys: input.publicKeys,
             platformOs: input.platformOs,
@@ -112,13 +111,13 @@ export function RevenueCatProvider(props: RevenueCatProviderProps) {
         return nextCustomerInfo;
     }
 
-    async function refreshCustomerInfo(): Promise<CustomerInfo> {
+    async function refreshCustomerInfo(): Promise<HostedCustomerInfo> {
         const nextCustomerInfo = await client.getCustomerInfo();
         setCustomerInfo(nextCustomerInfo);
         return nextCustomerInfo;
     }
 
-    async function getOfferings(): Promise<PurchasesOfferings> {
+    async function getOfferings(): Promise<HostedRevenueCatOfferings> {
         return client.getOfferings();
     }
 
@@ -129,7 +128,7 @@ export function RevenueCatProvider(props: RevenueCatProviderProps) {
     }
 
     async function purchasePackage(
-        aPackage: PurchasesPackage,
+        aPackage: HostedRevenueCatPackage,
     ): Promise<RevenueCatPurchaseResult> {
         const result = await client.purchasePackage(aPackage);
         setCustomerInfo(result.customerInfo);

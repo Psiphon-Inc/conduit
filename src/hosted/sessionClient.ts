@@ -16,15 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+// Owns hosted authentication, session persistence, and token refresh.
 import { base64urlnopad } from "@scure/base";
-import * as SecureStore from "expo-secure-store";
 import { z } from "zod";
 
 import { wrapError } from "@/src/common/errors";
+import * as secureStorage from "@/src/common/secureStorage";
 import { SECURESTORE_HOSTED_SESSION_KEY } from "@/src/constants";
 import {
     AccountProfile,
-    HostedApiErrorSchema,
     HostedLoginRequest,
     HostedLoginRequestSchema,
     RefreshRequestSchema,
@@ -32,6 +32,7 @@ import {
     SessionTokenResponse,
     SessionTokenResponseSchema,
 } from "@/src/hosted/contracts";
+import { normalizeHostedBaseUrl, requestHostedJson } from "@/src/hosted/http";
 
 const LOGIN_PATH = "/auth/oauth/login";
 const REFRESH_PATH = "/auth/refresh";
@@ -46,7 +47,7 @@ export interface HostedSession {
     accountProfile: AccountProfile | null;
 }
 
-export interface HostedSessionClientConfig {
+interface HostedSessionClientConfig {
     baseUrl: string;
     fetchImpl?: typeof fetch;
     now?: () => number;
@@ -67,7 +68,9 @@ export class HostedApiRequestError extends Error {
 export function createHostedSessionClient(config: HostedSessionClientConfig) {
     const fetchImpl = config.fetchImpl ?? fetch;
     const now = config.now ?? (() => Date.now());
-    const normalizedBaseUrl = normalizeBaseUrl(config.baseUrl);
+    const normalizedBaseUrl = normalizeHostedBaseUrl(config.baseUrl, {
+        trimWhitespace: true,
+    });
     let refreshInFlight: Promise<HostedSession> | null = null;
 
     async function login(input: HostedLoginRequest): Promise<HostedSession> {
@@ -156,8 +159,10 @@ export function createHostedSessionClient(config: HostedSessionClientConfig) {
 export async function loadHostedSession(
     baseUrl: string,
 ): Promise<HostedSession | null> {
-    const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
-    const raw = await SecureStore.getItemAsync(
+    const normalizedBaseUrl = normalizeHostedBaseUrl(baseUrl, {
+        trimWhitespace: true,
+    });
+    const raw = await secureStorage.getItemAsync(
         storageKeyForBaseUrl(normalizedBaseUrl),
     );
     if (raw == null) {
@@ -166,7 +171,10 @@ export async function loadHostedSession(
 
     try {
         const parsed = HostedStoredSessionSchema.parse(JSON.parse(raw));
-        if (normalizeBaseUrl(parsed.baseUrl) !== normalizedBaseUrl) {
+        if (
+            normalizeHostedBaseUrl(parsed.baseUrl, { trimWhitespace: true }) !==
+            normalizedBaseUrl
+        ) {
             throw new Error("Hosted session base URL mismatch");
         }
         return parsed.session;
@@ -179,23 +187,27 @@ export async function persistHostedSession(
     baseUrl: string,
     session: HostedSession,
 ): Promise<void> {
-    const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+    const normalizedBaseUrl = normalizeHostedBaseUrl(baseUrl, {
+        trimWhitespace: true,
+    });
     const parsed = HostedSessionSchema.parse(session);
-    await SecureStore.setItemAsync(
+    await secureStorage.setItemAsync(
         storageKeyForBaseUrl(normalizedBaseUrl),
         JSON.stringify({
             baseUrl: normalizedBaseUrl,
             session: parsed,
         }),
     );
-    await SecureStore.deleteItemAsync(SECURESTORE_HOSTED_SESSION_KEY);
+    await secureStorage.deleteItemAsync(SECURESTORE_HOSTED_SESSION_KEY);
 }
 
 export async function clearHostedSession(baseUrl: string): Promise<void> {
-    await SecureStore.deleteItemAsync(
-        storageKeyForBaseUrl(normalizeBaseUrl(baseUrl)),
+    await secureStorage.deleteItemAsync(
+        storageKeyForBaseUrl(
+            normalizeHostedBaseUrl(baseUrl, { trimWhitespace: true }),
+        ),
     );
-    await SecureStore.deleteItemAsync(SECURESTORE_HOSTED_SESSION_KEY);
+    await secureStorage.deleteItemAsync(SECURESTORE_HOSTED_SESSION_KEY);
 }
 
 async function requestJson(
@@ -203,40 +215,16 @@ async function requestJson(
     url: string,
     init: RequestInit,
 ): Promise<unknown> {
-    const response = await fetchImpl(url, init);
-
-    const text = await response.text();
-    let body: unknown;
-    try {
-        body = text ? (JSON.parse(text) as unknown) : null;
-    } catch {
-        // Server returned non-JSON (e.g. HTML error page from a proxy/LB).
-        throw new HostedApiRequestError(
-            `Server is currently unavailable (HTTP ${response.status})`,
-            response.status,
-        );
-    }
-
-    if (!response.ok) {
-        const apiErr = HostedApiErrorSchema.safeParse(body);
-        if (apiErr.success) {
-            throw new HostedApiRequestError(
-                apiErr.data.error.message,
-                response.status,
-                apiErr.data.error.code,
-            );
-        }
-        throw new HostedApiRequestError(
-            `Hosted API request failed with status ${response.status}`,
-            response.status,
-        );
-    }
-
-    return body;
-}
-
-function normalizeBaseUrl(baseUrl: string): string {
-    return baseUrl.trim().replace(/\/$/, "");
+    return requestHostedJson(fetchImpl, url, init, {
+        telemetryClient: "hosted-session",
+        createRequestError: createSessionRequestError,
+        // Session endpoints must never accept proxy/LB HTML as a response body.
+        onInvalidJson: (status) =>
+            new HostedApiRequestError(
+                `Server is currently unavailable (HTTP ${status})`,
+                status,
+            ),
+    });
 }
 
 function storageKeyForBaseUrl(baseUrl: string): string {
@@ -249,7 +237,10 @@ function storageKeyForBaseUrl(baseUrl: string): string {
 async function migrateLegacyHostedSession(
     normalizedBaseUrl: string,
 ): Promise<HostedSession | null> {
-    const raw = await SecureStore.getItemAsync(SECURESTORE_HOSTED_SESSION_KEY);
+    // Retain migration while already-persisted unsuffixed sessions may exist.
+    const raw = await secureStorage.getItemAsync(
+        SECURESTORE_HOSTED_SESSION_KEY,
+    );
     if (raw == null) {
         return null;
     }
@@ -261,6 +252,14 @@ async function migrateLegacyHostedSession(
     } catch (error) {
         throw wrapError(error, "Invalid hosted session state");
     }
+}
+
+function createSessionRequestError(
+    message: string,
+    status: number,
+    code?: string,
+): HostedApiRequestError {
+    return new HostedApiRequestError(message, status, code);
 }
 
 function buildSessionFromLogin(

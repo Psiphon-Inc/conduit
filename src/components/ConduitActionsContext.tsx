@@ -90,18 +90,18 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
             state.stationPhase,
         ],
     );
-    const personalCompartmentId =
-        Platform.OS === "ios"
-            ? hostedPersonalPairing.hostedPersonalCompartmentId
-            : (hostedPersonalPairing.hostedPersonalCompartmentId ??
-              androidPersonalCompartmentId ??
-              null);
-    const isPersonalPairingShareReady =
-        Platform.OS === "ios"
-            ? hostedPersonalPairing.ready
-            : personalCompartmentId != null;
+    const usesHostedPersonalPairing =
+        Platform.OS === "ios" || Platform.OS === "web";
+    const personalCompartmentId = usesHostedPersonalPairing
+        ? hostedPersonalPairing.hostedPersonalCompartmentId
+        : (hostedPersonalPairing.hostedPersonalCompartmentId ??
+          androidPersonalCompartmentId ??
+          null);
+    const isPersonalPairingShareReady = usesHostedPersonalPairing
+        ? hostedPersonalPairing.ready
+        : personalCompartmentId != null;
     const isPersonalPairingPreparing =
-        Platform.OS === "ios" &&
+        usesHostedPersonalPairing &&
         hostedPersonalPairing.preparing &&
         !isPersonalPairingShareReady;
     const personalPairingWrapperBaseUrl =

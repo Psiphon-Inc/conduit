@@ -20,6 +20,7 @@ import { base64nopad } from "@scure/base";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
+import { createOrLoadAccount } from "@/src/auth/account";
 import { base64nopadToKeyPair } from "@/src/common/cryptography";
 import {
     SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
@@ -28,7 +29,7 @@ import {
 import {
     PersonalCompartmentId,
     PersonalCompartmentIdSchema,
-} from "@/src/hosted/contracts";
+} from "@/src/pairing/compartmentId";
 
 export async function loadAndroidPersonalCompartmentId(): Promise<PersonalCompartmentId | null> {
     if (Platform.OS !== "android") {
@@ -46,7 +47,14 @@ export async function loadAndroidPersonalCompartmentId(): Promise<PersonalCompar
 
     const derivedPersonalCompartmentId = await derivePersonalCompartmentId();
     if (!derivedPersonalCompartmentId) {
-        return null;
+        const accountPersonalCompartmentId =
+            await derivePersonalCompartmentIdFromAccount();
+        if (!accountPersonalCompartmentId) {
+            return null;
+        }
+
+        await persistAndroidPersonalCompartmentId(accountPersonalCompartmentId);
+        return accountPersonalCompartmentId;
     }
 
     await persistAndroidPersonalCompartmentId(derivedPersonalCompartmentId);
@@ -92,5 +100,16 @@ async function derivePersonalCompartmentId(): Promise<PersonalCompartmentId | nu
 
     return parsePersonalCompartmentId(
         base64nopad.encode(inproxyKeyPair.publicKey),
+    );
+}
+
+async function derivePersonalCompartmentIdFromAccount(): Promise<PersonalCompartmentId | null> {
+    const account = await createOrLoadAccount();
+    if (account instanceof Error) {
+        return null;
+    }
+
+    return parsePersonalCompartmentId(
+        base64nopad.encode(account.inproxyKey.publicKey),
     );
 }

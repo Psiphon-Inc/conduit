@@ -46,6 +46,8 @@ type WorldMapPathValue =
 
 const MAP_VIEWBOX_WIDTH = 2000;
 const MAP_VIEWBOX_HEIGHT = 857;
+const REGIONAL_GLYPH_WIDTH = 52;
+const REGIONAL_GLYPH_HEIGHT = 38;
 const worldMapPaths = require("@/assets/worldmapPaths.json") as Record<
     string,
     WorldMapPathValue
@@ -56,6 +58,13 @@ const worldMapLookup = buildWorldMapLookup();
 const regionalGlyphCache = new Map<string, RegionalMapGlyphData | null>();
 const IDLE_REGION_RGB = hexToRgb(palette.deepMauve);
 const ACTIVE_REGION_RGB = hexToRgb(palette.peach);
+const REGIONAL_GLYPH_CANVAS_STYLE = {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    width: REGIONAL_GLYPH_WIDTH,
+    height: REGIONAL_GLYPH_HEIGHT,
+};
 
 interface RegionalMapGlyphData {
     bounds: {
@@ -337,8 +346,14 @@ export function RegionalWorldMap({ rows }: { rows: RegionalImpactRow[] }) {
                 backgroundColor: "rgba(25, 18, 36, 0.06)",
             }}
         >
-            <Canvas style={{ flex: 1 }}>
-                {canvasSize.width > 0 && canvasSize.height > 0 ? (
+            {canvasSize.width > 0 && canvasSize.height > 0 ? (
+                <Canvas
+                    style={{
+                        width: canvasSize.width,
+                        height: canvasSize.height,
+                    }}
+                    __destroyWebGLContextAfterRender
+                >
                     <Group transform={resizeTransform}>
                         {mapPaths.allPaths.map((path, index) => (
                             <Path
@@ -359,8 +374,8 @@ export function RegionalWorldMap({ rows }: { rows: RegionalImpactRow[] }) {
                             )),
                         )}
                     </Group>
-                ) : null}
-            </Canvas>
+                </Canvas>
+            ) : null}
         </View>
     );
 }
@@ -394,23 +409,33 @@ export function RegionalMapGlyph({
         return (
             <View
                 style={{
-                    width: 52,
-                    height: 38,
+                    width: REGIONAL_GLYPH_WIDTH,
+                    height: REGIONAL_GLYPH_HEIGHT,
+                    flexShrink: 0,
                     borderRadius: 10,
+                    overflow: "hidden",
                     backgroundColor: "rgba(78, 54, 119, 0.08)",
                     borderWidth: 1,
                     borderColor: "rgba(78, 54, 119, 0.12)",
                 }}
             >
                 {marker ? (
-                    <Canvas style={{ flex: 1 }}>
+                    <Canvas
+                        style={REGIONAL_GLYPH_CANVAS_STYLE}
+                        __destroyWebGLContextAfterRender
+                    >
                         <Circle
-                            cx={26}
-                            cy={19}
+                            cx={REGIONAL_GLYPH_WIDTH / 2}
+                            cy={REGIONAL_GLYPH_HEIGHT / 2}
                             r={9}
                             color="rgba(25, 18, 36, 0.18)"
                         />
-                        <Circle cx={26} cy={19} r={6} color={heatColor} />
+                        <Circle
+                            cx={REGIONAL_GLYPH_WIDTH / 2}
+                            cy={REGIONAL_GLYPH_HEIGHT / 2}
+                            r={6}
+                            color={heatColor}
+                        />
                     </Canvas>
                 ) : null}
             </View>
@@ -424,13 +449,14 @@ export function RegionalMapGlyph({
         glyph.bounds.width + padding * 2,
         glyph.bounds.height + padding * 2,
     );
-    const dst = rect(0, 0, 52, 38);
+    const dst = rect(0, 0, REGIONAL_GLYPH_WIDTH, REGIONAL_GLYPH_HEIGHT);
 
     return (
         <View
             style={{
-                width: 52,
-                height: 38,
+                width: REGIONAL_GLYPH_WIDTH,
+                height: REGIONAL_GLYPH_HEIGHT,
+                flexShrink: 0,
                 borderRadius: 10,
                 overflow: "hidden",
                 backgroundColor: "rgba(78, 54, 119, 0.08)",
@@ -438,7 +464,10 @@ export function RegionalMapGlyph({
                 borderColor: "rgba(78, 54, 119, 0.12)",
             }}
         >
-            <Canvas style={{ flex: 1 }}>
+            <Canvas
+                style={REGIONAL_GLYPH_CANVAS_STYLE}
+                __destroyWebGLContextAfterRender
+            >
                 <Group transform={fitbox("contain", src, dst)}>
                     {glyph.paths.map((path, index) => (
                         <Path

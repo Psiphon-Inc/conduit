@@ -1,0 +1,17 @@
+# Performance setup: destructive fresh-state phone/info onboarding screen.
+appId: ${APP_ID}
+---
+- clearState
+- launchApp:
+      permissions:
+          all: allow
+- extendedWaitUntil:
+      visible:
+          id: "onboarding-next"
+      timeout: 180000
+- tapOn:
+      id: "onboarding-next"
+- waitForAnimationToEnd:
+      timeout: 5000
+- assertVisible:
+      id: "onboarding-next"

@@ -1,0 +1,14 @@
+# Reusable subflow: navigate to a destination via the bottom navigation bar.
+# Conduit uses an always-visible bottom nav (AppBottomNav) - there is no
+# hamburger/drawer, so navigation is a single tap.
+#
+# Requires (passed by the caller via `env:`):
+#   DEST - one of: home, dashboard, settings  (matches the nav-<DEST> testIDs in
+#          AppBottomNav).
+#
+# Do NOT declare an `env:` default for DEST: a subflow-local default overrides
+# the caller's value in Maestro (it would always navigate to the default).
+appId: ca.psiphon.conduit
+---
+- tapOn:
+      id: "nav-${DEST}"

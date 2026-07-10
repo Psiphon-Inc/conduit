@@ -10,6 +10,6 @@
         "expo-modules-core": "*",
         "react-native": "*"
     },
-    "license": "UNLICENSED",
+    "license": "GPL-3.0-or-later",
     "private": true
 }

@@ -1,12 +1,6 @@
 {
-    "LOADING_I18N": {
-        "string": "Ŀǿǿȧȧḓīīƞɠ..."
-    },
     "TAP_TO_TURN_ON_I18N": {
         "string": "Ŧȧȧƥ ŧǿǿ Ŧŭŭřƞ Ǿǿƞ"
-    },
-    "YOUR_CONDUIT_ID_I18N": {
-        "string": "Ẏǿǿŭŭř Ƈǿǿƞḓŭŭīīŧ ĪīḒ"
     },
     "TOTAL_BYTES_TRANSFERRED_I18N": {
         "string": "{{ niceBytes }} ŧřȧȧƞşƒḗḗřřḗḗḓ"
@@ -14,17 +8,11 @@
     "CONNECTED_PEERS_I18N": {
         "string": "{{ peers }} ƈǿǿƞƞḗḗƈŧḗḗḓ ƥḗḗḗḗřş"
     },
-    "CONNECTING_PEERS_I18N": {
-        "string": "{{ peers }} ƈǿǿƞƞḗḗƈŧīīƞɠ"
-    },
     "CANCEL_I18N": {
         "string": "Ƈȧȧƞƈḗḗŀ"
     },
     "CONFIRM_I18N": {
         "string": "Ƈǿǿƞƒīīřḿ"
-    },
-    "MAX_PEERS_I18N": {
-        "string": "Ḿȧȧẋ Ƥḗḗḗḗřş"
     },
     "MAX_PUBLIC_PEERS_I18N": {
         "string": "Ḿȧȧẋ Ƥŭŭƀŀīīƈ Ƥḗḗḗḗřş"
@@ -53,15 +41,6 @@
     "CONFIRM_CHANGES_I18N": {
         "string": "Ƈǿǿƞƒīīřḿ Ƈħȧȧƞɠḗḗş ȧȧƞḓ Řḗḗşŧȧȧřŧ Ƞǿǿẇ?"
     },
-    "NOTIFICATIONS_I18N": {
-        "string": "Ƞǿǿŧīīƒīīƈȧȧŧīīǿǿƞş"
-    },
-    "ENABLE_I18N": {
-        "string": "Ḗḗƞȧȧƀŀḗḗ"
-    },
-    "ENABLED_I18N": {
-        "string": "Ḗḗƞȧȧƀŀḗḗḓ"
-    },
     "CONDUIT_STATION_I18N": {
         "string": "Ƈǿǿƞḓŭŭīīŧ Şŧȧȧŧīīǿǿƞ"
     },
@@ -88,15 +67,6 @@
     },
     "TRY_AGAIN_I18N": {
         "string": "Ŧřẏ ȧȧɠȧȧīīƞ"
-    },
-    "HOLD_TO_TURN_OFF_I18N": {
-        "string": "Ħǿǿŀḓ ŧǿǿ Ŧŭŭřƞ Ǿǿƒƒ"
-    },
-    "CHANGES_PENDING_I18N": {
-        "string": "ƈħȧȧƞɠḗḗş ƥḗḗƞḓīīƞɠ"
-    },
-    "CLOSE_TO_APPLY_I18N": {
-        "string": "ƈŀǿǿşḗḗ ŧǿǿ ȧȧƥƥŀẏ"
     },
     "ONBOARDING_WELCOME_HEADER_I18N": {
         "string": "Ẇḗḗŀƈǿǿḿḗḗ ŧǿǿ Ƈǿǿƞḓŭŭīīŧ!"
@@ -161,20 +131,8 @@
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Ȧȧƈƈḗḗƥŧ"
     },
-    "REPLAY_INTRO_I18N": {
-        "string": "Řḗḗƥŀȧȧẏ Īīƞŧřǿǿ"
-    },
-    "UPGRADE_REQUIRED_I18N": {
-        "string": "Ƥŀḗḗȧȧşḗḗ ŭŭƥɠřȧȧḓḗḗ ŧħḗḗ ȧȧƥƥ"
-    },
-    "WAITING_FOR_PEERS_I18N": {
-        "string": "Ẇȧȧīīŧīīƞɠ ƒǿǿř ƥḗḗḗḗřş"
-    },
     "LEARN_MORE_I18N": {
         "string": "Ŀḗḗȧȧřƞ Ḿǿǿřḗḗ"
-    },
-    "CONDUIT_NAME_I18N": {
-        "string": "Ƈǿǿƞḓŭŭīīŧ Ƞȧȧḿḗḗ"
     },
     "NAME_YOUR_CONDUIT_I18N": {
         "string": "Ƞȧȧḿḗḗ ẏǿǿŭŭř Ƈǿǿƞḓŭŭīīŧ"
@@ -185,9 +143,6 @@
     "SAVE_I18N": {
         "string": "Şȧȧṽḗḗ"
     },
-    "ID_I18N": {
-        "string": "ĪīḒ"
-    },
     "ALIAS_I18N": {
         "string": "Ƈǿǿƞḓŭŭīīŧ ƞȧȧḿḗḗ"
     },
@@ -196,9 +151,6 @@
     },
     "CLAIM_REWARDS_IN_RYVE_I18N": {
         "string": "Ƈŀȧȧīīḿ řḗḗẇȧȧřḓş īīƞ Řẏṽḗḗ"
-    },
-    "CLAIM_HOSTED_REWARDS_I18N": {
-        "string": "Ƈŀȧȧīīḿ ħǿǿşŧḗḗḓ řḗḗẇȧȧřḓş"
     },
     "CLAIM_LOCAL_REWARDS_I18N": {
         "string": "Ƈŀȧȧīīḿ ŀǿǿƈȧȧŀ řḗḗẇȧȧřḓş"
@@ -221,14 +173,8 @@
     "INVALID_QR_CODE_I18N": {
         "string": "īīƞṽȧȧŀīīḓ ɋř ƈǿǿḓḗḗ"
     },
-    "ANALYTICS_I18N": {
-        "string": "Ȧȧƞȧȧŀẏŧīīƈş"
-    },
     "GET_RYVE_I18N": {
         "string": "Ɠḗḗŧ Řẏṽḗḗ"
-    },
-    "REVEAL_I18N": {
-        "string": "Řḗḗṽḗḗȧȧŀ"
     },
     "REVEAL_QR_I18N": {
         "string": "Řḗḗṽḗḗȧȧŀ ɊŘ"
@@ -239,12 +185,6 @@
     "REDUCED_WINDOW_DESCRIPTION_I18N": {
         "string": "Ƈǿǿƞƒīīɠŭŭřḗḗ ŀǿǿẇḗḗř ŭŭşȧȧɠḗḗ ŀīīḿīīŧş ḓŭŭřīīƞɠ ȧȧ ḓȧȧīīŀẏ ẇīīƞḓǿǿẇ. Ƒǿǿř īīƞşŧȧȧƞƈḗḗ, ḓŭŭřīīƞɠ ŧħḗḗ ḓȧȧẏŧīīḿḗḗ ẇħḗḗƞ ẏǿǿŭŭ ƞḗḗḗḗḓ ẏǿǿŭŭř ƀȧȧƞḓẇīīḓŧħ ȧȧƞḓ ƀȧȧŧŧḗḗřẏ ŧǿǿ ŀȧȧşŧ."
     },
-    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
-        "string": "Ŀǿǿƈȧȧŀ ŧīīḿḗḗ"
-    },
-    "REDUCED_WINDOW_CONFIGURE_I18N": {
-        "string": "Ƈǿǿƞƒīīɠŭŭřḗḗ Ŭŭşȧȧɠḗḗ Ẇīīƞḓǿǿẇ"
-    },
     "REDUCED_WINDOW_CLEAR_I18N": {
         "string": "Ƈŀḗḗȧȧř"
     },
@@ -254,35 +194,17 @@
     "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
         "string": "Řḗḗḓŭŭƈḗḗḓ ŭŭşȧȧɠḗḗ ȧȧƈŧīīṽḗḗ"
     },
-    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
-        "string": "ŀǿǿƈȧȧŀ ŧīīḿḗḗ"
-    },
     "REDUCED_START_TIME_I18N": {
         "string": "Şŧȧȧřŧ ŧīīḿḗḗ"
     },
     "REDUCED_END_TIME_I18N": {
         "string": "Ḗḗƞḓ ŧīīḿḗḗ"
     },
-    "REDUCED_WINDOW_NOTE_I18N": {
-        "string": "Şḗḗŀḗḗƈŧ şŧȧȧřŧ ȧȧƞḓ ḗḗƞḓ ŧīīḿḗḗş īīƞ 30-ḿīīƞŭŭŧḗḗ şŧḗḗƥş."
-    },
     "REDUCED_TIME_FORMAT_I18N": {
         "string": "Ŭŭşḗḗ ĦĦ:ḾḾ"
     },
     "REDUCED_TIME_RANGE_I18N": {
         "string": "Şŧȧȧřŧ ȧȧƞḓ ḗḗƞḓ ḿŭŭşŧ ƀḗḗ ḓīīƒƒḗḗřḗḗƞŧ"
-    },
-    "REDUCED_MAX_PEERS_I18N": {
-        "string": "Řḗḗḓŭŭƈḗḗḓ Ḿȧȧẋ Ƥḗḗḗḗřş"
-    },
-    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
-        "string": "Řḗḗḓŭŭƈḗḗḓ Ḿȧȧẋ ḾƁ/ş Ƥḗḗř Ƥḗḗḗḗř"
-    },
-    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
-        "string": "Řḗḗḓŭŭƈḗḗḓ Řḗḗɋŭŭīīřḗḗḓ Ɓȧȧƞḓẇīīḓŧħ"
-    },
-    "HOSTED_CALL_TO_ACTION_I18N": {
-        "string": "Ħǿǿşŧ ẏǿǿŭŭř ǿǿẇƞ ƈŀǿǿŭŭḓ Ƈǿǿƞḓŭŭīīŧ"
     },
     "SHARE_PERSONAL_PAIRING_I18N": {
         "string": "Şħȧȧřḗḗ ƥḗḗřşǿǿƞȧȧŀ ƥȧȧīīřīīƞɠ"
@@ -298,33 +220,6 @@
     },
     "PREPARING_PERSONAL_PAIRING_I18N": {
         "string": "Ƥřḗḗƥȧȧřīīƞɠ ƥḗḗřşǿǿƞȧȧŀ ƥȧȧīīřīīƞɠ..."
-    },
-    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
-        "string": "Ẏǿǿŭŭř īīḿƥȧȧƈŧ (ŀȧȧşŧ 30 ḓȧȧẏş)"
-    },
-    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
-        "string": "Ŀǿǿȧȧḓīīƞɠ īīḿƥȧȧƈŧ şŭŭḿḿȧȧřẏ..."
-    },
-    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
-        "string": "Īīḿƥȧȧƈŧ şŭŭḿḿȧȧřẏ īīş ŭŭƞȧȧṽȧȧīīŀȧȧƀŀḗḗ ƀḗḗƈȧȧŭŭşḗḗ ƞǿǿ ȧȧŭŭŧħǿǿřīīẑḗḗḓ şŧȧȧŧş ŧȧȧřɠḗḗŧş ẇḗḗřḗḗ řḗḗŧŭŭřƞḗḗḓ ƒǿǿř ŧħīīş ȧȧƈƈǿǿŭŭƞŧ."
-    },
-    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
-        "string": "Ƥḗḗȧȧķ ƈǿǿƞƞḗḗƈŧḗḗḓ ŭŭşḗḗřş īīƞ ŀȧȧşŧ 30 ḓȧȧẏş"
-    },
-    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
-        "string": "Ɓẏŧḗḗş ŧřȧȧƞşƒḗḗřřḗḗḓ īīƞ ŀȧȧşŧ 30 ḓȧȧẏş"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
-        "string": "Şŭŭƀşƈřīīƥŧīīǿǿƞ ȧȧƞḓ ȧȧƈƈǿǿŭŭƞŧ"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
-        "string": "Şŭŭƀşƈřīīƥŧīīǿǿƞ şŧȧȧŧŭŭş: {{status}}"
-    },
-    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
-        "string": "Ƥřǿǿḓŭŭƈŧ: {{productId}}"
-    },
-    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
-        "string": "Řḗḗƞḗḗẇş/ḗḗẋƥīīřḗḗş ȧȧŧ: {{expiresAt}}"
     },
     "HOSTED_MANAGE_OPEN_BILLING_I18N": {
         "string": "Ḿȧȧƞȧȧɠḗḗ ƀīīŀŀīīƞɠ"
@@ -406,18 +301,6 @@
     },
     "SHARE_LINK_I18N": {
         "string": "Şħȧȧřḗḗ ŀīīƞķ"
-    },
-    "MBPS_PER_PEER_I18N": {
-        "string": "ḾƁƤŞ ƥḗḗř ƥḗḗḗḗř"
-    },
-    "MAX_BANDWIDTH_USAGE_I18N": {
-        "string": "Ḿȧȧẋ Ɓȧȧƞḓẇīīḓŧħ ŭŭşȧȧɠḗḗ"
-    },
-    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
-        "string": "Şħȧȧřḗḗ ẏǿǿŭŭř ƈǿǿƞƞḗḗƈŧīīǿǿƞ ḓīīřḗḗƈŧŀẏ ẇīīŧħ ƒřīīḗḗƞḓş ȧȧƞḓ ƒȧȧḿīīŀẏ"
-    },
-    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
-        "string": "Ƈŀȧȧīīḿ ħǿǿşŧḗḗḓ řḗḗẇȧȧřḓş īīƞ Řẏṽḗḗ"
     },
     "REWARDS_I18N": {
         "string": "Řḗḗẇȧȧřḓş"
@@ -524,14 +407,8 @@
     "CONNECTED_USERS_I18N": {
         "string": "Ƈǿǿƞƞḗḗƈŧḗḗḓ Ŭŭşḗḗřş"
     },
-    "CONNECTING_USERS_I18N": {
-        "string": "Ƈǿǿƞƞḗḗƈŧīīƞɠ Ŭŭşḗḗřş"
-    },
     "CONNECTED_I18N": {
         "string": "Ƈǿǿƞƞḗḗƈŧḗḗḓ"
-    },
-    "CONNECTING_I18N": {
-        "string": "Ƈǿǿƞƞḗḗƈŧīīƞɠ"
     },
     "BYTES_I18N": {
         "string": "Ɓẏŧḗḗş"
@@ -544,9 +421,6 @@
     },
     "HOME_I18N": {
         "string": "Ħǿǿḿḗḗ"
-    },
-    "ERROR_I18N": {
-        "string": "Ḗḗřřǿǿř"
     },
     "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
         "string": "Ŀīīƞķ ŧǿǿ ƥřīīṽȧȧƈẏ ƥǿǿŀīīƈẏ"
@@ -569,26 +443,11 @@
     "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N": {
         "string": "Ħǿǿşŧḗḗḓ Ƈǿǿƞḓŭŭīīŧ, ƥřǿǿṽīīşīīǿǿƞīīƞɠ ħǿǿşŧ"
     },
-    "SIGN_IN_TO_SYNC_I18N": {
-        "string": "Şīīɠƞ īīƞ ŧǿǿ şẏƞƈ ẏǿǿŭŭř ħǿǿşŧḗḗḓ ȧȧƈƈǿǿŭŭƞŧ"
-    },
-    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
-        "string": "{{ bytes }} ŧřȧȧƞşƒḗḗřřḗḗḓ{{ window }}"
-    },
-    "N_HOSTED_PEERS_ONLINE_I18N": {
-        "string": "{{ count }} ħǿǿşŧḗḗḓ ƥḗḗḗḗřş ǿǿƞŀīīƞḗḗ"
-    },
     "HOME_SUMMARY_PEER_COUNT_I18N": {
         "string": "{{count}} ƥḗḗḗḗřş"
     },
     "HOME_SUMMARY_OFFLINE_I18N": {
         "string": "ǾǿƑƑĿĪīȠḖḗ"
-    },
-    "PUBLIC_PEERS_ONLINE_I18N": {
-        "string": "ƥŭŭƀŀīīƈ ƥḗḗḗḗřş ǿǿƞŀīīƞḗḗ"
-    },
-    "PERSONAL_PEERS_ONLINE_I18N": {
-        "string": "ƥḗḗřşǿǿƞȧȧŀ ƥḗḗḗḗřş ǿǿƞŀīīƞḗḗ"
     },
     "SYNCING_HOSTED_USAGE_METRICS_I18N": {
         "string": "Şẏƞƈīīƞɠ ħǿǿşŧḗḗḓ ŭŭşȧȧɠḗḗ ḿḗḗŧřīīƈş..."
@@ -596,17 +455,11 @@
     "UPGRADE_REQUIRED_LOCAL_CONDUIT_I18N": {
         "string": "Ŭŭƥɠřȧȧḓḗḗ řḗḗɋŭŭīīřḗḗḓ ƒǿǿř ŀǿǿƈȧȧŀ ƈǿǿƞḓŭŭīīŧ"
     },
-    "HOLD_ORB_TO_TURN_OFF_I18N": {
-        "string": "Ħǿǿŀḓ ǿǿřƀ ŧǿǿ ŧŭŭřƞ ǿǿƒƒ ẇħīīŀḗḗ ƥḗḗḗḗřş ȧȧřḗḗ ƈǿǿƞƞḗḗƈŧḗḗḓ"
-    },
     "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "Ŀǿǿƈȧȧŀ ƈǿǿƞḓŭŭīīŧ şƈḗḗƞḗḗ ƀŭŭŧŧǿǿƞ"
     },
     "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "Ħǿǿşŧḗḗḓ ƈǿǿƞḓŭŭīīŧ şƈḗḗƞḗḗ ƀŭŭŧŧǿǿƞ"
-    },
-    "PREPARING_HOSTED_CONDUIT_I18N": {
-        "string": "Ƥřḗḗƥȧȧřīīƞɠ Ħǿǿşŧḗḗḓ Ƈǿǿƞḓŭŭīīŧ"
     },
     "PREPARING_I18N": {
         "string": "Ƥřḗḗƥȧȧřīīƞɠ..."
@@ -677,17 +530,8 @@
     "REGIONAL_ACTIVITY_BY_BYTES_I18N": {
         "string": "Řḗḗɠīīǿǿƞȧȧŀ ȧȧƈŧīīṽīīŧẏ ƀẏ ƀẏŧḗḗş ŧřȧȧƞşƒḗḗřřḗḗḓ"
     },
-    "TOP_HELPED_COUNTRIES_I18N": {
-        "string": "Ŧǿǿƥ ħḗḗŀƥḗḗḓ ƈǿǿŭŭƞŧřīīḗḗş ƀẏ {{ metric }} ({{ window }})"
-    },
     "BYTES_TRANSFERRED_LABEL_I18N": {
         "string": "ƀẏŧḗḗş ŧřȧȧƞşƒḗḗřřḗḗḓ"
-    },
-    "CONNECTED_USERS_LABEL_I18N": {
-        "string": "ƈǿǿƞƞḗḗƈŧḗḗḓ ŭŭşḗḗřş"
-    },
-    "TAP_TO_SWITCH_METRIC_I18N": {
-        "string": "Ŧȧȧƥ şḗḗƈŧīīǿǿƞ ŧǿǿ şẇīīŧƈħ ḿḗḗŧřīīƈ"
     },
     "COMPLETING_SIGN_IN_I18N": {
         "string": "Ƈǿǿḿƥŀḗḗŧīīƞɠ şīīɠƞ-īīƞ..."
@@ -775,5 +619,8 @@
     },
     "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
         "string": "Ƈħǿǿǿǿşḗḗ ȧȧ ƥŀȧȧƞ ŧǿǿ ƈǿǿƞŧīīƞŭŭḗḗ şḗḗŧŭŭƥ ȧȧƞḓ ŭŭƞŀǿǿƈķ şħȧȧřīīƞɠ."
+    },
+    "UPDATED_AT_I18N": {
+        "string": "Ŭŭƥḓȧȧŧḗḗḓ ȧȧŧ {{time}}"
     }
 }

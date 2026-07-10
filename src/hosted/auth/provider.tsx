@@ -17,9 +17,10 @@
  *
  */
 import { ClerkProvider } from "@clerk/clerk-expo";
-import * as SecureStore from "expo-secure-store";
 import React from "react";
+import { Platform, View } from "react-native";
 
+import * as secureStorage from "@/src/common/secureStorage";
 import {
     readHostedClerkPublishableKey,
     useHostedClerkAuthService,
@@ -45,6 +46,7 @@ export function HostedAuthProvider(props: React.PropsWithChildren) {
 
     return (
         <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+            {Platform.OS === "web" ? <ClerkCaptchaSlot /> : null}
             <HostedAuthServiceProviderWithClerk>
                 {props.children}
             </HostedAuthServiceProviderWithClerk>
@@ -65,10 +67,19 @@ function HostedAuthServiceProviderWithClerk(props: React.PropsWithChildren) {
     );
 }
 
+function ClerkCaptchaSlot() {
+    return (
+        <View
+            nativeID="clerk-captcha"
+            style={{ alignItems: "center", minHeight: 1, width: "100%" }}
+        />
+    );
+}
+
 const tokenCache = {
     getToken: async (key: string): Promise<string | null> =>
-        SecureStore.getItemAsync(key),
+        secureStorage.getItemAsync(key),
     saveToken: async (key: string, value: string): Promise<void> => {
-        await SecureStore.setItemAsync(key, value);
+        await secureStorage.setItemAsync(key, value);
     },
 };

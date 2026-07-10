@@ -1,0 +1,13 @@
+# Reusable subflow: block until the app shell is interactive.
+#
+# The `app-ready` testID is attached to the visible, always-mounted app shell
+# root. It marks shell mount/interactivity; hosted-specific flows still wait on
+# their own screen/state markers.
+#
+# Marker location (added in the instrumentation pass): src/app/(app)/_layout.tsx.
+appId: ca.psiphon.conduit
+---
+- extendedWaitUntil:
+      visible:
+          id: "app-ready"
+      timeout: 180000

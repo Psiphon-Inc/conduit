@@ -1,0 +1,20 @@
+# Performance setup: preserve signed-in state and show the active hosted home orb.
+appId: ${APP_ID}
+---
+- launchApp:
+      permissions:
+          all: allow
+- extendedWaitUntil:
+      visible:
+          id: "app-ready"
+      timeout: 180000
+- tapOn:
+      id: "nav-home"
+- extendedWaitUntil:
+      visible:
+          id: "hosted-active"
+      timeout: 60000
+- extendedWaitUntil:
+      visible:
+          id: "orb-primary"
+      timeout: 60000

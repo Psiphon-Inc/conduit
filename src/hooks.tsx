@@ -18,16 +18,17 @@
  */
 import { UseQueryResult, useQuery } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import React from "react";
+import { AccessibilityInfo, AppState, Platform } from "react-native";
 import { z } from "zod";
 
+import { loadCachedAlias } from "@/src/common/conduitAlias";
 import {
     QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
     QUERYKEY_CONDUIT_NAME,
     QUERYKEY_NOTIFICATIONS_PERMISSIONS,
 } from "@/src/constants";
-import { loadCachedAlias } from "@/src/hosted/aliasCache";
-import { PersonalCompartmentId } from "@/src/hosted/contracts";
+import { PersonalCompartmentId } from "@/src/pairing/compartmentId";
 import { loadAndroidPersonalCompartmentId } from "@/src/personalCompartmentId";
 
 const PermissionsStatusSchema = z.enum([
@@ -36,6 +37,45 @@ const PermissionsStatusSchema = z.enum([
     "NOT_GRANTED_CANT_ASK",
 ]);
 type PermissionsStatus = z.infer<typeof PermissionsStatusSchema>;
+
+export function useAppIsActive(): boolean {
+    const [isActive, setIsActive] = React.useState(
+        AppState.currentState === "active",
+    );
+
+    React.useEffect(() => {
+        const subscription = AppState.addEventListener("change", (state) => {
+            setIsActive(state === "active");
+        });
+        return () => subscription.remove();
+    }, []);
+
+    return isActive;
+}
+
+export function useReducedMotionPreference(): boolean {
+    const [reducedMotionPreferred, setReducedMotionPreferred] =
+        React.useState(false);
+
+    React.useEffect(() => {
+        let mounted = true;
+        AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+            if (mounted) {
+                setReducedMotionPreferred(enabled);
+            }
+        });
+        const subscription = AccessibilityInfo.addEventListener(
+            "reduceMotionChanged",
+            setReducedMotionPreferred,
+        );
+        return () => {
+            mounted = false;
+            subscription.remove();
+        };
+    }, []);
+
+    return reducedMotionPreferred;
+}
 
 export const useNotificationsPermissions =
     (): UseQueryResult<PermissionsStatus> =>

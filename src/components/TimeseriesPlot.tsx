@@ -34,13 +34,8 @@ import {
 } from "react-native-svg";
 
 import { clamp } from "@/src/common/mathUtils";
+import { TimeseriesDataPoint } from "@/src/common/timeseries";
 import { palette, sharedStyles as ss } from "@/src/styles";
-
-export interface TimeseriesDataPoint {
-    time: Date;
-    value: number;
-    isPadded?: boolean;
-}
 
 export interface TimeseriesSeries {
     label: string;
@@ -51,53 +46,6 @@ export interface TimeseriesSeries {
 }
 
 export type TimeseriesScale = "24h" | "7d" | "30d" | "max";
-
-export const generateSyntheticTestData = (scale: TimeseriesScale) => {
-    const now = Date.now();
-    const points: TimeseriesDataPoint[] = [];
-    let hoursPerChunk = 0.2;
-    let numPoints = 24 * 5;
-    switch (scale) {
-        case "24h":
-            break;
-        case "7d":
-            numPoints = 7 * (24 / 3);
-            hoursPerChunk = 3;
-            break;
-        case "30d":
-            numPoints = 30;
-            hoursPerChunk = 24;
-            break;
-        case "max":
-            numPoints = 52;
-            hoursPerChunk = 168;
-            break;
-        default:
-            break;
-    }
-
-    const a = [1.3e-2, 8.4e-3, 1.7e-2];
-    const b = [1.3e-2, 1.4e-3, 2.2e-2];
-    const p = [1.3e-2, 0.4e-2, 2.2e-3];
-    for (let i = 0; i < numPoints; i++) {
-        const t = i / (numPoints - 1);
-        const segmentIndex = Math.min(Math.floor(t * 3), 2);
-        const parabola =
-            a[segmentIndex] +
-            b[segmentIndex] * (1 - Math.pow(p[segmentIndex] * t - 1, 2));
-        const jitter = (Math.random() - 0.5) * 4.3e-3;
-        const value = Math.max(0, parabola + jitter);
-
-        points.push({
-            time: new Date(
-                now - (numPoints - i) * 60 * 60 * 1000 * hoursPerChunk,
-            ),
-            value,
-        });
-    }
-
-    return points;
-};
 
 interface SanitizedSeries {
     label: string;

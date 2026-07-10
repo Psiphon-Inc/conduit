@@ -1,0 +1,11 @@
+# Reusable subflow: block until Android local/personal pairing can be used.
+#
+# The `local-pairing-ready` marker is attached to the app shell when
+# InproxyProvider has resolved the Android personal compartment ID required by
+# local conduit actions.
+appId: ca.psiphon.conduit
+---
+- extendedWaitUntil:
+      visible:
+          id: "local-pairing-ready"
+      timeout: 180000

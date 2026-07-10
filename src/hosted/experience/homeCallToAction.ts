@@ -39,7 +39,7 @@ export interface ResolveHostedCallToActionModeInput {
     conduits: ConduitView[];
 }
 
-export interface HostedCallToActionResolution {
+interface HostedCallToActionResolution {
     hasActiveHostedConduit: boolean;
     hostedSharePreparing: boolean;
     hostedShareReady: boolean;

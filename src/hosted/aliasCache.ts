@@ -17,33 +17,18 @@
  *
  */
 import { QueryClient } from "@tanstack/react-query";
-import * as SecureStore from "expo-secure-store";
 
-import { migrateLegacyNickname } from "@/src/common/precis";
+import { loadCachedAlias } from "@/src/common/conduitAlias";
+import * as secureStorage from "@/src/common/secureStorage";
 import {
     QUERYKEY_CONDUIT_NAME,
     SECURESTORE_CONDUIT_NAME_KEY,
 } from "@/src/constants";
 import { AccountProfile } from "@/src/hosted/contracts";
 
-export async function loadCachedAlias(): Promise<string> {
-    const alias =
-        (await SecureStore.getItemAsync(SECURESTORE_CONDUIT_NAME_KEY)) ?? "";
-    const migratedAlias = migrateLegacyNickname(alias);
-
-    if (migratedAlias === alias) {
-        return migratedAlias;
-    }
-
-    if (migratedAlias === "") {
-        await SecureStore.deleteItemAsync(SECURESTORE_CONDUIT_NAME_KEY);
-        return "";
-    }
-
-    await SecureStore.setItemAsync(SECURESTORE_CONDUIT_NAME_KEY, migratedAlias);
-    return migratedAlias;
-}
-
+// NOTE: This module intentionally shares the SECURESTORE_CONDUIT_NAME_KEY
+// storage key with src/common/conduitAlias.ts so that aliases persisted by
+// either the local or the hosted flow remain readable by both.
 export async function cacheHostedAlias(
     queryClient: QueryClient,
     profileOrAlias: AccountProfile | string,
@@ -60,9 +45,9 @@ export async function cacheHostedAlias(
             queryClient.setQueryData([QUERYKEY_CONDUIT_NAME], cachedAlias);
             return;
         }
-        await SecureStore.deleteItemAsync(SECURESTORE_CONDUIT_NAME_KEY);
+        await secureStorage.deleteItemAsync(SECURESTORE_CONDUIT_NAME_KEY);
     } else {
-        await SecureStore.setItemAsync(SECURESTORE_CONDUIT_NAME_KEY, alias);
+        await secureStorage.setItemAsync(SECURESTORE_CONDUIT_NAME_KEY, alias);
     }
     queryClient.setQueryData([QUERYKEY_CONDUIT_NAME], alias);
 }

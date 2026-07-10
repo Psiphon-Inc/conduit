@@ -20,11 +20,13 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, Text, View } from "react-native";
 
+import { formatBytes } from "@/src/common/formatters";
 import { useConduitActions } from "@/src/components/ConduitActionsContext";
 import { Icon } from "@/src/components/Icon";
 import { Identicon } from "@/src/components/Identicon";
 import { resolvePreferredRyveName } from "@/src/components/ryveClaim";
 import { useConduitName } from "@/src/hooks";
+import { getScopeLabel } from "@/src/hosted/conduitDisplay";
 import { ConduitView } from "@/src/hosted/contracts";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
@@ -32,14 +34,12 @@ export function HostedConduitModal({
     conduit,
     connectedCount,
     bytesTransferred,
-    onViewDashboard: _onViewDashboard,
     onClose,
     onSetAsMain,
 }: {
     conduit: ConduitView;
     connectedCount: number;
     bytesTransferred: number;
-    onViewDashboard: () => void;
     onClose: () => void;
     /** When provided, shows a "Set as main" button that promotes this
      *  conduit to the big center orb slot. */
@@ -49,7 +49,11 @@ export function HostedConduitModal({
     const { data: conduitName } = useConduitName();
     const { openRyveClaimModal } = useConduitActions();
 
-    const scopeLabel = getScopeLabel(conduit.traffic_scope, t);
+    const scopeLabel = getScopeLabel(
+        conduit.traffic_scope,
+        t,
+        Platform.OS === "android",
+    );
     const showClaimButton = Boolean(conduit.ryve_claim);
     const stationAlias =
         resolvePreferredRyveName(conduitName) ??
@@ -116,6 +120,7 @@ export function HostedConduitModal({
                             ) : null}
                         </View>
                         <Pressable
+                            testID="hosted-modal-close"
                             accessibilityRole="button"
                             accessibilityLabel={t(
                                 "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N.string",
@@ -161,8 +166,10 @@ export function HostedConduitModal({
                                 ]}
                             >
                                 {t("TOTAL_BYTES_TRANSFERRED_I18N.string", {
-                                    niceBytes:
-                                        formatByteLabel(bytesTransferred),
+                                    niceBytes: formatBytes(bytesTransferred, {
+                                        precision: "fixed",
+                                        lowercaseKilo: true,
+                                    }),
                                 })}
                             </Text>
                         </View>
@@ -209,6 +216,7 @@ export function HostedConduitModal({
                     {/* Claim in Ryve CTA (common scope) */}
                     {showClaimButton ? (
                         <Pressable
+                            testID="hosted-modal-setmain"
                             accessibilityRole="button"
                             onPress={() => {
                                 if (conduit.ryve_claim) {
@@ -281,43 +289,4 @@ export function HostedConduitModal({
             </Pressable>
         </Pressable>
     );
-}
-
-function getScopeLabel(
-    scope: ConduitView["traffic_scope"],
-    t: (key: string, options?: Record<string, unknown>) => string,
-): string | null {
-    if (scope === "personal") {
-        if (Platform.OS === "android") {
-            return t("HOSTED_PERSONAL_SCOPE_I18N.string", {
-                defaultValue: "Hosted Personal",
-            });
-        }
-        return t("SCOPE_PERSONAL_I18N.string");
-    }
-    if (scope === "public") {
-        if (Platform.OS === "android") {
-            return t("HOSTED_PUBLIC_SCOPE_I18N.string", {
-                defaultValue: "Hosted Public",
-            });
-        }
-        return t("SCOPE_COMMON_I18N.string");
-    }
-    return null;
-}
-
-function formatByteLabel(bytes: number): string {
-    if (bytes < 1000) {
-        return `${bytes} B`;
-    }
-    if (bytes < 1000 * 1000) {
-        return `${(bytes / 1000).toFixed(1)} kB`;
-    }
-    if (bytes < 1000 * 1000 * 1000) {
-        return `${(bytes / (1000 * 1000)).toFixed(1)} MB`;
-    }
-    if (bytes < 1000 * 1000 * 1000 * 1000) {
-        return `${(bytes / (1000 * 1000 * 1000)).toFixed(1)} GB`;
-    }
-    return `${(bytes / (1000 * 1000 * 1000 * 1000)).toFixed(2)} TB`;
 }

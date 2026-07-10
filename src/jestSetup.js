@@ -2,6 +2,15 @@ jest.mock("@react-native-async-storage/async-storage", () =>
     require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
 );
 
+// Silence timedLog's console.log output, which production init paths
+// (migrations, auth, clerk, inproxy, hosted experience) would otherwise
+// spray across the jest output. Only timedLog is replaced so genuinely
+// unexpected console.log calls still surface in test runs.
+jest.mock("@/src/common/utils", () => ({
+    ...jest.requireActual("@/src/common/utils"),
+    timedLog: jest.fn(),
+}));
+
 jest.mock("expo-secure-store", () => {
     let mockStore = {};
 
@@ -54,6 +63,24 @@ jest.mock("@clerk/clerk-expo", () => {
         }),
         useAuth: () => ({
             getToken: jest.fn(async () => "clerk.jwt.token"),
+        }),
+        useSignIn: () => ({
+            isLoaded: true,
+            setActive: jest.fn(async () => {}),
+            signIn: {
+                create: jest.fn(),
+                prepareFirstFactor: jest.fn(),
+                attemptFirstFactor: jest.fn(),
+            },
+        }),
+        useSignUp: () => ({
+            isLoaded: true,
+            setActive: jest.fn(async () => {}),
+            signUp: {
+                create: jest.fn(),
+                prepareEmailAddressVerification: jest.fn(),
+                attemptEmailAddressVerification: jest.fn(),
+            },
         }),
     };
 });

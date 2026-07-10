@@ -1,6 +1,8 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require("expo/metro-config");
 
+const revenueCatPurchasesUmdPath = require.resolve("@revenuecat/purchases-js");
+
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
@@ -11,6 +13,13 @@ config.server.unstable_serverRoot = __dirname;
 
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
+    if (platform === "web" && moduleName === "@revenuecat/purchases-js") {
+        return {
+            type: "sourceFile",
+            filePath: revenueCatPurchasesUmdPath,
+        };
+    }
+
     const rewrittenModuleName =
         moduleName === "@noble/hashes/crypto.js"
             ? "@noble/hashes/crypto"

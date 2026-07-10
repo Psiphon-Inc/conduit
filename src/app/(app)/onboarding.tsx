@@ -60,14 +60,15 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { drawBigFont } from "@/src/common/utils";
-import { LearnMoreLink } from "@/src/components/LearnMoreLink";
-import { PrivacyPolicyLink } from "@/src/components/PrivacyPolicyLink";
+import { ExternalTextLink } from "@/src/components/ExternalTextLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { SkyBox } from "@/src/components/SkyBox";
 import { OnboardingScene } from "@/src/components/canvas/OnboardingScene";
 import {
     APP_MAX_CONTENT_WIDTH,
     ASYNCSTORAGE_HAS_ONBOARDED_KEY,
+    LEARN_MORE_URL,
+    PRIVACY_POLICY_URL,
 } from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
 import { fonts, palette, sharedStyles as ss } from "@/src/styles";
@@ -457,7 +458,7 @@ export default function OnboardingScreen() {
                         alignSelf: "center",
                     }}
                 >
-                    <Canvas style={[ss.flex]}>
+                    <Canvas style={ss.flex}>
                         <Group
                             layer={
                                 <Paint>
@@ -553,6 +554,7 @@ export default function OnboardingScreen() {
                     </GestureDetector>
                     <GestureDetector gesture={buttonGesture}>
                         <Animated.View
+                            testID="onboarding-next"
                             accessible={true}
                             accessibilityLabel={currentButtonText}
                             accessibilityRole={"button"}
@@ -567,7 +569,10 @@ export default function OnboardingScreen() {
                     </GestureDetector>
                     <Animated.View style={{ opacity: everythingOpacity }}>
                         <Animated.View style={learnMoreLinkStyle}>
-                            <LearnMoreLink
+                            <ExternalTextLink
+                                url={LEARN_MORE_URL}
+                                labelKey="LEARN_MORE_I18N.string"
+                                accessibilityLabelKey="LINK_TO_INFO_WEBSITE_ACCESSIBILITY_I18N.string"
                                 textStyle={{ ...ss.boldFont, ...ss.purpleText }}
                                 containerHeight={privacyPolicyHeight}
                             />
@@ -575,7 +580,10 @@ export default function OnboardingScreen() {
                     </Animated.View>
                     <Animated.View style={{ opacity: everythingOpacity }}>
                         <Animated.View style={privacyPolicyLinkStyle}>
-                            <PrivacyPolicyLink
+                            <ExternalTextLink
+                                url={PRIVACY_POLICY_URL}
+                                labelKey="PRIVACY_POLICY_I18N.string"
+                                accessibilityLabelKey="LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N.string"
                                 textStyle={{ ...ss.boldFont, ...ss.purpleText }}
                                 containerHeight={privacyPolicyHeight}
                             />

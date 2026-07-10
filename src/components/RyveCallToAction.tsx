@@ -21,7 +21,13 @@ import * as Haptics from "expo-haptics";
 import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, View, useWindowDimensions } from "react-native";
+import {
+    Platform,
+    Pressable,
+    Text,
+    View,
+    useWindowDimensions,
+} from "react-native";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
@@ -39,6 +45,7 @@ import { useConduitName } from "@/src/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 const RYVE_GRADIENT_COLORS = ["#A475E3", "rgba(156, 129, 201, 0.69)"];
+const COMPACT_WEB_MODAL_WIDTH = 430;
 
 function RyveModalShell({
     children,
@@ -49,7 +56,10 @@ function RyveModalShell({
 }) {
     const { t } = useTranslation();
     const { closeModal } = useModal();
+    const win = useWindowDimensions();
     const handleClose = onClose ?? closeModal;
+    const compactWeb =
+        Platform.OS === "web" && win.width <= COMPACT_WEB_MODAL_WIDTH;
 
     return (
         <Pressable
@@ -68,7 +78,7 @@ function RyveModalShell({
                     ss.modalBottom90,
                     {
                         overflow: "hidden",
-                        height: "75%",
+                        height: compactWeb ? "90%" : "75%",
                         backgroundColor: palette.white,
                     },
                 ]}
@@ -148,6 +158,13 @@ export function RyveClaimModalContent({
     const [canOpenInRyve, setCanOpenInRyve] = React.useState<boolean | null>(
         null,
     );
+    const compactWeb =
+        Platform.OS === "web" && win.width <= COMPACT_WEB_MODAL_WIDTH;
+    const qrSize = Math.min(
+        win.width * (compactWeb ? 0.76 : 0.8),
+        win.height * (compactWeb ? 0.38 : 0.48),
+        300,
+    );
 
     const ryveInstallUrl = React.useMemo(() => getRyveInstallUrl(), []);
 
@@ -175,10 +192,6 @@ export function RyveClaimModalContent({
             return;
         }
 
-        console.log(
-            "[RyveClaim] Ryve not installed, opening install URL:",
-            ryveInstallUrl,
-        );
         await Linking.openURL(ryveInstallUrl);
     }, [claimDeepLink, ryveInstallUrl]);
 
@@ -300,16 +313,13 @@ export function RyveClaimModalContent({
 
                 {qrRevealed ? (
                     <Pressable onPress={() => setQrRevealed(false)}>
-                        <QRDisplay
-                            data={claimDeepLink}
-                            size={Math.min(win.width * 0.8, 300)}
-                        />
+                        <QRDisplay data={claimDeepLink} size={qrSize} />
                     </Pressable>
                 ) : (
                     <View
                         style={{
-                            width: Math.min(win.width * 0.8, 300),
-                            height: Math.min(win.width * 0.8, 300),
+                            width: qrSize,
+                            height: qrSize,
                             justifyContent: "center",
                             alignItems: "center",
                             borderRadius: 15,

@@ -22,8 +22,8 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 import { formatBytes } from "@/src/common/formatters";
+import { TimeseriesDataPoint } from "@/src/common/timeseries";
 import {
-    TimeseriesDataPoint,
     TimeseriesPlot,
     TimeseriesSeries,
 } from "@/src/components/TimeseriesPlot";

@@ -28,8 +28,8 @@ import {
 import { cacheHostedAlias } from "@/src/hosted/aliasCache";
 import {
     HostedAccountProfileConflictError,
-    createHostedClient,
-} from "@/src/hosted/client";
+    createHostedApiClient,
+} from "@/src/hosted/apiClient";
 import { AccountProfile } from "@/src/hosted/contracts";
 import { hostedQueryKeys } from "@/src/hosted/queryKeys";
 import {
@@ -39,9 +39,9 @@ import {
     withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
 
-type HostedClient = ReturnType<typeof createHostedClient>;
+type HostedClient = ReturnType<typeof createHostedApiClient>;
 
-export interface HostedAccountDependencies extends HostedSessionDependencies {
+interface HostedAccountDependencies extends HostedSessionDependencies {
     hostedClient: HostedClient;
 }
 

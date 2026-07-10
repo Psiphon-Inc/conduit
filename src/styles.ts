@@ -422,15 +422,6 @@ export const lineItemStyle = [
     sharedStyles.greyBorderBottom,
 ];
 
-export const iconButton = [
-    sharedStyles.rounded5,
-    sharedStyles.justifyCenter,
-    sharedStyles.alignCenter,
-    {
-        backgroundColor: palette.black,
-    },
-];
-
 export const fonts = {
     JuraRegular: require("@/assets/fonts/Jura-Regular.otf"),
     JuraBold: require("@/assets/fonts/Jura-Bold.otf"),

@@ -29,13 +29,13 @@ import {
     SECURESTORE_CONDUIT_NAME_KEY,
     SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
 } from "@/src/constants";
-import { HostedAuthService } from "@/src/hosted/auth/types";
 import {
     HostedAccountProfileConflictError,
-    HostedClientRequestError,
+    HostedApiClientRequestError,
     HostedPersonalCompartmentIdConflictError,
-    createHostedClient,
-} from "@/src/hosted/client";
+    createHostedApiClient,
+} from "@/src/hosted/apiClient";
+import { HostedAuthService } from "@/src/hosted/auth/types";
 import {
     HostedExperienceContextValue,
     HostedExperienceProvider,
@@ -76,6 +76,37 @@ describe("hosted experience context", () => {
             configurable: true,
             value: originalPlatformOs,
         });
+    });
+
+    it("fails clearly without an injected or context auth service", () => {
+        const queryClient = new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+        });
+        const consoleError = jest
+            .spyOn(console, "error")
+            .mockImplementation(() => {});
+
+        try {
+            expect(() => {
+                act(() => {
+                    create(
+                        <QueryClientProvider client={queryClient}>
+                            <HostedExperienceProvider
+                                baseUrl="https://hcb.example.test"
+                                revenueCat={makeRevenueCatContext()}
+                            >
+                                <React.Fragment />
+                            </HostedExperienceProvider>
+                        </QueryClientProvider>,
+                    );
+                });
+            }).toThrow(
+                "HostedExperienceProvider requires an authService or a parent <HostedAuthProvider />",
+            );
+        } finally {
+            consoleError.mockRestore();
+            queryClient.clear();
+        }
     });
 
     it("orchestrates auth, session, revenuecat, and conduits poll", async () => {
@@ -151,7 +182,7 @@ describe("hosted experience context", () => {
                     now,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                     revenueCatPublicKeys: {
                         ios: "appl_public",
@@ -266,7 +297,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -347,7 +378,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -414,7 +445,7 @@ describe("hosted experience context", () => {
                     now,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                 },
                 <Consumer />,
@@ -490,7 +521,7 @@ describe("hosted experience context", () => {
                     now,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                 },
                 <Consumer />,
@@ -543,7 +574,10 @@ describe("hosted experience context", () => {
             getConduitsSnapshot: jest
                 .fn()
                 .mockRejectedValueOnce(
-                    new HostedClientRequestError("access token rejected", 401),
+                    new HostedApiClientRequestError(
+                        "access token rejected",
+                        401,
+                    ),
                 )
                 .mockResolvedValueOnce({
                     entitlement: {
@@ -575,7 +609,7 @@ describe("hosted experience context", () => {
                     now,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                 },
                 <Consumer />,
@@ -659,7 +693,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -720,7 +754,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -761,6 +795,54 @@ describe("hosted experience context", () => {
         await waitFor(() => {
             expect(contextValue!.state.authPhase).toBe("authenticated");
         });
+    });
+
+    it("rolls back the auth provider hint when sign-in fails", async () => {
+        const authService = makeAuthService({
+            signIn: jest.fn().mockRejectedValue(new Error("popup closed")),
+        });
+        const sessionClient = makeSessionClient({
+            loadHostedSession: jest.fn().mockResolvedValue(null),
+            login: jest.fn(),
+        });
+
+        let contextValue: HostedExperienceContextValue | null = null;
+        function Consumer() {
+            contextValue = useHostedExperienceContext();
+            return null;
+        }
+
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 10_000,
+                    authService,
+                    sessionClient,
+                    apiClient: makeHostedClient(),
+                    revenueCat: makeRevenueCatContext(),
+                },
+                <Consumer />,
+            );
+        });
+
+        let signInError: unknown;
+        await act(async () => {
+            try {
+                await contextValue!.signIn("google");
+            } catch (error) {
+                signInError = error;
+            }
+        });
+
+        expect(signInError).toEqual(new Error("popup closed"));
+        expect(sessionClient.login).not.toHaveBeenCalled();
+        await waitFor(() => {
+            expect(contextValue!.lastAuthProvider).toBeNull();
+        });
+        await expect(
+            SecureStore.getItemAsync(SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY),
+        ).resolves.toBeNull();
     });
 
     it("clears the auth hint and upstream auth session on explicit sign out", async () => {
@@ -811,7 +893,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -861,7 +943,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -922,7 +1004,7 @@ describe("hosted experience context", () => {
                     now,
                     authService: makeAuthService(),
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                     revenueCatPublicKeys: {
                         ios: "appl_public",
@@ -939,7 +1021,6 @@ describe("hosted experience context", () => {
                 accountId: existingSession.accountId,
             });
         });
-        expect(hostedClient.reconcileRevenueCat).not.toHaveBeenCalled();
         await waitFor(() => {
             expect(getContextValue().state.revenuecatPhase).toBe("ready");
         });
@@ -976,7 +1057,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService: makeAuthService(),
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                 },
                 <Consumer />,
@@ -1030,7 +1111,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService: makeAuthService(),
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                 },
                 <Consumer />,
@@ -1095,7 +1176,7 @@ describe("hosted experience context", () => {
                     now,
                     authService: makeAuthService(),
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                 },
                 <Consumer />,
@@ -1187,7 +1268,7 @@ describe("hosted experience context", () => {
                     now,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat,
                     revenueCatPublicKeys: {
                         ios: "appl_public",
@@ -1206,7 +1287,6 @@ describe("hosted experience context", () => {
         });
 
         expect(getContextValue().state.revenuecatError).toBeNull();
-        expect(hostedClient.reconcileRevenueCat).not.toHaveBeenCalled();
     });
 
     it("treats missing RevenueCat keys as a no-op bootstrap", async () => {
@@ -1233,7 +1313,7 @@ describe("hosted experience context", () => {
                     now: () => 20_000,
                     authService: makeAuthService(),
                     sessionClient,
-                    hostedClient: makeHostedClient(),
+                    apiClient: makeHostedClient(),
                     revenueCat,
                 },
                 <Consumer />,
@@ -1313,7 +1393,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -1396,7 +1476,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -1482,7 +1562,7 @@ describe("hosted experience context", () => {
                     now: () => 10_000,
                     authService,
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -1546,7 +1626,7 @@ describe("hosted experience context", () => {
                     now: () => 20_000,
                     authService: makeAuthService(),
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -1627,7 +1707,7 @@ describe("hosted experience context", () => {
                     now: () => 20_000,
                     authService: makeAuthService(),
                     sessionClient,
-                    hostedClient,
+                    apiClient: hostedClient,
                     revenueCat: makeRevenueCatContext(),
                 },
                 <Consumer />,
@@ -1710,10 +1790,11 @@ function makeSessionClient(overrides?: Partial<SessionClient>): SessionClient {
 }
 
 type HostedClient = Pick<
-    ReturnType<typeof createHostedClient>,
+    ReturnType<typeof createHostedApiClient>,
     | "getAccountProfile"
     | "updateAccountProfile"
     | "deleteAccount"
+    | "createBillingPortalSession"
     | "setPersonalCompartmentId"
     | "getConduitsSnapshot"
     | "getPlanCatalog"
@@ -1721,8 +1802,6 @@ type HostedClient = Pick<
     | "getSummary"
     | "getRecent"
     | "getLive"
-    | "reconcileRevenueCat"
-    | "resetDevState"
 >;
 
 function makeHostedClient(overrides?: Partial<HostedClient>): HostedClient {
@@ -1734,6 +1813,9 @@ function makeHostedClient(overrides?: Partial<HostedClient>): HostedClient {
         }),
         updateAccountProfile: jest.fn(),
         deleteAccount: jest.fn().mockResolvedValue(undefined),
+        createBillingPortalSession: jest.fn().mockResolvedValue({
+            url: "https://billing.revenuecat.com/app/sub?token=abc",
+        }),
         setPersonalCompartmentId: jest
             .fn()
             .mockResolvedValue("jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g"),
@@ -1743,11 +1825,6 @@ function makeHostedClient(overrides?: Partial<HostedClient>): HostedClient {
         getSummary: jest.fn(),
         getRecent: jest.fn(),
         getLive: jest.fn(),
-        reconcileRevenueCat: jest.fn().mockResolvedValue(undefined),
-        resetDevState: jest.fn().mockResolvedValue({
-            status: "ok",
-            account_id: "acc_123",
-        }),
         ...overrides,
     };
 }
@@ -1774,14 +1851,17 @@ function renderHostedExperience(
 ): ReactTestRenderer {
     const queryClient = new QueryClient({
         defaultOptions: {
-            queries: { retry: false, gcTime: Infinity },
-            mutations: { retry: false, gcTime: Infinity },
+            // retryDelay: 0 keeps retrying queries (e.g. fetchQuery with
+            // retry: 1) from parking real 1s timers that outlive the test
+            // and keep the jest worker's event loop alive.
+            queries: { retry: false, retryDelay: 0, gcTime: Infinity },
+            mutations: { retry: false, retryDelay: 0, gcTime: Infinity },
         },
     });
 
     const renderer = create(
         <QueryClientProvider client={queryClient}>
-            <HostedExperienceProvider {...providerProps}>
+            <HostedExperienceProvider delay={immediateDelay} {...providerProps}>
                 {child}
             </HostedExperienceProvider>
         </QueryClientProvider>,
@@ -1793,6 +1873,14 @@ function renderHostedExperience(
 
 const mountedRenderers: ReactTestRenderer[] = [];
 const mountedQueryClients: QueryClient[] = [];
+
+// The provider's activation-window poll sleeps on a real 1s setTimeout
+// between iterations; resolve immediately in tests so no timer handle can
+// outlive a test and keep the jest worker alive. Individual tests may still
+// override this by passing their own `delay` in providerProps.
+async function immediateDelay(): Promise<void> {
+    await Promise.resolve();
+}
 
 async function flushPromises(): Promise<void> {
     await act(async () => {

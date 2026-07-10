@@ -38,16 +38,12 @@ import { Icon } from "@/src/components/Icon";
 import { useModal } from "@/src/components/ModalStore";
 import { ASYNCSTORAGE_PAIRING_LANGUAGE_KEY } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
-import { buildPairingShareOutput } from "@/src/hosted/conduits";
+import { buildPairingShareOutput } from "@/src/pairing/token";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 interface LanguageOption {
     code: string;
     label: string;
-}
-
-interface LanguageCopy {
-    shareMessage: string;
 }
 
 const LANGUAGE_OPTIONS: LanguageOption[] = [
@@ -66,65 +62,6 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
     { code: "ur", label: "اردو" },
     { code: "vi", label: "Tiếng Việt" },
 ];
-
-const LANGUAGE_COPY: Record<string, LanguageCopy> = {
-    en: {
-        shareMessage:
-            "Open this link to connect to a trusted Conduit station. If the link is blocked, copy and paste it into the Psiphon App's Personal Pairing widget.",
-    },
-    ar: {
-        shareMessage:
-            "افتح هذا الرابط للاتصال بمحطة Conduit موثوقة. إذا كان الرابط محجوبًا، انسخه والصقه في أداة Personal Pairing داخل تطبيق Psiphon.",
-    },
-    fa: {
-        shareMessage:
-            "این لینک را باز کنید تا به یک ایستگاه Conduit مورد اعتماد متصل شوید. اگر لینک مسدود بود، آن را کپی کرده و در ویجت Personal Pairing برنامه Psiphon جای گذاری کنید.",
-    },
-    tr: {
-        shareMessage:
-            "Güvenilir bir Conduit istasyonuna bağlanmak için bu bağlantıyı açın. Bağlantı engellenirse Psiphon Uygulamasındaki Personal Pairing bileşenine kopyalayıp yapıştırın.",
-    },
-    de: {
-        shareMessage:
-            "Öffnen Sie diesen Link, um sich mit einer vertrauenswürdigen Conduit-Station zu verbinden. Wenn der Link blockiert ist, kopieren Sie ihn und fügen Sie ihn in das Personal-Pairing-Widget der Psiphon-App ein.",
-    },
-    es: {
-        shareMessage:
-            "Abra este enlace para conectarse a una estación de Conduit de confianza. Si el enlace está bloqueado, cópielo y péguelo en el widget de Emparejamiento personal de la aplicación Psiphon.",
-    },
-    fr: {
-        shareMessage:
-            "Ouvrez ce lien pour vous connecter à une station Conduit de confiance. Si le lien est bloqué, copiez-le et collez-le dans le widget de jumelage personnel de l’application Psiphon.",
-    },
-    hi: {
-        shareMessage:
-            "किसी विश्वसनीय Conduit स्टेशन से जुड़ने के लिए इस लिंक को खोलें। यदि लिंक ब्लॉक हो, तो इसे कॉपी करके Psiphon ऐप के Personal Pairing विजेट में पेस्ट करें।",
-    },
-    id: {
-        shareMessage:
-            "Buka tautan ini untuk terhubung ke stasiun Conduit tepercaya. Jika tautan diblokir, salin lalu tempelkan ke widget Personal Pairing di aplikasi Psiphon.",
-    },
-    "pt-BR": {
-        shareMessage:
-            "Abra este link para se conectar a uma estação Conduit confiável. Se o link estiver bloqueado, copie e cole no widget de Pareamento Pessoal do app Psiphon.",
-    },
-    "pt-PT": {
-        shareMessage:
-            "Abra esta ligação para se ligar a uma estação Conduit de confiança. Se a ligação estiver bloqueada, copie-a e cole-a no widget de Emparelhamento Pessoal da aplicação Psiphon.",
-    },
-    sw: {
-        shareMessage:
-            "Fungua kiungo hiki ili kuunganisha kwenye kituo cha Conduit kinachoaminika. Ikiwa kiungo kimezuiwa, nakili na ubandike kwenye wijeti ya Personal Pairing ndani ya programu ya Psiphon.",
-    },
-    ur: {
-        shareMessage:
-            "قابلِ اعتماد Conduit اسٹیشن سے جڑنے کے لیے یہ لنک کھولیں۔ اگر لنک بلاک ہو تو اسے کاپی کریں اور Psiphon ایپ کے Personal Pairing ویجیٹ میں پیسٹ کریں۔",
-    },
-    vi: {
-        shareMessage:
-            "Mở liên kết này để kết nối với một trạm Conduit đáng tin cậy. Nếu liên kết bị chặn, hãy sao chép và dán vào tiện ích Personal Pairing trong ứng dụng Psiphon.",
-    },
-};
 
 const PRIMARY_CTA_PURPLE = "#A475E3";
 
@@ -164,7 +101,9 @@ export function PersonalPairingShareModal({
         );
     }, [i18n.language]);
 
-    const languageCopy = LANGUAGE_COPY[selectedLanguage] ?? LANGUAGE_COPY.en;
+    const shareMessageCopy = i18n.getFixedT(selectedLanguage)(
+        "PERSONAL_PAIRING_SHARE_MESSAGE_I18N.string",
+    );
     const selectedLanguageLabel =
         LANGUAGE_OPTIONS.find((option) => option.code === selectedLanguage)
             ?.label ??
@@ -189,7 +128,7 @@ export function PersonalPairingShareModal({
             wrapperBaseUrl,
         );
         const shareLink = shareOutput.wrapperUrl ?? shareOutput.deepLink;
-        const shareMessage = `${languageCopy.shareMessage}\n\n${shareLink}`;
+        const shareMessage = `${shareMessageCopy}\n\n${shareLink}`;
 
         try {
             await Share.share({ message: shareMessage });
@@ -209,6 +148,13 @@ export function PersonalPairingShareModal({
             <LanguagePickerModal
                 languages={LANGUAGE_OPTIONS}
                 selected={selectedLanguage}
+                onSelect={(language) => {
+                    setSelectedLanguageState(language);
+                    void AsyncStorage.setItem(
+                        ASYNCSTORAGE_PAIRING_LANGUAGE_KEY,
+                        language,
+                    );
+                }}
             />,
         );
     }, [pushModal, selectedLanguage]);
@@ -459,9 +405,11 @@ export function PersonalPairingShareModal({
 function LanguagePickerModal({
     languages,
     selected,
+    onSelect,
 }: {
     languages: LanguageOption[];
     selected: string;
+    onSelect: (language: string) => void;
 }) {
     const { t } = useTranslation();
     const { popModal } = useModal();
@@ -513,10 +461,7 @@ function LanguagePickerModal({
                             <Pressable
                                 key={option.code}
                                 onPress={() => {
-                                    void AsyncStorage.setItem(
-                                        ASYNCSTORAGE_PAIRING_LANGUAGE_KEY,
-                                        option.code,
-                                    );
+                                    onSelect(option.code);
                                     popModal();
                                 }}
                                 style={{

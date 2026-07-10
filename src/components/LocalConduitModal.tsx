@@ -20,6 +20,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
+import { formatBytes } from "@/src/common/formatters";
 import { useConduitActions } from "@/src/components/ConduitActionsContext";
 import { Icon } from "@/src/components/Icon";
 import { Identicon } from "@/src/components/Identicon";
@@ -89,11 +90,10 @@ export function LocalConduitModal({
                                 },
                             ]}
                         >
-                            {t("LOCAL_CONDUIT_I18N.string", {
-                                defaultValue: "Local Conduit",
-                            })}
+                            {t("LOCAL_CONDUIT_I18N.string")}
                         </Text>
                         <Pressable
+                            testID="local-modal-close"
                             accessibilityRole="button"
                             accessibilityLabel={t(
                                 "CLOSE_CONDUIT_DETAILS_ACCESSIBILITY_I18N.string",
@@ -139,8 +139,10 @@ export function LocalConduitModal({
                                 ]}
                             >
                                 {t("TOTAL_BYTES_TRANSFERRED_I18N.string", {
-                                    niceBytes:
-                                        formatByteLabel(bytesTransferred),
+                                    niceBytes: formatBytes(bytesTransferred, {
+                                        precision: "fixed",
+                                        lowercaseKilo: true,
+                                    }),
                                 })}
                             </Text>
                         </View>
@@ -182,6 +184,7 @@ export function LocalConduitModal({
                     </View>
 
                     <Pressable
+                        testID="local-modal-share"
                         accessibilityRole="button"
                         onPress={() => {
                             onClose();
@@ -263,6 +266,7 @@ export function LocalConduitModal({
                     />
 
                     <Pressable
+                        testID="local-modal-turnoff"
                         accessibilityRole="button"
                         onPress={onTurnOff}
                         style={{
@@ -286,29 +290,11 @@ export function LocalConduitModal({
                                 },
                             ]}
                         >
-                            {t("TURN_OFF_I18N.string", {
-                                defaultValue: "Turn Off",
-                            })}
+                            {t("TURN_OFF_I18N.string")}
                         </Text>
                     </Pressable>
                 </View>
             </Pressable>
         </Pressable>
     );
-}
-
-function formatByteLabel(bytes: number): string {
-    if (bytes < 1000) {
-        return `${bytes} B`;
-    }
-    if (bytes < 1000 * 1000) {
-        return `${(bytes / 1000).toFixed(1)} kB`;
-    }
-    if (bytes < 1000 * 1000 * 1000) {
-        return `${(bytes / (1000 * 1000)).toFixed(1)} MB`;
-    }
-    if (bytes < 1000 * 1000 * 1000 * 1000) {
-        return `${(bytes / (1000 * 1000 * 1000)).toFixed(1)} GB`;
-    }
-    return `${(bytes / (1000 * 1000 * 1000 * 1000)).toFixed(2)} TB`;
 }
