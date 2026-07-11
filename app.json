@@ -2,7 +2,7 @@
     "expo": {
         "name": "conduit",
         "slug": "conduit",
-        "version": "2.2.0",
+        "version": "2.3.0",
         "orientation": "portrait",
         "scheme": "ca.psiphon.conduit",
         "userInterfaceStyle": "automatic",
@@ -19,7 +19,7 @@
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 88,
+            "versionCode": 89,
             "permissions": [
                 "android.permission.POST_NOTIFICATIONS",
                 "com.android.vending.BILLING"
