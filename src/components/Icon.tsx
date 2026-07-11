@@ -120,6 +120,11 @@ const ICONS: Record<IconName, IconAsset> = {
         viewWidth: 58,
         viewHeight: 58,
     },
+    speaker: {
+        source: require("@/assets/images/icons/speaker.svg"),
+        viewWidth: 24,
+        viewHeight: 24,
+    },
 };
 
 type IconName =
@@ -137,7 +142,8 @@ type IconName =
     | "analytics"
     | "notepad"
     | "shield"
-    | "right-arrow";
+    | "right-arrow"
+    | "speaker";
 
 export function Icon({
     name,

@@ -63,6 +63,7 @@ export const ASYNCSTORAGE_INPROXY_REDUCED_MAX_CLIENTS_KEY =
     "InproxyReducedMaxClients";
 export const ASYNCSTORAGE_INPROXY_REDUCED_LIMIT_BYTES_PER_SECOND_KEY =
     "InproxyReducedLimitBytesPerSecond";
+export const ASYNCSTORAGE_SOUND_ENABLED_KEY = "SoundEffectsEnabled";
 
 // SecureStore keys, centralized to prevent accidental collision
 export const SECURESTORE_MNEMONIC_KEY = "mnemonic";
@@ -112,6 +113,7 @@ export const QUERYKEY_HOSTED_STATION = "hostedStation";
 export const QUERYKEY_HOSTED_STATS_SUMMARY = "hostedStatsSummary";
 export const QUERYKEY_HOSTED_STATS_RECENT = "hostedStatsRecent";
 export const QUERYKEY_HOSTED_STATS_LIVE = "hostedStatsLive";
+export const QUERYKEY_SOUND_ENABLED = "soundEffectsEnabled";
 
 export const ASYNCSTORAGE_DASHBOARD_RECENT_WINDOW_KEY = "DashboardRecentWindow";
 export const ASYNCSTORAGE_DASHBOARD_STATUS_MODE_KEY = "DashboardStatusMode";

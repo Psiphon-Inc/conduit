@@ -47,6 +47,7 @@ import {
     useHostedExperienceActions,
     useHostedExperienceState,
 } from "@/src/hosted/experience/hooks";
+import { playSound } from "@/src/sound";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 /**
@@ -179,6 +180,7 @@ function ConduitNameEditorModal({
         onSuccess: (result) => {
             const alias = typeof result === "string" ? result : result.alias;
             queryClient.setQueryData([QUERYKEY_CONDUIT_NAME], alias);
+            playSound("successConfirm", { haptic: false });
         },
         onError: (error) => {
             console.error("Failed to persist conduit alias:", error);

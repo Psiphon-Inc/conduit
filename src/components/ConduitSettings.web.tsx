@@ -3,7 +3,7 @@ import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 
 import { useConduitActions } from "@/src/components/ConduitActionsContext";
 import { EditableConduitAlias } from "@/src/components/EditableConduitAlias";
@@ -24,6 +24,7 @@ import {
 import { useConduitName } from "@/src/hooks";
 import { useHostedExperienceState } from "@/src/hosted/experience/hooks";
 import { isEntitlementAllowed } from "@/src/hosted/experience/stateMachine";
+import { playSound, setSoundEnabled, useSoundEnabled } from "@/src/sound";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitSettings({ inline = false }: { inline?: boolean }) {
@@ -44,6 +45,15 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
         hostedState.entitlementSnapshot,
     );
     const showAddToHomeScreenAction = isIOSWebDevice && !isStandalone;
+    const soundEnabled = useSoundEnabled();
+
+    function onSoundEnabledToggle(enabled: boolean) {
+        void setSoundEnabled(enabled);
+        if (enabled) {
+            // Audible sample of the new setting.
+            playSound("successConfirm");
+        }
+    }
 
     function renderSettingsAction({
         icon,
@@ -176,6 +186,38 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                     subtitle: t("ACCOUNT_SETTINGS_DESCRIPTION_I18N.string"),
                     onPress: () => router.push("/(app)/account"),
                 })}
+
+                {/* Sound effects toggle */}
+                <View
+                    style={{
+                        minHeight: 60,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 16,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "rgba(0, 0, 0, 0.12)",
+                        paddingVertical: 8,
+                    }}
+                >
+                    <View
+                        style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 10,
+                            flex: 1,
+                        }}
+                    >
+                        <Icon name="speaker" color={palette.black} size={20} />
+                        <Text style={[ss.bodyFont, ss.blackText]}>
+                            {t("SETTINGS_SOUND_EFFECTS_I18N.string")}
+                        </Text>
+                    </View>
+                    <Switch
+                        value={soundEnabled}
+                        onValueChange={onSoundEnabledToggle}
+                    />
+                </View>
 
                 {renderSettingsAction({
                     icon: (

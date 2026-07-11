@@ -30,6 +30,7 @@ import { useHostedExperienceIsOffline } from "@/src/hosted/experience/hooks";
 import { RevenueCatProvider } from "@/src/hosted/revenuecatContext";
 import { InproxyProvider, useInproxyContext } from "@/src/inproxy/context";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
+import { SoundTriggers } from "@/src/sound/SoundTriggers";
 import { palette } from "@/src/styles";
 
 export default function AppLayout() {
@@ -50,6 +51,7 @@ export default function AppLayout() {
                         revenueCatPublicKeys={hostedConfig.revenueCatPublicKeys}
                     >
                         <ConduitActionsProvider>
+                            <SoundTriggers />
                             <ModalHost />
                             <AppShell showBottomNav={showBottomNav} />
                         </ConduitActionsProvider>

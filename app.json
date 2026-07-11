@@ -60,6 +60,7 @@
                     "root": "./src/app"
                 }
             ],
+            "expo-audio",
             "expo-localization",
             "expo-font",
             "expo-secure-store",

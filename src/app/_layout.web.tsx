@@ -8,6 +8,7 @@ import { useEffect } from "react";
 
 import { HostedAuthProvider } from "@/src/hosted/auth/provider";
 import i18nService from "@/src/i18n/i18n";
+import { hydrateSoundPreference } from "@/src/sound";
 import { fonts, palette } from "@/src/styles";
 import { createAppQueryClient } from "@/src/telemetry/queryClient";
 
@@ -24,6 +25,7 @@ export default function RootLayout() {
 
     useEffect(() => {
         SystemUI.setBackgroundColorAsync(palette.black).then(() => {});
+        void hydrateSoundPreference();
     }, []);
 
     return (

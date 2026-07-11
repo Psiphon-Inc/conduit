@@ -40,6 +40,10 @@
     "SEND_DIAGNOSTIC_I18N": {
         "string": "Send Diagnostic"
     },
+    "SETTINGS_SOUND_EFFECTS_I18N": {
+        "string": "Sound effects",
+        "developer_comment": "Settings row label for the in-app sound effects toggle."
+    },
     "SETTINGS_CHANGE_WILL_RESTART_CONDUIT_DESCRIPTION_I18N": {
         "string": "Changing Conduit settings requires restarting your Conduit Station. Any connected users will be disconnected."
     },

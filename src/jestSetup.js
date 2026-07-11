@@ -85,6 +85,28 @@ jest.mock("@clerk/clerk-expo", () => {
     };
 });
 
+jest.mock("expo-audio", () => ({
+    createAudioPlayer: jest.fn(() => ({
+        volume: 1,
+        play: jest.fn(),
+        seekTo: jest.fn(() => Promise.resolve()),
+        remove: jest.fn(),
+    })),
+    setAudioModeAsync: jest.fn(() => Promise.resolve()),
+}));
+
+jest.mock("expo-haptics", () => ({
+    ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
+    NotificationFeedbackType: {
+        Success: "success",
+        Warning: "warning",
+        Error: "error",
+    },
+    impactAsync: jest.fn(() => Promise.resolve()),
+    notificationAsync: jest.fn(() => Promise.resolve()),
+    selectionAsync: jest.fn(() => Promise.resolve()),
+}));
+
 jest.mock("expo-linking", () => ({
     createURL: jest.fn((path = "") => `conduit://${path.replace(/^\//, "")}`),
 }));

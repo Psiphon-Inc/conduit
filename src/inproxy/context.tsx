@@ -81,6 +81,7 @@ import {
     parsePersonalCompartmentId,
     persistAndroidPersonalCompartmentId,
 } from "@/src/personalCompartmentId";
+import { playSound } from "@/src/sound";
 
 const InproxyContext = createContext<InproxyContextValue | null>(null);
 const DASHBOARD_STATS_THROTTLE_MS = 5_000;
@@ -121,6 +122,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     const queryClient = useQueryClient();
     const lastDashboardStatsUpdateAtMsRef = useRef(0);
     const lastInproxyStatusRef = useRef<InproxyStatusEnum | null>(null);
+    // Set on user-initiated starts so background auto-reconnects do not
+    // replay the activation sound.
+    const armedForActivationSoundRef = useRef(false);
 
     useEffect(() => {
         // this manages InproxyEvent subscription and connects it to the handler
@@ -229,6 +233,13 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 [QUERYKEY_INPROXY_ACTIVITY_STATS_READY],
                 false,
             );
+            if (armedForActivationSoundRef.current) {
+                armedForActivationSoundRef.current = false;
+                playSound("stationGoingLive");
+            }
+        }
+        if (previousStatus === "RUNNING" && inproxyStatus === "STOPPED") {
+            playSound("stationGoingOffline");
         }
         // The module does not send an update for ActivityData when the Inproxy
         // is stopped, so reset it when we receive a non-running status.
@@ -246,6 +257,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     function handleProxyError(inproxyError: ProxyError): void {
+        if (inproxyError.action !== "unimplemented") {
+            playSound("warningAlert");
+        }
         if (inproxyError.action === "inProxyMustUpgrade") {
             queryClient.setQueryData([QUERYKEY_INPROXY_MUST_UPGRADE], true);
         } else {
@@ -520,6 +534,10 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
 
     // ConduitModule.toggleInProxy
     async function toggleInproxy(): Promise<void> {
+        // Arm the activation sound only when this toggle is starting the
+        // proxy; clear it when toggling off.
+        armedForActivationSoundRef.current =
+            lastInproxyStatusRef.current !== "RUNNING";
         try {
             await ConduitModule.toggleInProxy(inproxyParameters);
             timedLog(`ConduitModule.toggleInProxy(...) invoked`);

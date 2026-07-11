@@ -39,6 +39,7 @@ import { useModal } from "@/src/components/ModalStore";
 import { ASYNCSTORAGE_PAIRING_LANGUAGE_KEY } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { buildPairingShareOutput } from "@/src/pairing/token";
+import { playSound } from "@/src/sound";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 interface LanguageOption {
@@ -135,6 +136,7 @@ export function PersonalPairingShareModal({
             setNotice(null);
         } catch {
             await Clipboard.setStringAsync(shareOutput.rawToken);
+            playSound("copyToClipboard");
             setNotice(t("SHARE_UNAVAILABLE_TOKEN_COPIED_I18N.string"));
         }
     }

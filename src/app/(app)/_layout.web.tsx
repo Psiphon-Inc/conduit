@@ -10,6 +10,7 @@ import { readHostedRuntimeConfig } from "@/src/hosted/config";
 import { HostedExperienceProvider } from "@/src/hosted/experience/context";
 import { RevenueCatProvider } from "@/src/hosted/revenuecatContext";
 import { InproxyProvider } from "@/src/inproxy/context";
+import { SoundTriggers } from "@/src/sound/SoundTriggers";
 import { palette } from "@/src/styles";
 
 export default function AppLayout() {
@@ -35,6 +36,7 @@ export default function AppLayout() {
                         revenueCatPublicKeys={hostedConfig.revenueCatPublicKeys}
                     >
                         <ConduitActionsProvider>
+                            <SoundTriggers />
                             <ModalHost />
                             <WebAddToHomeScreenPromptController
                                 disabled={suppressAddToHomeScreenPrompt}

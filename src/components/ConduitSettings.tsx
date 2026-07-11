@@ -23,7 +23,7 @@ import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Switch, Text, View } from "react-native";
 import {
     GestureHandlerRootView,
     ScrollView,
@@ -72,6 +72,7 @@ import {
     InproxyParameters,
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
+import { playSound, setSoundEnabled, useSoundEnabled } from "@/src/sound";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 // ---------------------------------------------------------------------------
@@ -332,6 +333,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
     const { data: conduitName } = useConduitName();
+    const soundEnabled = useSoundEnabled();
     const showLocalConduitSettings = Platform.OS !== "ios";
     const {
         openPersonalPairingModal,
@@ -731,7 +733,8 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
             );
             return;
         }
-        selectInproxyParameters(newInproxyParameters.data);
+        await selectInproxyParameters(newInproxyParameters.data);
+        playSound("successConfirm");
     }
 
     async function onSavePress() {
@@ -766,6 +769,14 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     function onSendDiagnosticPress() {
         void sendFeedback();
         setShowDiagnosticThanks(true);
+    }
+
+    function onSoundEnabledToggle(enabled: boolean) {
+        void setSoundEnabled(enabled);
+        if (enabled) {
+            // Audible sample of the new setting.
+            playSound("successConfirm");
+        }
     }
 
     function renderSettingsAction({
@@ -1061,6 +1072,36 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         onPress: () => router.push("/(app)/account" as Href),
                         testID: "settings-account",
                     })}
+
+                    {/* Sound effects toggle */}
+                    <View
+                        style={[
+                            ...settingsLineItemStyle,
+                            ss.justifySpaceBetween,
+                            {
+                                flexDirection: "row",
+                                alignItems: "center",
+                            },
+                        ]}
+                    >
+                        <View style={[ss.row, ss.alignCenter, { gap: 10 }]}>
+                            <Icon
+                                name="speaker"
+                                color={palette.black}
+                                size={20}
+                            />
+                            <Text style={[ss.bodyFont, ss.blackText]}>
+                                {t("SETTINGS_SOUND_EFFECTS_I18N.string")}
+                            </Text>
+                        </View>
+                        <Switch
+                            testID="settings-sound-toggle"
+                            value={soundEnabled}
+                            onValueChange={onSoundEnabledToggle}
+                            trackColor={{ true: palette.purple }}
+                            thumbColor={palette.white}
+                        />
+                    </View>
 
                     {renderSettingsAction({
                         icon: (
