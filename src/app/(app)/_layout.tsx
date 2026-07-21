@@ -18,15 +18,19 @@
  */
 import { Stack, usePathname } from "expo-router";
 import React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
+import { isE2E } from "@/src/common/e2e";
 import { AppBottomNav } from "@/src/components/AppBottomNav";
 import { ConduitActionsProvider } from "@/src/components/ConduitActionsContext";
 import { ModalHost, ModalProvider } from "@/src/components/ModalStore";
 import { readHostedRuntimeConfig } from "@/src/hosted/config";
 import { HostedExperienceProvider } from "@/src/hosted/experience/context";
+import { useHostedExperienceIsOffline } from "@/src/hosted/experience/hooks";
 import { RevenueCatProvider } from "@/src/hosted/revenuecatContext";
-import { InproxyProvider } from "@/src/inproxy/context";
+import { InproxyProvider, useInproxyContext } from "@/src/inproxy/context";
+import { useInproxyStatus } from "@/src/inproxy/hooks";
+import { SoundTriggers } from "@/src/sound/SoundTriggers";
 import { palette } from "@/src/styles";
 
 export default function AppLayout() {
@@ -47,29 +51,9 @@ export default function AppLayout() {
                         revenueCatPublicKeys={hostedConfig.revenueCatPublicKeys}
                     >
                         <ConduitActionsProvider>
+                            <SoundTriggers />
                             <ModalHost />
-                            <View style={{ flex: 1 }}>
-                                <View style={{ flex: 1 }}>
-                                    <Stack
-                                        screenOptions={{
-                                            headerShown: false,
-                                            animation: "fade",
-                                            contentStyle: {
-                                                backgroundColor: palette.white,
-                                            },
-                                        }}
-                                    >
-                                        <Stack.Screen name="index" />
-                                        <Stack.Screen name="onboarding" />
-                                        <Stack.Screen name="hosted-setup" />
-                                        <Stack.Screen name="hosted-dashboard" />
-                                        <Stack.Screen name="settings" />
-                                        <Stack.Screen name="account" />
-                                        <Stack.Screen name="sso-callback" />
-                                    </Stack>
-                                </View>
-                                {showBottomNav ? <AppBottomNav /> : null}
-                            </View>
+                            <AppShell showBottomNav={showBottomNav} />
                         </ConduitActionsProvider>
                     </HostedExperienceProvider>
                 </RevenueCatProvider>
@@ -77,3 +61,112 @@ export default function AppLayout() {
         </ModalProvider>
     );
 }
+
+function AppShell({ showBottomNav }: { showBottomNav: boolean }) {
+    return (
+        <View
+            testID="app-ready"
+            accessibilityLabel="app-ready"
+            style={styles.appShell}
+        >
+            <View style={{ flex: 1 }}>
+                <Stack
+                    screenOptions={{
+                        headerShown: false,
+                        animation: "fade",
+                        contentStyle: {
+                            backgroundColor: palette.white,
+                        },
+                    }}
+                >
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="onboarding" />
+                    <Stack.Screen name="hosted-setup" />
+                    <Stack.Screen name="hosted-dashboard" />
+                    <Stack.Screen name="settings" />
+                    <Stack.Screen name="account" />
+                    <Stack.Screen name="sso-callback" />
+                </Stack>
+            </View>
+            {showBottomNav ? <AppBottomNav /> : null}
+            {isE2E() ? (
+                <>
+                    <HostedApiOfflineMarker />
+                    <LocalPairingReadyMarker />
+                    <ConduitRunningMarker />
+                </>
+            ) : null}
+        </View>
+    );
+}
+
+function HostedApiOfflineMarker() {
+    const isOffline = useHostedExperienceIsOffline();
+    if (!isOffline) {
+        return null;
+    }
+
+    return (
+        <View
+            testID="hosted-api-offline"
+            accessibilityLabel="hosted-api-offline"
+            style={[styles.stateMarker, styles.hostedApiOfflineMarker]}
+            pointerEvents="none"
+        />
+    );
+}
+
+function LocalPairingReadyMarker() {
+    const { isPersonalPairingReady } = useInproxyContext();
+    if (!isPersonalPairingReady) {
+        return null;
+    }
+
+    return (
+        <View
+            testID="local-pairing-ready"
+            accessibilityLabel="local-pairing-ready"
+            style={[styles.stateMarker, styles.localPairingReadyMarker]}
+            pointerEvents="none"
+        />
+    );
+}
+
+function ConduitRunningMarker() {
+    const { data: inproxyStatus } = useInproxyStatus();
+    if (inproxyStatus !== "RUNNING") {
+        return null;
+    }
+
+    return (
+        <View
+            testID="conduit-running"
+            accessibilityLabel="conduit-running"
+            style={[styles.stateMarker, styles.conduitRunningMarker]}
+            pointerEvents="none"
+        />
+    );
+}
+
+const styles = StyleSheet.create({
+    appShell: {
+        flex: 1,
+    },
+    stateMarker: {
+        position: "absolute",
+        left: 0,
+        width: 8,
+        height: 8,
+        backgroundColor: "#000",
+        zIndex: 1,
+    },
+    hostedApiOfflineMarker: {
+        top: 0,
+    },
+    localPairingReadyMarker: {
+        top: 8,
+    },
+    conduitRunningMarker: {
+        top: 16,
+    },
+});

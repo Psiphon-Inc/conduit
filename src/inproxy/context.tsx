@@ -17,12 +17,14 @@
  *
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { base64nopad } from "@scure/base";
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
+import { isE2EMockProxy } from "@/src/common/e2e";
 import { unpackErrorMessage, wrapError } from "@/src/common/errors";
 import { timedLog } from "@/src/common/utils";
 import {
@@ -38,6 +40,7 @@ import {
     DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS,
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_CLIENTS_TOTAL_MAX,
+    QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
     QUERYKEY_INPROXY_ACTIVITY_SEGMENTS,
     QUERYKEY_INPROXY_ACTIVITY_STATS_READY,
     QUERYKEY_INPROXY_CURRENT_ANNOUNCING_WORKERS,
@@ -74,6 +77,11 @@ import {
     getProxyId,
     getZeroedInproxyActivityStats,
 } from "@/src/inproxy/utils";
+import {
+    parsePersonalCompartmentId,
+    persistAndroidPersonalCompartmentId,
+} from "@/src/personalCompartmentId";
+import { playSound } from "@/src/sound";
 
 const InproxyContext = createContext<InproxyContextValue | null>(null);
 const DASHBOARD_STATS_THROTTLE_MS = 5_000;
@@ -98,7 +106,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     const androidPersonalCompartmentIdQuery = useAndroidPersonalCompartmentId();
     const androidPersonalCompartmentId = androidPersonalCompartmentIdQuery.data;
     const isPersonalPairingReady =
-        Platform.OS !== "android" || androidPersonalCompartmentId != null;
+        Platform.OS !== "android" ||
+        isE2EMockProxy() ||
+        androidPersonalCompartmentId != null;
 
     // This provider handles tracking the user-selected Inproxy parameters, and
     // persisting them in AsyncStorage.
@@ -112,6 +122,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     const queryClient = useQueryClient();
     const lastDashboardStatsUpdateAtMsRef = useRef(0);
     const lastInproxyStatusRef = useRef<InproxyStatusEnum | null>(null);
+    // Set on user-initiated starts so background auto-reconnects do not
+    // replay the activation sound.
+    const armedForActivationSoundRef = useRef(false);
 
     useEffect(() => {
         // this manages InproxyEvent subscription and connects it to the handler
@@ -220,6 +233,13 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 [QUERYKEY_INPROXY_ACTIVITY_STATS_READY],
                 false,
             );
+            if (armedForActivationSoundRef.current) {
+                armedForActivationSoundRef.current = false;
+                playSound("stationGoingLive");
+            }
+        }
+        if (previousStatus === "RUNNING" && inproxyStatus === "STOPPED") {
+            playSound("stationGoingOffline");
         }
         // The module does not send an update for ActivityData when the Inproxy
         // is stopped, so reset it when we receive a non-running status.
@@ -237,6 +257,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     function handleProxyError(inproxyError: ProxyError): void {
+        if (inproxyError.action !== "unimplemented") {
+            playSound("warningAlert");
+        }
         if (inproxyError.action === "inProxyMustUpgrade") {
             queryClient.setQueryData([QUERYKEY_INPROXY_MUST_UPGRADE], true);
         } else {
@@ -511,6 +534,10 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
 
     // ConduitModule.toggleInProxy
     async function toggleInproxy(): Promise<void> {
+        // Arm the activation sound only when this toggle is starting the
+        // proxy; clear it when toggling off.
+        armedForActivationSoundRef.current =
+            lastInproxyStatusRef.current !== "RUNNING";
         try {
             await ConduitModule.toggleInProxy(inproxyParameters);
             timedLog(`ConduitModule.toggleInProxy(...) invoked`);
@@ -581,6 +608,29 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         loadInproxyParameters();
     }, [androidPersonalCompartmentId, conduitKeyPair.data]);
+
+    useEffect(() => {
+        if (
+            Platform.OS !== "android" ||
+            androidPersonalCompartmentId != null ||
+            !(conduitKeyPair.data?.publicKey instanceof Uint8Array)
+        ) {
+            return;
+        }
+
+        const personalCompartmentId = parsePersonalCompartmentId(
+            base64nopad.encode(conduitKeyPair.data.publicKey),
+        );
+        if (!personalCompartmentId) {
+            return;
+        }
+
+        queryClient.setQueryData(
+            [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+            personalCompartmentId,
+        );
+        void persistAndroidPersonalCompartmentId(personalCompartmentId);
+    }, [androidPersonalCompartmentId, conduitKeyPair.data, queryClient]);
 
     const value = {
         inproxyParameters,

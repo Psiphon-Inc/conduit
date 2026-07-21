@@ -1,0 +1,77 @@
+# Reusable subflow: advance through first-run onboarding to the Home screen.
+#
+# Onboarding is a Skia-rendered carousel; the tappable "next" target is an
+# overlaid Animated.View. The instrumentation pass adds an `onboarding-next`
+# testID to it (src/app/(app)/onboarding.tsx). The number of steps differs by
+# platform (iOS omits the "Hosted" info slide), so we run a bounded set of
+# guarded taps until the onboarding control is gone, then wait for the app shell.
+#
+# If the app was already onboarded (HAS_ONBOARDED in AsyncStorage) it boots
+# straight to Home and `onboarding-next` is never visible - the guarded taps
+# below simply no-ops in that case.
+appId: ca.psiphon.conduit
+---
+- extendedWaitUntil:
+    visible:
+      id: "app-ready"
+    timeout: 180000
+- runFlow:
+    when:
+      visible:
+        id: "onboarding-next"
+    commands:
+      - tapOn:
+          id: "onboarding-next"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+- runFlow:
+    when:
+      visible:
+        id: "onboarding-next"
+    commands:
+      - tapOn:
+          id: "onboarding-next"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+- runFlow:
+    when:
+      visible:
+        id: "onboarding-next"
+    commands:
+      - tapOn:
+          id: "onboarding-next"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+- runFlow:
+    when:
+      visible:
+        id: "onboarding-next"
+    commands:
+      - tapOn:
+          id: "onboarding-next"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+- runFlow:
+    when:
+      visible:
+        id: "onboarding-next"
+    commands:
+      - tapOn:
+          id: "onboarding-next"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000
+- runFlow:
+    when:
+      visible:
+        id: "onboarding-next"
+    commands:
+      - tapOn:
+          id: "onboarding-next"
+          optional: true
+      - waitForAnimationToEnd:
+          timeout: 2000

@@ -20,6 +20,8 @@ import { Canvas, Rect, RoundedRect } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
 
+import { isE2E } from "@/src/common/e2e";
+import { useReducedMotionPreference } from "@/src/hooks";
 import { palette } from "@/src/styles";
 
 interface QRDisplayProps {
@@ -855,6 +857,8 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({
     backgroundColor = palette.white,
     foregroundColor = palette.black,
 }) => {
+    const reducedMotionPreferred = useReducedMotionPreference();
+    const animationDisabled = reducedMotionPreferred || isE2E();
     const modules = React.useMemo(() => {
         const generator = new QRCodeGenerator();
         generator.addData(data);
@@ -883,6 +887,11 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({
 
     React.useEffect(() => {
         const maxRadius = modules.moduleSize / 2;
+        if (animationDisabled) {
+            setCornerRadius(modules.moduleSize * 0.2);
+            return;
+        }
+
         const duration = 6000;
         let startTime: number | null = null;
         let animationFrame: number;
@@ -905,7 +914,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({
         animationFrame = requestAnimationFrame(animate);
 
         return () => cancelAnimationFrame(animationFrame);
-    }, [modules.moduleSize]);
+    }, [animationDisabled, modules.moduleSize]);
 
     return (
         <View style={{ width: size, height: size }}>

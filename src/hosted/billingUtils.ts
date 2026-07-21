@@ -36,13 +36,30 @@ export function resolveManageBillingUrl(
         if (!candidate) {
             continue;
         }
-        if (/^https?:\/\//i.test(candidate)) {
-            return candidate;
-        }
-        if (candidate.startsWith("/") && baseUrl) {
-            return `${baseUrl}${candidate}`;
+        const billingUrl = resolveHttpsUrl(candidate, baseUrl);
+        if (billingUrl) {
+            return billingUrl;
         }
     }
 
     return null;
+}
+
+export function resolveHttpsUrl(
+    value: string | null | undefined,
+    baseUrl?: string,
+): string | null {
+    const trimmed = value?.trim();
+    if (!trimmed) {
+        return null;
+    }
+
+    try {
+        const url = trimmed.startsWith("/")
+            ? new URL(trimmed, baseUrl)
+            : new URL(trimmed);
+        return url.protocol === "https:" ? url.toString() : null;
+    } catch {
+        return null;
+    }
 }

@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import * as SecureStore from "expo-secure-store";
 import { z } from "zod";
 
+import * as secureStorage from "@/src/common/secureStorage";
 import { SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY } from "@/src/constants";
 import { OAuthProvider, OAuthProviderSchema } from "@/src/hosted/contracts";
 
@@ -30,7 +30,7 @@ const HostedAuthProviderHintSchema = z.object({
 export async function loadHostedLastAuthProvider(
     baseUrl: string,
 ): Promise<OAuthProvider | null> {
-    const raw = await SecureStore.getItemAsync(
+    const raw = await secureStorage.getItemAsync(
         SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
     );
     if (raw == null) {
@@ -57,14 +57,14 @@ export async function persistHostedLastAuthProvider(
         baseUrl: normalizeBaseUrl(baseUrl),
         provider,
     });
-    await SecureStore.setItemAsync(
+    await secureStorage.setItemAsync(
         SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
         JSON.stringify(parsed),
     );
 }
 
 export async function clearHostedLastAuthProvider(): Promise<void> {
-    await SecureStore.deleteItemAsync(
+    await secureStorage.deleteItemAsync(
         SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
     );
 }

@@ -16,15 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import {
-    AccountProfile,
-    ConduitsSnapshot,
-    OAuthProvider,
-} from "@/src/hosted/contracts";
+import { AccountProfile, ConduitsSnapshot } from "@/src/hosted/contracts";
 import { HostedEntitlementStatus } from "@/src/hosted/revenuecatEntitlements";
 import { HostedSession } from "@/src/hosted/sessionClient";
 
-export type HostedAuthPhase =
+type HostedAuthPhase =
     | "signed_out"
     | "authenticating"
     | "authenticated"
@@ -44,7 +40,7 @@ export type HostedStationPhase =
     | "suspended"
     | "error";
 
-export interface HostedPollingMetadata {
+interface HostedPollingMetadata {
     nextPollAt: number | null;
     pollAfterSeconds: number | null;
     lastError: string | null;
@@ -63,80 +59,4 @@ export interface HostedExperienceState {
     entitlementSnapshot: HostedEntitlementStatus;
     polling: HostedPollingMetadata;
     lastUpdatedAtMs: number | null;
-}
-
-export type HostedExperienceEvent =
-    | {
-          type: "auth/start";
-          occurredAtMs: number;
-      }
-    | {
-          type: "auth/success";
-          session: HostedSession;
-          occurredAtMs: number;
-      }
-    | {
-          type: "auth/error";
-          errorMessage: string;
-          occurredAtMs: number;
-      }
-    | {
-          type: "session/loaded";
-          session: HostedSession;
-          occurredAtMs: number;
-      }
-    | {
-          type: "session/refreshed";
-          session: HostedSession;
-          occurredAtMs: number;
-      }
-    | {
-          type: "session/cleared";
-          occurredAtMs: number;
-      }
-    | {
-          type: "revenuecat/ready";
-          occurredAtMs: number;
-      }
-    | {
-          type: "revenuecat/purchase_pending";
-          occurredAtMs: number;
-      }
-    | {
-          type: "revenuecat/restore_pending";
-          occurredAtMs: number;
-      }
-    | {
-          type: "revenuecat/error";
-          errorMessage: string;
-          occurredAtMs: number;
-      }
-    | {
-          type: "revenuecat/warning";
-          errorMessage: string;
-          occurredAtMs: number;
-      }
-    | {
-          type: "account/profile_updated";
-          profile: AccountProfile;
-          occurredAtMs: number;
-      }
-    | {
-          type: "conduits/update";
-          snapshot: ConduitsSnapshot;
-          receivedAtMs: number;
-      }
-    | {
-          type: "conduits/error";
-          errorMessage: string;
-          occurredAtMs: number;
-      }
-    | {
-          type: "entitlement/update";
-          entitlementStatus: HostedEntitlementStatus;
-          occurredAtMs: number;
-      };
-
-export interface HostedAuthAttempt {
-    provider: OAuthProvider;
 }

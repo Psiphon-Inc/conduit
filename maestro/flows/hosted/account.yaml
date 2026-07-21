@@ -1,0 +1,22 @@
+# Flow: hosted/account
+appId: ca.psiphon.conduit
+tags:
+    - hosted
+    - requires-hosted-state
+    - android
+    - ios
+---
+- runFlow: ../../subflows/launch.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- runFlow:
+      file: ../../subflows/go-to.yaml
+      env:
+          DEST: settings
+- tapOn:
+      id: "settings-account"
+- extendedWaitUntil:
+      visible:
+          id: "account-signout"
+      timeout: 30000
+- assertVisible:
+      id: "account-delete"

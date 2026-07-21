@@ -16,12 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Image as ExpoImage } from "expo-image";
 import * as Linking from "expo-linking";
 import * as Network from "expo-network";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+    useLocalSearchParams,
+    useRootNavigationState,
+    useRouter,
+} from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -35,32 +38,27 @@ import {
 } from "react-native";
 
 import { toErrorString } from "@/src/common/errors";
+import { formatExpiresAt } from "@/src/common/formatters";
 import { timedLog } from "@/src/common/utils";
+import {
+    ActionButton,
+    HostedPlanSelection,
+    HostedSetupBackButton,
+    PrimaryActionBlock,
+    StatusText,
+} from "@/src/components/HostedSetupSections";
 import { HostedSetupSignInHero } from "@/src/components/HostedSetupSignInHero";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
-import {
-    APPLE_STANDARD_EULA_URL,
-    APP_MAX_CONTENT_WIDTH,
-    PRIVACY_POLICY_URL,
-    TERMS_OF_USE_URL,
-} from "@/src/constants";
+import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
+import { createHostedApiClient } from "@/src/hosted/apiClient";
 import { readHostedClerkPublishableKey } from "@/src/hosted/auth/clerk";
-import {
-    HostedClientRequestError,
-    createHostedClient,
-} from "@/src/hosted/client";
 import {
     formatConduitScope,
     orderedConduitsForDisplay,
 } from "@/src/hosted/conduitDisplay";
 import { readHostedRuntimeConfig } from "@/src/hosted/config";
 import { OAuthProvider } from "@/src/hosted/contracts";
-import {
-    buildHostedPlanCatalogQuery,
-    getHostedAppVersion,
-    getHostedCountry,
-} from "@/src/hosted/deviceInfo";
 import {
     useHostedExperienceActions,
     useHostedExperienceInitialSessionResolved,
@@ -69,36 +67,27 @@ import {
     useHostedExperienceState,
 } from "@/src/hosted/experience/hooks";
 import { shouldRouteToHostedActiveExperience } from "@/src/hosted/experience/navigation";
-import {
-    HostedOnboardingPrimaryAction,
-    createHostedOnboardingViewModel,
-} from "@/src/hosted/experience/onboarding";
-import { resolveHostedPlanOptions } from "@/src/hosted/planCatalog";
+import { createHostedOnboardingViewModel } from "@/src/hosted/experience/onboarding";
+import { useHostedPlanOptionsQuery } from "@/src/hosted/planCatalogQueries";
 import {
     HostedPlanOption,
     HostedPlanSelectionDescriptor,
-    formatHostedPlanPrice,
     isCancelledPurchaseError,
     normalizeStatusText,
     resolveFirstHostedPackage,
     resolveHostedSelectedPlanOption,
-    toRevenueCatPackageCandidates,
 } from "@/src/hosted/planUtils";
 import { resolveRevenueCatApiKey } from "@/src/hosted/revenuecatClient";
 import { useRevenueCatContext } from "@/src/hosted/revenuecatContext";
 import { palette, sharedStyles as ss } from "@/src/styles";
+import { recordVisibleClientError } from "@/src/telemetry/clientEvents";
 
-type ActionButtonVariant = "primary" | "secondary";
-
-const GOOGLE_SIGN_IN_ICON = require("../../../assets/images/google.png");
-const APPLE_SIGN_IN_ICON = require("../../../assets/images/apple.png");
 const NO_NETWORK_ICON = require("@/assets/images/icons/no-network.svg");
-const HOSTED_PRIMARY_GRADIENT_START = "#7E5CB8";
-const HOSTED_PRIMARY_GRADIENT_END = "rgba(156, 129, 201, 0.69)";
 
 export default function HostedSetupScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const router = useRouter();
+    const rootNavigationState = useRootNavigationState();
     const { intent } = useLocalSearchParams<{ intent?: string }>();
     const isRenewIntent = intent === "renew";
     const config = React.useMemo(readHostedRuntimeConfig, []);
@@ -114,7 +103,7 @@ export default function HostedSetupScreen() {
     const actions = useHostedExperienceActions();
     const revenueCat = useRevenueCatContext();
     const hostedClient = React.useMemo(
-        () => createHostedClient({ baseUrl: config.baseUrl }),
+        () => createHostedApiClient({ baseUrl: config.baseUrl }),
         [config.baseUrl],
     );
     const window = useWindowDimensions();
@@ -122,6 +111,10 @@ export default function HostedSetupScreen() {
     const isOffline =
         networkState.isConnected === false ||
         networkState.isInternetReachable === false;
+    const webRenewUsesBillingPortal =
+        Platform.OS === "web" &&
+        isRenewIntent &&
+        state.entitlementSnapshot === "canceled_not_expired";
 
     const [actionError, setActionError] = React.useState<string | null>(null);
     const [actionNotice, setActionNotice] = React.useState<string | null>(null);
@@ -130,6 +123,14 @@ export default function HostedSetupScreen() {
     );
     const [selectedPlanDescriptor, setSelectedPlanDescriptor] =
         React.useState<HostedPlanSelectionDescriptor | null>(null);
+
+    function goBackFromHostedSetup() {
+        if (router.canGoBack()) {
+            router.back();
+            return;
+        }
+        router.replace("/(app)");
+    }
 
     const canContinue = shouldRouteToHostedActiveExperience(state);
     const onboarding = React.useMemo(
@@ -148,11 +149,11 @@ export default function HostedSetupScreen() {
         // In renewal mode the user already has an allowed entitlement, so
         // canContinue is true on mount.  Skip the auto-redirect and let them
         // pick a plan; we redirect after a successful purchase instead.
-        if (!canContinue || isRenewIntent) {
+        if (!rootNavigationState?.key || !canContinue || isRenewIntent) {
             return;
         }
         router.replace("/(app)");
-    }, [canContinue, isRenewIntent, router]);
+    }, [canContinue, isRenewIntent, rootNavigationState?.key, router]);
 
     React.useEffect(() => {
         if (onboarding.primaryAction !== "restore_or_manage") {
@@ -226,57 +227,18 @@ export default function HostedSetupScreen() {
         refetchInterval: (query) => (query.state.error ? 10_000 : false),
     });
 
-    const activatePlansQuery = useQuery({
-        queryKey: ["hosted", "activate-offerings", state.session?.accountId],
+    const activatePlansQuery = useHostedPlanOptionsQuery({
+        baseUrl: config.baseUrl,
+        accountId: state.session?.accountId,
         enabled:
             state.authPhase === "authenticated" &&
             !isOffline &&
+            !webRenewUsesBillingPortal &&
             (onboarding.primaryAction === "activate_or_restore" ||
                 isRenewIntent),
-        queryFn: async () => {
-            const [offerings, session] = await Promise.all([
-                revenueCat.getOfferings(),
-                actions.refreshSessionIfNeeded(),
-            ]);
-            const catalogQuery = buildHostedPlanCatalogQuery();
-            const fetchPlanCatalog = (accessToken: string) =>
-                hostedClient.getPlanCatalog(accessToken, catalogQuery);
-            let planCatalog: Awaited<ReturnType<typeof fetchPlanCatalog>>;
-            try {
-                planCatalog = await fetchPlanCatalog(session.accessToken);
-            } catch (error) {
-                if (
-                    !(error instanceof HostedClientRequestError) ||
-                    error.status !== 401
-                ) {
-                    throw error;
-                }
-
-                const refreshed = await actions.refreshSession();
-                planCatalog = await fetchPlanCatalog(refreshed.accessToken);
-            }
-            const fallback = resolveHostedPlanOptions({
-                catalog: planCatalog,
-                platform: Platform.OS === "ios" ? "ios" : "android",
-                appVersion: getHostedAppVersion(),
-                country: getHostedCountry(),
-                revenueCatPackages: toRevenueCatPackageCandidates(offerings),
-            });
-            return {
-                options: fallback.options,
-                blockingError: fallback.blockingError,
-                offeringIdentifier: offerings.current?.identifier ?? null,
-            };
-        },
-        staleTime: 60_000,
-        gcTime: 10 * 60_000,
-        retry: 3,
-        retryDelay: 5_000,
-        refetchOnMount: false,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: true,
-        refetchInterval: (query) => (query.state.error ? 10_000 : false),
-        placeholderData: (previous) => previous,
+        getOfferings: revenueCat.getOfferings,
+        refreshSessionIfNeeded: actions.refreshSessionIfNeeded,
+        refreshSession: actions.refreshSession,
     });
 
     const planOptions = activatePlansQuery.data?.options ?? [];
@@ -326,6 +288,19 @@ export default function HostedSetupScreen() {
             setActionError(toErrorString(error));
         },
     });
+    const emailCodeSignInMutation = useMutation({
+        mutationFn: async (input: { email: string; code: string }) => {
+            await actions.startEmailCodeSignIn(input.email);
+            await actions.completeEmailCodeSignIn(input.code);
+        },
+        onMutate: () => {
+            setActionError(null);
+            setActionNotice(null);
+        },
+        onError: (error) => {
+            setActionError(toErrorString(error));
+        },
+    });
 
     const purchaseMutation = useMutation({
         mutationFn: async () => {
@@ -359,11 +334,26 @@ export default function HostedSetupScreen() {
             setActionNotice(null);
         },
         onSuccess: () => {
-            setActionNotice(
-                t("PURCHASES_RESTORED_I18N.string", {
-                    defaultValue: "Purchases restored.",
-                }),
+            setActionNotice(t("PURCHASES_RESTORED_I18N.string"));
+        },
+        onError: (error) => {
+            setActionError(toErrorString(error));
+        },
+    });
+    const openBillingPortalMutation = useMutation({
+        mutationFn: async () => {
+            const session = await actions.refreshSessionIfNeeded();
+            const response = await hostedClient.createBillingPortalSession(
+                session.accessToken,
             );
+            await Linking.openURL(response.url);
+        },
+        onMutate: () => {
+            setActionError(null);
+            setActionNotice(null);
+        },
+        onSuccess: () => {
+            setActionNotice(t("RENEW_SUBSCRIPTION_PORTAL_OPENED_I18N.string"));
         },
         onError: (error) => {
             setActionError(toErrorString(error));
@@ -372,16 +362,34 @@ export default function HostedSetupScreen() {
 
     // After a successful renewal purchase, redirect back to the home screen.
     React.useEffect(() => {
-        if (isRenewIntent && purchaseMutation.isSuccess) {
+        if (
+            rootNavigationState?.key &&
+            isRenewIntent &&
+            purchaseMutation.isSuccess
+        ) {
             router.replace("/(app)");
         }
-    }, [isRenewIntent, purchaseMutation.isSuccess, router]);
+    }, [
+        isRenewIntent,
+        purchaseMutation.isSuccess,
+        rootNavigationState?.key,
+        router,
+    ]);
 
     React.useEffect(() => {
-        if (restorePurchasesMutation.isSuccess && canContinue) {
+        if (
+            rootNavigationState?.key &&
+            restorePurchasesMutation.isSuccess &&
+            canContinue
+        ) {
             router.replace("/(app)");
         }
-    }, [canContinue, restorePurchasesMutation.isSuccess, router]);
+    }, [
+        canContinue,
+        restorePurchasesMutation.isSuccess,
+        rootNavigationState?.key,
+        router,
+    ]);
 
     const recoverAccessMutation = useMutation({
         mutationFn: async () => {
@@ -402,6 +410,10 @@ export default function HostedSetupScreen() {
         signInMutation.mutate(provider);
     }
 
+    function signInWithEmailCode(email: string, code: string): void {
+        emailCodeSignInMutation.mutate({ email, code });
+    }
+
     function purchaseFirstPackage(): void {
         purchaseMutation.mutate();
     }
@@ -413,8 +425,10 @@ export default function HostedSetupScreen() {
     );
     const primaryActionPending =
         signInMutation.isPending ||
+        emailCodeSignInMutation.isPending ||
         purchaseMutation.isPending ||
-        restorePurchasesMutation.isPending;
+        restorePurchasesMutation.isPending ||
+        openBillingPortalMutation.isPending;
     const recoverActionPending = recoverAccessMutation.isPending;
     const setupReady = hasBaseUrl && hasClerkKey && hasRevenueCatKeyForPlatform;
     const storyParagraph = `${onboarding.detail} ${onboarding.helper}`;
@@ -473,15 +487,41 @@ export default function HostedSetupScreen() {
             ? null
             : actionError;
 
+    React.useEffect(() => {
+        if (offeringsError) {
+            recordVisibleClientError(offeringsError, {
+                surface: "hosted-setup",
+                field: "offeringsError",
+            });
+        }
+        if (currentStatusError) {
+            recordVisibleClientError(currentStatusError, {
+                surface: "hosted-setup",
+                field: "currentStatusError",
+            });
+        }
+        if (dedupedActionError) {
+            recordVisibleClientError(dedupedActionError, {
+                surface: "hosted-setup",
+                field: "actionError",
+            });
+        }
+    }, [currentStatusError, dedupedActionError, offeringsError]);
+
     const centeredContentStyle = {
         width: "100%" as const,
         maxWidth: APP_MAX_CONTENT_WIDTH,
         alignSelf: "center" as const,
     };
+    const hostedSetupBackButton =
+        Platform.OS === "web" ? (
+            <HostedSetupBackButton onPress={goBackFromHostedSetup} />
+        ) : null;
 
     if (showInitialLoading || showTransitionLoading) {
         return (
             <SafeAreaView includeBottomInset={false}>
+                {hostedSetupBackButton}
                 <View
                     style={[
                         ss.flex,
@@ -504,6 +544,7 @@ export default function HostedSetupScreen() {
     if (onboarding.primaryAction === "offline") {
         return (
             <SafeAreaView includeBottomInset={false}>
+                {hostedSetupBackButton}
                 <View
                     style={[
                         ss.flex,
@@ -542,9 +583,7 @@ export default function HostedSetupScreen() {
                     </View>
                     <View style={[ss.column]}>
                         <ActionButton
-                            label={t("TRY_AGAIN_I18N.string", {
-                                defaultValue: "Try again",
-                            })}
+                            label={t("TRY_AGAIN_I18N.string")}
                             onPress={() => {
                                 setActionError(null);
                                 setActionNotice(null);
@@ -579,9 +618,77 @@ export default function HostedSetupScreen() {
         );
     }
 
+    if (webRenewUsesBillingPortal) {
+        return (
+            <SafeAreaView includeBottomInset={false}>
+                {hostedSetupBackButton}
+                <ScrollView
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        padding: 16,
+                        gap: 18,
+                        justifyContent: "space-between",
+                        ...centeredContentStyle,
+                    }}
+                >
+                    <View style={[ss.column]}>
+                        <Text style={[ss.extraLargeFont, ss.blackText]}>
+                            {t("RENEW_SUBSCRIPTION_I18N.string")}
+                        </Text>
+                        <Text style={[ss.bodyFont, ss.blackText]}>
+                            {t(
+                                "RENEW_SUBSCRIPTION_PORTAL_DESCRIPTION_I18N.string",
+                                {
+                                    expiresAt: formatExpiresAt(
+                                        state.conduitsSnapshot?.entitlement
+                                            ?.expires_at,
+                                        i18n.language,
+                                    ),
+                                },
+                            )}
+                        </Text>
+                    </View>
+
+                    <View style={[ss.column]}>
+                        {currentStatusError ? (
+                            <StatusText>{currentStatusError}</StatusText>
+                        ) : null}
+                        {dedupedActionError ? (
+                            <StatusText>Error: {dedupedActionError}</StatusText>
+                        ) : null}
+                        {actionNotice ? (
+                            <StatusText>{actionNotice}</StatusText>
+                        ) : null}
+                        <ActionButton
+                            label={t("RENEW_SUBSCRIPTION_I18N.string")}
+                            onPress={() => openBillingPortalMutation.mutate()}
+                            disabled={
+                                openBillingPortalMutation.isPending ||
+                                !setupReady
+                            }
+                            variant="primary"
+                            gradientBackground={true}
+                        />
+                        <ActionButton
+                            label={t("REFRESH_SUBSCRIPTION_STATUS_I18N.string")}
+                            onPress={() => recoverAccessMutation.mutate()}
+                            disabled={
+                                openBillingPortalMutation.isPending ||
+                                recoverActionPending ||
+                                !setupReady
+                            }
+                            variant="secondary"
+                        />
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        );
+    }
+
     if (showProvisioningScreen) {
         return (
             <SafeAreaView includeBottomInset={false}>
+                {hostedSetupBackButton}
                 <View
                     style={[
                         ss.flex,
@@ -649,6 +756,7 @@ export default function HostedSetupScreen() {
     if (onboarding.primaryAction === "wait") {
         return (
             <SafeAreaView includeBottomInset={false}>
+                {hostedSetupBackButton}
                 <View
                     style={[
                         ss.flex,
@@ -671,6 +779,7 @@ export default function HostedSetupScreen() {
     if (canContinue && !isRenewIntent) {
         return (
             <SafeAreaView includeBottomInset={false}>
+                {hostedSetupBackButton}
                 <View
                     style={[
                         ss.flex,
@@ -692,6 +801,11 @@ export default function HostedSetupScreen() {
 
     return (
         <SafeAreaView includeBottomInset={false}>
+            <View
+                testID="hosted-setup-ready"
+                pointerEvents="none"
+                style={{ width: 1, height: 1 }}
+            />
             <ScrollView
                 contentContainerStyle={{
                     flexGrow: 1,
@@ -701,6 +815,7 @@ export default function HostedSetupScreen() {
                     ...centeredContentStyle,
                 }}
             >
+                {hostedSetupBackButton}
                 <View style={[ss.column]}>
                     {showPlanSelectionScreen ? (
                         <HostedPlanSelection
@@ -777,6 +892,7 @@ export default function HostedSetupScreen() {
                                                 >
                                                     {formatConduitScope(
                                                         conduit.traffic_scope,
+                                                        t,
                                                     )}
                                                 </Text>
                                                 <View
@@ -858,6 +974,7 @@ export default function HostedSetupScreen() {
                         activateOfferingsError={offeringsError}
                         onSignInGoogle={() => signIn("google")}
                         onSignInApple={() => signIn("apple")}
+                        onSignInEmailCode={signInWithEmailCode}
                         onPurchase={purchaseFirstPackage}
                         onRestorePurchases={() => {
                             restorePurchasesMutation.mutate();
@@ -877,341 +994,6 @@ export default function HostedSetupScreen() {
                 </View>
             </ScrollView>
         </SafeAreaView>
-    );
-}
-
-function HostedPlanSelection({
-    offeringsLoading,
-    offeringsError,
-    options,
-    selectedPlanKey,
-    onSelectPlan,
-    onRetry,
-}: {
-    offeringsLoading: boolean;
-    offeringsError: string | null;
-    offeringIdentifier: string | null;
-    options: HostedPlanOption[];
-    selectedPlanKey: string | null;
-    onSelectPlan: (option: HostedPlanOption) => void;
-    onRetry: () => void;
-}) {
-    const { t } = useTranslation();
-    return (
-        <View style={[ss.column]}>
-            <Text style={[ss.extraLargeFont, ss.blackText, ss.centeredText]}>
-                {t("CHOOSE_A_PLAN_I18N.string")}
-            </Text>
-            {offeringsLoading ? (
-                <StatusText>Loading plan options from RevenueCat...</StatusText>
-            ) : null}
-            {options.length > 0
-                ? options.map((option) => {
-                      const selected = selectedPlanKey === option.key;
-                      const textColor = selected
-                          ? palette.white
-                          : palette.black;
-                      const badgeColor = selected
-                          ? palette.white
-                          : palette.purple;
-                      return (
-                          <Pressable
-                              key={option.key}
-                              onPress={() => {
-                                  onSelectPlan(option);
-                              }}
-                              style={{
-                                  borderWidth: 2,
-                                  borderColor: selected
-                                      ? palette.purple
-                                      : palette.thinPurple,
-                                  borderRadius: 14,
-                                  paddingHorizontal: 14,
-                                  paddingVertical: 12,
-                                  backgroundColor: selected
-                                      ? HOSTED_PRIMARY_GRADIENT_START
-                                      : palette.white,
-                                  shadowColor: selected
-                                      ? HOSTED_PRIMARY_GRADIENT_START
-                                      : palette.transparent,
-                                  shadowOpacity: selected ? 0.34 : 0,
-                                  shadowRadius: selected ? 12 : 0,
-                                  shadowOffset: {
-                                      width: 0,
-                                      height: selected ? 6 : 0,
-                                  },
-                                  elevation: selected ? 4 : 0,
-                                  gap: 6,
-                              }}
-                          >
-                              <View
-                                  style={{
-                                      flexDirection: "row",
-                                      justifyContent: "space-between",
-                                      alignItems: "flex-start",
-                                      gap: 8,
-                                  }}
-                              >
-                                  <Text
-                                      style={[
-                                          ss.bodyFont,
-                                          {
-                                              color: textColor,
-                                              flexShrink: 1,
-                                          },
-                                      ]}
-                                  >
-                                      {option.title}
-                                  </Text>
-                                  {option.badge ? (
-                                      <Text
-                                          style={[
-                                              ss.tinyFont,
-                                              { color: badgeColor },
-                                          ]}
-                                      >
-                                          {option.badge}
-                                      </Text>
-                                  ) : null}
-                              </View>
-                              {option.features.map((feature) => (
-                                  <Text
-                                      key={`${option.key}-${feature}`}
-                                      style={[
-                                          ss.bodyFont,
-                                          { fontSize: 16, color: textColor },
-                                      ]}
-                                  >
-                                      - {feature}
-                                  </Text>
-                              ))}
-                              <View
-                                  style={{
-                                      width: "100%",
-                                      justifyContent: "flex-end",
-                                      alignItems: "flex-end",
-                                  }}
-                              >
-                                  <Text
-                                      style={[
-                                          ss.bodyFont,
-                                          { color: textColor },
-                                      ]}
-                                  >
-                                      {formatHostedPlanPrice(option)}
-                                  </Text>
-                              </View>
-                          </Pressable>
-                      );
-                  })
-                : null}
-            {offeringsError ? <StatusText>{offeringsError}</StatusText> : null}
-            {offeringsError ? (
-                <ActionButton
-                    label={t("RETRY_PLAN_LOAD_I18N.string")}
-                    onPress={onRetry}
-                    variant="secondary"
-                />
-            ) : null}
-        </View>
-    );
-}
-
-function PrimaryActionBlock({
-    onboardingAction,
-    setupReady,
-    authPhase,
-    actionPending,
-    activatePlan,
-    activateOfferingsLoading,
-    activateOfferingsError,
-    onSignInGoogle,
-    onSignInApple,
-    onPurchase,
-    onRestorePurchases,
-    onRecoverAccess,
-    recoverActionPending,
-    onOpenManage,
-}: {
-    onboardingAction: HostedOnboardingPrimaryAction;
-    setupReady: boolean;
-    authPhase: string;
-    actionPending: boolean;
-    activatePlan: HostedPlanOption | null;
-    activateOfferingsLoading: boolean;
-    activateOfferingsError: string | null;
-    onSignInGoogle: () => void;
-    onSignInApple: () => void;
-    onPurchase: () => void;
-    onRestorePurchases: () => void;
-    onRecoverAccess: () => void;
-    recoverActionPending: boolean;
-    onOpenManage: () => void;
-}) {
-    const { t } = useTranslation();
-    if (onboardingAction === "sign_in") {
-        return (
-            <View style={[ss.column]}>
-                <ActionButton
-                    label={t("SIGN_IN_WITH_GOOGLE_I18N.string")}
-                    onPress={onSignInGoogle}
-                    disabled={actionPending || !setupReady}
-                    variant="primary"
-                    gradientBackground={true}
-                    leadingIcon={GOOGLE_SIGN_IN_ICON}
-                />
-                {Platform.OS === "ios" ? (
-                    <ActionButton
-                        label={t("SIGN_IN_WITH_APPLE_I18N.string")}
-                        onPress={onSignInApple}
-                        disabled={actionPending || !setupReady}
-                        variant="secondary"
-                        gradientBackground={true}
-                        leadingIcon={APPLE_SIGN_IN_ICON}
-                        leadingIconTintColor={palette.black}
-                    />
-                ) : null}
-            </View>
-        );
-    }
-
-    if (onboardingAction === "activate_or_restore") {
-        return (
-            <View style={[ss.column]}>
-                {activateOfferingsLoading ? (
-                    <StatusText>Loading plans from RevenueCat...</StatusText>
-                ) : null}
-                {activateOfferingsError ? (
-                    <StatusText>{activateOfferingsError}</StatusText>
-                ) : null}
-                <ActionButton
-                    label={t("CONTINUE_I18N.string")}
-                    onPress={onPurchase}
-                    disabled={
-                        actionPending ||
-                        authPhase !== "authenticated" ||
-                        !setupReady ||
-                        activateOfferingsLoading ||
-                        Boolean(activateOfferingsError) ||
-                        (!activatePlan && !activateOfferingsError)
-                    }
-                    variant="primary"
-                    gradientBackground={true}
-                />
-                <ActionButton
-                    label={t("RESTORE_PURCHASES_I18N.string", {
-                        defaultValue: "Restore Purchases",
-                    })}
-                    onPress={onRestorePurchases}
-                    disabled={
-                        actionPending ||
-                        authPhase !== "authenticated" ||
-                        !setupReady
-                    }
-                    variant="secondary"
-                />
-                <HostedPaywallLegalLinks />
-            </View>
-        );
-    }
-
-    if (onboardingAction === "wait") {
-        return null;
-    }
-
-    if (onboardingAction === "offline") {
-        return null;
-    }
-
-    if (onboardingAction === "restore_or_manage") {
-        return (
-            <View style={[ss.column]}>
-                <ActionButton
-                    label={t("CONTINUE_RETRY_INFRA_CHECK_I18N.string")}
-                    onPress={onRecoverAccess}
-                    disabled={
-                        actionPending ||
-                        recoverActionPending ||
-                        authPhase !== "authenticated" ||
-                        !setupReady
-                    }
-                    variant="primary"
-                />
-                <ActionButton
-                    label={t("MANAGE_SETUP_DETAILS_I18N.string")}
-                    onPress={onOpenManage}
-                    disabled={actionPending}
-                    variant="secondary"
-                />
-                <ActionButton
-                    label={t("RESTORE_PURCHASES_I18N.string", {
-                        defaultValue: "Restore Purchases",
-                    })}
-                    onPress={onRestorePurchases}
-                    disabled={
-                        actionPending ||
-                        recoverActionPending ||
-                        authPhase !== "authenticated" ||
-                        !setupReady
-                    }
-                    variant="secondary"
-                />
-            </View>
-        );
-    }
-
-    return null;
-}
-
-function HostedPaywallLegalLinks() {
-    const { t } = useTranslation();
-    const termsOfUseUrl =
-        Platform.OS === "ios" ? APPLE_STANDARD_EULA_URL : TERMS_OF_USE_URL;
-
-    return (
-        <View
-            style={[
-                ss.row,
-                ss.justifyCenter,
-                ss.alignCenter,
-                ss.flexWrap,
-                { gap: 8 },
-            ]}
-        >
-            <Pressable
-                accessibilityRole="link"
-                onPress={() => {
-                    void Linking.openURL(termsOfUseUrl);
-                }}
-            >
-                <Text
-                    style={[
-                        ss.tinyFont,
-                        ss.purpleText,
-                        { textDecorationLine: "underline" },
-                    ]}
-                >
-                    {t("TERMS_OF_USE_I18N.string")}
-                </Text>
-            </Pressable>
-            <Text style={[ss.tinyFont, ss.lightGreyText]}>|</Text>
-            <Pressable
-                accessibilityRole="link"
-                onPress={() => {
-                    void Linking.openURL(PRIVACY_POLICY_URL);
-                }}
-            >
-                <Text
-                    style={[
-                        ss.tinyFont,
-                        ss.purpleText,
-                        { textDecorationLine: "underline" },
-                    ]}
-                >
-                    {t("PRIVACY_POLICY_I18N.string")}
-                </Text>
-            </Pressable>
-        </View>
     );
 }
 
@@ -1255,124 +1037,4 @@ function listRestoreOrManageReasons(
         reasons.push("revenuecat_error");
     }
     return reasons;
-}
-
-function StatusText(props: React.PropsWithChildren) {
-    return (
-        <Text
-            style={[
-                ss.tinyFont,
-                ss.blackText,
-                {
-                    borderWidth: 1,
-                    borderColor: palette.thinPurple,
-                    borderRadius: 10,
-                    padding: 10,
-                    backgroundColor: palette.whiteHighlight,
-                },
-            ]}
-        >
-            {props.children}
-        </Text>
-    );
-}
-
-function ActionButton({
-    label,
-    onPress,
-    disabled,
-    variant,
-    gradientBackground,
-    leadingIcon,
-    leadingIconTintColor,
-}: {
-    label: string;
-    onPress: () => void;
-    disabled?: boolean;
-    variant: ActionButtonVariant;
-    gradientBackground?: boolean;
-    leadingIcon?: number;
-    leadingIconTintColor?: string;
-}) {
-    const [buttonWidth, setButtonWidth] = React.useState(0);
-    const isPrimary = variant === "primary";
-    const showGradient = Boolean(gradientBackground) && !disabled;
-    const textColor = showGradient ? palette.white : palette.black;
-
-    return (
-        <Pressable
-            onLayout={(event) => {
-                setButtonWidth(event.nativeEvent.layout.width);
-            }}
-            style={{
-                borderWidth: 1,
-                borderColor: palette.purple,
-                borderRadius: 12,
-                height: 48,
-                paddingHorizontal: showGradient ? 0 : 14,
-                justifyContent: "center",
-                alignItems: "center",
-                overflow: "hidden",
-                backgroundColor: disabled
-                    ? palette.fadedMauve
-                    : showGradient
-                      ? palette.transparent
-                      : isPrimary
-                        ? palette.purpleTint3
-                        : palette.white,
-            }}
-            onPress={onPress}
-            disabled={disabled}
-        >
-            {showGradient ? (
-                <View style={[ss.absoluteFill]} pointerEvents="none">
-                    <Canvas style={{ flex: 1 }}>
-                        <Rect
-                            x={0}
-                            y={0}
-                            width={Math.max(1, buttonWidth)}
-                            height={48}
-                        >
-                            <LinearGradient
-                                start={vec(0, 24)}
-                                end={vec(Math.max(1, buttonWidth), 24.3)}
-                                colors={[
-                                    HOSTED_PRIMARY_GRADIENT_START,
-                                    HOSTED_PRIMARY_GRADIENT_END,
-                                ]}
-                            />
-                        </Rect>
-                    </Canvas>
-                </View>
-            ) : null}
-            <View style={[ss.row, ss.alignCenter, ss.justifyCenter]}>
-                {leadingIcon ? (
-                    <View
-                        style={{
-                            backgroundColor: palette.white,
-                            padding: 5,
-                            borderRadius: 20,
-                            borderWidth: 1,
-                            borderColor: palette.purple,
-                        }}
-                    >
-                        <ExpoImage
-                            source={leadingIcon}
-                            contentFit="contain"
-                            style={{
-                                width: 18,
-                                height: 18,
-                                tintColor: leadingIconTintColor,
-                            }}
-                        />
-                    </View>
-                ) : null}
-                <Text
-                    style={[ss.bodyFont, ss.centeredText, { color: textColor }]}
-                >
-                    {label}
-                </Text>
-            </View>
-        </Pressable>
-    );
 }

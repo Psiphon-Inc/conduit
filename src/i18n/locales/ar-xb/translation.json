@@ -1,12 +1,6 @@
 {
-    "LOADING_I18N": {
-        "string": "‮˥oɐpıuƃ‬..."
-    },
     "TAP_TO_TURN_ON_I18N": {
         "string": "‮⊥ɐd‬ ‮ʇo‬ ‮⊥nɹu‬ ‮Ou‬"
-    },
-    "YOUR_CONDUIT_ID_I18N": {
-        "string": "‮ʎonɹ‬ ‮Ↄoupnıʇ‬ ‮Ip‬"
     },
     "TOTAL_BYTES_TRANSFERRED_I18N": {
         "string": "{{ niceBytes }} ‮ʇɹɐusɟǝɹɹǝp‬"
@@ -14,17 +8,11 @@
     "CONNECTED_PEERS_I18N": {
         "string": "{{ peers }} ‮ɔouuǝɔʇǝp‬ ‮dǝǝɹs‬"
     },
-    "CONNECTING_PEERS_I18N": {
-        "string": "{{ peers }} ‮ɔouuǝɔʇıuƃ‬"
-    },
     "CANCEL_I18N": {
         "string": "‮Ↄɐuɔǝʅ‬"
     },
     "CONFIRM_I18N": {
         "string": "‮Ↄouɟıɹɯ‬"
-    },
-    "MAX_PEERS_I18N": {
-        "string": "‮Wɐx‬ ‮Ԁǝǝɹs‬"
     },
     "MAX_PUBLIC_PEERS_I18N": {
         "string": "‮Wɐx‬ ‮Ԁnqʅıɔ‬ ‮Ԁǝǝɹs‬"
@@ -53,15 +41,6 @@
     "CONFIRM_CHANGES_I18N": {
         "string": "‮Ↄouɟıɹɯ‬ ‮Ↄɥɐuƃǝs‬ ‮ɐup‬ ‮ᴚǝsʇɐɹʇ‬ ‮Noʍ‬?"
     },
-    "NOTIFICATIONS_I18N": {
-        "string": "‮Noʇıɟıɔɐʇıous‬"
-    },
-    "ENABLE_I18N": {
-        "string": "‮Ǝuɐqʅǝ‬"
-    },
-    "ENABLED_I18N": {
-        "string": "‮Ǝuɐqʅǝp‬"
-    },
     "CONDUIT_STATION_I18N": {
         "string": "‮Ↄoupnıʇ‬ ‮Sʇɐʇıou‬"
     },
@@ -88,15 +67,6 @@
     },
     "TRY_AGAIN_I18N": {
         "string": "‮⊥ɹʎ‬ ‮ɐƃɐıu‬"
-    },
-    "HOLD_TO_TURN_OFF_I18N": {
-        "string": "‮Hoʅp‬ ‮ʇo‬ ‮⊥nɹu‬ ‮Oɟɟ‬"
-    },
-    "CHANGES_PENDING_I18N": {
-        "string": "‮ɔɥɐuƃǝs‬ ‮dǝupıuƃ‬"
-    },
-    "CLOSE_TO_APPLY_I18N": {
-        "string": "‮ɔʅosǝ‬ ‮ʇo‬ ‮ɐddʅʎ‬"
     },
     "ONBOARDING_WELCOME_HEADER_I18N": {
         "string": "‮Ｍǝʅɔoɯǝ‬ ‮ʇo‬ ‮Ↄoupnıʇ‬!"
@@ -161,20 +131,8 @@
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "‮∀ɔɔǝdʇ‬"
     },
-    "REPLAY_INTRO_I18N": {
-        "string": "‮ᴚǝdʅɐʎ‬ ‮Iuʇɹo‬"
-    },
-    "UPGRADE_REQUIRED_I18N": {
-        "string": "‮Ԁʅǝɐsǝ‬ ‮ndƃɹɐpǝ‬ ‮ʇɥǝ‬ ‮ɐdd‬"
-    },
-    "WAITING_FOR_PEERS_I18N": {
-        "string": "‮Ｍɐıʇıuƃ‬ ‮ɟoɹ‬ ‮dǝǝɹs‬"
-    },
     "LEARN_MORE_I18N": {
         "string": "‮˥ǝɐɹu‬ ‮Woɹǝ‬"
-    },
-    "CONDUIT_NAME_I18N": {
-        "string": "‮Ↄoupnıʇ‬ ‮Nɐɯǝ‬"
     },
     "NAME_YOUR_CONDUIT_I18N": {
         "string": "‮Nɐɯǝ‬ ‮ʎonɹ‬ ‮Ↄoupnıʇ‬"
@@ -185,9 +143,6 @@
     "SAVE_I18N": {
         "string": "‮Sɐʌǝ‬"
     },
-    "ID_I18N": {
-        "string": "‮Ip‬"
-    },
     "ALIAS_I18N": {
         "string": "‮Ↄoupnıʇ‬ ‮uɐɯǝ‬"
     },
@@ -196,9 +151,6 @@
     },
     "CLAIM_REWARDS_IN_RYVE_I18N": {
         "string": "‮Ↄʅɐıɯ‬ ‮ɹǝʍɐɹps‬ ‮ıu‬ ‮ᴚʎʌǝ‬"
-    },
-    "CLAIM_HOSTED_REWARDS_I18N": {
-        "string": "‮Ↄʅɐıɯ‬ ‮ɥosʇǝp‬ ‮ɹǝʍɐɹps‬"
     },
     "CLAIM_LOCAL_REWARDS_I18N": {
         "string": "‮Ↄʅɐıɯ‬ ‮ʅoɔɐʅ‬ ‮ɹǝʍɐɹps‬"
@@ -221,14 +173,8 @@
     "INVALID_QR_CODE_I18N": {
         "string": "‮ıuʌɐʅıp‬ ‮bɹ‬ ‮ɔopǝ‬"
     },
-    "ANALYTICS_I18N": {
-        "string": "‮∀uɐʅʎʇıɔs‬"
-    },
     "GET_RYVE_I18N": {
         "string": "‮פǝʇ‬ ‮ᴚʎʌǝ‬"
-    },
-    "REVEAL_I18N": {
-        "string": "‮ᴚǝʌǝɐʅ‬"
     },
     "REVEAL_QR_I18N": {
         "string": "‮ᴚǝʌǝɐʅ‬ ‮Òᴚ‬"
@@ -239,12 +185,6 @@
     "REDUCED_WINDOW_DESCRIPTION_I18N": {
         "string": "‮Ↄouɟıƃnɹǝ‬ ‮ʅoʍǝɹ‬ ‮nsɐƃǝ‬ ‮ʅıɯıʇs‬ ‮pnɹıuƃ‬ ‮ɐ‬ ‮pɐıʅʎ‬ ‮ʍıupoʍ‬. ‮ɟoɹ‬ ‮ıusʇɐuɔǝ‬, ‮pnɹıuƃ‬ ‮ʇɥǝ‬ ‮pɐʎʇıɯǝ‬ ‮ʍɥǝu‬ ‮ʎon‬ ‮uǝǝp‬ ‮ʎonɹ‬ ‮qɐupʍıpʇɥ‬ ‮ɐup‬ ‮qɐʇʇǝɹʎ‬ ‮ʇo‬ ‮ʅɐsʇ‬."
     },
-    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
-        "string": "‮˥oɔɐʅ‬ ‮ʇıɯǝ‬"
-    },
-    "REDUCED_WINDOW_CONFIGURE_I18N": {
-        "string": "‮Ↄouɟıƃnɹǝ‬ ‮∩sɐƃǝ‬ ‮Ｍıupoʍ‬"
-    },
     "REDUCED_WINDOW_CLEAR_I18N": {
         "string": "‮Ↄʅǝɐɹ‬"
     },
@@ -254,35 +194,17 @@
     "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
         "string": "‮ᴚǝpnɔǝp‬ ‮nsɐƃǝ‬ ‮ɐɔʇıʌǝ‬"
     },
-    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
-        "string": "‮ʅoɔɐʅ‬ ‮ʇıɯǝ‬"
-    },
     "REDUCED_START_TIME_I18N": {
         "string": "‮Sʇɐɹʇ‬ ‮ʇıɯǝ‬"
     },
     "REDUCED_END_TIME_I18N": {
         "string": "‮Ǝup‬ ‮ʇıɯǝ‬"
     },
-    "REDUCED_WINDOW_NOTE_I18N": {
-        "string": "‮Sǝʅǝɔʇ‬ ‮sʇɐɹʇ‬ ‮ɐup‬ ‮ǝup‬ ‮ʇıɯǝs‬ ‮ıu‬ 30-‮ɯıunʇǝ‬ ‮sʇǝds‬."
-    },
     "REDUCED_TIME_FORMAT_I18N": {
         "string": "‮∩sǝ‬ ‮HH‬:‮WW‬"
     },
     "REDUCED_TIME_RANGE_I18N": {
         "string": "‮Sʇɐɹʇ‬ ‮ɐup‬ ‮ǝup‬ ‮ɯnsʇ‬ ‮qǝ‬ ‮pıɟɟǝɹǝuʇ‬"
-    },
-    "REDUCED_MAX_PEERS_I18N": {
-        "string": "‮ᴚǝpnɔǝp‬ ‮Wɐx‬ ‮Ԁǝǝɹs‬"
-    },
-    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
-        "string": "‮ᴚǝpnɔǝp‬ ‮Wɐx‬ ‮WԐ‬/‮s‬ ‮Ԁǝɹ‬ ‮Ԁǝǝɹ‬"
-    },
-    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
-        "string": "‮ᴚǝpnɔǝp‬ ‮ᴚǝbnıɹǝp‬ ‮Ԑɐupʍıpʇɥ‬"
-    },
-    "HOSTED_CALL_TO_ACTION_I18N": {
-        "string": "‮Hosʇ‬ ‮ʎonɹ‬ ‮oʍu‬ ‮ɔʅonp‬ ‮Ↄoupnıʇ‬"
     },
     "SHARE_PERSONAL_PAIRING_I18N": {
         "string": "‮Sɥɐɹǝ‬ ‮dǝɹsouɐʅ‬ ‮dɐıɹıuƃ‬"
@@ -298,33 +220,6 @@
     },
     "PREPARING_PERSONAL_PAIRING_I18N": {
         "string": "‮Ԁɹǝdɐɹıuƃ‬ ‮dǝɹsouɐʅ‬ ‮dɐıɹıuƃ‬..."
-    },
-    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
-        "string": "‮ʎonɹ‬ ‮ıɯdɐɔʇ‬ (‮ʅɐsʇ‬ 30 ‮pɐʎs‬)"
-    },
-    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
-        "string": "‮˥oɐpıuƃ‬ ‮ıɯdɐɔʇ‬ ‮snɯɯɐɹʎ‬..."
-    },
-    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
-        "string": "‮Iɯdɐɔʇ‬ ‮snɯɯɐɹʎ‬ ‮ıs‬ ‮nuɐʌɐıʅɐqʅǝ‬ ‮qǝɔɐnsǝ‬ ‮uo‬ ‮ɐnʇɥoɹızǝp‬ ‮sʇɐʇs‬ ‮ʇɐɹƃǝʇs‬ ‮ʍǝɹǝ‬ ‮ɹǝʇnɹuǝp‬ ‮ɟoɹ‬ ‮ʇɥıs‬ ‮ɐɔɔonuʇ‬."
-    },
-    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
-        "string": "‮Ԁǝɐʞ‬ ‮ɔouuǝɔʇǝp‬ ‮nsǝɹs‬ ‮ıu‬ ‮ʅɐsʇ‬ 30 ‮pɐʎs‬"
-    },
-    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
-        "string": "‮Ԑʎʇǝs‬ ‮ʇɹɐusɟǝɹɹǝp‬ ‮ıu‬ ‮ʅɐsʇ‬ 30 ‮pɐʎs‬"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
-        "string": "‮Snqsɔɹıdʇıou‬ ‮ɐup‬ ‮ɐɔɔonuʇ‬"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
-        "string": "‮Snqsɔɹıdʇıou‬ ‮sʇɐʇns‬: {{status}}"
-    },
-    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
-        "string": "‮Ԁɹopnɔʇ‬: {{productId}}"
-    },
-    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
-        "string": "‮ᴚǝuǝʍs‬/‮ǝxdıɹǝs‬ ‮ɐʇ‬: {{expiresAt}}"
     },
     "HOSTED_MANAGE_OPEN_BILLING_I18N": {
         "string": "‮Wɐuɐƃǝ‬ ‮qıʅʅıuƃ‬"
@@ -406,18 +301,6 @@
     },
     "SHARE_LINK_I18N": {
         "string": "‮Sɥɐɹǝ‬ ‮ʅıuʞ‬"
-    },
-    "MBPS_PER_PEER_I18N": {
-        "string": "‮WԐԀS‬ ‮dǝɹ‬ ‮dǝǝɹ‬"
-    },
-    "MAX_BANDWIDTH_USAGE_I18N": {
-        "string": "‮Wɐx‬ ‮Ԑɐupʍıpʇɥ‬ ‮nsɐƃǝ‬"
-    },
-    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
-        "string": "‮Sɥɐɹǝ‬ ‮ʎonɹ‬ ‮ɔouuǝɔʇıou‬ ‮pıɹǝɔʇʅʎ‬ ‮ʍıʇɥ‬ ‮ɟɹıǝups‬ ‮ɐup‬ ‮ɟɐɯıʅʎ‬"
-    },
-    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
-        "string": "‮Ↄʅɐıɯ‬ ‮ɥosʇǝp‬ ‮ɹǝʍɐɹps‬ ‮ıu‬ ‮ᴚʎʌǝ‬"
     },
     "REWARDS_I18N": {
         "string": "‮ᴚǝʍɐɹps‬"
@@ -524,14 +407,8 @@
     "CONNECTED_USERS_I18N": {
         "string": "‮Ↄouuǝɔʇǝp‬ ‮∩sǝɹs‬"
     },
-    "CONNECTING_USERS_I18N": {
-        "string": "‮Ↄouuǝɔʇıuƃ‬ ‮∩sǝɹs‬"
-    },
     "CONNECTED_I18N": {
         "string": "‮Ↄouuǝɔʇǝp‬"
-    },
-    "CONNECTING_I18N": {
-        "string": "‮Ↄouuǝɔʇıuƃ‬"
     },
     "BYTES_I18N": {
         "string": "‮Ԑʎʇǝs‬"
@@ -544,9 +421,6 @@
     },
     "HOME_I18N": {
         "string": "‮Hoɯǝ‬"
-    },
-    "ERROR_I18N": {
-        "string": "‮Ǝɹɹoɹ‬"
     },
     "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
         "string": "‮˥ıuʞ‬ ‮ʇo‬ ‮dɹıʌɐɔʎ‬ ‮doʅıɔʎ‬"
@@ -569,26 +443,11 @@
     "HOSTED_CONDUIT_PROVISIONING_ORB_ACCESSIBILITY_I18N": {
         "string": "‮Hosʇǝp‬ ‮Ↄoupnıʇ‬, ‮dɹoʌısıouıuƃ‬ ‮ɥosʇ‬"
     },
-    "SIGN_IN_TO_SYNC_I18N": {
-        "string": "‮Sıƃu‬ ‮ıu‬ ‮ʇo‬ ‮sʎuɔ‬ ‮ʎonɹ‬ ‮ɥosʇǝp‬ ‮ɐɔɔonuʇ‬"
-    },
-    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
-        "string": "{{ bytes }} ‮ʇɹɐusɟǝɹɹǝp‬{{ window }}"
-    },
-    "N_HOSTED_PEERS_ONLINE_I18N": {
-        "string": "{{ count }} ‮ɥosʇǝp‬ ‮dǝǝɹs‬ ‮ouʅıuǝ‬"
-    },
     "HOME_SUMMARY_PEER_COUNT_I18N": {
         "string": "{{count}} ‮dǝǝɹs‬"
     },
     "HOME_SUMMARY_OFFLINE_I18N": {
         "string": "‮Oɟɟ˥INƎ‬"
-    },
-    "PUBLIC_PEERS_ONLINE_I18N": {
-        "string": "‮dnqʅıɔ‬ ‮dǝǝɹs‬ ‮ouʅıuǝ‬"
-    },
-    "PERSONAL_PEERS_ONLINE_I18N": {
-        "string": "‮dǝɹsouɐʅ‬ ‮dǝǝɹs‬ ‮ouʅıuǝ‬"
     },
     "SYNCING_HOSTED_USAGE_METRICS_I18N": {
         "string": "‮Sʎuɔıuƃ‬ ‮ɥosʇǝp‬ ‮nsɐƃǝ‬ ‮ɯǝʇɹıɔs‬..."
@@ -596,17 +455,11 @@
     "UPGRADE_REQUIRED_LOCAL_CONDUIT_I18N": {
         "string": "‮∩dƃɹɐpǝ‬ ‮ɹǝbnıɹǝp‬ ‮ɟoɹ‬ ‮ʅoɔɐʅ‬ ‮ɔoupnıʇ‬"
     },
-    "HOLD_ORB_TO_TURN_OFF_I18N": {
-        "string": "‮Hoʅp‬ ‮oɹq‬ ‮ʇo‬ ‮ʇnɹu‬ ‮oɟɟ‬ ‮ʍɥıʅǝ‬ ‮dǝǝɹs‬ ‮ɐɹǝ‬ ‮ɔouuǝɔʇǝp‬"
-    },
     "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "‮˥oɔɐʅ‬ ‮ɔoupnıʇ‬ ‮sɔǝuǝ‬ ‮qnʇʇou‬"
     },
     "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "‮Hosʇǝp‬ ‮ɔoupnıʇ‬ ‮sɔǝuǝ‬ ‮qnʇʇou‬"
-    },
-    "PREPARING_HOSTED_CONDUIT_I18N": {
-        "string": "‮Ԁɹǝdɐɹıuƃ‬ ‮Hosʇǝp‬ ‮Ↄoupnıʇ‬"
     },
     "PREPARING_I18N": {
         "string": "‮Ԁɹǝdɐɹıuƃ‬..."
@@ -677,17 +530,8 @@
     "REGIONAL_ACTIVITY_BY_BYTES_I18N": {
         "string": "‮ᴚǝƃıouɐʅ‬ ‮ɐɔʇıʌıʇʎ‬ ‮qʎ‬ ‮qʎʇǝs‬ ‮ʇɹɐusɟǝɹɹǝp‬"
     },
-    "TOP_HELPED_COUNTRIES_I18N": {
-        "string": "‮⊥od‬ ‮ɥǝʅdǝp‬ ‮ɔonuʇɹıǝs‬ ‮qʎ‬ {{ metric }} ({{ window }})"
-    },
     "BYTES_TRANSFERRED_LABEL_I18N": {
         "string": "‮qʎʇǝs‬ ‮ʇɹɐusɟǝɹɹǝp‬"
-    },
-    "CONNECTED_USERS_LABEL_I18N": {
-        "string": "‮ɔouuǝɔʇǝp‬ ‮nsǝɹs‬"
-    },
-    "TAP_TO_SWITCH_METRIC_I18N": {
-        "string": "‮⊥ɐd‬ ‮sǝɔʇıou‬ ‮ʇo‬ ‮sʍıʇɔɥ‬ ‮ɯǝʇɹıɔ‬"
     },
     "COMPLETING_SIGN_IN_I18N": {
         "string": "‮Ↄoɯdʅǝʇıuƃ‬ ‮sıƃu‬-‮ıu‬..."
@@ -775,5 +619,8 @@
     },
     "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
         "string": "‮Ↄɥoosǝ‬ ‮ɐ‬ ‮dʅɐu‬ ‮ʇo‬ ‮ɔouʇıunǝ‬ ‮sǝʇnd‬ ‮ɐup‬ ‮nuʅoɔʞ‬ ‮sɥɐɹıuƃ‬."
+    },
+    "UPDATED_AT_I18N": {
+        "string": "‮∩dpɐʇǝp‬ ‮ɐʇ‬ {{time}}"
     }
 }

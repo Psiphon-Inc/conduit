@@ -1,15 +1,7 @@
 {
-    "LOADING_I18N": {
-        "string": "Cargando...",
-        "developer_comment": "Text displayed when the app is loading content."
-    },
     "TAP_TO_TURN_ON_I18N": {
         "string": "Pulsar para activar",
         "developer_comment": "Text displayed on a button to turn on a feature."
-    },
-    "YOUR_CONDUIT_ID_I18N": {
-        "string": "Tu identificación de Conduit",
-        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
     },
     "TOTAL_BYTES_TRANSFERRED_I18N": {
         "string": "{{ niceBytes }} transferidos"
@@ -17,17 +9,11 @@
     "CONNECTED_PEERS_I18N": {
         "string": "{{ peers }} compañeros conectados"
     },
-    "CONNECTING_PEERS_I18N": {
-        "string": "{{ peers }} conectando"
-    },
     "CANCEL_I18N": {
         "string": "Cancelar"
     },
     "CONFIRM_I18N": {
         "string": "Confirmar"
-    },
-    "MAX_PEERS_I18N": {
-        "string": "Número máximo de compañeros"
     },
     "MAX_PUBLIC_PEERS_I18N": {
         "string": "Número máximo de compañeros públicos",
@@ -60,15 +46,6 @@
     "CONFIRM_CHANGES_I18N": {
         "string": "¿Confirmar los cambios y reiniciar ahora?"
     },
-    "NOTIFICATIONS_I18N": {
-        "string": "Notificaciones"
-    },
-    "ENABLE_I18N": {
-        "string": "Activar"
-    },
-    "ENABLED_I18N": {
-        "string": "Activado"
-    },
     "CONDUIT_STATION_I18N": {
         "string": "Terminal Conduit"
     },
@@ -97,15 +74,6 @@
     "TRY_AGAIN_I18N": {
         "string": "Intentar de nuevo",
         "developer_comment": "Button label to retry a failed or offline operation."
-    },
-    "HOLD_TO_TURN_OFF_I18N": {
-        "string": "Mantener pulsado para desactivar"
-    },
-    "CHANGES_PENDING_I18N": {
-        "string": "cambios pendientes"
-    },
-    "CLOSE_TO_APPLY_I18N": {
-        "string": "cerrar para aplicar"
     },
     "ONBOARDING_WELCOME_HEADER_I18N": {
         "string": "¡Bienvenido a Conduit!"
@@ -170,20 +138,8 @@
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "Aceptar"
     },
-    "REPLAY_INTRO_I18N": {
-        "string": "Repetir la introducción"
-    },
-    "UPGRADE_REQUIRED_I18N": {
-        "string": "Actualizar la aplicación"
-    },
-    "WAITING_FOR_PEERS_I18N": {
-        "string": "Esperando a compañeros"
-    },
     "LEARN_MORE_I18N": {
         "string": "Más información"
-    },
-    "CONDUIT_NAME_I18N": {
-        "string": "Nombre de Conduit"
     },
     "NAME_YOUR_CONDUIT_I18N": {
         "string": "Asignar nombre a tu Conduit"
@@ -194,9 +150,6 @@
     "SAVE_I18N": {
         "string": "Guardar"
     },
-    "ID_I18N": {
-        "string": "Identificación"
-    },
     "ALIAS_I18N": {
         "string": "Alias"
     },
@@ -205,10 +158,6 @@
     },
     "CLAIM_REWARDS_IN_RYVE_I18N": {
         "string": "Canjear recompensas en Ryve"
-    },
-    "CLAIM_HOSTED_REWARDS_I18N": {
-        "string": "Canjear recompensas alojadas",
-        "developer_comment": "Label for claiming hosted conduit rewards from settings."
     },
     "CLAIM_LOCAL_REWARDS_I18N": {
         "string": "Canjear recompensas locales",
@@ -233,14 +182,8 @@
     "INVALID_QR_CODE_I18N": {
         "string": "código QR no válido"
     },
-    "ANALYTICS_I18N": {
-        "string": "Analíticas"
-    },
     "GET_RYVE_I18N": {
         "string": "Obtener Ryve"
-    },
-    "REVEAL_I18N": {
-        "string": "Mostrar"
     },
     "REVEAL_QR_I18N": {
         "string": "Mostrar QR"
@@ -251,12 +194,6 @@
     "REDUCED_WINDOW_DESCRIPTION_I18N": {
         "string": "Configura límites de uso más bajos durante una ventana diaria. Por ejemplo, durante el día cuando necesitas que tu ancho de banda y batería duren."
     },
-    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
-        "string": "Hora local"
-    },
-    "REDUCED_WINDOW_CONFIGURE_I18N": {
-        "string": "Configurar ventana de uso"
-    },
     "REDUCED_WINDOW_CLEAR_I18N": {
         "string": "Borrar"
     },
@@ -266,35 +203,17 @@
     "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
         "string": "Uso reducido entre"
     },
-    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
-        "string": "hora local"
-    },
     "REDUCED_START_TIME_I18N": {
         "string": "Hora de inicio"
     },
     "REDUCED_END_TIME_I18N": {
         "string": "Hora de fin"
     },
-    "REDUCED_WINDOW_NOTE_I18N": {
-        "string": "Selecciona horas de inicio y fin en pasos de 30 minutos."
-    },
     "REDUCED_TIME_FORMAT_I18N": {
         "string": "Usa HH:MM"
     },
     "REDUCED_TIME_RANGE_I18N": {
         "string": "El inicio y el fin deben ser diferentes"
-    },
-    "REDUCED_MAX_PEERS_I18N": {
-        "string": "Número máximo de compañeros reducido"
-    },
-    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
-        "string": "Cantidad máxima de MB/s por compañero reducida"
-    },
-    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
-        "string": "Ancho de banda necesario reducido"
-    },
-    "HOSTED_CALL_TO_ACTION_I18N": {
-        "string": "Aloja tu propio Conduit en la nube"
     },
     "SHARE_PERSONAL_PAIRING_I18N": {
         "string": "Compartir emparejamiento personal"
@@ -313,33 +232,6 @@
     },
     "PREPARING_PERSONAL_PAIRING_I18N": {
         "string": "Preparando emparejamiento personal..."
-    },
-    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
-        "string": "Tu impacto (últimos 30 días)"
-    },
-    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
-        "string": "Cargando resumen de impacto..."
-    },
-    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
-        "string": "El resumen de impacto no está disponible porque no se devolvieron objetivos de estadísticas autorizados para esta cuenta."
-    },
-    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
-        "string": "Pico de usuarios conectados en los últimos 30 días"
-    },
-    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
-        "string": "Bytes transferidos en los últimos 30 días"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
-        "string": "Suscripción y cuenta"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
-        "string": "Estado de la suscripción: {{status}}"
-    },
-    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
-        "string": "Producto: {{productId}}"
-    },
-    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
-        "string": "Renueva/vence el: {{expiresAt}}"
     },
     "HOSTED_MANAGE_OPEN_BILLING_I18N": {
         "string": "Gestionar facturación"
@@ -440,22 +332,6 @@
     "SHARE_LINK_I18N": {
         "string": "Compartir enlace",
         "developer_comment": "Label for the share link button."
-    },
-    "MBPS_PER_PEER_I18N": {
-        "string": "MBPS por compañero",
-        "developer_comment": "Label for the megabits per second per peer setting."
-    },
-    "MAX_BANDWIDTH_USAGE_I18N": {
-        "string": "Uso máximo de ancho de banda",
-        "developer_comment": "Label for the maximum bandwidth usage setting."
-    },
-    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
-        "string": "Comparte tu conexión directamente con amigos y familiares",
-        "developer_comment": "Description text for the personal pairing share action in settings."
-    },
-    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
-        "string": "Canjear recompensas alojadas en Ryve",
-        "developer_comment": "Label for claiming hosted conduit rewards in the Ryve app."
     },
     "REWARDS_I18N": {
         "string": "Recompensas",
@@ -597,17 +473,9 @@
         "string": "Usuarios conectados",
         "developer_comment": "Y-axis label for the connected users chart."
     },
-    "CONNECTING_USERS_I18N": {
-        "string": "Usuarios conectándose",
-        "developer_comment": "Y-axis label for the connecting users chart."
-    },
     "CONNECTED_I18N": {
         "string": "Conectados",
         "developer_comment": "Label for the connected metric tab."
-    },
-    "CONNECTING_I18N": {
-        "string": "Conectando",
-        "developer_comment": "Label for the connecting metric tab."
     },
     "BYTES_I18N": {
         "string": "Bytes",
@@ -624,10 +492,6 @@
     "HOME_I18N": {
         "string": "Inicio",
         "developer_comment": "Label for the Home tab in bottom navigation."
-    },
-    "ERROR_I18N": {
-        "string": "Error",
-        "developer_comment": "Generic error text."
     },
     "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
         "string": "Enlace a la política de privacidad",
@@ -657,18 +521,6 @@
         "string": "Conduit alojado, host en aprovisionamiento",
         "developer_comment": "Accessibility label for a hosted conduit orb whose host is still provisioning."
     },
-    "SIGN_IN_TO_SYNC_I18N": {
-        "string": "Inicia sesión para sincronizar tu cuenta alojada",
-        "developer_comment": "Hint shown when user needs to sign in for hosted account sync."
-    },
-    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
-        "string": "{{ bytes }} transferidos{{ window }}",
-        "developer_comment": "Metric text showing bytes transferred with optional time window suffix."
-    },
-    "N_HOSTED_PEERS_ONLINE_I18N": {
-        "string": "{{ count }} compañeros alojados en línea",
-        "developer_comment": "Metric text showing the number of hosted peers currently online."
-    },
     "HOME_SUMMARY_PEER_COUNT_I18N": {
         "string": "{{count}} compañeros",
         "developer_comment": "Peer count text shown on the simplified home summary rows."
@@ -676,12 +528,6 @@
     "HOME_SUMMARY_OFFLINE_I18N": {
         "string": "SIN CONEXIÓN",
         "developer_comment": "Status text shown for the local conduit row when it is not running."
-    },
-    "PUBLIC_PEERS_ONLINE_I18N": {
-        "string": "compañeros públicos en línea"
-    },
-    "PERSONAL_PEERS_ONLINE_I18N": {
-        "string": "compañeros personales en línea"
     },
     "SYNCING_HOSTED_USAGE_METRICS_I18N": {
         "string": "Sincronizando métricas de uso alojado...",
@@ -691,10 +537,6 @@
         "string": "Actualización requerida para Conduit local",
         "developer_comment": "Hint shown when a local conduit requires an app upgrade."
     },
-    "HOLD_ORB_TO_TURN_OFF_I18N": {
-        "string": "Mantén pulsado el orbe para desactivar mientras haya compañeros conectados",
-        "developer_comment": "Hint shown when user taps orb while peers are connected."
-    },
     "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "Botón de escena de Conduit local",
         "developer_comment": "Accessibility label for the local conduit scene selector."
@@ -702,10 +544,6 @@
     "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "Botón de escena de Conduit alojado",
         "developer_comment": "Accessibility label for the hosted conduit scene selector."
-    },
-    "PREPARING_HOSTED_CONDUIT_I18N": {
-        "string": "Preparando tu Conduit alojado...",
-        "developer_comment": "Loading message during hosted conduit setup."
     },
     "PREPARING_I18N": {
         "string": "Preparando...",
@@ -799,21 +637,9 @@
         "string": "Actividad regional por bytes transferidos",
         "developer_comment": "Title shown in the dashboard regional breakdown modal."
     },
-    "TOP_HELPED_COUNTRIES_I18N": {
-        "string": "Países más ayudados por {{ metric }} ({{ window }})",
-        "developer_comment": "Subheader describing the top helped countries chart."
-    },
     "BYTES_TRANSFERRED_LABEL_I18N": {
         "string": "bytes transferidos",
         "developer_comment": "Label for the bytes transferred metric."
-    },
-    "CONNECTED_USERS_LABEL_I18N": {
-        "string": "usuarios conectados",
-        "developer_comment": "Label for the connected users metric."
-    },
-    "TAP_TO_SWITCH_METRIC_I18N": {
-        "string": "Toca la sección para cambiar la métrica",
-        "developer_comment": "Hint text telling users to tap to switch between metrics."
     },
     "COMPLETING_SIGN_IN_I18N": {
         "string": "Completando inicio de sesión...",
@@ -930,5 +756,13 @@
     "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
         "string": "Elige un plan para continuar la configuración y desbloquear el uso compartido.",
         "developer_comment": "Hosted onboarding helper for initial plan activation."
+    },
+    "PERSONAL_PAIRING_SHARE_MESSAGE_I18N": {
+        "string": "Abra este enlace para conectarse a una estación de Conduit de confianza. Si el enlace está bloqueado, cópielo y péguelo en el widget de Emparejamiento personal de la aplicación Psiphon.",
+        "developer_comment": "Message shared with a personal pairing link. 'Conduit', 'Psiphon', and 'Personal Pairing' are product/feature names."
+    },
+    "UPDATED_AT_I18N": {
+        "string": "Updated at {{time}}",
+        "developer_comment": "Label showing when stats were last refreshed. {{time}} is a localized time, or \"--\" when unknown."
     }
 }

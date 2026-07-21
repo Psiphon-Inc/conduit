@@ -31,7 +31,7 @@ import {
     SECURESTORE_MNEMONIC_KEY,
 } from "@/src/constants";
 
-export interface AuthContextValue {
+interface AuthContextValue {
     signIn: () => Promise<void | Error>;
     deleteAccount: () => void;
 }

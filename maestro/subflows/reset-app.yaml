@@ -1,0 +1,20 @@
+# Reusable subflow: wipe all app state and relaunch with permissions granted.
+#
+# On Android `clearState` runs `pm clear`, which also wipes expo-secure-store
+# (the Clerk token cache / local conduit keys), giving a true fresh-install
+# state. On iOS, clearState does NOT clear the Keychain, where expo-secure-store
+# keeps the Clerk session cache (see src/hosted/auth/provider.tsx) - so we also
+# clearKeychain there, otherwise the session survives the "reset".
+appId: ca.psiphon.conduit
+---
+- clearState
+- runFlow:
+      when:
+          platform: iOS
+      commands:
+          - clearKeychain
+- launchApp:
+      permissions:
+          all: allow
+- waitForAnimationToEnd:
+      timeout: 5000

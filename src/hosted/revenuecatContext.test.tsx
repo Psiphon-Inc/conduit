@@ -17,11 +17,6 @@
  *
  */
 import React from "react";
-import type {
-    CustomerInfo,
-    CustomerInfoUpdateListener,
-    PurchasesPackage,
-} from "react-native-purchases";
 import { ReactTestRenderer, act, create } from "react-test-renderer";
 
 import type { RevenueCatClient } from "@/src/hosted/revenuecatClient";
@@ -30,6 +25,11 @@ import {
     useRevenueCatContext,
 } from "@/src/hosted/revenuecatContext";
 import type { RevenueCatContextValue } from "@/src/hosted/revenuecatContext";
+import type {
+    HostedCustomerInfo,
+    HostedCustomerInfoListener,
+    HostedRevenueCatPackage,
+} from "@/src/hosted/revenuecatTypes";
 
 describe("revenuecat context", () => {
     it("throws when hook is used outside provider", () => {
@@ -90,7 +90,7 @@ describe("revenuecat context", () => {
             }),
             addCustomerInfoListener: jest
                 .fn()
-                .mockImplementation((listener: CustomerInfoUpdateListener) => {
+                .mockImplementation((listener: HostedCustomerInfoListener) => {
                     listener(customerInfoE);
                     return jest.fn();
                 }),
@@ -164,7 +164,7 @@ describe("revenuecat context", () => {
         expect(getContextValue().customerInfo?.originalAppUserId).toBe("acc_c");
 
         await act(async () => {
-            await getContextValue().purchasePackage({} as PurchasesPackage);
+            await getContextValue().purchasePackage(makeHostedPackage());
         });
         expect(getContextValue().customerInfo?.originalAppUserId).toBe("acc_d");
     });
@@ -183,19 +183,23 @@ function makeClient(overrides?: Partial<RevenueCatClient>): RevenueCatClient {
     };
 }
 
-function makeCustomerInfo(accountId: string): CustomerInfo {
+function makeCustomerInfo(accountId: string): HostedCustomerInfo {
     return {
-        entitlements: { all: {}, active: {}, verification: "NOT_REQUESTED" },
-        activeSubscriptions: [],
-        allPurchasedProductIdentifiers: [],
-        latestExpirationDate: null,
-        originalAppUserId: accountId,
-        originalApplicationVersion: null,
-        requestDate: "2026-02-06T00:00:00.000Z",
-        firstSeen: "2026-02-06T00:00:00.000Z",
-        managementURL: null,
-        originalPurchaseDate: null,
-        nonSubscriptionTransactions: [],
+        entitlements: { all: {}, active: {} },
         subscriptionsByProductIdentifier: {},
-    } as unknown as CustomerInfo;
+        managementUrl: null,
+        originalAppUserId: accountId,
+    };
+}
+
+function makeHostedPackage(): HostedRevenueCatPackage {
+    return {
+        identifier: "primary",
+        product: {
+            identifier: "test.product.primary",
+            title: "Primary",
+            priceString: "$1.00",
+        },
+        target: {},
+    };
 }

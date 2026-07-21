@@ -43,6 +43,8 @@ export function ActionsArea({
     onRenew,
     onSharePersonalPairing,
     onHostedCallToActionPress,
+    bottomOffset = 0,
+    compact = false,
 }: {
     width: number;
     height: number;
@@ -59,6 +61,8 @@ export function ActionsArea({
     onRenew?: () => void;
     onSharePersonalPairing: () => void | Promise<void>;
     onHostedCallToActionPress?: () => void;
+    bottomOffset?: number;
+    compact?: boolean;
 }) {
     const { t } = useTranslation();
     const { data: inproxyStatus } = useInproxyStatus();
@@ -93,7 +97,7 @@ export function ActionsArea({
             style={[
                 {
                     position: "absolute",
-                    bottom: 0,
+                    bottom: bottomOffset,
                     width: width,
                     height: height,
                     justifyContent: "space-between",
@@ -125,6 +129,7 @@ export function ActionsArea({
                         }}
                         mode={hostedCallToActionMode}
                         hasRecentHostedSignIn={hasRecentHostedSignIn}
+                        compact={compact}
                     />
                 )}
                 {!showProvisioning && showRenew && onRenew ? (
@@ -135,19 +140,19 @@ export function ActionsArea({
                             borderWidth: 2,
                             borderColor: palette.purple,
                             backgroundColor: "rgba(255, 255, 255, 0.35)",
-                            paddingHorizontal: 20,
-                            paddingTop: 14,
-                            paddingBottom: 16,
+                            paddingHorizontal: compact ? 16 : 20,
+                            paddingTop: compact ? 12 : 14,
+                            paddingBottom: compact ? 13 : 16,
                         }}
                     >
-                        <View style={{ gap: 10 }}>
+                        <View style={{ gap: compact ? 8 : 10 }}>
                             <View
                                 style={{
                                     position: "relative",
                                     justifyContent: "center",
                                     alignItems: "center",
-                                    minHeight: 36,
-                                    paddingHorizontal: 28,
+                                    minHeight: compact ? 30 : 36,
+                                    paddingHorizontal: compact ? 24 : 28,
                                 }}
                             >
                                 <Text
@@ -156,8 +161,8 @@ export function ActionsArea({
                                         ss.bodyFont,
                                         ss.centeredText,
                                         {
-                                            fontSize: 22,
-                                            lineHeight: 28,
+                                            fontSize: compact ? 20 : 22,
+                                            lineHeight: compact ? 25 : 28,
                                         },
                                     ]}
                                 >
@@ -173,7 +178,7 @@ export function ActionsArea({
                                     <Icon
                                         name="right-arrow"
                                         color={palette.purple}
-                                        size={20}
+                                        size={compact ? 18 : 20}
                                     />
                                 </View>
                             </View>
@@ -181,8 +186,8 @@ export function ActionsArea({
                                 style={[
                                     ss.purpleText,
                                     {
-                                        fontSize: 17,
-                                        lineHeight: 21,
+                                        fontSize: compact ? 15 : 17,
+                                        lineHeight: compact ? 19 : 21,
                                         fontFamily: "JuraRegular",
                                     },
                                 ]}
@@ -234,10 +239,12 @@ function HostedCallToAction({
     onPress,
     mode,
     hasRecentHostedSignIn,
+    compact,
 }: {
     onPress: () => void;
     mode: "loading" | "setup" | "restore" | "preparing" | "share";
     hasRecentHostedSignIn?: boolean;
+    compact: boolean;
 }) {
     const { t } = useTranslation();
     const isDisabled = mode === "loading" || mode === "preparing";
@@ -247,19 +254,24 @@ function HostedCallToAction({
     if (useCompactButton) {
         return (
             <Pressable
+                testID="hosted-cta"
                 onPress={onPress}
                 disabled={isDisabled}
                 style={{
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "center",
-                    borderRadius: 20,
+                    borderRadius: compact ? 18 : 20,
                     borderWidth: 2,
                     borderColor: palette.purple,
                     backgroundColor: "rgba(255, 255, 255, 0.35)",
-                    paddingHorizontal: mode === "share" ? 16 : 20,
-                    paddingVertical: 12,
-                    gap: 10,
+                    paddingHorizontal: compact
+                        ? 14
+                        : mode === "share"
+                          ? 16
+                          : 20,
+                    paddingVertical: compact ? 10 : 12,
+                    gap: compact ? 8 : 10,
                     opacity: isDisabled ? 0.65 : 1,
                 }}
             >
@@ -267,19 +279,26 @@ function HostedCallToAction({
                     <ExpoImage
                         source={require("@/assets/images/icons/p2p_24px.svg")}
                         tintColor={palette.purple}
-                        style={{ width: 20, height: 20 }}
+                        style={{
+                            width: compact ? 18 : 20,
+                            height: compact ? 18 : 20,
+                        }}
                         contentFit="contain"
                     />
                 ) : mode === "loading" || mode === "preparing" ? (
                     <ActivityIndicator size="small" color={palette.purple} />
                 ) : null}
-                <Text style={[ss.purpleText, ss.bodyFont, { fontSize: 18 }]}>
+                <Text
+                    style={[
+                        ss.purpleText,
+                        ss.bodyFont,
+                        { fontSize: compact ? 16 : 18 },
+                    ]}
+                >
                     {mode === "loading"
                         ? t("LOADING_HOSTED_STATUS_I18N.string")
                         : mode === "preparing"
-                          ? t("PREPARING_PERSONAL_PAIRING_I18N.string", {
-                                defaultValue: "Preparing personal pairing...",
-                            })
+                          ? t("PREPARING_PERSONAL_PAIRING_I18N.string")
                           : t("SHARE_PERSONAL_PAIRING_LINK_I18N.string")}
                 </Text>
             </Pressable>
@@ -307,27 +326,28 @@ function HostedCallToAction({
 
     return (
         <Pressable
+            testID="hosted-cta"
             onPress={onPress}
             disabled={isDisabled}
             style={{
-                borderRadius: 30,
+                borderRadius: compact ? 24 : 30,
                 borderWidth: 2,
                 borderColor: palette.purple,
                 backgroundColor: "rgba(255, 255, 255, 0.35)",
-                paddingHorizontal: 20,
-                paddingTop: 14,
-                paddingBottom: 16,
+                paddingHorizontal: compact ? 16 : 20,
+                paddingTop: compact ? 12 : 14,
+                paddingBottom: compact ? 13 : 16,
                 opacity: isDisabled ? 0.65 : 1,
             }}
         >
-            <View style={{ gap: 10 }}>
+            <View style={{ gap: compact ? 8 : 10 }}>
                 <View
                     style={{
                         position: "relative",
                         justifyContent: "center",
                         alignItems: "center",
-                        minHeight: 36,
-                        paddingHorizontal: 28,
+                        minHeight: compact ? 30 : 36,
+                        paddingHorizontal: compact ? 24 : 28,
                     }}
                 >
                     <Text
@@ -336,8 +356,8 @@ function HostedCallToAction({
                             ss.bodyFont,
                             ss.centeredText,
                             {
-                                fontSize: 22,
-                                lineHeight: 28,
+                                fontSize: compact ? 20 : 22,
+                                lineHeight: compact ? 25 : 28,
                             },
                         ]}
                     >
@@ -354,7 +374,7 @@ function HostedCallToAction({
                             <Icon
                                 name="right-arrow"
                                 color={palette.purple}
-                                size={20}
+                                size={compact ? 18 : 20}
                             />
                         </View>
                     ) : null}
@@ -364,8 +384,8 @@ function HostedCallToAction({
                     style={[
                         ss.purpleText,
                         {
-                            fontSize: 17,
-                            lineHeight: 21,
+                            fontSize: compact ? 15 : 17,
+                            lineHeight: compact ? 19 : 21,
                             fontFamily: "JuraRegular",
                         },
                     ]}

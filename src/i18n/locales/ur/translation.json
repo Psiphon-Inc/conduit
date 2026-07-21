@@ -1,15 +1,7 @@
 {
-    "LOADING_I18N": {
-        "string": "لوڈ ہو رہا ہے",
-        "developer_comment": "Text displayed when the app is loading content."
-    },
     "TAP_TO_TURN_ON_I18N": {
         "string": "آن کرنے کے لیے ٹیپ کریں",
         "developer_comment": "Text displayed on a button to turn on a feature."
-    },
-    "YOUR_CONDUIT_ID_I18N": {
-        "string": "آپ کے کنڈیوئٹ کی آئی ڈی",
-        "developer_comment": "Text displayed to the user to indicate their Conduit ID. The name 'Conduit' is the app name and should not be translated."
     },
     "TOTAL_BYTES_TRANSFERRED_I18N": {
         "string": "{{ niceBytes }} ٹرانسفرڈ ہوئے"
@@ -17,17 +9,11 @@
     "CONNECTED_PEERS_I18N": {
         "string": "{{ peers }} ہم رتبہ ساتھی منسلک ہو گئے"
     },
-    "CONNECTING_PEERS_I18N": {
-        "string": "{{ peers }} منسلک ہو رہے ہیں"
-    },
     "CANCEL_I18N": {
         "string": "منسوخ کریں"
     },
     "CONFIRM_I18N": {
         "string": "تصدیق کریں"
-    },
-    "MAX_PEERS_I18N": {
-        "string": "ہم رتبہ ساتھیوں کی زیادہ سے زیادہ تعداد"
     },
     "MAX_PUBLIC_PEERS_I18N": {
         "string": "عوامی ہم رتبہ ساتھیوں کی زیادہ سے زیادہ تعداد",
@@ -60,15 +46,6 @@
     "CONFIRM_CHANGES_I18N": {
         "string": "تبدیلیوں کی تصدیق کرنا چاہتے ہیں اور ابھی دوبارہ شروع کرنا چاہتے ہیں؟"
     },
-    "NOTIFICATIONS_I18N": {
-        "string": "اطلاعات"
-    },
-    "ENABLE_I18N": {
-        "string": "فعال کریں"
-    },
-    "ENABLED_I18N": {
-        "string": "فعال شدہ "
-    },
     "CONDUIT_STATION_I18N": {
         "string": "کنڈیوئٹ اسٹیشن"
     },
@@ -97,15 +74,6 @@
     "TRY_AGAIN_I18N": {
         "string": "دوبارہ کوشش کریں",
         "developer_comment": "Button label to retry a failed or offline operation."
-    },
-    "HOLD_TO_TURN_OFF_I18N": {
-        "string": "بند کرنے کے لیے دبائے رکھیں"
-    },
-    "CHANGES_PENDING_I18N": {
-        "string": "تبدیلیاں زیر التواء"
-    },
-    "CLOSE_TO_APPLY_I18N": {
-        "string": "اطلاق کرنے کے لیے اس کو بند کریں"
     },
     "ONBOARDING_WELCOME_HEADER_I18N": {
         "string": "کنڈیوئٹ پر خوش آمدید!"
@@ -170,20 +138,8 @@
     "ONBOARDING_PRIVACY_POLICY_BUTTON_I18N": {
         "string": "قبول کریں"
     },
-    "REPLAY_INTRO_I18N": {
-        "string": "تعارف کو ری پلے کریں"
-    },
-    "UPGRADE_REQUIRED_I18N": {
-        "string": "براہ کرم ایپ کو اپ گریڈ کریں"
-    },
-    "WAITING_FOR_PEERS_I18N": {
-        "string": "پیرز کا انتظار ہو رہا ہے"
-    },
     "LEARN_MORE_I18N": {
         "string": "مزید جانیں"
-    },
-    "CONDUIT_NAME_I18N": {
-        "string": "Conduit کا نام"
     },
     "NAME_YOUR_CONDUIT_I18N": {
         "string": "اپنے Conduit کا نام بتائیں"
@@ -194,9 +150,6 @@
     "SAVE_I18N": {
         "string": "محفوظ کریں"
     },
-    "ID_I18N": {
-        "string": "آئی ڈی"
-    },
     "ALIAS_I18N": {
         "string": "اٹلس"
     },
@@ -205,10 +158,6 @@
     },
     "CLAIM_REWARDS_IN_RYVE_I18N": {
         "string": "Ryve میں انعام حاصل کریں"
-    },
-    "CLAIM_HOSTED_REWARDS_I18N": {
-        "string": "ہوسٹڈ انعامات حاصل کریں",
-        "developer_comment": "Label for claiming hosted conduit rewards from settings."
     },
     "CLAIM_LOCAL_REWARDS_I18N": {
         "string": "مقامی انعامات حاصل کریں",
@@ -233,14 +182,8 @@
     "INVALID_QR_CODE_I18N": {
         "string": "غلط QR کوڈ"
     },
-    "ANALYTICS_I18N": {
-        "string": "تجزیات"
-    },
     "GET_RYVE_I18N": {
         "string": "Ryve حاصل کریں"
-    },
-    "REVEAL_I18N": {
-        "string": "ظاہر کریں"
     },
     "REVEAL_QR_I18N": {
         "string": "QR دکھائیں"
@@ -251,12 +194,6 @@
     "REDUCED_WINDOW_DESCRIPTION_I18N": {
         "string": "روزانہ ونڈو کے دوران کم استعمال کی حدیں ترتیب دیں۔ مثلاً دن کے وقت جب آپ کو اپنی بینڈوڈتھ اور بیٹری چلانی ہو۔"
     },
-    "REDUCED_WINDOW_LOCAL_TIME_I18N": {
-        "string": "مقامی وقت"
-    },
-    "REDUCED_WINDOW_CONFIGURE_I18N": {
-        "string": "استعمال کی ونڈو ترتیب دیں"
-    },
     "REDUCED_WINDOW_CLEAR_I18N": {
         "string": "صاف کریں"
     },
@@ -266,35 +203,17 @@
     "REDUCED_WINDOW_SUMMARY_PREFIX_I18N": {
         "string": "کم استعمال کے اوقات"
     },
-    "REDUCED_WINDOW_SUMMARY_SUFFIX_I18N": {
-        "string": "مقامی وقت"
-    },
     "REDUCED_START_TIME_I18N": {
         "string": "آغاز وقت"
     },
     "REDUCED_END_TIME_I18N": {
         "string": "اختتام وقت"
     },
-    "REDUCED_WINDOW_NOTE_I18N": {
-        "string": "آغاز اور اختتام کے وقت 30 منٹ کے مراحل میں منتخب کریں۔"
-    },
     "REDUCED_TIME_FORMAT_I18N": {
         "string": "HH:MM استعمال کریں"
     },
     "REDUCED_TIME_RANGE_I18N": {
         "string": "آغاز اور اختتام مختلف ہونے چاہئیں"
-    },
-    "REDUCED_MAX_PEERS_I18N": {
-        "string": "کم ہم رتبہ ساتھیوں کی زیادہ سے زیادہ تعداد"
-    },
-    "REDUCED_MAX_MBPS_PER_PEER_I18N": {
-        "string": "فی ہم رتبہ ساتھی کم زیادہ سے زیادہ MB/s"
-    },
-    "REDUCED_REQUIRED_BANDWIDTH_I18N": {
-        "string": "کم مطلوبہ بینڈوِتھ"
-    },
-    "HOSTED_CALL_TO_ACTION_I18N": {
-        "string": "اپنا کلاؤڈ Conduit ہوسٹ کریں"
     },
     "SHARE_PERSONAL_PAIRING_I18N": {
         "string": "ذاتی پیئرنگ شیئر کریں"
@@ -313,33 +232,6 @@
     },
     "PREPARING_PERSONAL_PAIRING_I18N": {
         "string": "ذاتی پیئرنگ تیار ہو رہی ہے..."
-    },
-    "HOSTED_MANAGE_IMPACT_TITLE_I18N": {
-        "string": "آپ کا اثر (گزشتہ 30 دن)"
-    },
-    "HOSTED_MANAGE_IMPACT_LOADING_I18N": {
-        "string": "اثر کا خلاصہ لوڈ ہو رہا ہے..."
-    },
-    "HOSTED_MANAGE_IMPACT_NO_TARGETS_I18N": {
-        "string": "اثر کا خلاصہ دستیاب نہیں کیونکہ اس اکاؤنٹ کے لیے کوئی مجاز شماریاتی اہداف واپس نہیں آئے۔"
-    },
-    "HOSTED_MANAGE_IMPACT_PEAK_CONNECTED_30D_I18N": {
-        "string": "گزشتہ 30 دنوں میں منسلک صارفین کی بلند ترین تعداد"
-    },
-    "HOSTED_MANAGE_IMPACT_BYTES_30D_I18N": {
-        "string": "گزشتہ 30 دنوں میں منتقل شدہ بائٹس"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_TITLE_I18N": {
-        "string": "سبسکرپشن اور اکاؤنٹ"
-    },
-    "HOSTED_MANAGE_SUBSCRIPTION_STATUS_I18N": {
-        "string": "سبسکرپشن کی حالت: {{status}}"
-    },
-    "HOSTED_MANAGE_PRODUCT_ID_I18N": {
-        "string": "پروڈکٹ: {{productId}}"
-    },
-    "HOSTED_MANAGE_EXPIRES_AT_I18N": {
-        "string": "تجدید/ختم ہونے کا وقت: {{expiresAt}}"
     },
     "HOSTED_MANAGE_OPEN_BILLING_I18N": {
         "string": "بلنگ کا نظم کریں"
@@ -440,22 +332,6 @@
     "SHARE_LINK_I18N": {
         "string": "لنک شیئر کریں",
         "developer_comment": "Label for the share link button."
-    },
-    "MBPS_PER_PEER_I18N": {
-        "string": "فی ہم رتبہ ساتھی MBPS",
-        "developer_comment": "Label for the megabits per second per peer setting."
-    },
-    "MAX_BANDWIDTH_USAGE_I18N": {
-        "string": "بینڈوڈتھ کا زیادہ سے زیادہ استعمال",
-        "developer_comment": "Label for the maximum bandwidth usage setting."
-    },
-    "SHARE_PERSONAL_PAIRING_DESCRIPTION_I18N": {
-        "string": "اپنا کنکشن براہ راست دوستوں اور خاندان کے ساتھ شیئر کریں",
-        "developer_comment": "Description text for the personal pairing share action in settings."
-    },
-    "CLAIM_HOSTED_REWARDS_IN_RYVE_I18N": {
-        "string": "Ryve میں ہوسٹڈ انعامات حاصل کریں",
-        "developer_comment": "Label for claiming hosted conduit rewards in the Ryve app."
     },
     "REWARDS_I18N": {
         "string": "انعامات",
@@ -597,17 +473,9 @@
         "string": "منسلک صارفین",
         "developer_comment": "Y-axis label for the connected users chart."
     },
-    "CONNECTING_USERS_I18N": {
-        "string": "منسلک ہو رہے صارفین",
-        "developer_comment": "Y-axis label for the connecting users chart."
-    },
     "CONNECTED_I18N": {
         "string": "منسلک",
         "developer_comment": "Label for the connected metric tab."
-    },
-    "CONNECTING_I18N": {
-        "string": "منسلک ہو رہا ہے",
-        "developer_comment": "Label for the connecting metric tab."
     },
     "BYTES_I18N": {
         "string": "بائٹس",
@@ -624,10 +492,6 @@
     "HOME_I18N": {
         "string": "ہوم",
         "developer_comment": "Label for the Home tab in bottom navigation."
-    },
-    "ERROR_I18N": {
-        "string": "خرابی",
-        "developer_comment": "Generic error text."
     },
     "LINK_TO_PRIVACY_POLICY_ACCESSIBILITY_I18N": {
         "string": "رازداری کی پالیسی کا لنک",
@@ -657,18 +521,6 @@
         "string": "ہوسٹڈ Conduit، ہوسٹ پروویژن ہو رہا ہے",
         "developer_comment": "Accessibility label for a hosted conduit orb whose host is still provisioning."
     },
-    "SIGN_IN_TO_SYNC_I18N": {
-        "string": "اپنا ہوسٹڈ اکاؤنٹ سنک کرنے کے لیے سائن ان کریں",
-        "developer_comment": "Hint shown when user needs to sign in for hosted account sync."
-    },
-    "BYTES_TRANSFERRED_WITH_WINDOW_I18N": {
-        "string": "{{ bytes }} منتقل ہوئے{{ window }}",
-        "developer_comment": "Metric text showing bytes transferred with optional time window suffix."
-    },
-    "N_HOSTED_PEERS_ONLINE_I18N": {
-        "string": "{{ count }} ہوسٹڈ ہم رتبہ ساتھی آن لائن",
-        "developer_comment": "Metric text showing the number of hosted peers currently online."
-    },
     "HOME_SUMMARY_PEER_COUNT_I18N": {
         "string": "{{count}} ہم رتبہ ساتھی",
         "developer_comment": "Peer count text shown on the simplified home summary rows."
@@ -676,12 +528,6 @@
     "HOME_SUMMARY_OFFLINE_I18N": {
         "string": "آف لائن",
         "developer_comment": "Status text shown for the local conduit row when it is not running."
-    },
-    "PUBLIC_PEERS_ONLINE_I18N": {
-        "string": "عوامی ہم رتبہ ساتھی آن لائن"
-    },
-    "PERSONAL_PEERS_ONLINE_I18N": {
-        "string": "ذاتی ہم رتبہ ساتھی آن لائن"
     },
     "SYNCING_HOSTED_USAGE_METRICS_I18N": {
         "string": "ہوسٹڈ استعمال کی پیمائشیں سنک ہو رہی ہیں...",
@@ -691,10 +537,6 @@
         "string": "مقامی conduit کے لیے اپ گریڈ درکار ہے",
         "developer_comment": "Hint shown when a local conduit requires an app upgrade."
     },
-    "HOLD_ORB_TO_TURN_OFF_I18N": {
-        "string": "جب ہم رتبہ ساتھی منسلک ہوں تو بند کرنے کے لیے آرب دبائے رکھیں",
-        "developer_comment": "Hint shown when user taps orb while peers are connected."
-    },
     "LOCAL_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "مقامی conduit منظر کا بٹن",
         "developer_comment": "Accessibility label for the local conduit scene selector."
@@ -702,10 +544,6 @@
     "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N": {
         "string": "ہوسٹڈ conduit منظر کا بٹن",
         "developer_comment": "Accessibility label for the hosted conduit scene selector."
-    },
-    "PREPARING_HOSTED_CONDUIT_I18N": {
-        "string": "آپ کا ہوسٹڈ Conduit تیار ہو رہا ہے...",
-        "developer_comment": "Loading message during hosted conduit setup."
     },
     "PREPARING_I18N": {
         "string": "تیار ہو رہا ہے...",
@@ -799,21 +637,9 @@
         "string": "منتقل شدہ بائٹس کے لحاظ سے علاقائی سرگرمی",
         "developer_comment": "Title shown in the dashboard regional breakdown modal."
     },
-    "TOP_HELPED_COUNTRIES_I18N": {
-        "string": "{{ metric }} کے لحاظ سے سب سے زیادہ مدد پانے والے ممالک ({{ window }})",
-        "developer_comment": "Subheader describing the top helped countries chart."
-    },
     "BYTES_TRANSFERRED_LABEL_I18N": {
         "string": "منتقل شدہ بائٹس",
         "developer_comment": "Label for the bytes transferred metric."
-    },
-    "CONNECTED_USERS_LABEL_I18N": {
-        "string": "منسلک صارفین",
-        "developer_comment": "Label for the connected users metric."
-    },
-    "TAP_TO_SWITCH_METRIC_I18N": {
-        "string": "پیمائش بدلنے کے لیے سیکشن پر ٹیپ کریں",
-        "developer_comment": "Hint text telling users to tap to switch between metrics."
     },
     "COMPLETING_SIGN_IN_I18N": {
         "string": "سائن ان مکمل ہو رہا ہے...",
@@ -930,5 +756,13 @@
     "HOSTED_ONBOARDING_ACTIVATE_HELPER_I18N": {
         "string": "سیٹ اپ جاری رکھنے اور شیئرنگ ان لاک کرنے کے لیے پلان منتخب کریں۔",
         "developer_comment": "Hosted onboarding helper for initial plan activation."
+    },
+    "PERSONAL_PAIRING_SHARE_MESSAGE_I18N": {
+        "string": "قابلِ اعتماد Conduit اسٹیشن سے جڑنے کے لیے یہ لنک کھولیں۔ اگر لنک بلاک ہو تو اسے کاپی کریں اور Psiphon ایپ کے Personal Pairing ویجیٹ میں پیسٹ کریں۔",
+        "developer_comment": "Message shared with a personal pairing link. 'Conduit', 'Psiphon', and 'Personal Pairing' are product/feature names."
+    },
+    "UPDATED_AT_I18N": {
+        "string": "Updated at {{time}}",
+        "developer_comment": "Label showing when stats were last refreshed. {{time}} is a localized time, or \"--\" when unknown."
     }
 }

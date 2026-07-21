@@ -43,7 +43,7 @@ export function HostedConduitCard({
 }) {
     const { t } = useTranslation();
     const scopeIcon = getScopeIcon(conduit.traffic_scope);
-    const scopeLabel = getScopeLabel(conduit.traffic_scope);
+    const scopeLabel = getScopeLabel(conduit.traffic_scope, t);
 
     return (
         <View style={[{ alignItems: "center" }, style]}>

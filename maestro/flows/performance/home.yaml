@@ -1,0 +1,10 @@
+# Performance setup: destructive fresh-state home screen.
+appId: ${APP_ID}
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- extendedWaitUntil:
+      visible:
+          id: "orb-primary"
+      timeout: 180000

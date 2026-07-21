@@ -19,10 +19,11 @@
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import * as Linking from "expo-linking";
+import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Switch, Text, View } from "react-native";
 import {
     GestureHandlerRootView,
     ScrollView,
@@ -71,6 +72,7 @@ import {
     InproxyParameters,
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
+import { playSound, setSoundEnabled, useSoundEnabled } from "@/src/sound";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 // ---------------------------------------------------------------------------
@@ -152,6 +154,7 @@ function LocalConduitSettingsCard({
         >
             <View style={[ss.column, { gap: 2 }]}>
                 <Pressable
+                    testID="settings-local-expand"
                     onPress={() => setExpanded((v) => !v)}
                     style={{
                         flexDirection: "row",
@@ -330,6 +333,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
     } = useInproxyContext();
     const { data: inproxyStatus } = useInproxyStatus();
     const { data: conduitName } = useConduitName();
+    const soundEnabled = useSoundEnabled();
     const showLocalConduitSettings = Platform.OS !== "ios";
     const {
         openPersonalPairingModal,
@@ -729,7 +733,8 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
             );
             return;
         }
-        selectInproxyParameters(newInproxyParameters.data);
+        await selectInproxyParameters(newInproxyParameters.data);
+        playSound("successConfirm");
     }
 
     async function onSavePress() {
@@ -766,21 +771,32 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
         setShowDiagnosticThanks(true);
     }
 
+    function onSoundEnabledToggle(enabled: boolean) {
+        void setSoundEnabled(enabled);
+        if (enabled) {
+            // Audible sample of the new setting.
+            playSound("successConfirm");
+        }
+    }
+
     function renderSettingsAction({
         icon,
         label,
         subtitle,
         onPress,
         disabled = false,
+        testID,
     }: {
         icon: React.ReactNode;
         label: string;
         subtitle?: string;
         onPress: () => void;
         disabled?: boolean;
+        testID?: string;
     }) {
         return (
             <Pressable
+                testID={testID}
                 onPress={onPress}
                 disabled={disabled}
                 style={[
@@ -872,6 +888,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                             ]}
                         >
                             <Pressable
+                                testID="settings-save"
                                 onPress={() => void onSavePress()}
                                 disabled={!canSaveChanges}
                                 style={({ pressed }) => [
@@ -988,13 +1005,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                               ),
                               label: t("SETTINGS_PERSONAL_PAIRING_I18N.string"),
                               subtitle: isPersonalPairingPreparing
-                                  ? t(
-                                        "PREPARING_PERSONAL_PAIRING_I18N.string",
-                                        {
-                                            defaultValue:
-                                                "Preparing personal pairing...",
-                                        },
-                                    )
+                                  ? t("PREPARING_PERSONAL_PAIRING_I18N.string")
                                   : t(
                                         "SETTINGS_PERSONAL_PAIRING_DESCRIPTION_I18N.string",
                                     ),
@@ -1058,8 +1069,39 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         ),
                         label: t("ACCOUNT_I18N.string"),
                         subtitle: t("ACCOUNT_SETTINGS_DESCRIPTION_I18N.string"),
-                        onPress: () => router.push("/(app)/account"),
+                        onPress: () => router.push("/(app)/account" as Href),
+                        testID: "settings-account",
                     })}
+
+                    {/* Sound effects toggle */}
+                    <View
+                        style={[
+                            ...settingsLineItemStyle,
+                            ss.justifySpaceBetween,
+                            {
+                                flexDirection: "row",
+                                alignItems: "center",
+                            },
+                        ]}
+                    >
+                        <View style={[ss.row, ss.alignCenter, { gap: 10 }]}>
+                            <Icon
+                                name="speaker"
+                                color={palette.black}
+                                size={20}
+                            />
+                            <Text style={[ss.bodyFont, ss.blackText]}>
+                                {t("SETTINGS_SOUND_EFFECTS_I18N.string")}
+                            </Text>
+                        </View>
+                        <Switch
+                            testID="settings-sound-toggle"
+                            value={soundEnabled}
+                            onValueChange={onSoundEnabledToggle}
+                            trackColor={{ true: palette.purple }}
+                            thumbColor={palette.white}
+                        />
+                    </View>
 
                     {renderSettingsAction({
                         icon: (
@@ -1071,6 +1113,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         ),
                         label: t("MORE_INFO_I18N.string"),
                         onPress: () => router.push("/(app)/onboarding"),
+                        testID: "settings-more-info",
                     })}
 
                     {Platform.OS !== "ios"
@@ -1087,6 +1130,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                                   : t("SEND_DIAGNOSTIC_I18N.string"),
                               onPress: onSendDiagnosticPress,
                               disabled: showDiagnosticThanks,
+                              testID: "settings-diagnostic",
                           })
                         : null}
 

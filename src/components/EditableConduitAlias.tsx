@@ -18,7 +18,6 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
-import * as SecureStore from "expo-secure-store";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -36,6 +35,7 @@ import {
     isValidNickname,
     normalizeNickname,
 } from "@/src/common/precis";
+import * as secureStorage from "@/src/common/secureStorage";
 import { Icon } from "@/src/components/Icon";
 import { useModal } from "@/src/components/ModalStore";
 import {
@@ -47,6 +47,7 @@ import {
     useHostedExperienceActions,
     useHostedExperienceState,
 } from "@/src/hosted/experience/hooks";
+import { playSound } from "@/src/sound";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 /**
@@ -59,6 +60,7 @@ export function EditableConduitAlias({
     fallbackName,
     fontSize = 18,
     labelBackground,
+    testID = "alias-trigger",
 }: {
     /** Fallback display name when no alias is stored */
     fallbackName?: string;
@@ -66,6 +68,7 @@ export function EditableConduitAlias({
     fontSize?: number;
     /** Background color behind the notched label (should match parent) */
     labelBackground?: string;
+    testID?: string;
 }) {
     const { t } = useTranslation();
     const { data: storedName } = useConduitName();
@@ -93,6 +96,7 @@ export function EditableConduitAlias({
 
     return (
         <Pressable
+            testID={testID}
             onPress={handleOpen}
             style={{
                 position: "relative",
@@ -167,12 +171,16 @@ function ConduitNameEditorModal({
                 return updateAccountAlias(name);
             }
 
-            await SecureStore.setItemAsync(SECURESTORE_CONDUIT_NAME_KEY, name);
+            await secureStorage.setItemAsync(
+                SECURESTORE_CONDUIT_NAME_KEY,
+                name,
+            );
             return name;
         },
         onSuccess: (result) => {
             const alias = typeof result === "string" ? result : result.alias;
             queryClient.setQueryData([QUERYKEY_CONDUIT_NAME], alias);
+            playSound("successConfirm", { haptic: false });
         },
         onError: (error) => {
             console.error("Failed to persist conduit alias:", error);
@@ -269,7 +277,11 @@ function ConduitNameEditorModal({
                             marginBottom: 20,
                         }}
                     >
-                        <Pressable onPress={dismiss} hitSlop={12}>
+                        <Pressable
+                            testID="alias-close"
+                            onPress={dismiss}
+                            hitSlop={12}
+                        >
                             <Icon
                                 name="close"
                                 color={palette.black}
@@ -288,7 +300,11 @@ function ConduitNameEditorModal({
                         >
                             {t("INPUT_YOUR_CONDUIT_NAME_I18N.string")}
                         </Text>
-                        <Pressable onPress={commit} hitSlop={12}>
+                        <Pressable
+                            testID="alias-commit"
+                            onPress={commit}
+                            hitSlop={12}
+                        >
                             <Icon
                                 name="right-arrow"
                                 color={palette.black}
@@ -314,6 +330,7 @@ function ConduitNameEditorModal({
 
                     {/* Text input */}
                     <TextInput
+                        testID="alias-input"
                         ref={inputRef}
                         value={draft}
                         onChangeText={handleChangeText}

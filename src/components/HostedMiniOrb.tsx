@@ -151,7 +151,7 @@ export function HostedMiniOrb({
                 backgroundColor: "transparent",
             }}
         >
-            <Canvas style={[ss.flex]}>
+            <Canvas style={ss.flex}>
                 <Group layer={<Paint>{applyBlur && <Blur blur={5} />}</Paint>}>
                     <Group transform={orbCenteringTransform}>
                         <Group layer={morphLayer}>
@@ -192,7 +192,6 @@ export function HostedMiniOrb({
                                 <ConduitConnectionLight
                                     key={i}
                                     active={clampedLights > i}
-                                    canvasWidth={width}
                                     orbRadius={finalOrbRadius}
                                     midPoint={vec(0, 0)}
                                     secondLastPoint={vec(0, -finalOrbRadius)}

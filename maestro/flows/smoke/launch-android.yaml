@@ -1,0 +1,17 @@
+# Flow: launch-android (smoke)
+# Cold-starts a fresh install and confirms the app reaches an interactive shell.
+# This is the first flow to get green after the instrumentation pass adds the
+# `app-ready` marker and the `orb-primary` testID.
+appId: ca.psiphon.conduit
+tags:
+    - smoke
+    - android
+---
+- runFlow: ../../subflows/reset-app.yaml
+# First run lands on onboarding; advance through it to Home.
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- assertVisible:
+      id: "app-ready"
+- assertVisible:
+      id: "orb-primary"

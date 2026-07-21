@@ -19,18 +19,17 @@
 import {
     normalizeRegionalMapKey,
     toRegionalImpactIntensity,
-    toRegionalImpactOpacity,
     toRegionalMapLookupKeys,
 } from "@/src/hosted/dashboard/regional";
 
 describe("regional dashboard map helpers", () => {
     it("uses log scaling so outliers do not consume all color", () => {
-        expect(toRegionalImpactOpacity(0, 10, 1_000_000)).toBe(0);
+        expect(toRegionalImpactIntensity(0, 10, 1_000_000)).toBe(0);
         expect(toRegionalImpactIntensity(10, 10, 1_000_000)).toBeCloseTo(0.18);
         expect(toRegionalImpactIntensity(1_000, 10, 1_000_000)).toBeGreaterThan(
             0.45,
         );
-        expect(toRegionalImpactOpacity(1_000_000, 10, 1_000_000)).toBe(1);
+        expect(toRegionalImpactIntensity(1_000_000, 10, 1_000_000)).toBe(1);
     });
 
     it("normalizes country names for asset lookup", () => {

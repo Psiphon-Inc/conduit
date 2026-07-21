@@ -32,6 +32,8 @@ export function useHostedExperienceState(): HostedExperienceState {
 export function useHostedExperienceActions(): HostedExperienceActions {
     const {
         signIn,
+        startEmailCodeSignIn,
+        completeEmailCodeSignIn,
         signOut,
         deleteAccount,
         pollConduitsOnce,
@@ -45,6 +47,8 @@ export function useHostedExperienceActions(): HostedExperienceActions {
     return React.useMemo(
         () => ({
             signIn,
+            startEmailCodeSignIn,
+            completeEmailCodeSignIn,
             signOut,
             deleteAccount,
             pollConduitsOnce,
@@ -61,6 +65,8 @@ export function useHostedExperienceActions(): HostedExperienceActions {
             refreshSession,
             refreshSessionIfNeeded,
             restorePurchases,
+            startEmailCodeSignIn,
+            completeEmailCodeSignIn,
             signIn,
             signOut,
             updateAccountAlias,
@@ -70,6 +76,10 @@ export function useHostedExperienceActions(): HostedExperienceActions {
 
 export function useHostedExperienceInitialSessionResolved(): boolean {
     return useHostedExperienceContext().initialSessionResolved;
+}
+
+export function useHostedExperienceIsOffline(): boolean {
+    return useHostedExperienceContext().isOffline;
 }
 
 export function useHostedExperienceSnapshotBootstrapPending(): boolean {

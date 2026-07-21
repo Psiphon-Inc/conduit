@@ -24,8 +24,8 @@ import {
 } from "@tanstack/react-query";
 import * as Network from "expo-network";
 import React from "react";
-import { PurchasesPackage } from "react-native-purchases";
 
+import { loadCachedAlias } from "@/src/common/conduitAlias";
 import { timedLog } from "@/src/common/utils";
 import {
     QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
@@ -38,23 +38,22 @@ import {
     useHostedAccountProfileQuery,
     useHostedUpdateAccountAliasMutation,
 } from "@/src/hosted/accountQueries";
-import { loadCachedAlias } from "@/src/hosted/aliasCache";
+import {
+    HostedPersonalCompartmentIdConflictError,
+    createHostedApiClient,
+} from "@/src/hosted/apiClient";
+import { HOSTED_SIGN_IN_METHOD_UNAVAILABLE_MESSAGE } from "@/src/hosted/auth/messages";
 import {
     clearHostedLastAuthProvider,
     loadHostedLastAuthProvider,
     persistHostedLastAuthProvider,
 } from "@/src/hosted/auth/persistence";
 import { useOptionalHostedAuthService } from "@/src/hosted/auth/provider";
-import { createStubHostedAuthService } from "@/src/hosted/auth/service";
 import {
     HostedAuthService,
     HostedAuthServiceError,
     HostedAuthSignInResult,
 } from "@/src/hosted/auth/types";
-import {
-    HostedPersonalCompartmentIdConflictError,
-    createHostedClient,
-} from "@/src/hosted/client";
 import {
     fetchHostedConduitsSnapshot,
     useHostedConduitsQuery,
@@ -63,7 +62,6 @@ import {
     AccountProfile,
     ConduitsSnapshot,
     OAuthProvider,
-    PersonalCompartmentId,
 } from "@/src/hosted/contracts";
 import { selectHostedExperienceState } from "@/src/hosted/experience/selectors";
 import {
@@ -82,6 +80,10 @@ import {
 } from "@/src/hosted/revenuecatContext";
 import { HostedEntitlementStatus } from "@/src/hosted/revenuecatEntitlements";
 import {
+    HostedCustomerInfo,
+    HostedRevenueCatPackage,
+} from "@/src/hosted/revenuecatTypes";
+import {
     HostedSession,
     createHostedSessionClient,
 } from "@/src/hosted/sessionClient";
@@ -94,43 +96,48 @@ import {
     useHostedSessionQuery,
     withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
+import { PersonalCompartmentId } from "@/src/pairing/compartmentId";
 import {
     loadAndroidPersonalCompartmentId,
     persistAndroidPersonalCompartmentId,
 } from "@/src/personalCompartmentId";
 
 type HostedSessionClient = ReturnType<typeof createHostedSessionClient>;
-type HostedClient = ReturnType<typeof createHostedClient>;
+type HostedApiClient = ReturnType<typeof createHostedApiClient>;
 
 export interface HostedExperienceActions {
     signIn(provider: OAuthProvider): Promise<void>;
+    startEmailCodeSignIn(email: string): Promise<void>;
+    completeEmailCodeSignIn(code: string): Promise<void>;
     signOut(): Promise<void>;
     deleteAccount(): Promise<void>;
     pollConduitsOnce(): Promise<void>;
-    restorePurchases(): Promise<void>;
-    purchasePackage(aPackage: PurchasesPackage): Promise<void>;
     refreshSessionIfNeeded(): Promise<HostedSession>;
     refreshSession(): Promise<HostedSession>;
+    restorePurchases(): Promise<void>;
+    purchasePackage(aPackage: HostedRevenueCatPackage): Promise<void>;
     updateAccountAlias(alias: string): Promise<AccountProfile>;
 }
 
 export interface HostedExperienceContextValue extends HostedExperienceActions {
     state: HostedExperienceState;
     initialSessionResolved: boolean;
+    isOffline: boolean;
     hostedSnapshotBootstrapPending: boolean;
     revenueCatNativeActionPending: boolean;
     lastAuthProvider: OAuthProvider | null;
 }
 
-export interface HostedExperienceProviderProps extends React.PropsWithChildren {
+interface HostedExperienceProviderProps extends React.PropsWithChildren {
     baseUrl: string;
     revenueCatPublicKeys?: RevenueCatPublicKeys;
     revenueCatEntitlementIds?: string[];
     authService?: HostedAuthService;
     sessionClient?: HostedSessionClient;
-    hostedClient?: HostedClient;
+    apiClient?: HostedApiClient;
     revenueCat?: RevenueCatContextValue;
     now?: () => number;
+    delay?: (ms: number) => Promise<void>;
 }
 
 interface HostedExperienceProviderInnerProps
@@ -173,27 +180,30 @@ function HostedExperienceProviderWithRevenueCatContext(
 function HostedExperienceProviderInner(
     props: HostedExperienceProviderInnerProps,
 ) {
+    // Dependency setup. Optional injections are retained as test seams.
     const now = React.useMemo(
         () => props.now ?? (() => Date.now()),
         [props.now],
+    );
+    const delay = React.useMemo(
+        () => props.delay ?? defaultDelay,
+        [props.delay],
     );
     const baseUrl = React.useMemo(
         () => normalizeBaseUrl(props.baseUrl),
         [props.baseUrl],
     );
     const contextAuthService = useOptionalHostedAuthService();
+    const authService = props.authService ?? contextAuthService;
+    if (!authService) {
+        throw new Error(
+            "HostedExperienceProvider requires an authService or a parent <HostedAuthProvider />",
+        );
+    }
     const queryClient = useQueryClient();
     const [revenuecatNotice, setRevenuecatNotice] = React.useState<
         string | null
     >(null);
-
-    const authService = React.useMemo(
-        () =>
-            props.authService ??
-            contextAuthService ??
-            createStubHostedAuthService(),
-        [contextAuthService, props.authService],
-    );
 
     const sessionClient = React.useMemo(
         () =>
@@ -204,13 +214,13 @@ function HostedExperienceProviderInner(
         [baseUrl, props.sessionClient],
     );
 
-    const hostedClient = React.useMemo(
+    const apiClient = React.useMemo(
         () =>
-            props.hostedClient ??
-            createHostedClient({
+            props.apiClient ??
+            createHostedApiClient({
                 baseUrl,
             }),
-        [baseUrl, props.hostedClient],
+        [baseUrl, props.apiClient],
     );
 
     const sessionDeps = React.useMemo<HostedSessionDependencies>(
@@ -221,6 +231,8 @@ function HostedExperienceProviderInner(
         }),
         [baseUrl, now, sessionClient],
     );
+
+    // Queries.
     const sessionQuery = useHostedSessionQuery(sessionDeps);
     const networkState = Network.useNetworkState();
     const isOffline =
@@ -236,16 +248,16 @@ function HostedExperienceProviderInner(
     });
     const accountProfileQuery = useHostedAccountProfileQuery({
         ...sessionDeps,
-        hostedClient,
+        hostedClient: apiClient,
     });
     const conduitsQuery = useHostedConduitsQuery({
         ...sessionDeps,
-        hostedClient,
+        hostedClient: apiClient,
         isOnline: isOffline ? false : true,
     });
     const updateAccountAliasMutation = useHostedUpdateAccountAliasMutation({
         ...sessionDeps,
-        hostedClient,
+        hostedClient: apiClient,
     });
     const currentEntitlementStatus = normalizeHostedEntitlementStatus(
         conduitsQuery.data?.entitlement?.status ?? "",
@@ -275,12 +287,10 @@ function HostedExperienceProviderInner(
         },
     });
 
+    // Authentication.
     const rememberAuthProvider = React.useCallback(
         async (provider: OAuthProvider) => {
-            queryClient.setQueryData(
-                hostedQueryKeys.authProviderHint(baseUrl),
-                provider,
-            );
+            setCachedAuthProviderHint(queryClient, baseUrl, provider);
             try {
                 await persistHostedLastAuthProvider(baseUrl, provider);
             } catch (error) {
@@ -320,7 +330,7 @@ function HostedExperienceProviderInner(
                         queryClient,
                         {
                             ...sessionDeps,
-                            hostedClient,
+                            hostedClient: apiClient,
                         },
                         localAlias,
                     );
@@ -334,7 +344,7 @@ function HostedExperienceProviderInner(
             if (authResult.platform === "android") {
                 const personalCompartmentId =
                     await syncAndroidPersonalCompartmentId({
-                        hostedClient,
+                        apiClient,
                         queryClient,
                         sessionDeps,
                     });
@@ -370,13 +380,13 @@ function HostedExperienceProviderInner(
                 queryFn: async () =>
                     fetchHostedConduitsSnapshot(queryClient, {
                         ...sessionDeps,
-                        hostedClient,
+                        hostedClient: apiClient,
                     }),
             });
         },
         [
             baseUrl,
-            hostedClient,
+            apiClient,
             props.revenueCat,
             props.revenueCatPublicKeys,
             queryClient,
@@ -399,21 +409,46 @@ function HostedExperienceProviderInner(
             await rememberAuthProvider(provider);
             return { previousAuthProvider };
         },
-        onError: async (error, _provider, context) => {
-            if (
-                error instanceof HostedAuthServiceError &&
-                error.code === "cancelled"
-            ) {
-                if (context?.previousAuthProvider) {
-                    await rememberAuthProvider(context.previousAuthProvider);
-                    return;
-                }
-                await clearHostedLastAuthProvider();
-                queryClient.setQueryData(
-                    hostedQueryKeys.authProviderHint(baseUrl),
-                    null,
-                );
+        onError: async (_error, _provider, context) => {
+            if (context?.previousAuthProvider) {
+                await rememberAuthProvider(context.previousAuthProvider);
+                return;
             }
+            await clearHostedLastAuthProvider();
+            setCachedAuthProviderHint(queryClient, baseUrl, null);
+        },
+    });
+    const startEmailCodeSignInMutation = useMutation({
+        mutationFn: async (email: string) => {
+            if (!authService.startEmailCodeSignIn) {
+                throw new HostedAuthServiceError({
+                    code: "unavailable",
+                    message: "Email-code sign-in is not available",
+                    userMessage: HOSTED_SIGN_IN_METHOD_UNAVAILABLE_MESSAGE,
+                });
+            }
+            await authService.startEmailCodeSignIn(email);
+        },
+        onMutate: () => {
+            setRevenuecatNotice(null);
+        },
+    });
+    const completeEmailCodeSignInMutation = useMutation({
+        mutationFn: async (code: string) => {
+            if (!authService.completeEmailCodeSignIn) {
+                throw new HostedAuthServiceError({
+                    code: "unavailable",
+                    message: "Email-code sign-in is not available",
+                    userMessage: HOSTED_SIGN_IN_METHOD_UNAVAILABLE_MESSAGE,
+                });
+            }
+            const authResult = await authService.completeEmailCodeSignIn(code);
+            await completeHostedAuth(authResult, {
+                persistAuthProviderHint: true,
+            });
+        },
+        onMutate: () => {
+            setRevenuecatNotice(null);
         },
     });
     const restoreSignInMutation = useMutation({
@@ -433,13 +468,14 @@ function HostedExperienceProviderInner(
         },
     });
 
+    // Billing activation.
     const [purchaseInflight, setPurchaseInflight] = React.useState(false);
     const [purchaseNeedsFreshEntitlement, setPurchaseNeedsFreshEntitlement] =
         React.useState(false);
     const [revenueCatNativeActionPending, setRevenueCatNativeActionPending] =
         React.useState(false);
     const purchaseMutation = useMutation({
-        mutationFn: async (aPackage: PurchasesPackage) => {
+        mutationFn: async (aPackage: HostedRevenueCatPackage) => {
             const previousEntitlementStatus = currentEntitlementStatus;
             let purchaseResult;
             setRevenueCatNativeActionPending(true);
@@ -450,8 +486,10 @@ function HostedExperienceProviderInner(
                 setRevenueCatNativeActionPending(false);
             }
             const session = await ensureHostedSession(queryClient, sessionDeps);
-            queryClient.setQueryData(
-                hostedQueryKeys.revenueCat(baseUrl, session.accountId),
+            setCachedRevenueCatCustomerInfo(
+                queryClient,
+                baseUrl,
+                session.accountId,
                 purchaseResult.customerInfo,
             );
             await queryClient.fetchQuery({
@@ -460,7 +498,7 @@ function HostedExperienceProviderInner(
                 queryFn: async () =>
                     fetchHostedConduitsSnapshot(queryClient, {
                         ...sessionDeps,
-                        hostedClient,
+                        hostedClient: apiClient,
                     }),
             });
             const confirmed = await pollConduitsDuringActivationWindow({
@@ -469,7 +507,8 @@ function HostedExperienceProviderInner(
                 queryClient,
                 baseUrl,
                 now,
-                hostedClient,
+                delay,
+                apiClient,
                 sessionDeps,
             });
             if (!confirmed) {
@@ -505,14 +544,15 @@ function HostedExperienceProviderInner(
                 setRevenueCatNativeActionPending(false);
             }
             const session = await ensureHostedSession(queryClient, sessionDeps);
-            queryClient.setQueryData(
-                hostedQueryKeys.revenueCat(baseUrl, session.accountId),
+            setCachedRevenueCatCustomerInfo(
+                queryClient,
+                baseUrl,
+                session.accountId,
                 restoreResult.customerInfo,
             );
 
             // If the customer has no active entitlements after restore,
-            // there is nothing to restore — fail immediately rather than
-            // polling for 25 s and showing a hung loading screen (CON-19).
+            // fail immediately instead of polling through the activation window.
             const activeEntitlements = Object.keys(
                 restoreResult.customerInfo.entitlements?.active ?? {},
             );
@@ -528,7 +568,7 @@ function HostedExperienceProviderInner(
                 queryFn: async () =>
                     fetchHostedConduitsSnapshot(queryClient, {
                         ...sessionDeps,
-                        hostedClient,
+                        hostedClient: apiClient,
                     }),
             });
             const confirmed = await pollConduitsDuringActivationWindow({
@@ -537,7 +577,8 @@ function HostedExperienceProviderInner(
                 queryClient,
                 baseUrl,
                 now,
-                hostedClient,
+                delay,
+                apiClient,
                 sessionDeps,
             });
             if (!confirmed) {
@@ -557,6 +598,7 @@ function HostedExperienceProviderInner(
         },
     });
 
+    // Derived state.
     const lastAuthProvider = authProviderHintQuery.data ?? null;
     const autoRestoreCandidate =
         baseUrl &&
@@ -629,41 +671,40 @@ function HostedExperienceProviderInner(
         purchaseInflight,
         restoreInflight,
     ]);
-    const revenuecatPhase: HostedRevenueCatPhase = !sessionQuery.data
-        ? "uninitialized"
-        : purchaseMutation.isPending || purchaseInflight
-          ? "purchase_pending"
-          : restoreMutation.isPending || restoreInflight
-            ? "restore_pending"
-            : revenueCatBootstrapQuery.isSuccess
-              ? "ready"
-              : revenueCatBootstrapQuery.isError ||
-                  purchaseMutation.isError ||
-                  restoreMutation.isError
-                ? "error"
-                : "uninitialized";
-    const revenuecatError = revenuecatNotice
-        ? revenuecatNotice
-        : revenueCatBootstrapQuery.isError
-          ? toErrorMessage(revenueCatBootstrapQuery.error)
-          : purchaseMutation.isError &&
-              lastRevenuecatActionRef.current === "purchase"
-            ? toErrorMessage(purchaseMutation.error)
-            : restoreMutation.isError &&
-                lastRevenuecatActionRef.current === "restore"
-              ? toErrorMessage(restoreMutation.error)
-              : null;
+    const revenuecatPhase = resolveRevenueCatPhase({
+        hasSession: Boolean(sessionQuery.data),
+        purchasePending: purchaseMutation.isPending || purchaseInflight,
+        restorePending: restoreMutation.isPending || restoreInflight,
+        bootstrapSucceeded: revenueCatBootstrapQuery.isSuccess,
+        hasError:
+            revenueCatBootstrapQuery.isError ||
+            purchaseMutation.isError ||
+            restoreMutation.isError,
+    });
+    const revenuecatError = resolveRevenueCatError({
+        notice: revenuecatNotice,
+        bootstrap: revenueCatBootstrapQuery,
+        purchase: purchaseMutation,
+        restore: restoreMutation,
+        lastAction: lastRevenuecatActionRef.current,
+    });
+    const authError = resolveAuthError({
+        hasSession: Boolean(sessionQuery.data),
+        signIn: signInMutation,
+        startEmailCodeSignIn: startEmailCodeSignInMutation,
+        completeEmailCodeSignIn: completeEmailCodeSignInMutation,
+    });
 
-    const state = React.useMemo(
+    const experienceState = React.useMemo(
         () =>
             selectHostedExperienceState({
                 session: sessionQuery.data ?? null,
                 authPending:
-                    signInMutation.isPending || restoreSignInMutation.isPending,
-                authError:
-                    !sessionQuery.data && signInMutation.isError
-                        ? toErrorMessage(signInMutation.error)
-                        : null,
+                    signInMutation.isPending ||
+                    startEmailCodeSignInMutation.isPending ||
+                    completeEmailCodeSignInMutation.isPending ||
+                    restoreSignInMutation.isPending,
+                authError,
                 revenuecatPhase,
                 revenuecatError,
                 accountProfile,
@@ -682,6 +723,7 @@ function HostedExperienceProviderInner(
         [
             accountProfile,
             accountProfileQuery.dataUpdatedAt,
+            authError,
             conduitsQuery.data,
             conduitsQuery.dataUpdatedAt,
             conduitsQuery.error,
@@ -691,9 +733,9 @@ function HostedExperienceProviderInner(
             revenuecatPhase,
             sessionQuery.data,
             sessionQuery.dataUpdatedAt,
-            signInMutation.error,
-            signInMutation.isError,
             signInMutation.isPending,
+            startEmailCodeSignInMutation.isPending,
+            completeEmailCodeSignInMutation.isPending,
             restoreSignInMutation.isPending,
         ],
     );
@@ -704,6 +746,7 @@ function HostedExperienceProviderInner(
         !conduitsQuery.isError &&
         conduitsQuery.isFetching;
 
+    // Actions.
     const pollConduitsOnce = React.useCallback(async () => {
         const session = await ensureHostedSession(queryClient, sessionDeps);
         await queryClient.fetchQuery({
@@ -712,10 +755,10 @@ function HostedExperienceProviderInner(
             queryFn: async () =>
                 fetchHostedConduitsSnapshot(queryClient, {
                     ...sessionDeps,
-                    hostedClient,
+                    hostedClient: apiClient,
                 }),
         });
-    }, [baseUrl, hostedClient, queryClient, sessionDeps]);
+    }, [apiClient, baseUrl, queryClient, sessionDeps]);
 
     const refreshSessionIfNeeded = React.useCallback(async () => {
         assertConfiguredBaseUrl(baseUrl);
@@ -733,9 +776,23 @@ function HostedExperienceProviderInner(
         },
         [signInMutation],
     );
+    const startEmailCodeSignIn = React.useCallback(
+        async (email: string) => {
+            await startEmailCodeSignInMutation.mutateAsync(email);
+        },
+        [startEmailCodeSignInMutation],
+    );
+    const completeEmailCodeSignIn = React.useCallback(
+        async (code: string) => {
+            await completeEmailCodeSignInMutation.mutateAsync(code);
+        },
+        [completeEmailCodeSignInMutation],
+    );
 
     const signOut = React.useCallback(async () => {
         signInMutation.reset();
+        startEmailCodeSignInMutation.reset();
+        completeEmailCodeSignInMutation.reset();
         restoreSignInMutation.reset();
         purchaseMutation.reset();
         restoreMutation.reset();
@@ -751,18 +808,9 @@ function HostedExperienceProviderInner(
         } catch {}
 
         await clearHostedLastAuthProvider();
-        queryClient.setQueryData(
-            hostedQueryKeys.authProviderHint(baseUrl),
-            null,
-        );
+        setCachedAuthProviderHint(queryClient, baseUrl, null);
         await clearHostedSessionState(queryClient, sessionDeps);
-        queryClient.removeQueries({ queryKey: hostedQueryKeys.root(baseUrl) });
-        queryClient.removeQueries({
-            queryKey: [QUERYKEY_HOSTED_STATS_SUMMARY],
-        });
-        queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_RECENT] });
-        queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_LIVE] });
-        queryClient.setQueryData(hostedQueryKeys.session(baseUrl), null);
+        clearHostedExperienceQueryCache(queryClient, baseUrl);
     }, [
         baseUrl,
         purchaseMutation,
@@ -771,37 +819,44 @@ function HostedExperienceProviderInner(
         restoreSignInMutation,
         sessionDeps,
         signInMutation,
+        startEmailCodeSignInMutation,
+        completeEmailCodeSignInMutation,
         updateAccountAliasMutation,
         authService,
     ]);
 
     const deleteAccount = React.useCallback(async () => {
         const session = await ensureHostedSession(queryClient, sessionDeps);
-        await hostedClient.deleteAccount(session.accessToken);
+        await apiClient.deleteAccount(session.accessToken);
         await signOut();
-    }, [hostedClient, queryClient, sessionDeps, signOut]);
+    }, [apiClient, queryClient, sessionDeps, signOut]);
 
+    // Provider value.
     const value = React.useMemo<HostedExperienceContextValue>(
         () => ({
-            state,
+            state: experienceState,
             initialSessionResolved,
+            isOffline,
             hostedSnapshotBootstrapPending,
             revenueCatNativeActionPending,
             lastAuthProvider,
             signIn,
+            startEmailCodeSignIn,
+            completeEmailCodeSignIn,
             signOut,
             deleteAccount,
             pollConduitsOnce,
+            refreshSessionIfNeeded,
+            refreshSession,
             restorePurchases: async () => restoreMutation.mutateAsync(),
             purchasePackage: async (aPackage) =>
                 purchaseMutation.mutateAsync(aPackage),
-            refreshSessionIfNeeded,
-            refreshSession,
             updateAccountAlias: async (alias) =>
                 updateAccountAliasMutation.mutateAsync(alias),
         }),
         [
             initialSessionResolved,
+            isOffline,
             deleteAccount,
             hostedSnapshotBootstrapPending,
             lastAuthProvider,
@@ -811,9 +866,11 @@ function HostedExperienceProviderInner(
             refreshSession,
             refreshSessionIfNeeded,
             restoreMutation,
+            startEmailCodeSignIn,
+            completeEmailCodeSignIn,
             signIn,
             signOut,
-            state,
+            experienceState,
             updateAccountAliasMutation,
         ],
     );
@@ -823,6 +880,113 @@ function HostedExperienceProviderInner(
             {props.children}
         </HostedExperienceContext.Provider>
     );
+}
+
+interface ErrorState {
+    isError: boolean;
+    error: unknown;
+}
+
+function resolveRevenueCatPhase(input: {
+    hasSession: boolean;
+    purchasePending: boolean;
+    restorePending: boolean;
+    bootstrapSucceeded: boolean;
+    hasError: boolean;
+}): HostedRevenueCatPhase {
+    if (!input.hasSession) {
+        return "uninitialized";
+    }
+    if (input.purchasePending) {
+        return "purchase_pending";
+    }
+    if (input.restorePending) {
+        return "restore_pending";
+    }
+    if (input.bootstrapSucceeded) {
+        return "ready";
+    }
+    if (input.hasError) {
+        return "error";
+    }
+    return "uninitialized";
+}
+
+function resolveRevenueCatError(input: {
+    notice: string | null;
+    bootstrap: ErrorState;
+    purchase: ErrorState;
+    restore: ErrorState;
+    lastAction: "purchase" | "restore" | null;
+}): string | null {
+    if (input.notice) {
+        return input.notice;
+    }
+    if (input.bootstrap.isError) {
+        return toErrorMessage(input.bootstrap.error);
+    }
+    if (input.purchase.isError && input.lastAction === "purchase") {
+        return toErrorMessage(input.purchase.error);
+    }
+    if (input.restore.isError && input.lastAction === "restore") {
+        return toErrorMessage(input.restore.error);
+    }
+    return null;
+}
+
+function resolveAuthError(input: {
+    hasSession: boolean;
+    signIn: ErrorState;
+    startEmailCodeSignIn: ErrorState;
+    completeEmailCodeSignIn: ErrorState;
+}): string | null {
+    if (input.hasSession) {
+        return null;
+    }
+    if (input.signIn.isError) {
+        return toErrorMessage(input.signIn.error);
+    }
+    if (input.startEmailCodeSignIn.isError) {
+        return toErrorMessage(input.startEmailCodeSignIn.error);
+    }
+    if (input.completeEmailCodeSignIn.isError) {
+        return toErrorMessage(input.completeEmailCodeSignIn.error);
+    }
+    return null;
+}
+
+function setCachedRevenueCatCustomerInfo(
+    queryClient: QueryClient,
+    baseUrl: string,
+    accountId: string,
+    customerInfo: HostedCustomerInfo,
+): void {
+    queryClient.setQueryData(
+        hostedQueryKeys.revenueCat(baseUrl, accountId),
+        customerInfo,
+    );
+}
+
+function setCachedAuthProviderHint(
+    queryClient: QueryClient,
+    baseUrl: string,
+    provider: OAuthProvider | null,
+): void {
+    queryClient.setQueryData(
+        hostedQueryKeys.authProviderHint(baseUrl),
+        provider,
+    );
+}
+
+function clearHostedExperienceQueryCache(
+    queryClient: QueryClient,
+    baseUrl: string,
+): void {
+    queryClient.removeQueries({ queryKey: hostedQueryKeys.root(baseUrl) });
+    queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_SUMMARY] });
+    queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_RECENT] });
+    queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_LIVE] });
+    queryClient.setQueryData(hostedQueryKeys.session(baseUrl), null);
 }
 
 async function configureRevenueCatForSession(input: {
@@ -843,7 +1007,7 @@ async function configureRevenueCatForSession(input: {
 }
 
 async function syncAndroidPersonalCompartmentId(input: {
-    hostedClient: HostedClient;
+    apiClient: HostedApiClient;
     queryClient: QueryClient;
     sessionDeps: HostedSessionDependencies;
 }): Promise<PersonalCompartmentId | null> {
@@ -857,7 +1021,7 @@ async function syncAndroidPersonalCompartmentId(input: {
             input.queryClient,
             input.sessionDeps,
             (session) =>
-                input.hostedClient.setPersonalCompartmentId(
+                input.apiClient.setPersonalCompartmentId(
                     session.accessToken,
                     localPersonalCompartmentId,
                 ),
@@ -905,7 +1069,8 @@ async function pollConduitsDuringActivationWindow(input: {
     queryClient: ReturnType<typeof useQueryClient>;
     baseUrl: string;
     now: () => number;
-    hostedClient: HostedClient;
+    delay: (ms: number) => Promise<void>;
+    apiClient: HostedApiClient;
     sessionDeps: HostedSessionDependencies;
 }): Promise<boolean> {
     const startedAtMs = input.now();
@@ -917,27 +1082,31 @@ async function pollConduitsDuringActivationWindow(input: {
             input.queryClient,
             input.sessionDeps,
         );
-        // Invalidate before fetching so we always hit the network and
-        // never silently return the cached snapshot from the pre-poll
-        // fetch that may still have the old entitlement status.
+        // Mark stale before fetching so we never return the pre-poll snapshot,
+        // but do not refetch active observers here; fetchQuery below performs
+        // the single activation poll request.
         const queryKey = hostedQueryKeys.conduits(
             input.baseUrl,
             session.accountId,
         );
-        await input.queryClient.invalidateQueries({ queryKey });
+        await input.queryClient.invalidateQueries({
+            queryKey,
+            refetchType: "none",
+        });
         const snapshot = await input.queryClient.fetchQuery({
             queryKey,
+            staleTime: 0,
             retry: 1,
             queryFn: async () =>
                 fetchHostedConduitsSnapshot(input.queryClient, {
                     ...input.sessionDeps,
-                    hostedClient: input.hostedClient,
+                    hostedClient: input.apiClient,
                 }),
         });
         if (isActivationSnapshotConfirmed(input, snapshot)) {
             return true;
         }
-        await delay(intervalMs);
+        await input.delay(intervalMs);
     }
 
     return false;
@@ -964,7 +1133,7 @@ function isActivationSnapshotConfirmed(
     );
 }
 
-function delay(ms: number): Promise<void> {
+function defaultDelay(ms: number): Promise<void> {
     return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });

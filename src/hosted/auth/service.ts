@@ -18,9 +18,9 @@
  */
 import { z } from "zod";
 
-import { createHostedAppleAuthAdapter } from "@/src/hosted/auth/apple";
-import { createHostedGoogleAuthAdapter } from "@/src/hosted/auth/google";
+import { HOSTED_SIGN_IN_METHOD_UNAVAILABLE_MESSAGE } from "@/src/hosted/auth/messages";
 import {
+    HostedAuthAdapter,
     HostedAuthAdapterMap,
     HostedAuthAdapterResultSchema,
     HostedAuthService,
@@ -29,7 +29,7 @@ import {
 } from "@/src/hosted/auth/types";
 import { OAuthProvider } from "@/src/hosted/contracts";
 
-export interface HostedAuthServiceConfig {
+interface HostedAuthServiceConfig {
     adapters: HostedAuthAdapterMap;
 }
 
@@ -43,8 +43,7 @@ export function createHostedAuthService(
                 throw new HostedAuthServiceError({
                     code: "unavailable",
                     message: `No auth adapter configured for provider: ${provider}`,
-                    userMessage:
-                        "This sign-in method is not available right now.",
+                    userMessage: HOSTED_SIGN_IN_METHOD_UNAVAILABLE_MESSAGE,
                 });
             }
 
@@ -66,6 +65,20 @@ export function createHostedAuthService(
         async restoreSignIn(): Promise<HostedAuthSignInResult | null> {
             return null;
         },
+        async startEmailCodeSignIn(): Promise<void> {
+            throw new HostedAuthServiceError({
+                code: "unavailable",
+                message: "Email-code sign-in is not available",
+                userMessage: HOSTED_SIGN_IN_METHOD_UNAVAILABLE_MESSAGE,
+            });
+        },
+        async completeEmailCodeSignIn(): Promise<HostedAuthSignInResult> {
+            throw new HostedAuthServiceError({
+                code: "unavailable",
+                message: "Email-code sign-in is not available",
+                userMessage: HOSTED_SIGN_IN_METHOD_UNAVAILABLE_MESSAGE,
+            });
+        },
         async signOut(): Promise<void> {},
     };
 }
@@ -73,10 +86,24 @@ export function createHostedAuthService(
 export function createStubHostedAuthService(): HostedAuthService {
     return createHostedAuthService({
         adapters: {
-            google: createHostedGoogleAuthAdapter(),
-            apple: createHostedAppleAuthAdapter(),
+            google: createUnavailableAuthAdapter("Google"),
+            apple: createUnavailableAuthAdapter("Apple"),
         },
     });
+}
+
+function createUnavailableAuthAdapter(
+    providerLabel: "Google" | "Apple",
+): HostedAuthAdapter {
+    return {
+        async signIn() {
+            throw new HostedAuthServiceError({
+                code: "unavailable",
+                message: `${providerLabel} sign-in adapter is not implemented`,
+                userMessage: `${providerLabel} sign-in is not available yet in this build.`,
+            });
+        },
+    };
 }
 
 export function toHostedAuthServiceError(

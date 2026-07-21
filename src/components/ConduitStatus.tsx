@@ -72,31 +72,23 @@ export function ConduitStatus(props: ConduitStatusProps) {
     const summaryRows = [
         showLocal
             ? {
-                  label: t("LOCAL_CONDUIT_I18N.string", {
-                      defaultValue: "Local Conduit",
-                  }),
+                  label: t("LOCAL_CONDUIT_I18N.string"),
                   isLoading: localIsOnline && localMetricsPending,
                   value: localIsOnline
                       ? localPublicConnected
-                      : t("HOME_SUMMARY_OFFLINE_I18N.string", {
-                            defaultValue: "OFFLINE",
-                        }),
+                      : t("HOME_SUMMARY_OFFLINE_I18N.string"),
               }
             : null,
         showHosted
             ? {
-                  label: t("HOSTED_CONDUIT_FALLBACK_I18N.string", {
-                      defaultValue: "Hosted Conduit",
-                  }),
+                  label: t("HOSTED_CONDUIT_FALLBACK_I18N.string"),
                   isLoading: hostedMetricsPending,
                   value: hostedPublicConnected,
               }
             : null,
         showPersonalPairing
             ? {
-                  label: t("PERSONAL_PAIRING_TITLE_I18N.string", {
-                      defaultValue: "Personal Pairing",
-                  }),
+                  label: t("PERSONAL_PAIRING_TITLE_I18N.string"),
                   isLoading: personalPairingMetricsPending,
                   value: personalPairingConnected,
               }

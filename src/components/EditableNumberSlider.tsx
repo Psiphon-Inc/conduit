@@ -176,7 +176,7 @@ export function EditableNumberSlider({
                     onLayout={onSliderLayout}
                     style={[ss.flex, isRTL ? { transform: "scaleX(-1)" } : {}]}
                 >
-                    <Canvas style={[ss.flex]}>
+                    <Canvas style={ss.flex}>
                         <RoundedRect
                             x={circleR}
                             y={trackY}

@@ -18,7 +18,7 @@
 import { ConduitView } from "@/src/hosted/contracts";
 import { HostedStationPhase } from "@/src/hosted/experience/types";
 
-export interface HostedPersonalPairingState {
+interface HostedPersonalPairingState {
     hostedPersonalCompartmentId: string | null;
     ready: boolean;
     preparing: boolean;
@@ -65,7 +65,7 @@ export function resolveHostedPersonalPairingState(input: {
     };
 }
 
-export function selectHostedPersonalCompartmentId(
+function selectHostedPersonalCompartmentId(
     conduits: ConduitView[],
 ): string | null {
     const preferred = conduits.find(

@@ -1,0 +1,26 @@
+# Reusable subflow: optionally select a hosted plan, start purchase, and wait
+# for active hosted entitlement. Pass PLAN to force `plan-${PLAN}`; otherwise
+# the app's default selected plan is used. E2E builds use RevenueCat Test
+# Store (test_*) keys, which show a native confirmation dialog with
+# "Test valid purchase" / "Test failed purchase" / "Cancel" buttons (same
+# labels on Android and iOS).
+appId: ca.psiphon.conduit
+---
+- runFlow:
+      when:
+          true: ${PLAN != null && PLAN != ""}
+      commands:
+          - tapOn:
+                id: "plan-${PLAN}"
+- tapOn:
+      id: "hosted-purchase"
+- extendedWaitUntil:
+      visible:
+          text: "(?i)test valid purchase"
+      timeout: 30000
+- tapOn:
+      text: "(?i)test valid purchase"
+- extendedWaitUntil:
+      visible:
+          id: "hosted-active"
+      timeout: 180000

@@ -1,0 +1,29 @@
+# Maestro workspace config for the Conduit app.
+# Docs: https://docs.maestro.dev/
+#
+# Run the whole suite:        maestro test maestro
+# Run a single flow:          maestro test maestro/flows/smoke/launch-android.yaml
+# Run by tag:                 maestro test maestro --include-tags=smoke
+# Exclude destructive flows:  maestro test maestro --exclude-tags=destructive
+#
+# Flows need a dedicated E2E build (EXPO_PUBLIC_E2E=true) pointed at the dev
+# Conduit server. See maestro/README.md for build commands and required env.
+#
+# Secrets/inputs are injected at runtime with `-e KEY=value` and must NOT be
+# committed. The email-code sign-in is self-contained (no secret needed).
+
+appId: ca.psiphon.conduit
+
+# Order in which flows execute when running the whole directory.
+# Lifecycle/destructive flows run later; smoke first while state is well known.
+flows:
+    - flows/smoke/*
+    - flows/onboarding/*
+    - flows/local/*
+    - flows/hosted/*
+
+# Non-secret defaults available to every flow (override per-run with `-e`).
+env:
+    TEST_ALIAS_PREFIX: qa
+    TEST_EMAIL: ""
+    PLAN: ""

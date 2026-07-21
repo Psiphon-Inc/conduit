@@ -22,8 +22,8 @@ import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 import { formatBytes } from "@/src/common/formatters";
+import { TimeseriesDataPoint } from "@/src/common/timeseries";
 import {
-    TimeseriesDataPoint,
     TimeseriesPlot,
     TimeseriesSeries,
 } from "@/src/components/TimeseriesPlot";
@@ -145,27 +145,34 @@ export function HostedStatusPanel({
                 </Text>
             ) : null}
             <View
+                // Fixed height and natural (full) width so the chart area
+                // occupies its final size on the first frame; the plot itself
+                // renders once the width has been measured, avoiding a
+                // narrow-then-expand layout shift as the dashboard opens.
+                style={{ height: 235 }}
                 onLayout={(event) => {
                     setPlotWidth(event.nativeEvent.layout.width);
                 }}
             >
-                {isLoading ? (
+                {isLoading || plotWidth === 0 ? (
                     <View
                         style={{
-                            width: Math.max(260, plotWidth),
+                            width: "100%",
                             height: 235,
                             justifyContent: "center",
                             alignItems: "center",
                         }}
                     >
-                        <ActivityIndicator
-                            size="small"
-                            color={palette.midGrey}
-                        />
+                        {isLoading ? (
+                            <ActivityIndicator
+                                size="small"
+                                color={palette.midGrey}
+                            />
+                        ) : null}
                     </View>
                 ) : (
                     <TimeseriesPlot
-                        width={Math.max(260, plotWidth)}
+                        width={plotWidth}
                         height={235}
                         series={activeSeries}
                         plotNotice={chartNotice}

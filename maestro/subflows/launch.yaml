@@ -1,0 +1,10 @@
+# Reusable subflow: launch the app WITHOUT clearing state (keeps the existing
+# session/account) and grant runtime permissions so notification/camera screens
+# don't block on the OS permission dialog.
+appId: ca.psiphon.conduit
+---
+- launchApp:
+      permissions:
+          all: allow
+- waitForAnimationToEnd:
+      timeout: 5000

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import type { DashboardLiveRegionMetric } from "@/src/hosted/dashboard";
+import type { DashboardLiveRegionMetric } from "@/src/hosted/dashboard/transforms";
 
 export interface RegionalImpactRow {
     region: string;
@@ -109,18 +109,6 @@ export function toRegionalImpactIntensity(
     return (
         MIN_REGIONAL_ACTIVITY_INTENSITY +
         Math.max(0, Math.min(1, scaled)) * (1 - MIN_REGIONAL_ACTIVITY_INTENSITY)
-    );
-}
-
-export function toRegionalImpactOpacity(
-    bytesTransferred: number,
-    minPositiveBytesTransferred: number,
-    maxBytesTransferred: number,
-): number {
-    return toRegionalImpactIntensity(
-        bytesTransferred,
-        minPositiveBytesTransferred,
-        maxBytesTransferred,
     );
 }
 
@@ -270,14 +258,14 @@ const REGION_NAME_FALLBACK: Record<string, string> = {
  * Intl.DisplayNames, falling back to a static map and then the
  * uppercase code.
  */
-export function toRegionLabel(region: string): string {
+export function toRegionLabel(region: string, locale = "en"): string {
     const upper = region.trim().toUpperCase();
     if (upper.length !== 2) {
         return region;
     }
     try {
         if (typeof Intl !== "undefined" && "DisplayNames" in Intl) {
-            const displayNames = new Intl.DisplayNames(["en"], {
+            const displayNames = new Intl.DisplayNames([locale], {
                 type: "region",
             });
             const name = displayNames.of(upper);

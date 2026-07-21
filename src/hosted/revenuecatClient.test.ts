@@ -19,7 +19,6 @@
 import type {
     CustomerInfo,
     CustomerInfoUpdateListener,
-    PurchasesPackage,
 } from "react-native-purchases";
 
 import {
@@ -27,6 +26,11 @@ import {
     resolveRevenueCatApiKey,
     toRevenueCatAppUserId,
 } from "@/src/hosted/revenuecatClient";
+import type {
+    HostedCustomerInfo,
+    HostedCustomerInfoListener,
+    HostedRevenueCatPackage,
+} from "@/src/hosted/revenuecatTypes";
 
 describe("revenuecat client", () => {
     it("resolves platform api keys", () => {
@@ -42,12 +46,24 @@ describe("revenuecat client", () => {
                 "android",
             ),
         ).toBe("goog_abc");
+        expect(
+            resolveRevenueCatApiKey(
+                { ios: "appl_abc", android: "goog_abc", web: "web_abc" },
+                "web",
+            ),
+        ).toBe("web_abc");
         expect(() =>
             resolveRevenueCatApiKey(
                 { ios: "appl_abc", android: "goog_abc" },
                 "web",
             ),
-        ).toThrow("RevenueCat is not supported on platform: web");
+        ).toThrow("RevenueCat public key missing for web platform");
+        expect(() =>
+            resolveRevenueCatApiKey(
+                { ios: "appl_abc", android: "goog_abc" },
+                "windows",
+            ),
+        ).toThrow("RevenueCat is not supported on platform: windows");
         expect(() =>
             resolveRevenueCatApiKey({ android: "goog_abc" }, "ios"),
         ).toThrow("RevenueCat public key missing for ios platform");
@@ -59,17 +75,20 @@ describe("revenuecat client", () => {
     });
 
     it("configures sdk and proxies customer operations", async () => {
-        const customerInfo = makeCustomerInfo();
+        const nativeCustomerInfo = makeNativeCustomerInfo();
+        const customerInfo = makeHostedCustomerInfo();
         const sdk = {
             configure: jest.fn(),
-            logIn: jest.fn().mockResolvedValue({ customerInfo }),
-            getCustomerInfo: jest.fn().mockResolvedValue(customerInfo),
+            logIn: jest.fn().mockResolvedValue({
+                customerInfo: nativeCustomerInfo,
+            }),
+            getCustomerInfo: jest.fn().mockResolvedValue(nativeCustomerInfo),
             addCustomerInfoUpdateListener: jest.fn(),
             removeCustomerInfoUpdateListener: jest.fn().mockReturnValue(true),
             getOfferings: jest.fn().mockResolvedValue({ current: null }),
-            restorePurchases: jest.fn().mockResolvedValue(customerInfo),
+            restorePurchases: jest.fn().mockResolvedValue(nativeCustomerInfo),
             purchasePackage: jest.fn().mockResolvedValue({
-                customerInfo,
+                customerInfo: nativeCustomerInfo,
                 productIdentifier: "test.product.primary",
             }),
         };
@@ -87,31 +106,35 @@ describe("revenuecat client", () => {
         });
 
         const logInResult = await client.logIn("acc_789");
-        expect(logInResult).toBe(customerInfo);
+        expect(logInResult).toEqual(customerInfo);
         expect(sdk.logIn).toHaveBeenCalledWith("acc_789");
 
-        await expect(client.getCustomerInfo()).resolves.toBe(customerInfo);
+        await expect(client.getCustomerInfo()).resolves.toEqual(customerInfo);
         await expect(client.getOfferings()).resolves.toEqual({ current: null });
 
-        const listener = jest.fn() as CustomerInfoUpdateListener;
+        const listener =
+            jest.fn() as jest.MockedFunction<HostedCustomerInfoListener>;
         const unsubscribe = client.addCustomerInfoListener(listener);
-        expect(sdk.addCustomerInfoUpdateListener).toHaveBeenCalledWith(
-            listener,
-        );
+        expect(sdk.addCustomerInfoUpdateListener).toHaveBeenCalledTimes(1);
+        const nativeListener = sdk.addCustomerInfoUpdateListener.mock
+            .calls[0]?.[0] as CustomerInfoUpdateListener;
+        nativeListener(nativeCustomerInfo);
+        expect(listener).toHaveBeenCalledWith(customerInfo);
         unsubscribe();
         expect(sdk.removeCustomerInfoUpdateListener).toHaveBeenCalledWith(
-            listener,
+            nativeListener,
         );
 
         await expect(client.restorePurchases()).resolves.toEqual({
             customerInfo,
         });
         await expect(
-            client.purchasePackage({} as PurchasesPackage),
+            client.purchasePackage(makeHostedPackage()),
         ).resolves.toEqual({
             customerInfo,
             productIdentifier: "test.product.primary",
         });
+        expect(sdk.purchasePackage).toHaveBeenCalledWith("native-package");
     });
 
     it("rejects invalid configure and login inputs", async () => {
@@ -145,7 +168,7 @@ describe("revenuecat client", () => {
     });
 });
 
-function makeCustomerInfo(): CustomerInfo {
+function makeNativeCustomerInfo(): CustomerInfo {
     return {
         entitlements: { all: {}, active: {}, verification: "NOT_REQUESTED" },
         activeSubscriptions: [],
@@ -160,4 +183,25 @@ function makeCustomerInfo(): CustomerInfo {
         nonSubscriptionTransactions: [],
         subscriptionsByProductIdentifier: {},
     } as unknown as CustomerInfo;
+}
+
+function makeHostedCustomerInfo(): HostedCustomerInfo {
+    return {
+        entitlements: { all: {}, active: {} },
+        subscriptionsByProductIdentifier: {},
+        managementUrl: null,
+        originalAppUserId: "acc_123",
+    };
+}
+
+function makeHostedPackage(): HostedRevenueCatPackage {
+    return {
+        identifier: "primary",
+        product: {
+            identifier: "test.product.primary",
+            title: "Primary",
+            priceString: "$1.00",
+        },
+        target: "native-package",
+    };
 }

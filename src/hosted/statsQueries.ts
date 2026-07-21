@@ -25,9 +25,9 @@ import {
 } from "@tanstack/react-query";
 
 import {
-    HostedClientRequestError,
-    createHostedClient,
-} from "@/src/hosted/client";
+    HostedApiClientRequestError,
+    createHostedApiClient,
+} from "@/src/hosted/apiClient";
 import { RecentWindow, SummaryWindow } from "@/src/hosted/contracts";
 import {
     DashboardLiveData,
@@ -41,19 +41,18 @@ import {
     toDashboardLiveData,
     toDashboardRecentData,
     toDashboardSummaryData,
-} from "@/src/hosted/dashboard";
-import { HostedStatsDataSource, hostedQueryKeys } from "@/src/hosted/queryKeys";
+} from "@/src/hosted/dashboard/transforms";
+import { hostedQueryKeys } from "@/src/hosted/queryKeys";
 import {
     HostedSessionDependencies,
     useHostedSessionQuery,
     withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
 
-type HostedClient = ReturnType<typeof createHostedClient>;
+type HostedClient = ReturnType<typeof createHostedApiClient>;
 
-export interface HostedStatsDependencies extends HostedSessionDependencies {
+interface HostedStatsDependencies extends HostedSessionDependencies {
     hostedClient: HostedClient;
-    dataSource?: HostedStatsDataSource;
 }
 
 interface HostedStatsSessionData {
@@ -67,28 +66,20 @@ export function useHostedStatsSessionQuery(
 ): UseQueryResult<HostedStatsSessionData | null> {
     const queryClient = useQueryClient();
     const sessionQuery = useHostedSessionQuery(input);
-    const dataSource = input.dataSource ?? "api";
 
     return useQuery({
         queryKey: hostedQueryKeys.statsSession(
             input.baseUrl,
             sessionQuery.data?.accountId ?? null,
-            dataSource,
         ),
-        enabled:
-            dataSource === "mock"
-                ? enabled
-                : Boolean(
-                      enabled && input.baseUrl && sessionQuery.data?.accountId,
-                  ),
+        enabled: Boolean(
+            enabled && input.baseUrl && sessionQuery.data?.accountId,
+        ),
         staleTime: 20_000,
         retry: 1,
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
         queryFn: async () => {
-            if (dataSource === "mock") {
-                return null;
-            }
             try {
                 return await createHostedStatsSessionData(
                     queryClient,
@@ -97,7 +88,7 @@ export function useHostedStatsSessionQuery(
                 );
             } catch (error) {
                 if (
-                    error instanceof HostedClientRequestError &&
+                    error instanceof HostedApiClientRequestError &&
                     error.code === "stats.no_authorized_targets"
                 ) {
                     return null;
@@ -113,33 +104,20 @@ export function useHostedStatsSummaryQuery(
     sessionData: HostedStatsSessionData | null | undefined,
     window: SummaryWindow,
     enabled: boolean,
-    queryFnOverride?: () => Promise<DashboardSummaryData | null>,
 ): UseQueryResult<DashboardSummaryData | null> {
     const queryClient = useQueryClient();
-    const dataSource = input.dataSource ?? "api";
     return useQuery({
         queryKey: hostedQueryKeys.statsSummary(
-            dataSource,
             sessionData?.statsToken ?? null,
             sessionData?.proxyId ?? null,
             window,
         ),
-        enabled:
-            dataSource === "mock"
-                ? enabled
-                : Boolean(
-                      enabled && sessionData?.statsToken && sessionData.proxyId,
-                  ),
-        staleTime: 20_000,
-        placeholderData: keepPreviousData,
-        retry: 1,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: true,
+        enabled: Boolean(
+            enabled && sessionData?.statsToken && sessionData.proxyId,
+        ),
+        ...hostedStatsDataQueryOptions(20_000),
         queryFn: async () => {
-            if (queryFnOverride) {
-                return queryFnOverride();
-            }
-            if (dataSource === "mock" || !sessionData) {
+            if (!sessionData) {
                 return null;
             }
             const response = await fetchStatsWithRecovery(
@@ -164,34 +142,20 @@ export function useHostedStatsRecentQuery(
     window: RecentWindow,
     enabled: boolean,
     refetchInterval: number | false,
-    queryFnOverride?: () => Promise<DashboardRecentData | null>,
 ): UseQueryResult<DashboardRecentData | null> {
     const queryClient = useQueryClient();
-    const dataSource = input.dataSource ?? "api";
     return useQuery({
         queryKey: hostedQueryKeys.statsRecent(
-            dataSource,
             sessionData?.statsToken ?? null,
             sessionData?.proxyId ?? null,
             window,
         ),
-        enabled:
-            dataSource === "mock"
-                ? enabled
-                : Boolean(
-                      enabled && sessionData?.statsToken && sessionData.proxyId,
-                  ),
-        staleTime: 10_000,
-        placeholderData: keepPreviousData,
-        retry: 1,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: true,
-        refetchInterval,
+        enabled: Boolean(
+            enabled && sessionData?.statsToken && sessionData.proxyId,
+        ),
+        ...hostedStatsDataQueryOptions(10_000, refetchInterval),
         queryFn: async () => {
-            if (queryFnOverride) {
-                return queryFnOverride();
-            }
-            if (dataSource === "mock" || !sessionData) {
+            if (!sessionData) {
                 return null;
             }
             const response = await fetchStatsWithRecovery(
@@ -215,33 +179,19 @@ export function useHostedStatsLiveQuery(
     sessionData: HostedStatsSessionData | null | undefined,
     enabled: boolean,
     refetchInterval: number | false,
-    queryFnOverride?: () => Promise<DashboardLiveData | null>,
 ): UseQueryResult<DashboardLiveData | null> {
     const queryClient = useQueryClient();
-    const dataSource = input.dataSource ?? "api";
     return useQuery({
         queryKey: hostedQueryKeys.statsLive(
-            dataSource,
             sessionData?.statsToken ?? null,
             sessionData?.proxyId ?? null,
         ),
-        enabled:
-            dataSource === "mock"
-                ? enabled
-                : Boolean(
-                      enabled && sessionData?.statsToken && sessionData.proxyId,
-                  ),
-        staleTime: 10_000,
-        placeholderData: keepPreviousData,
-        retry: 1,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: true,
-        refetchInterval,
+        enabled: Boolean(
+            enabled && sessionData?.statsToken && sessionData.proxyId,
+        ),
+        ...hostedStatsDataQueryOptions(10_000, refetchInterval),
         queryFn: async () => {
-            if (queryFnOverride) {
-                return queryFnOverride();
-            }
-            if (dataSource === "mock" || !sessionData) {
+            if (!sessionData) {
                 return null;
             }
             const response = await fetchStatsWithRecovery(
@@ -306,6 +256,30 @@ export function useHostedHomeWidgetStats(
     };
 }
 
+function hostedStatsDataQueryOptions(
+    staleTime: number,
+    refetchInterval?: number | false,
+): {
+    staleTime: number;
+    placeholderData: typeof keepPreviousData;
+    retry: 1;
+    refetchOnWindowFocus: false;
+    refetchOnReconnect: true;
+    refetchInterval?: number | false;
+} {
+    const options = {
+        staleTime,
+        placeholderData: keepPreviousData,
+        retry: 1,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: true,
+    } as const;
+    if (refetchInterval === undefined) {
+        return options;
+    }
+    return { ...options, refetchInterval };
+}
+
 async function fetchStatsWithRecovery<T>(
     queryClient: QueryClient,
     input: HostedStatsDependencies,
@@ -316,22 +290,19 @@ async function fetchStatsWithRecovery<T>(
         return await request(sessionData);
     } catch (error) {
         if (
-            error instanceof HostedClientRequestError &&
-            error.status === 401 &&
-            input.dataSource !== "mock"
+            error instanceof HostedApiClientRequestError &&
+            error.status === 401
         ) {
             await queryClient.invalidateQueries({
                 queryKey: hostedQueryKeys.statsSession(
                     input.baseUrl,
                     sessionQueryAccountId(queryClient, input.baseUrl),
-                    input.dataSource,
                 ),
             });
             const refreshedSession = await queryClient.fetchQuery({
                 queryKey: hostedQueryKeys.statsSession(
                     input.baseUrl,
                     sessionQueryAccountId(queryClient, input.baseUrl),
-                    input.dataSource,
                 ),
                 staleTime: 0,
                 queryFn: async () =>

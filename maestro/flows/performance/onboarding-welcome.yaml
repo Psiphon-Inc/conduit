@@ -1,0 +1,11 @@
+# Performance setup: destructive fresh-state welcome screen.
+appId: ${APP_ID}
+---
+- clearState
+- launchApp:
+      permissions:
+          all: allow
+- extendedWaitUntil:
+      visible:
+          id: "onboarding-next"
+      timeout: 180000

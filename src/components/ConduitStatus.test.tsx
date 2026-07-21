@@ -27,14 +27,14 @@ import {
 
 jest.mock("react-i18next", () => ({
     useTranslation: () => ({
-        t: (
-            _key: string,
-            options?: { count?: number; defaultValue?: string },
-        ) =>
-            options?.defaultValue?.replace(
-                "{{count}}",
-                String(options.count),
-            ) ?? "",
+        t: (key: string, options?: Record<string, unknown>) => {
+            const catalog = require("@/src/i18n/locales/en/translation.json");
+            const entry = catalog[key.replace(/\.string$/, "")];
+            const template: string = entry?.string ?? key;
+            return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (match, name) =>
+                options && name in options ? String(options[name]) : match,
+            );
+        },
     }),
 }));
 

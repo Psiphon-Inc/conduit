@@ -1,0 +1,12 @@
+# Performance setup: destructive fresh-state hosted setup screen.
+appId: ${APP_ID}
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- tapOn:
+      id: "hosted-cta"
+- extendedWaitUntil:
+      visible:
+          id: "hosted-setup-ready"
+      timeout: 60000

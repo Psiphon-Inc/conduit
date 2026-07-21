@@ -28,7 +28,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
-import { formatUpdatedAt } from "@/src/common/formatters";
+import { formatUpdatedAtTime } from "@/src/common/formatters";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function StatsSyncStatusRow({
@@ -72,7 +72,9 @@ export function StatsSyncStatusRow({
             }}
         >
             <Text style={[ss.tinyFont, { color: palette.midGrey }]}>
-                {formatUpdatedAt(updatedAt)}
+                {t("UPDATED_AT_I18N.string", {
+                    time: formatUpdatedAtTime(updatedAt) ?? "--",
+                })}
             </Text>
             {isSyncing ? (
                 <Animated.Text

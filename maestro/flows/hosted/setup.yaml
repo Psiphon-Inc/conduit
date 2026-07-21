@@ -1,0 +1,23 @@
+# Flow: hosted/setup
+# Non-destructive smoke coverage for reaching the hosted setup/sign-in screen.
+appId: ca.psiphon.conduit
+tags:
+    - hosted
+    - smoke
+    - android
+    - ios
+---
+- runFlow: ../../subflows/reset-app.yaml
+- runFlow: ../../subflows/onboarding-complete.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- runFlow:
+      when:
+          visible:
+              id: "hosted-cta"
+      commands:
+          - tapOn:
+                id: "hosted-cta"
+- extendedWaitUntil:
+      visible:
+          id: "hosted-setup-ready"
+      timeout: 60000

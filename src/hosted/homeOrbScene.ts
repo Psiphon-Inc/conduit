@@ -25,12 +25,12 @@ export interface OrbHostedTrack {
     hostStatus?: HostedHostStatus;
 }
 
-export interface OrbHostedLaneMapping {
+interface OrbHostedLaneMapping {
     id: string;
     orbIndex: number;
 }
 
-export interface OrbHostedProvisioningMarker {
+interface OrbHostedProvisioningMarker {
     id: string;
     orbIndex: number;
 }

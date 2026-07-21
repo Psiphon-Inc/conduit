@@ -1,0 +1,56 @@
+# Reusable subflow: sign in with Clerk email-code test mode.
+# Uses TEST_EMAIL when provided; otherwise generates a unique +clerk_test
+# address per run unless the caller already set output.email. Clerk dev
+# instances accept OTP 424242 for these addresses.
+appId: ca.psiphon.conduit
+---
+- evalScript: ${output.email = output.email || TEST_EMAIL || TEST_ALIAS_PREFIX + Math.floor(Date.now() / 1000) + "+clerk_test@example.com"}
+- runFlow:
+      when:
+          platform: Android
+      commands:
+          - tapOn:
+                id: "e2e-email-input"
+- runFlow:
+      when:
+          platform: iOS
+      commands:
+          - tapOn:
+                text: "e2e-email-input"
+- inputText: ${output.email}
+- runFlow:
+      when:
+          platform: Android
+      commands:
+          - hideKeyboard
+- runFlow:
+      when:
+          platform: Android
+      commands:
+          - tapOn:
+                id: "e2e-code-input"
+- runFlow:
+      when:
+          platform: iOS
+      commands:
+          - tapOn:
+                text: "e2e-code-input"
+- inputText: "424242"
+- runFlow:
+      when:
+          platform: Android
+      commands:
+          - hideKeyboard
+- runFlow:
+      when:
+          platform: Android
+      commands:
+          - tapOn:
+                id: "e2e-signin-submit"
+- runFlow:
+      when:
+          platform: iOS
+      commands:
+          - tapOn:
+                text: "E2E sign in"
+- runFlow: wait-for-ready.yaml

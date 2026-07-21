@@ -2,7 +2,7 @@
     "expo": {
         "name": "conduit",
         "slug": "conduit",
-        "version": "2.1.4",
+        "version": "2.3.1",
         "orientation": "portrait",
         "scheme": "ca.psiphon.conduit",
         "userInterfaceStyle": "automatic",
@@ -10,16 +10,18 @@
         "ios": {
             "supportsTablet": true,
             "bundleIdentifier": "ca.psiphon.conduit",
-            "buildNumber": "32",
+            "buildNumber": "34",
             "deploymentTarget": "15.1",
             "icon": "./assets/images/conduit-launcher.png",
             "infoPlist": {
-                "LSApplicationQueriesSchemes": ["network.ryve.app"]
+                "LSApplicationQueriesSchemes": [
+                    "network.ryve.app"
+                ]
             }
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 82,
+            "versionCode": 90,
             "permissions": [
                 "android.permission.POST_NOTIFICATIONS",
                 "com.android.vending.BILLING"
@@ -29,6 +31,26 @@
                 "backgroundImage": "./assets/images/android-icon-background.png"
             },
             "edgeToEdgeEnabled": true
+        },
+        "web": {
+            "output": "single",
+            "bundler": "metro",
+            "favicon": "./assets/images/conduit-logo.png",
+            "name": "Psiphon Conduit",
+            "shortName": "Conduit",
+            "description": "Share access to the open internet with people who need it.",
+            "lang": "en",
+            "scope": "/",
+            "startUrl": "/",
+            "display": "standalone",
+            "orientation": "portrait",
+            "themeColor": "#4E3677",
+            "backgroundColor": "#FEFEFE",
+            "splash": {
+                "backgroundColor": "#FEFEFE",
+                "image": "./assets/images/conduit-launcher.png",
+                "resizeMode": "contain"
+            }
         },
         "extra": {
             "supportsRTL": true
@@ -40,6 +62,7 @@
                     "root": "./src/app"
                 }
             ],
+            "expo-audio",
             "expo-localization",
             "expo-font",
             "expo-secure-store",

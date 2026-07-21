@@ -1,0 +1,1 @@
+app_identifier(ENV.fetch("ANDROID_APP_ID", "ca.psiphon.conduit"))

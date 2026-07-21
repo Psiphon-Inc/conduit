@@ -1,0 +1,22 @@
+# Performance setup: preserve the existing signed-in hosted state and expand it.
+appId: ${APP_ID}
+---
+- launchApp:
+      permissions:
+          all: allow
+- extendedWaitUntil:
+      visible:
+          id: "app-ready"
+      timeout: 180000
+- tapOn:
+      id: "nav-dashboard"
+- extendedWaitUntil:
+      visible:
+          id: "dash-conduits-expand"
+      timeout: 60000
+- tapOn:
+      id: "dash-conduits-expand"
+- extendedWaitUntil:
+      visible:
+          id: "dash-station-hosted"
+      timeout: 60000

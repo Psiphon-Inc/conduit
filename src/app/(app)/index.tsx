@@ -22,8 +22,6 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import {
     ActivityIndicator,
-    AppState,
-    AppStateStatus,
     InteractionManager,
     Platform,
     View,
@@ -58,16 +56,11 @@ import {
 } from "@/src/components/orb-scene/orbUtils";
 import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
-import { createHostedClient } from "@/src/hosted/client";
 import {
     resolveHostedConduitBytes,
     resolveHostedConduitConnectedCount,
 } from "@/src/hosted/conduitDisplay";
 import { readHostedRuntimeConfig } from "@/src/hosted/config";
-import {
-    DashboardRecentAggregate,
-    DashboardSummaryAggregate,
-} from "@/src/hosted/dashboard";
 import {
     HostedCallToActionMode,
     resolveHostedCallToActionMode,
@@ -83,8 +76,8 @@ import {
     OrbHostedTrack,
     deriveHostedProvisioningMarkers,
 } from "@/src/hosted/homeOrbScene";
-import { createHostedSessionClient } from "@/src/hosted/sessionClient";
-import { useHostedHomeWidgetStats } from "@/src/hosted/statsQueries";
+import { useHostedHomeWidgetData } from "@/src/hosted/homeStats";
+import { supportsLocalConduitExperience } from "@/src/hosted/platform";
 import { useInproxyContext } from "@/src/inproxy/context";
 import {
     useInproxyActivityStatsReady,
@@ -96,6 +89,11 @@ import {
     useInproxyTotalBytesTransferred,
 } from "@/src/inproxy/hooks";
 import { getProxyId } from "@/src/inproxy/utils";
+
+const COMPACT_WEB_WIDTH = 430;
+const COMPACT_WEB_TOP_PADDING = 14;
+const COMPACT_WEB_BOTTOM_NAV_RESERVE = 84;
+const COMPACT_WEB_ACTIONS_BOTTOM_OFFSET = 8;
 
 export default function HomeScreen() {
     const router = useRouter();
@@ -121,7 +119,7 @@ export default function HomeScreen() {
         useInproxyCurrentPersonalConnectedClients();
     const { data: localTotalBytesTransferred } =
         useInproxyTotalBytesTransferred();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { openModal, closeModal, isOpen: bgBlur } = useModal();
     const { openPersonalPairingModal } = useConduitActions();
     const [orbHint, setOrbHint] = React.useState<string | null>(null);
@@ -135,14 +133,21 @@ export default function HomeScreen() {
         typeof setTimeout
     > | null>(null);
 
-    const totalUsableHeight = win.height - (insets.top + insets.bottom);
+    const compactWeb = Platform.OS === "web" && win.width <= COMPACT_WEB_WIDTH;
+    const compactWebReservedHeight = compactWeb
+        ? COMPACT_WEB_TOP_PADDING + COMPACT_WEB_BOTTOM_NAV_RESERVE
+        : 0;
+    const totalUsableHeight = Math.max(
+        0,
+        win.height - (insets.top + insets.bottom) - compactWebReservedHeight,
+    );
     const totalUsableWidth = Math.min(
         win.width - (insets.left + insets.right),
         APP_MAX_CONTENT_WIDTH,
     );
-    const logoHeight = totalUsableHeight * 0.06;
-    const orbSceneHeight = totalUsableHeight * 0.45;
-    const actionsAreaHeight = totalUsableHeight * 0.2;
+    const logoHeight = totalUsableHeight * (compactWeb ? 0.055 : 0.06);
+    const orbSceneHeight = totalUsableHeight * (compactWeb ? 0.42 : 0.45);
+    const actionsAreaHeight = totalUsableHeight * (compactWeb ? 0.22 : 0.2);
 
     React.useEffect(() => {
         if (!isFocused) {
@@ -215,7 +220,7 @@ export default function HomeScreen() {
                   : null;
     const showHostedProvisioningAction = hostedProvisioningReason != null;
 
-    const showLocalExperience = Platform.OS !== "ios";
+    const showLocalExperience = supportsLocalConduitExperience();
     const isIosNoSubscriptionState =
         Platform.OS === "ios" && !entitlementAllowed;
     const shouldLoadHostedStats =
@@ -704,11 +709,7 @@ export default function HomeScreen() {
         }
 
         if (hostedCallToActionMode === "preparing") {
-            showOrbHint(
-                t("PREPARING_PERSONAL_PAIRING_I18N.string", {
-                    defaultValue: "Preparing personal pairing...",
-                }),
-            );
+            showOrbHint(t("PREPARING_PERSONAL_PAIRING_I18N.string"));
             return;
         }
 
@@ -733,9 +734,7 @@ export default function HomeScreen() {
         }
 
         if (!isPersonalPairingReady) {
-            showOrbHint(
-                t("PREPARING_I18N.string", { defaultValue: "Preparing..." }),
-            );
+            showOrbHint(t("PREPARING_I18N.string"));
             return;
         }
 
@@ -771,9 +770,7 @@ export default function HomeScreen() {
         }
 
         if (!isPersonalPairingReady) {
-            showOrbHint(
-                t("PREPARING_I18N.string", { defaultValue: "Preparing..." }),
-            );
+            showOrbHint(t("PREPARING_I18N.string"));
             return;
         }
 
@@ -816,10 +813,6 @@ export default function HomeScreen() {
                 connectedCount={connectedCount}
                 bytesTransferred={bytesTransferred}
                 onClose={dismissHostedModal}
-                onViewDashboard={() => {
-                    dismissHostedModal();
-                    router.push("/(app)/hosted-dashboard");
-                }}
                 onSetAsMain={
                     isAlreadyMain
                         ? undefined
@@ -842,6 +835,7 @@ export default function HomeScreen() {
                         width: "100%",
                         maxWidth: APP_MAX_CONTENT_WIDTH,
                         alignSelf: "center",
+                        paddingTop: compactWeb ? COMPACT_WEB_TOP_PADDING : 0,
                     }}
                 >
                     <LogoWordmark
@@ -875,6 +869,13 @@ export default function HomeScreen() {
                         </View>
                     ) : (
                         <>
+                            {hasActiveHostedConduit ? (
+                                <View
+                                    testID="hosted-active"
+                                    style={{ width: 1, height: 1 }}
+                                    pointerEvents="none"
+                                />
+                            ) : null}
                             <OrbScene
                                 width={totalUsableWidth}
                                 height={orbSceneHeight}
@@ -907,6 +908,7 @@ export default function HomeScreen() {
                                               "HOSTED_CONDUIT_SCENE_ACCESSIBILITY_I18N.string",
                                           )
                                 }
+                                testID="orb-primary"
                                 orbSlotMap={orbSlotMap}
                             />
 
@@ -963,6 +965,7 @@ export default function HomeScreen() {
                         }
                         renewExpiresAt={formatExpiresAt(
                             state.conduitsSnapshot?.entitlement?.expires_at,
+                            i18n.language,
                         )}
                         onRenew={() =>
                             router.push({
@@ -972,56 +975,13 @@ export default function HomeScreen() {
                         }
                         onSharePersonalPairing={openPairingModal}
                         onHostedCallToActionPress={handleHostedPrimaryAction}
+                        bottomOffset={
+                            compactWeb ? COMPACT_WEB_ACTIONS_BOTTOM_OFFSET : 0
+                        }
+                        compact={compactWeb}
                     />
                 </View>
             </SafeAreaView>
         </GestureHandlerRootView>
     );
-}
-
-function useHostedHomeWidgetData(enabled: boolean): {
-    summary: DashboardSummaryAggregate | null;
-    recent: DashboardRecentAggregate | null;
-    isLoading: boolean;
-    updatedAt: string | null;
-    isSyncing: boolean;
-} {
-    const config = React.useMemo(readHostedRuntimeConfig, []);
-    const sessionClient = React.useMemo(
-        () => createHostedSessionClient({ baseUrl: config.baseUrl }),
-        [config.baseUrl],
-    );
-    const hostedClient = React.useMemo(
-        () => createHostedClient({ baseUrl: config.baseUrl }),
-        [config.baseUrl],
-    );
-    const [appState, setAppState] = React.useState<AppStateStatus>(
-        AppState.currentState,
-    );
-
-    React.useEffect(() => {
-        const subscription = AppState.addEventListener("change", setAppState);
-        return () => {
-            subscription.remove();
-        };
-    }, []);
-
-    const homeStatsQuery = useHostedHomeWidgetStats(
-        {
-            baseUrl: config.baseUrl,
-            now: () => Date.now(),
-            sessionClient,
-            hostedClient,
-        },
-        enabled,
-        appState === "active" ? 10_000 : false,
-    );
-
-    return {
-        summary: homeStatsQuery.summary,
-        recent: homeStatsQuery.recent,
-        isLoading: homeStatsQuery.isLoading,
-        updatedAt: homeStatsQuery.updatedAt,
-        isSyncing: appState === "active" && homeStatsQuery.isSyncing,
-    };
 }

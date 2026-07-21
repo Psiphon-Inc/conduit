@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+import { recordClientEventErrorOnce } from "@/src/telemetry/clientEvents";
 
 /**
  * Converts an unknown error value to a string. Returns error.message
@@ -23,6 +24,11 @@
  */
 export function toErrorString(error: unknown): string {
     if (error instanceof Error) {
+        if (error.message === "Failed to fetch") {
+            recordClientEventErrorOnce("ui.visible_error", error, {
+                message: error.message,
+            });
+        }
         return error.message;
     }
     return "Unknown error";

@@ -17,13 +17,15 @@
  *
  */
 import type { ConduitView } from "@/src/hosted/contracts";
-import type { DashboardSummaryAggregate } from "@/src/hosted/dashboard";
+import type { DashboardSummaryAggregate } from "@/src/hosted/dashboard/transforms";
+
+type ScopeTranslator = (key: string) => string;
 
 /**
  * Returns a numeric rank for a conduit traffic scope, used for display
  * sorting: personal (0) > public (1) > other (2).
  */
-export function conduitScopeRank(scope: ConduitView["traffic_scope"]): number {
+function conduitScopeRank(scope: ConduitView["traffic_scope"]): number {
     if (scope === "personal") {
         return 0;
     }
@@ -52,14 +54,9 @@ export function orderedConduitsForDisplay(
  */
 export function formatConduitScope(
     scope: ConduitView["traffic_scope"],
+    t: ScopeTranslator,
 ): string {
-    if (scope === "personal") {
-        return "Personal conduit";
-    }
-    if (scope === "public") {
-        return "Public conduit";
-    }
-    return "Hosted conduit";
+    return getScopeLabel(scope, t) ?? t("HOSTED_CONDUIT_FALLBACK_I18N.string");
 }
 
 /**
@@ -82,12 +79,22 @@ export function getScopeIcon(
  */
 export function getScopeLabel(
     scope: ConduitView["traffic_scope"],
+    t: ScopeTranslator,
+    hostedPrefix = false,
 ): string | null {
     if (scope === "personal") {
-        return "Personal";
+        return t(
+            hostedPrefix
+                ? "HOSTED_PERSONAL_SCOPE_I18N.string"
+                : "SCOPE_PERSONAL_I18N.string",
+        );
     }
     if (scope === "public") {
-        return "Public";
+        return t(
+            hostedPrefix
+                ? "HOSTED_PUBLIC_SCOPE_I18N.string"
+                : "SCOPE_COMMON_I18N.string",
+        );
     }
     return null;
 }

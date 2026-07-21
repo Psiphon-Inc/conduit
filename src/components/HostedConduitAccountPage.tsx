@@ -22,17 +22,29 @@ import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    Platform,
+    Pressable,
+    Text,
+    View,
+} from "react-native";
 
 import { toErrorString } from "@/src/common/errors";
 import { readOptionalStringField } from "@/src/common/recordUtils";
 import { Icon } from "@/src/components/Icon";
-import { resolveManageBillingUrl } from "@/src/hosted/billingUtils";
+import { createHostedApiClient } from "@/src/hosted/apiClient";
+import {
+    resolveHttpsUrl,
+    resolveManageBillingUrl,
+} from "@/src/hosted/billingUtils";
 import { readHostedRuntimeConfig } from "@/src/hosted/config";
 import {
     useHostedExperienceActions,
     useHostedExperienceState,
 } from "@/src/hosted/experience/hooks";
+import { useRevenueCatContext } from "@/src/hosted/revenuecatContext";
+import { HostedCustomerInfo } from "@/src/hosted/revenuecatTypes";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
 const ACCOUNT_HORIZONTAL_PADDING = 32;
@@ -51,18 +63,27 @@ const SUBSCRIPTION_RENEWS_ICON = require("@/assets/images/icons/subscription-ren
 const SUBSCRIPTION_EXPIRED_ICON = require("@/assets/images/icons/subscription-expired.svg");
 const SIGN_OUT_ICON = require("@/assets/images/icons/sign-out.svg");
 const DELETE_ACCOUNT_ICON = require("@/assets/images/icons/delete-account.svg");
+const WEB_SUBSCRIPTION_DELETE_CLEANUP_MESSAGE =
+    "Cancel your web subscription before deleting your account. After cancellation is reflected here, retry delete account.";
 
 export function HostedConduitAccountPage() {
     const { t } = useTranslation();
     const router = useRouter();
     const state = useHostedExperienceState();
     const actions = useHostedExperienceActions();
+    const revenueCat = useRevenueCatContext();
     const hostedConfig = React.useMemo(readHostedRuntimeConfig, []);
+    const hostedClient = React.useMemo(
+        () => createHostedApiClient({ baseUrl: hostedConfig.baseUrl }),
+        [hostedConfig.baseUrl],
+    );
 
     const [subscriptionExpanded, setSubscriptionExpanded] =
         React.useState(false);
     const [actionError, setActionError] = React.useState<string | null>(null);
     const [actionNotice, setActionNotice] = React.useState<string | null>(null);
+    const [subscriptionRefreshSuggested, setSubscriptionRefreshSuggested] =
+        React.useState(false);
     const [confirmDelete, setConfirmDelete] = React.useState(false);
 
     const entitlementSnapshot =
@@ -70,8 +91,17 @@ export function HostedConduitAccountPage() {
         null;
     const manageBillingUrl = React.useMemo(
         () =>
-            resolveManageBillingUrl(hostedConfig.baseUrl, entitlementSnapshot),
-        [entitlementSnapshot, hostedConfig.baseUrl],
+            resolveManageBillingUrl(
+                hostedConfig.baseUrl,
+                entitlementSnapshot,
+            ) ??
+            resolveHttpsUrl(revenueCat.customerInfo?.managementUrl) ??
+            null,
+        [
+            entitlementSnapshot,
+            hostedConfig.baseUrl,
+            revenueCat.customerInfo?.managementUrl,
+        ],
     );
     const subscriptionStatus =
         readOptionalStringField(entitlementSnapshot, "status") ??
@@ -84,6 +114,23 @@ export function HostedConduitAccountPage() {
         entitlementSnapshot,
         "product_id",
     );
+    const effectiveStatus = subscriptionStatus;
+    const revenueCatHasRenewingEntitlement = hasRenewingRevenueCatEntitlement(
+        revenueCat.customerInfo,
+    );
+    const webSubscriptionRequiresCleanup =
+        Platform.OS === "web" &&
+        (effectiveStatus === "active" ||
+            effectiveStatus === "grace" ||
+            revenueCatHasRenewingEntitlement);
+
+    const openBillingPortal = React.useCallback(async () => {
+        const session = await actions.refreshSessionIfNeeded();
+        const response = await hostedClient.createBillingPortalSession(
+            session.accessToken,
+        );
+        await Linking.openURL(response.url);
+    }, [actions, hostedClient]);
 
     const signOutMutation = useMutation({
         mutationFn: async () => {
@@ -92,6 +139,7 @@ export function HostedConduitAccountPage() {
         onMutate: () => {
             setActionError(null);
             setActionNotice(null);
+            setSubscriptionRefreshSuggested(false);
             setConfirmDelete(false);
         },
         onError: (error) => {
@@ -101,14 +149,32 @@ export function HostedConduitAccountPage() {
 
     const renewMutation = useMutation({
         mutationFn: async () => {
+            if (
+                Platform.OS === "web" &&
+                effectiveStatus === "canceled_not_expired"
+            ) {
+                await openBillingPortal();
+                return true;
+            }
+
             router.push({
                 pathname: "/(app)/hosted-setup",
                 params: { intent: "renew" },
             });
+            return false;
         },
         onMutate: () => {
             setActionError(null);
             setActionNotice(null);
+            setSubscriptionRefreshSuggested(false);
+        },
+        onSuccess: (openedBillingPortal) => {
+            if (!openedBillingPortal) {
+                return;
+            }
+
+            setSubscriptionRefreshSuggested(true);
+            setActionNotice(t("RENEW_SUBSCRIPTION_PORTAL_OPENED_I18N.string"));
         },
         onError: (error) => {
             setActionError(toErrorString(error));
@@ -122,13 +188,47 @@ export function HostedConduitAccountPage() {
         onMutate: () => {
             setActionError(null);
             setActionNotice(null);
+            setSubscriptionRefreshSuggested(false);
         },
         onSuccess: () => {
-            setActionNotice(
-                t("PURCHASES_RESTORED_I18N.string", {
-                    defaultValue: "Purchases restored.",
-                }),
-            );
+            setActionNotice(t("PURCHASES_RESTORED_I18N.string"));
+        },
+        onError: (error) => {
+            setActionError(toErrorString(error));
+        },
+    });
+
+    const cancelSubscriptionMutation = useMutation({
+        mutationFn: async () => {
+            await openBillingPortal();
+        },
+        onMutate: () => {
+            setActionError(null);
+            setActionNotice(null);
+            setConfirmDelete(false);
+            setSubscriptionRefreshSuggested(false);
+        },
+        onSuccess: () => {
+            setSubscriptionRefreshSuggested(true);
+            setActionNotice(t("CANCEL_SUBSCRIPTION_PORTAL_OPENED_I18N.string"));
+        },
+        onError: (error) => {
+            setActionError(toErrorString(error));
+        },
+    });
+
+    const refreshSubscriptionMutation = useMutation({
+        mutationFn: async () => {
+            await revenueCat.refreshCustomerInfo();
+            await actions.pollConduitsOnce();
+        },
+        onMutate: () => {
+            setActionError(null);
+            setActionNotice(null);
+        },
+        onSuccess: () => {
+            setSubscriptionRefreshSuggested(false);
+            setActionNotice(t("SUBSCRIPTION_STATUS_REFRESHED_I18N.string"));
         },
         onError: (error) => {
             setActionError(toErrorString(error));
@@ -137,27 +237,27 @@ export function HostedConduitAccountPage() {
 
     const deleteAccountMutation = useMutation({
         mutationFn: async () => {
+            if (await shouldBlockWebAccountDeletion()) {
+                await openBillingPortal();
+                throw new Error(WEB_SUBSCRIPTION_DELETE_CLEANUP_MESSAGE);
+            }
             await actions.deleteAccount();
         },
         onMutate: () => {
             setActionError(null);
             setActionNotice(null);
+            setSubscriptionRefreshSuggested(false);
         },
         onSuccess: () => {
             setConfirmDelete(false);
             setSubscriptionExpanded(false);
-            setActionNotice(
-                t("ACCOUNT_DELETED_I18N.string", {
-                    defaultValue: "Account deleted.",
-                }),
-            );
+            setActionNotice(t("ACCOUNT_DELETED_I18N.string"));
         },
         onError: (error) => {
             setActionError(toErrorString(error));
         },
     });
 
-    const effectiveStatus = subscriptionStatus;
     const isSignedOut = state.authPhase === "signed_out";
     const showRenew = effectiveStatus === "canceled_not_expired";
     const isEntitlementLinked =
@@ -169,6 +269,8 @@ export function HostedConduitAccountPage() {
         signOutMutation.isPending ||
         renewMutation.isPending ||
         restorePurchasesMutation.isPending ||
+        cancelSubscriptionMutation.isPending ||
+        refreshSubscriptionMutation.isPending ||
         deleteAccountMutation.isPending;
     const subscriptionPresentation = resolveSubscriptionPresentation({
         status: effectiveStatus,
@@ -183,6 +285,28 @@ export function HostedConduitAccountPage() {
             return;
         }
         router.replace("/(app)/settings");
+    }
+
+    function onConfirmDeletePress() {
+        if (!webSubscriptionRequiresCleanup) {
+            deleteAccountMutation.mutate();
+            return;
+        }
+
+        cancelSubscriptionMutation.mutate();
+    }
+
+    async function shouldBlockWebAccountDeletion(): Promise<boolean> {
+        if (Platform.OS !== "web") {
+            return false;
+        }
+
+        const customerInfo = await revenueCat.refreshCustomerInfo();
+        return (
+            effectiveStatus === "active" ||
+            effectiveStatus === "grace" ||
+            hasRenewingRevenueCatEntitlement(customerInfo)
+        );
     }
 
     return (
@@ -203,13 +327,16 @@ export function HostedConduitAccountPage() {
                     marginLeft: -12,
                 }}
             >
-                <View style={{ transform: [{ rotate: "180deg" }] }}>
-                    <Icon
-                        name="chevron-right"
-                        color={palette.purple}
-                        size={20}
-                    />
-                </View>
+                <View
+                    style={{
+                        width: 14,
+                        height: 14,
+                        borderLeftWidth: 2,
+                        borderBottomWidth: 2,
+                        borderColor: palette.purple,
+                        transform: [{ rotate: "45deg" }],
+                    }}
+                />
             </Pressable>
 
             <Text
@@ -277,8 +404,39 @@ export function HostedConduitAccountPage() {
                                         variant="primary"
                                     />
                                 ) : null}
+                                {webSubscriptionRequiresCleanup ? (
+                                    <AccountPanelButton
+                                        label={t(
+                                            "CANCEL_SUBSCRIPTION_I18N.string",
+                                        )}
+                                        onPress={() =>
+                                            cancelSubscriptionMutation.mutate()
+                                        }
+                                        disabled={actionPending}
+                                        pending={
+                                            cancelSubscriptionMutation.isPending
+                                        }
+                                        variant="danger"
+                                    />
+                                ) : null}
+                                {subscriptionRefreshSuggested ? (
+                                    <AccountPanelButton
+                                        label={t(
+                                            "REFRESH_SUBSCRIPTION_STATUS_I18N.string",
+                                        )}
+                                        onPress={() =>
+                                            refreshSubscriptionMutation.mutate()
+                                        }
+                                        disabled={actionPending}
+                                        pending={
+                                            refreshSubscriptionMutation.isPending
+                                        }
+                                        variant="secondary"
+                                    />
+                                ) : null}
                                 {manageBillingUrl ? (
                                     <AccountPanelButton
+                                        testID="account-manage"
                                         label={t(
                                             "HOSTED_MANAGE_OPEN_BILLING_I18N.string",
                                         )}
@@ -297,12 +455,9 @@ export function HostedConduitAccountPage() {
                                 ) : null}
                                 {showRestorePurchases ? (
                                     <AccountPanelButton
+                                        testID="account-restore"
                                         label={t(
                                             "RESTORE_PURCHASES_I18N.string",
-                                            {
-                                                defaultValue:
-                                                    "Restore Purchases",
-                                            },
                                         )}
                                         onPress={() =>
                                             restorePurchasesMutation.mutate()
@@ -325,19 +480,19 @@ export function HostedConduitAccountPage() {
                             onPress={() => signOutMutation.mutate()}
                             disabled={actionPending}
                             pending={signOutMutation.isPending}
+                            testID="account-signout"
                         />
 
                         <Divider />
 
                         <AccountActionRow
                             iconSource={DELETE_ACCOUNT_ICON}
-                            label={t("DELETE_ACCOUNT_I18N.string", {
-                                defaultValue: "Delete account",
-                            })}
+                            label={t("DELETE_ACCOUNT_I18N.string")}
                             onPress={() => setConfirmDelete(true)}
                             disabled={actionPending}
                             danger={true}
                             showChevron={false}
+                            testID="account-delete"
                         />
 
                         {confirmDelete ? (
@@ -363,18 +518,39 @@ export function HostedConduitAccountPage() {
                                         "DELETE_ACCOUNT_CONFIRMATION_I18N.string",
                                     )}
                                 </Text>
+                                {webSubscriptionRequiresCleanup ? (
+                                    <Text
+                                        style={[
+                                            ss.tinyFont,
+                                            {
+                                                color: ACCOUNT_DANGER_RED,
+                                                lineHeight: 20,
+                                            },
+                                        ]}
+                                    >
+                                        Cancel your web subscription before
+                                        deleting your account so billing does
+                                        not continue after account deletion.
+                                    </Text>
+                                ) : null}
                                 <AccountPanelButton
-                                    label={t(
-                                        "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N.string",
-                                        {
-                                            defaultValue: "Delete account",
-                                        },
-                                    )}
-                                    onPress={() =>
-                                        deleteAccountMutation.mutate()
+                                    testID="account-delete-confirm"
+                                    label={
+                                        webSubscriptionRequiresCleanup
+                                            ? t(
+                                                  "CANCEL_SUBSCRIPTION_I18N.string",
+                                              )
+                                            : t(
+                                                  "DELETE_ACCOUNT_CONFIRM_BUTTON_I18N.string",
+                                              )
                                     }
+                                    onPress={onConfirmDeletePress}
                                     disabled={actionPending}
-                                    pending={deleteAccountMutation.isPending}
+                                    pending={
+                                        webSubscriptionRequiresCleanup
+                                            ? cancelSubscriptionMutation.isPending
+                                            : deleteAccountMutation.isPending
+                                    }
                                     variant="danger"
                                 />
                                 <AccountPanelButton
@@ -500,6 +676,7 @@ function AccountActionRow({
     pending = false,
     danger = false,
     showChevron = true,
+    testID,
 }: {
     iconSource: ExpoImageSource;
     label: string;
@@ -508,11 +685,13 @@ function AccountActionRow({
     pending?: boolean;
     danger?: boolean;
     showChevron?: boolean;
+    testID?: string;
 }) {
     const color = danger ? ACCOUNT_DANGER_RED : palette.black;
 
     return (
         <Pressable
+            testID={testID}
             onPress={onPress}
             disabled={disabled}
             style={{
@@ -612,12 +791,14 @@ function AccountPanelButton({
     disabled = false,
     pending = false,
     variant = "secondary",
+    testID,
 }: {
     label: string;
     onPress: () => void;
     disabled?: boolean;
     pending?: boolean;
     variant?: AccountActionVariant;
+    testID?: string;
 }) {
     const isDanger = variant === "danger";
     const isPrimary = variant === "primary";
@@ -637,6 +818,7 @@ function AccountPanelButton({
 
     return (
         <Pressable
+            testID={testID}
             onPress={onPress}
             disabled={disabled}
             style={{
@@ -676,6 +858,14 @@ function Divider() {
                 backgroundColor: "rgba(0, 0, 0, 0.08)",
             }}
         />
+    );
+}
+
+function hasRenewingRevenueCatEntitlement(
+    customerInfo: HostedCustomerInfo | null,
+): boolean {
+    return Object.values(customerInfo?.entitlements.active ?? {}).some(
+        (entitlement) => entitlement.isActive && entitlement.willRenew,
     );
 }
 

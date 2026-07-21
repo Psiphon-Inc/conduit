@@ -1,0 +1,19 @@
+# Flow: hosted/restore
+appId: ca.psiphon.conduit
+tags:
+    - hosted
+    - requires-hosted-state
+    - android
+    - ios
+---
+- runFlow: ../../subflows/launch.yaml
+- runFlow: ../../subflows/wait-for-ready.yaml
+- tapOn:
+      id: "hosted-cta"
+- runFlow:
+      when:
+          visible:
+              id: "hosted-restore"
+      commands:
+          - tapOn:
+                id: "hosted-restore"

@@ -18,7 +18,7 @@
  */
 import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
 import React from "react";
-import { View, useWindowDimensions } from "react-native";
+import { Platform, View, useWindowDimensions } from "react-native";
 
 import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
@@ -45,7 +45,9 @@ export default function SettingsScreen() {
                     />
                 </Rect>
             </Canvas>
-            <SafeAreaView includeBottomInset={false}>
+            {/* Web keeps the bottom inset (matching the former
+                settings.web.tsx); native excludes it. */}
+            <SafeAreaView includeBottomInset={Platform.OS === "web"}>
                 <View
                     style={{
                         flex: 1,

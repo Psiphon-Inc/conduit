@@ -27,8 +27,9 @@ import {
     useSVG,
 } from "@shopify/react-native-skia";
 import type { DataSourceParam } from "@shopify/react-native-skia";
+import { Image as ExpoImage } from "expo-image";
 import React from "react";
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { SharedValue } from "react-native-reanimated";
 
 import { FaderGroup } from "@/src/components/canvas/FaderGroup";
@@ -119,6 +120,11 @@ const ICONS: Record<IconName, IconAsset> = {
         viewWidth: 58,
         viewHeight: 58,
     },
+    speaker: {
+        source: require("@/assets/images/icons/speaker.svg"),
+        viewWidth: 24,
+        viewHeight: 24,
+    },
 };
 
 type IconName =
@@ -136,7 +142,8 @@ type IconName =
     | "analytics"
     | "notepad"
     | "shield"
-    | "right-arrow";
+    | "right-arrow"
+    | "speaker";
 
 export function Icon({
     name,
@@ -152,6 +159,64 @@ export function Icon({
     label?: string | undefined;
 }) {
     const { source, viewWidth, viewHeight } = ICONS[name];
+    const useWebImage = Platform.OS === "web" && opacity === undefined;
+    const content = useWebImage ? (
+        <ExpoImage
+            source={
+                source as unknown as React.ComponentProps<
+                    typeof ExpoImage
+                >["source"]
+            }
+            tintColor={color}
+            style={{ width: size, height: size }}
+            contentFit="contain"
+        />
+    ) : (
+        <SkiaIcon
+            source={source}
+            viewWidth={viewWidth}
+            viewHeight={viewHeight}
+            size={size}
+            color={color}
+            opacity={opacity}
+        />
+    );
+
+    return (
+        <View
+            style={{
+                justifyContent: "flex-start",
+                alignItems: "center",
+                width: label ? size * 2 : size,
+                height: label ? size * 2 : size,
+            }}
+        >
+            <View style={{ width: size, height: size }}>{content}</View>
+            {label && (
+                <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit={true}
+                    style={[ss.bodyFont, ss.blackText, { fontSize: 14 }]}
+                >
+                    {label}
+                </Text>
+            )}
+        </View>
+    );
+}
+
+function SkiaIcon({
+    source,
+    viewWidth,
+    viewHeight,
+    size,
+    color,
+    opacity,
+}: IconAsset & {
+    size: number;
+    color: string;
+    opacity: SharedValue<number> | undefined;
+}) {
     const iconSvg = useSVG(source);
     const paintColor = React.useMemo(() => Skia.Paint(), []);
     paintColor.setColorFilter(
@@ -170,41 +235,18 @@ export function Icon({
     const dst = rect(0, 0, size, size);
 
     return (
-        <View
-            style={{
-                justifyContent: "flex-start",
-                alignItems: "center",
-                width: label ? size * 2 : size,
-                height: label ? size * 2 : size,
-            }}
-        >
-            <View style={{ width: size, height: size }}>
-                <Canvas style={{ flex: 1 }}>
-                    <Group
-                        layer={paintColor}
-                        transform={fitbox("contain", src, dst)}
-                    >
-                        {opacity === undefined ? (
-                            <Group>
-                                <ImageSVG svg={iconSvg} />
-                            </Group>
-                        ) : (
-                            <FaderGroup opacity={opacity}>
-                                <ImageSVG svg={iconSvg} />
-                            </FaderGroup>
-                        )}
+        <Canvas style={{ width: size, height: size }}>
+            <Group layer={paintColor} transform={fitbox("contain", src, dst)}>
+                {opacity === undefined ? (
+                    <Group>
+                        <ImageSVG svg={iconSvg} />
                     </Group>
-                </Canvas>
-            </View>
-            {label && (
-                <Text
-                    numberOfLines={1}
-                    adjustsFontSizeToFit={true}
-                    style={[ss.bodyFont, ss.blackText, { fontSize: 14 }]}
-                >
-                    {label}
-                </Text>
-            )}
-        </View>
+                ) : (
+                    <FaderGroup opacity={opacity}>
+                        <ImageSVG svg={iconSvg} />
+                    </FaderGroup>
+                )}
+            </Group>
+        </Canvas>
     );
 }

@@ -24,7 +24,7 @@ import {
 } from "@tanstack/react-query";
 
 import { syncHostedProfileCaches } from "@/src/hosted/accountQueries";
-import { createHostedClient } from "@/src/hosted/client";
+import { createHostedApiClient } from "@/src/hosted/apiClient";
 import { ConduitsSnapshot } from "@/src/hosted/contracts";
 import { hostedQueryKeys } from "@/src/hosted/queryKeys";
 import {
@@ -33,9 +33,9 @@ import {
     withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
 
-type HostedClient = ReturnType<typeof createHostedClient>;
+type HostedClient = ReturnType<typeof createHostedApiClient>;
 
-export interface HostedConduitDependencies extends HostedSessionDependencies {
+interface HostedConduitDependencies extends HostedSessionDependencies {
     hostedClient: HostedClient;
     isOnline?: boolean;
 }

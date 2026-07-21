@@ -18,16 +18,17 @@
  */
 import Constants from "expo-constants";
 import { getLocales } from "expo-localization";
-import { Platform } from "react-native";
 
+import { getAppVersion } from "@/src/buildInfo";
 import type { HostedPlanCatalogQuery } from "@/src/hosted/contracts";
+import { resolveHostedCatalogPlatform } from "@/src/hosted/platform";
 
 /**
  * Constructs a plan catalog query with platform, locale, version, and country.
  */
 export function buildHostedPlanCatalogQuery(): HostedPlanCatalogQuery {
     return {
-        platform: Platform.OS === "ios" ? "ios" : "android",
+        platform: resolveHostedCatalogPlatform(),
         locale: getHostedLocale(),
         appVersion: getHostedAppVersion(),
         buildNumber: getHostedBuildNumber(),
@@ -38,7 +39,7 @@ export function buildHostedPlanCatalogQuery(): HostedPlanCatalogQuery {
 /**
  * Reads the device locale via getLocales(), falling back to "en-US".
  */
-export function getHostedLocale(): string {
+function getHostedLocale(): string {
     const locale = getLocales()[0]?.languageTag;
     if (!locale) {
         return "en-US";
@@ -50,7 +51,7 @@ export function getHostedLocale(): string {
 /**
  * Reads the device country code via getLocales().
  */
-export function getHostedCountry(): string | undefined {
+function getHostedCountry(): string | undefined {
     const region = getLocales()[0]?.regionCode;
     if (!region) {
         return undefined;
@@ -60,33 +61,16 @@ export function getHostedCountry(): string | undefined {
 }
 
 /**
- * Reads the app version from Expo config, falling back to a hardcoded version.
+ * Reads the app version from Expo runtime metadata, falling back to app.json.
  */
-export function getHostedAppVersion(): string {
-    const candidates = [
-        Constants.expoConfig?.version,
-        Constants.nativeApplicationVersion,
-    ];
-
-    for (const candidate of candidates) {
-        if (typeof candidate !== "string") {
-            continue;
-        }
-        const normalized = candidate.trim();
-        if (normalized.length > 0) {
-            return normalized;
-        }
-    }
-
-    // Keep this aligned with current catalog minAppVersion for dev-client flows
-    // where Expo config metadata is unavailable at runtime.
-    return "1.8.0";
+function getHostedAppVersion(): string {
+    return getAppVersion();
 }
 
 /**
  * Reads the build number from Expo config across multiple sources.
  */
-export function getHostedBuildNumber(): string | undefined {
+function getHostedBuildNumber(): string | undefined {
     if (
         typeof Constants.nativeBuildVersion === "string" &&
         Constants.nativeBuildVersion.trim().length > 0

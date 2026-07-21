@@ -16,21 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+import type { HostedPlanOption as ResolvedHostedPlanOption } from "@/src/hosted/planCatalog";
 import type {
-    PurchasesOfferings,
-    PurchasesPackage,
-} from "react-native-purchases";
+    HostedRevenueCatOfferings,
+    HostedRevenueCatPackage,
+} from "@/src/hosted/revenuecatTypes";
 
-export interface HostedPlanOption {
-    key: string;
-    package: PurchasesPackage;
-    title: string;
-    features: string[];
-    priceText: string;
-    badge: string | null;
-    matchedPlanId: string | null;
-    isGenericFallback: boolean;
-}
+export type HostedPlanOption =
+    ResolvedHostedPlanOption<HostedRevenueCatPackage>;
 
 export interface HostedPlanSelectionDescriptor {
     matchedPlanId: string | null;
@@ -40,7 +33,7 @@ export interface HostedPlanSelectionDescriptor {
 /**
  * Selects the "recommended" plan or falls back to the first plan.
  */
-export function pickDefaultHostedPlanOption(
+function pickDefaultHostedPlanOption(
     options: HostedPlanOption[],
 ): HostedPlanOption | null {
     const recommended = options.find((option) => {
@@ -119,9 +112,7 @@ export function formatHostedPlanPrice(option: HostedPlanOption): string {
 /**
  * Infers the billing period (month/year/etc.) from a plan's title and key.
  */
-export function inferHostedPlanBillingWindow(
-    option: HostedPlanOption,
-): string | null {
+function inferHostedPlanBillingWindow(option: HostedPlanOption): string | null {
     const signature = `${option.title} ${option.key}`.toLowerCase();
     if (signature.includes("annual") || signature.includes("year")) {
         return "year";
@@ -174,13 +165,13 @@ export function normalizeStatusText(value: string | null | undefined): string {
  * Extracts candidate package metadata from RevenueCat offerings.
  */
 export function toRevenueCatPackageCandidates(
-    offerings: PurchasesOfferings,
+    offerings: HostedRevenueCatOfferings,
 ): Array<{
     packageId: string;
     productId: string;
     productTitle?: string;
     priceString: string;
-    packageRef: PurchasesPackage;
+    packageRef: HostedRevenueCatPackage;
     entitlementId?: string;
 }> {
     const availablePackages = offerings.current?.availablePackages ?? [];
@@ -199,7 +190,7 @@ export function toRevenueCatPackageCandidates(
  */
 export async function resolveFirstHostedPackage(
     options: HostedPlanOption[],
-): Promise<PurchasesPackage> {
+): Promise<HostedRevenueCatPackage> {
     const first = options[0]?.package;
     if (first) {
         return first;

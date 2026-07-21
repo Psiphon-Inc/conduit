@@ -17,7 +17,7 @@
  *
  */
 import React from "react";
-import { Modal, Platform, View } from "react-native";
+import { BackHandler, Modal, Platform, StyleSheet, View } from "react-native";
 
 interface ModalActions {
     /** Replace the current modal (clears stack). */
@@ -92,6 +92,20 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
  */
 export function ModalHost() {
     const ctx = React.useContext(ModalContext);
+    const isOpen = (ctx?.stack.length ?? 0) > 0;
+
+    React.useEffect(() => {
+        if (Platform.OS !== "android" || !isOpen) {
+            return;
+        }
+
+        const subscription = BackHandler.addEventListener(
+            "hardwareBackPress",
+            () => true,
+        );
+        return () => subscription.remove();
+    }, [isOpen]);
+
     if (!ctx) {
         return null;
     }
@@ -99,12 +113,19 @@ export function ModalHost() {
     const topView =
         ctx.stack.length > 0 ? ctx.stack[ctx.stack.length - 1] : null;
 
+    if (Platform.OS === "android") {
+        return isOpen ? (
+            <View role="dialog" style={styles.androidOverlay}>
+                {topView}
+            </View>
+        ) : null;
+    }
+
     return (
         <Modal
             animationType="fade"
-            visible={ctx.stack.length > 0}
+            visible={isOpen}
             transparent={true}
-            statusBarTranslucent={Platform.OS === "android"}
             onRequestClose={() => {}}
         >
             <View style={{ flex: 1, backgroundColor: "transparent" }}>
@@ -113,3 +134,12 @@ export function ModalHost() {
         </Modal>
     );
 }
+
+const styles = StyleSheet.create({
+    androidOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: "transparent",
+        elevation: 1000,
+        zIndex: 1000,
+    },
+});

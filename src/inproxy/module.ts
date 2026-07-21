@@ -18,6 +18,7 @@
  */
 import { EventSubscription } from "expo-modules-core";
 
+import { isE2EMockProxy } from "@/src/common/e2e";
 import { InproxyEvent, InproxyParameters, IpcEvent } from "@/src/inproxy/types";
 
 export interface ConduitModuleAPI {
@@ -112,7 +113,8 @@ function readBooleanEnvAny(names: string[], fallback: boolean): boolean {
 
 function resolveConduitModule(): ConduitModuleAPI {
     const useMockModule =
-        __DEV__ && readBooleanEnvAny(DEV_SIMULATED_DATA_ENV_KEYS, false);
+        isE2EMockProxy() ||
+        (__DEV__ && readBooleanEnvAny(DEV_SIMULATED_DATA_ENV_KEYS, false));
 
     if (useMockModule) {
         const mockModule = require("./mockModule") as {
