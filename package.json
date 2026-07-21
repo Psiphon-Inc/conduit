@@ -13,6 +13,7 @@
         "pretest": "npm run get-git-hash",
         "test": "jest --verbose",
         "format": "node scripts/convert-to-absolute-imports.js && prettier --write ./src",
+        "pretsc": "npm run get-git-hash",
         "tsc": "tsc --noUnusedLocals --noUnusedParameters",
         "check": "npm run get-git-hash && jest && prettier --check ./src && tsc --noUnusedLocals --noUnusedParameters",
         "dev-server": "expo start",
