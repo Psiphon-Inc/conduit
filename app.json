@@ -2,7 +2,7 @@
     "expo": {
         "name": "conduit",
         "slug": "conduit",
-        "version": "2.3.0",
+        "version": "2.3.1",
         "orientation": "portrait",
         "scheme": "ca.psiphon.conduit",
         "userInterfaceStyle": "automatic",
@@ -14,12 +14,14 @@
             "deploymentTarget": "15.1",
             "icon": "./assets/images/conduit-launcher.png",
             "infoPlist": {
-                "LSApplicationQueriesSchemes": ["network.ryve.app"]
+                "LSApplicationQueriesSchemes": [
+                    "network.ryve.app"
+                ]
             }
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 89,
+            "versionCode": 90,
             "permissions": [
                 "android.permission.POST_NOTIFICATIONS",
                 "com.android.vending.BILLING"
