@@ -135,7 +135,8 @@ interface OrbGestureOverlayProps {
 const THEME_LEVELS: OrbEvolutionLevel[] = [0, 1, 2, 3];
 const HOSTED_ORB_THEME_LEVEL: OrbEvolutionLevel = 3;
 const DEFAULT_ORB_SLOT_MAP = [0, 1, 2];
-const MAIN_ORB_GLOW_SIGMA = 18;
+const MAIN_ORB_GLOW_SIGMA_RATIO = 0.2;
+const MAIN_ORB_GLOW_OPACITY = 0.45;
 const MORPH_BLUR_RADIUS = 5;
 const MORPH_BLUR_SUPPORT = MORPH_BLUR_RADIUS * 3;
 const MORPH_AA_PADDING = 2;
@@ -190,12 +191,16 @@ interface OrbGlowProps {
 
 const MAIN_ORB_GLOW_ALPHA_MULTIPLIERS = calculateOrbGlowGradientStops(
     0,
-    MAIN_ORB_GLOW_SIGMA,
+    1,
 ).alphaMultipliers;
 
 function OrbGlow({ center, centerX, centerY, radius, color }: OrbGlowProps) {
     const gradientStops = useDerivedValue(
-        () => calculateOrbGlowGradientStops(radius.value, MAIN_ORB_GLOW_SIGMA),
+        () =>
+            calculateOrbGlowGradientStops(
+                radius.value,
+                radius.value * MAIN_ORB_GLOW_SIGMA_RATIO,
+            ),
         [radius],
     );
     const outerRadius = useDerivedValue(
@@ -209,7 +214,10 @@ function OrbGlow({ center, centerX, centerY, radius, color }: OrbGlowProps) {
     const colors = useDerivedValue(
         () =>
             MAIN_ORB_GLOW_ALPHA_MULTIPLIERS.map((multiplier) =>
-                multiplyColorAlpha(color.value, multiplier),
+                multiplyColorAlpha(
+                    color.value,
+                    multiplier * MAIN_ORB_GLOW_OPACITY,
+                ),
             ),
         [color],
     );
