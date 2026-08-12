@@ -157,5 +157,7 @@ sides. In the human-readable report include:
 - accepted/rejected runs and median table;
 - absolute and relative deltas, including any regressions.
 
-The migration's worked example is in
-[Skia migration performance results](skia-migration-results.md).
+Concrete device readings and worked comparison reports are operational data.
+Store them in the private CI/performance repository rather than committing them
+to this open-source application. Keep only reusable instrumentation,
+methodology, workload definitions, and commands here.
