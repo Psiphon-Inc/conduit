@@ -17,7 +17,6 @@
  *
  */
 import { Image as ExpoImage } from "expo-image";
-import React from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
     SharedValue,
@@ -160,7 +159,7 @@ export function NativeParticleTail({
             <ExpoImage
                 source={TAIL_MASK}
                 tintColor={tint}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
                 contentFit="fill"
             />
         </Animated.View>

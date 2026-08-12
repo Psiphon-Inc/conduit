@@ -17,7 +17,6 @@
  *
  */
 import { Image as ExpoImage } from "expo-image";
-import React from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
     SharedValue,
@@ -125,7 +124,7 @@ export function MetaballBridge({
             <ExpoImage
                 source={BRIDGE_MASK}
                 tintColor={tint}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
                 contentFit="fill"
             />
         </Animated.View>

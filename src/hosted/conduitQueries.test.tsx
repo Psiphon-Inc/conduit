@@ -23,7 +23,6 @@ import {
     useQuery,
 } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
-import React from "react";
 import { ReactTestRenderer, act, create } from "react-test-renderer";
 
 import { QUERYKEY_CONDUIT_NAME } from "@/src/constants";

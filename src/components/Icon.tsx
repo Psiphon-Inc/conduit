@@ -17,7 +17,6 @@
  *
  */
 import { Image as ExpoImage, ImageSource } from "expo-image";
-import React from "react";
 import { Text, View } from "react-native";
 import Animated, {
     SharedValue,

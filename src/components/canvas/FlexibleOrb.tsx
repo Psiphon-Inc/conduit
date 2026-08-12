@@ -17,7 +17,6 @@
  *
  */
 import { Image as ExpoImage } from "expo-image";
-import React from "react";
 import Animated, {
     SharedValue,
     cancelAnimation,

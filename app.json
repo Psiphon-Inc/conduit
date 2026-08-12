@@ -10,7 +10,6 @@
             "supportsTablet": true,
             "bundleIdentifier": "ca.psiphon.conduit",
             "buildNumber": "34",
-            "deploymentTarget": "15.1",
             "icon": "./assets/images/conduit-launcher.png",
             "infoPlist": {
                 "LSApplicationQueriesSchemes": ["network.ryve.app"]
@@ -76,6 +75,18 @@
                     "backgroundColor": "#FEFEFE",
                     "image": "./assets/images/conduit-launcher.png",
                     "imageWidth": 200
+                }
+            ],
+            "expo-asset",
+            "expo-image",
+            "expo-status-bar",
+            "expo-web-browser",
+            [
+                "expo-build-properties",
+                {
+                    "ios": {
+                        "deploymentTarget": "16.4"
+                    }
                 }
             ]
         ],

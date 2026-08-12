@@ -37,7 +37,7 @@ export function DropdownSection(props: React.PropsWithChildren<ViewProps>) {
         >
             <LinearGradient
                 pointerEvents="none"
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
                 colors={[

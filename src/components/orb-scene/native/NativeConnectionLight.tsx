@@ -82,7 +82,7 @@ function LightSprite({
         <Svg
             width={outerRadius * 2}
             height={outerRadius * 2}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
         >
             <Defs>
                 <RadialGradient id={gradientId} cx="50%" cy="50%" r="50%">

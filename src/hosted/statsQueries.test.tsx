@@ -22,7 +22,6 @@ import {
     keepPreviousData,
     useQuery,
 } from "@tanstack/react-query";
-import React from "react";
 import { ReactTestRenderer, act, create } from "react-test-renderer";
 
 import {

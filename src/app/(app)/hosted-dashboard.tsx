@@ -17,10 +17,10 @@
  *
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useIsFocused } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRootNavigationState, useRouter } from "expo-router";
+import { useIsFocused } from "expo-router/react-navigation";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {

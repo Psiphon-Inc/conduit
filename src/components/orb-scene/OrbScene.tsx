@@ -16,8 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import React from "react";
-
 import { OrbSceneNative } from "@/src/components/orb-scene/OrbSceneNative";
 import { OrbEvolutionLevel } from "@/src/components/orb-scene/orbSceneTheme";
 import { VisualTestControl } from "@/src/components/orb-scene/visualTestControl";

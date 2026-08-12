@@ -194,12 +194,8 @@ function OrbThemeLayers({
 
     return (
         <>
-            <Animated.View style={[StyleSheet.absoluteFillObject, glowStyle]}>
-                <Svg
-                    width={box}
-                    height={box}
-                    style={StyleSheet.absoluteFillObject}
-                >
+            <Animated.View style={[StyleSheet.absoluteFill, glowStyle]}>
+                <Svg width={box} height={box} style={StyleSheet.absoluteFill}>
                     <Defs>
                         <RadialGradient
                             id={`${idPrefix}-glow`}
@@ -228,7 +224,7 @@ function OrbThemeLayers({
                     />
                 </Svg>
             </Animated.View>
-            <Svg width={box} height={box} style={StyleSheet.absoluteFillObject}>
+            <Svg width={box} height={box} style={StyleSheet.absoluteFill}>
                 <Defs>
                     {/* Gradient units are the painted circle's bounding box,
                         so 50% always fills the circle exactly. */}

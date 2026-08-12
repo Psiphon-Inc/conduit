@@ -204,7 +204,7 @@ export function EditableNumberSlider({
                     <Animated.View style={trackStyle}>
                         <Animated.View
                             style={[
-                                StyleSheet.absoluteFillObject,
+                                StyleSheet.absoluteFill,
                                 { overflow: "hidden" },
                                 filledClipStyle,
                             ]}
@@ -216,7 +216,7 @@ export function EditableNumberSlider({
                                 ]}
                             >
                                 <LinearGradient
-                                    style={StyleSheet.absoluteFillObject}
+                                    style={StyleSheet.absoluteFill}
                                     start={{ x: 0, y: 0.5 }}
                                     end={{ x: 1, y: 0.5 }}
                                     colors={[
@@ -230,7 +230,7 @@ export function EditableNumberSlider({
                     </Animated.View>
                     <Animated.View style={thumbStyle} />
                     <GestureDetector gesture={sliderGesture}>
-                        <Animated.View style={StyleSheet.absoluteFillObject} />
+                        <Animated.View style={StyleSheet.absoluteFill} />
                     </GestureDetector>
                 </View>
                 <View style={[ss.row, ss.alignCenter]}>

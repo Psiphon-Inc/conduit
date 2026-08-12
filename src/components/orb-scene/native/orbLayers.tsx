@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import React from "react";
 import { StyleSheet } from "react-native";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
@@ -36,7 +35,7 @@ export function OrbBodyGradient({
         <Svg
             width={radius * 2}
             height={radius * 2}
-            style={[StyleSheet.absoluteFillObject, styles.visibleOverflow]}
+            style={[StyleSheet.absoluteFill, styles.visibleOverflow]}
         >
             <Defs>
                 <RadialGradient id={id} cx="50%" cy="50%" r="50%">
@@ -73,7 +72,7 @@ export function InnerShadowLayer({
         <Svg
             width={radius * 2}
             height={radius * 2}
-            style={[StyleSheet.absoluteFillObject, styles.visibleOverflow]}
+            style={[StyleSheet.absoluteFill, styles.visibleOverflow]}
         >
             <Defs>
                 <RadialGradient id={id} cx={`${cx}%`} cy={`${cy}%`} r="72%">

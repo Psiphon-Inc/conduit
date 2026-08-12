@@ -18,7 +18,6 @@
  */
 import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
     Easing,
@@ -112,7 +111,7 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
     return (
         <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, phoneOpacityStyle]}
+            style={[StyleSheet.absoluteFill, phoneOpacityStyle]}
         >
             {/* Gradient bands behind the connection light's flight path. */}
             <LinearGradient
@@ -163,15 +162,15 @@ export function Phone({ currentView, sceneWidth, sceneHeight }: PhoneProps) {
                 >
                     <ExpoImage
                         source={require("@/assets/images/generated/noise-tile-a.png")}
-                        style={StyleSheet.absoluteFillObject}
+                        style={StyleSheet.absoluteFill}
                         contentFit="fill"
                     />
                     <Animated.View
-                        style={[StyleSheet.absoluteFillObject, noiseBStyle]}
+                        style={[StyleSheet.absoluteFill, noiseBStyle]}
                     >
                         <ExpoImage
                             source={require("@/assets/images/generated/noise-tile-b.png")}
-                            style={StyleSheet.absoluteFillObject}
+                            style={StyleSheet.absoluteFill}
                             contentFit="fill"
                         />
                     </Animated.View>

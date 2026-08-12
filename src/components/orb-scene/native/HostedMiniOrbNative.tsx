@@ -307,7 +307,7 @@ export function HostedMiniOrbNative({
                     <Svg
                         width={finalOrbRadius * 2}
                         height={finalOrbRadius * 2}
-                        style={StyleSheet.absoluteFillObject}
+                        style={StyleSheet.absoluteFill}
                     >
                         <Circle
                             cx={finalOrbRadius}
@@ -391,7 +391,7 @@ function OrbCycleLayer({
     }, [colorIndex, index]);
 
     return (
-        <Animated.View style={[StyleSheet.absoluteFillObject, layerStyle]}>
+        <Animated.View style={[StyleSheet.absoluteFill, layerStyle]}>
             <OrbBodyGradient
                 id={`mini-cycle-${index}`}
                 radius={radius}
@@ -419,7 +419,7 @@ function IdleActiveShadow({
     );
     return (
         <>
-            <Animated.View style={[StyleSheet.absoluteFillObject, idleStyle]}>
+            <Animated.View style={[StyleSheet.absoluteFill, idleStyle]}>
                 <InnerShadowLayer
                     id="mini-shadow-idle"
                     radius={radius}
@@ -428,7 +428,7 @@ function IdleActiveShadow({
                     dy={-10}
                 />
             </Animated.View>
-            <Animated.View style={[StyleSheet.absoluteFillObject, activeStyle]}>
+            <Animated.View style={[StyleSheet.absoluteFill, activeStyle]}>
                 <InnerShadowLayer
                     id="mini-shadow-active"
                     radius={radius}

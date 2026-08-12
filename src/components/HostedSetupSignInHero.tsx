@@ -72,7 +72,7 @@ function HeroOrbLayer({
     const box = orbRadius * 3;
     const center = box / 2;
     return (
-        <Svg width={box} height={box} style={StyleSheet.absoluteFillObject}>
+        <Svg width={box} height={box} style={StyleSheet.absoluteFill}>
             <Defs>
                 <RadialGradient
                     id={`hero-glow-${idSuffix}`}
@@ -210,7 +210,7 @@ export function HostedSetupSignInHero({
                 }}
             >
                 <LinearGradient
-                    style={StyleSheet.absoluteFillObject}
+                    style={StyleSheet.absoluteFill}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 1 }}
                     colors={BAND_COLORS}
@@ -271,7 +271,7 @@ export function HostedSetupSignInHero({
                         orbRadius={orbRadius}
                     />
                     <Animated.View
-                        style={[StyleSheet.absoluteFillObject, pulseStyle]}
+                        style={[StyleSheet.absoluteFill, pulseStyle]}
                     >
                         <HeroOrbLayer
                             variant={PULSE_VARIANTS[1]}

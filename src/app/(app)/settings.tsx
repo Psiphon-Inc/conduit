@@ -17,7 +17,6 @@
  *
  */
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
 import { Platform, View, useWindowDimensions } from "react-native";
 
 import { ConduitSettings } from "@/src/components/ConduitSettings";

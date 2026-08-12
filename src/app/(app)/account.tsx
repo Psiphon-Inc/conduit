@@ -17,7 +17,6 @@
  *
  */
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
 import { ScrollView, View, useWindowDimensions } from "react-native";
 
 import { HostedConduitAccountPage } from "@/src/components/HostedConduitAccountPage";

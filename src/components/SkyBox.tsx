@@ -99,7 +99,7 @@ function SkyBoxGradientLayer({
     return (
         <Animated.View
             pointerEvents="none"
-            style={[StyleSheet.absoluteFillObject, layerStyle]}
+            style={[StyleSheet.absoluteFill, layerStyle]}
         >
             <LinearGradient
                 // The Skia gradient ran bottom -> top; expo-linear-gradient
@@ -107,7 +107,7 @@ function SkyBoxGradientLayer({
                 colors={colors}
                 start={{ x: 0.5, y: 1 }}
                 end={{ x: 0.5, y: 0 }}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
             />
         </Animated.View>
     );
