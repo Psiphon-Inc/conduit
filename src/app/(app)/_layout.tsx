@@ -161,12 +161,14 @@ const styles = StyleSheet.create({
         zIndex: 1,
     },
     hostedApiOfflineMarker: {
-        top: 0,
+        // SDK 57 edge-to-edge content extends behind the Android status bar.
+        // Keep E2E markers within Maestro's visible-content bounds.
+        top: 32,
     },
     localPairingReadyMarker: {
-        top: 8,
+        top: 40,
     },
     conduitRunningMarker: {
-        top: 16,
+        top: 48,
     },
 });

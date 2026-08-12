@@ -27,6 +27,9 @@ apksigner="$(find_android_tool apksigner)"
 cd "$PROJECT_DIR"
 npm run get-git-hash
 
+# Keep Gradle clean reproducible after npm ci replaces generated codegen dirs.
+rm -rf "$PROJECT_DIR/android/app/.cxx"
+
 (
     cd android
     build_env=(

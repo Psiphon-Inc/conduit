@@ -290,7 +290,10 @@ class ConduitModuleMock {
         );
         this.emitState();
         if (this.running) {
-            await this.emitMockData(
+            // Data generation lasts until the proxy is stopped. Do not keep
+            // the toggle promise pending for that entire lifetime: React 19
+            // may defer state flushed from the event until this action yields.
+            void this.emitMockData(
                 totalMaxClients,
                 limitUpstreamBytesPerSecond + limitDownstreamBytesPerSecond,
             );

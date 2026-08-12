@@ -102,6 +102,9 @@ ANDROID_E2E_GRADLE_TARGETS=(
 
 build_android_real() {
   log "Building Android real release APK"
+  # npm ci replaces generated native code while Gradle's external-build cache
+  # can still refer to the previous node_modules tree.
+  rm -rf "$PROJECT_DIR/android/app/.cxx"
   (
     cd "$PROJECT_DIR/android"
     ./gradlew clean --console=plain
@@ -114,6 +117,8 @@ build_android_real() {
 
 build_android_mock() {
   log "Building Android mock release APK"
+  # Keep Gradle clean reproducible after npm ci replaces generated codegen dirs.
+  rm -rf "$PROJECT_DIR/android/app/.cxx"
   (
     cd "$PROJECT_DIR/android"
     ./gradlew clean --console=plain
