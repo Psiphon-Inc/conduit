@@ -90,10 +90,8 @@ export function FlexibleOrb({
                         withSequence(
                             withTiming(initialRadius * 1.2, { duration: 300 }),
                             withSpring(initialRadius, {
-                                duration: 1400,
+                                duration: 933,
                                 dampingRatio: 0.3,
-                                stiffness: 100,
-                                restDisplacementThreshold: 0.01,
                             }),
                         ),
                         -1,
@@ -105,8 +103,6 @@ export function FlexibleOrb({
                     mass: 5.2,
                     damping: 10,
                     stiffness: 100,
-                    restDisplacementThreshold: 0.01,
-                    restSpeedThreshold: 2,
                 });
                 cx.value = withDelay(
                     500,
@@ -114,8 +110,6 @@ export function FlexibleOrb({
                         mass: 5.2,
                         damping: 10,
                         stiffness: 100,
-                        restDisplacementThreshold: 0.01,
-                        restSpeedThreshold: 2,
                     }),
                 );
             } else if (current === 2) {
@@ -124,15 +118,11 @@ export function FlexibleOrb({
                     mass: 3.2,
                     damping: 15,
                     stiffness: 100,
-                    restDisplacementThreshold: 0.01,
-                    restSpeedThreshold: 2,
                 });
                 cx.value = withSpring(sceneWidth * 0.5, {
                     mass: 3.2,
                     damping: 15,
                     stiffness: 100,
-                    restDisplacementThreshold: 0.01,
-                    restSpeedThreshold: 2,
                 });
             } else if (current === 3) {
                 privacyPolicyOpacity.value = withTiming(1, { duration: 1000 });
@@ -140,23 +130,17 @@ export function FlexibleOrb({
                     mass: 2.2,
                     damping: 20,
                     stiffness: 100,
-                    restDisplacementThreshold: 0.01,
-                    restSpeedThreshold: 2,
                 });
                 cx.value = withSpring(sceneWidth * 0.3, {
                     mass: 3.2,
                     damping: 10,
                     stiffness: 100,
-                    restDisplacementThreshold: 0.01,
-                    restSpeedThreshold: 2,
                 });
             } else if (current === 4) {
                 radius.value = withSpring(sceneHeight / 3.5, {
                     mass: 2.2,
                     damping: 20,
                     stiffness: 100,
-                    restDisplacementThreshold: 0.01,
-                    restSpeedThreshold: 2,
                 });
                 backgroundOpacity.value = withTiming(1, { duration: 1000 });
             }

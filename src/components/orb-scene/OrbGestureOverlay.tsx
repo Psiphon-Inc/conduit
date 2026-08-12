@@ -87,9 +87,6 @@ export function OrbGestureOverlay({
             withTiming(baseRadius * 0.97, { duration: 55 }),
             withSpring(baseRadius, {
                 dampingRatio: 0.45,
-                stiffness: 120,
-                restDisplacementThreshold: 0.01,
-                restSpeedThreshold: 2,
             }),
         );
     }, [baseRadius, radius]);

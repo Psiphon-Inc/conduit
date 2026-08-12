@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 import { I18nManager, StyleSheet, Text, View } from "react-native";
 import Animated, {
     Easing,
+    type SharedValue,
     cancelAnimation,
     useAnimatedStyle,
     useDerivedValue,
@@ -182,8 +183,6 @@ export function HostedMiniOrbNative({
                 mass: 1.2,
                 damping: 10,
                 stiffness: 100,
-                restDisplacementThreshold: 0.01,
-                restSpeedThreshold: 2,
             }),
         );
     }, [frozen, mountScale]);
@@ -379,7 +378,7 @@ function OrbCycleLayer({
     index: number;
     radius: number;
     color: string;
-    colorIndex: Animated.SharedValue<number>;
+    colorIndex: SharedValue<number>;
 }) {
     const layerStyle = useAnimatedStyle(() => {
         // Stacked crossfade: the base layer stays opaque, each higher layer
@@ -408,7 +407,7 @@ function IdleActiveShadow({
     activityWeight,
 }: {
     radius: number;
-    activityWeight: Animated.SharedValue<number>;
+    activityWeight: SharedValue<number>;
 }) {
     const idleStyle = useAnimatedStyle(
         () => ({ opacity: 1 - activityWeight.value }),

@@ -37,6 +37,7 @@ import {
 } from "react-native";
 import Animated, {
     Easing,
+    type SharedValue,
     cancelAnimation,
     runOnJS,
     useAnimatedReaction,
@@ -1477,7 +1478,7 @@ function OrbitingCard({
 }: {
     conduit: ConduitView;
     connectedCount: number;
-    progress: Animated.SharedValue<number>;
+    progress: SharedValue<number>;
     phaseOffset: number;
 }) {
     const angle = useDerivedValue(

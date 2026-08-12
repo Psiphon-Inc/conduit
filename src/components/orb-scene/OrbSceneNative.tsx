@@ -932,8 +932,6 @@ export function OrbSceneNative(props: OrbSceneProps) {
                         mass: 1.15,
                         damping: 10,
                         stiffness: 100,
-                        restDisplacementThreshold: 0.01,
-                        restSpeedThreshold: 2,
                     }),
                 );
             } else {
