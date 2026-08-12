@@ -96,7 +96,6 @@ copy_android_release_apk() {
 # project build dirs without wiring the producing tasks, so build those prefab
 # packages explicitly first.
 ANDROID_E2E_GRADLE_TARGETS=(
-  :shopify_react-native-skia:prefabReleasePackage
   :react-native-reanimated:prefabReleasePackage
   assembleRelease
 )

@@ -21,6 +21,10 @@ export function isE2E(): boolean {
     return value === "true" || value === "1";
 }
 
+export function isPerf(): boolean {
+    return process.env.EXPO_PUBLIC_PERF === "1";
+}
+
 export function isE2EMockProxy(): boolean {
     const value = process.env.EXPO_PUBLIC_E2E_MOCK_PROXY;
     return value === "true" || value === "1";

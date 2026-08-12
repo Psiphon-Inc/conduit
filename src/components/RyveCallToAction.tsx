@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -44,7 +44,7 @@ import {
 import { useConduitName } from "@/src/hooks";
 import { palette, sharedStyles as ss } from "@/src/styles";
 
-const RYVE_GRADIENT_COLORS = ["#A475E3", "rgba(156, 129, 201, 0.69)"];
+const RYVE_GRADIENT_COLORS = ["#A475E3", "rgba(156, 129, 201, 0.69)"] as const;
 const COMPACT_WEB_MODAL_WIDTH = 430;
 
 function RyveModalShell({
@@ -154,7 +154,6 @@ export function RyveClaimModalContent({
     }, [claim, resolvedPreferredName]);
 
     const [qrRevealed, setQrRevealed] = React.useState(Boolean(openToQr));
-    const [buttonWidth, setButtonWidth] = React.useState(0);
     const [canOpenInRyve, setCanOpenInRyve] = React.useState<boolean | null>(
         null,
     );
@@ -230,9 +229,6 @@ export function RyveClaimModalContent({
                     onPress={() => {
                         void handlePrimaryAction();
                     }}
-                    onLayout={(event) => {
-                        setButtonWidth(event.nativeEvent.layout.width);
-                    }}
                     style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -244,7 +240,7 @@ export function RyveClaimModalContent({
                         alignSelf: "stretch",
                     }}
                 >
-                    <View
+                    <LinearGradient
                         style={{
                             position: "absolute",
                             left: 0,
@@ -253,22 +249,10 @@ export function RyveClaimModalContent({
                             height: "100%",
                         }}
                         pointerEvents="none"
-                    >
-                        <Canvas style={{ flex: 1 }}>
-                            <Rect
-                                x={0}
-                                y={0}
-                                width={Math.max(1, buttonWidth)}
-                                height={52}
-                            >
-                                <LinearGradient
-                                    start={vec(0, 26)}
-                                    end={vec(Math.max(1, buttonWidth), 26)}
-                                    colors={RYVE_GRADIENT_COLORS}
-                                />
-                            </Rect>
-                        </Canvas>
-                    </View>
+                        start={{ x: 0, y: 0.5 }}
+                        end={{ x: 1, y: 0.5 }}
+                        colors={RYVE_GRADIENT_COLORS}
+                    />
                     <Text style={[ss.whiteText, ss.bodyFont, { fontSize: 24 }]}>
                         {primaryActionLabel}
                     </Text>

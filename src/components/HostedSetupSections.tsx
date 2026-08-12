@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
 import { Image as ExpoImage } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -519,7 +519,6 @@ export function ActionButton({
     leadingIconTintColor?: string;
     testID?: string;
 }) {
-    const [buttonWidth, setButtonWidth] = React.useState(0);
     const isPrimary = variant === "primary";
     const showGradient = Boolean(gradientBackground) && !disabled;
     const textColor = showGradient ? palette.white : palette.black;
@@ -527,9 +526,6 @@ export function ActionButton({
     return (
         <Pressable
             testID={testID}
-            onLayout={(event) => {
-                setButtonWidth(event.nativeEvent.layout.width);
-            }}
             style={{
                 borderWidth: 1,
                 borderColor: palette.purple,
@@ -551,25 +547,16 @@ export function ActionButton({
             disabled={disabled}
         >
             {showGradient ? (
-                <View style={[ss.absoluteFill]} pointerEvents="none">
-                    <Canvas style={{ flex: 1 }}>
-                        <Rect
-                            x={0}
-                            y={0}
-                            width={Math.max(1, buttonWidth)}
-                            height={48}
-                        >
-                            <LinearGradient
-                                start={vec(0, 24)}
-                                end={vec(Math.max(1, buttonWidth), 24.3)}
-                                colors={[
-                                    HOSTED_PRIMARY_GRADIENT_START,
-                                    HOSTED_PRIMARY_GRADIENT_END,
-                                ]}
-                            />
-                        </Rect>
-                    </Canvas>
-                </View>
+                <LinearGradient
+                    style={[ss.absoluteFill]}
+                    pointerEvents="none"
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    colors={[
+                        HOSTED_PRIMARY_GRADIENT_START,
+                        HOSTED_PRIMARY_GRADIENT_END,
+                    ]}
+                />
             ) : null}
             <View style={[ss.row, ss.alignCenter, ss.justifyCenter]}>
                 {leadingIcon ? (

@@ -1,0 +1,10 @@
+# Perf APKs use an isolated application ID so this fresh-state reset cannot
+# wipe the developer's normal ca.psiphon.conduit install.
+appId: ca.psiphon.conduit.perf
+---
+- clearState
+- launchApp:
+      permissions:
+          all: allow
+- waitForAnimationToEnd:
+      timeout: 5000

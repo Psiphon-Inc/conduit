@@ -16,20 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import {
-    Circle,
-    Group,
-    Image,
-    RadialGradient,
-    Shadow,
-    useImage,
-    vec,
-} from "@shopify/react-native-skia";
-import {
+import { Image as ExpoImage } from "expo-image";
+import React from "react";
+import Animated, {
     SharedValue,
     cancelAnimation,
     useAnimatedReaction,
-    useDerivedValue,
+    useAnimatedStyle,
     useSharedValue,
     withDelay,
     withRepeat,
@@ -38,6 +31,10 @@ import {
     withTiming,
 } from "react-native-reanimated";
 
+import {
+    InnerShadowLayer,
+    OrbBodyGradient,
+} from "@/src/components/orb-scene/native/orbLayers";
 import { palette } from "@/src/styles";
 
 interface FlexibleOrbProps {
@@ -45,33 +42,28 @@ interface FlexibleOrbProps {
     sceneWidth: number;
     sceneHeight: number;
 }
+
+/**
+ * The onboarding orb, rendered from the shared native layers: a static
+ * radial-gradient body plus offset inner-shadow tints in a wrapper that
+ * animates position and scale. The per-view springs are unchanged from the
+ * Skia version; only the paint moved.
+ */
 export function FlexibleOrb({
     currentView,
     sceneHeight,
     sceneWidth,
 }: FlexibleOrbProps) {
     const initialRadius = sceneHeight / 4;
+    // Largest spring target across views, with bounce overshoot headroom;
+    // the wrapper renders at this size and scales down.
+    const baseRadius = sceneHeight / 2.5;
     const radius = useSharedValue(initialRadius);
     const cx = useSharedValue(sceneWidth);
     const cy = sceneHeight / 2;
 
-    const notificationsPng = useImage(
-        require("@/assets/images/onboarding-permissions.png"),
-    );
     const backgroundOpacity = useSharedValue(0);
-
-    const privacyPolicyPng = useImage(
-        require("@/assets/images/onboarding-privacy-policy.png"),
-    );
     const privacyPolicyOpacity = useSharedValue(0);
-
-    const radialGradientC = useDerivedValue(() => {
-        return vec(cx.value, cy);
-    });
-
-    const notificationY = useDerivedValue(() => {
-        return cy - radius.value * 1.2;
-    });
 
     useAnimatedReaction(
         () => {
@@ -102,7 +94,6 @@ export function FlexibleOrb({
                                 dampingRatio: 0.3,
                                 stiffness: 100,
                                 restDisplacementThreshold: 0.01,
-                                //restSpeedThreshold: 2,
                             }),
                         ),
                         -1,
@@ -172,41 +163,106 @@ export function FlexibleOrb({
         },
     );
 
+    const orbStyle = useAnimatedStyle(() => {
+        return {
+            transform: [
+                { translateX: cx.value - baseRadius },
+                { translateY: cy - baseRadius },
+                { scale: radius.value / baseRadius },
+            ],
+        };
+    }, [baseRadius, cx, cy, radius]);
+
+    const privacyPolicyStyle = useAnimatedStyle(
+        () => ({ opacity: privacyPolicyOpacity.value }),
+        [privacyPolicyOpacity],
+    );
+
+    const notificationStyle = useAnimatedStyle(() => {
+        return {
+            opacity: backgroundOpacity.value,
+            transform: [
+                { translateX: cx.value },
+                { translateY: cy - radius.value * 1.2 },
+            ],
+        };
+    }, [backgroundOpacity, cx, cy, radius]);
+
     return (
-        <Group>
-            <Image
-                image={privacyPolicyPng}
-                x={sceneWidth * 0.55}
-                y={sceneHeight / 4}
-                width={sceneWidth / 4}
-                height={sceneHeight / 2}
-                fit={"contain"}
-                opacity={privacyPolicyOpacity}
-            />
-            <Circle cx={cx} cy={cy} r={radius}>
-                <Shadow dx={10} dy={10} blur={10} color={palette.mauve} inner />
-                <Shadow
+        <>
+            <Animated.View
+                pointerEvents="none"
+                style={[
+                    {
+                        position: "absolute",
+                        left: sceneWidth * 0.55,
+                        top: sceneHeight / 4,
+                        width: sceneWidth / 4,
+                        height: sceneHeight / 2,
+                    },
+                    privacyPolicyStyle,
+                ]}
+            >
+                <ExpoImage
+                    source={require("@/assets/images/onboarding-privacy-policy.png")}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="contain"
+                />
+            </Animated.View>
+            <Animated.View
+                pointerEvents="none"
+                style={[
+                    {
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        width: baseRadius * 2,
+                        height: baseRadius * 2,
+                        overflow: "visible",
+                    },
+                    orbStyle,
+                ]}
+            >
+                <OrbBodyGradient
+                    id="onboarding-orb-body"
+                    radius={baseRadius}
+                    innerColor={palette.fadedMauve}
+                    outerColor={palette.purple}
+                />
+                <InnerShadowLayer
+                    id="onboarding-orb-shadow-mauve"
+                    radius={baseRadius}
+                    color={palette.mauve}
+                    dx={10}
+                    dy={10}
+                />
+                <InnerShadowLayer
+                    id="onboarding-orb-shadow-peach"
+                    radius={baseRadius}
+                    color={palette.peach}
                     dx={-10}
                     dy={-10}
-                    blur={10}
-                    color={palette.peach}
-                    inner
                 />
-                <RadialGradient
-                    c={radialGradientC}
-                    r={radius}
-                    colors={[palette.fadedMauve, palette.purple]}
+            </Animated.View>
+            <Animated.View
+                pointerEvents="none"
+                style={[
+                    {
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        width: sceneWidth / 5,
+                        height: sceneHeight / 3,
+                    },
+                    notificationStyle,
+                ]}
+            >
+                <ExpoImage
+                    source={require("@/assets/images/onboarding-permissions.png")}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="contain"
                 />
-            </Circle>
-            <Image
-                image={notificationsPng}
-                x={cx}
-                y={notificationY}
-                width={sceneWidth / 5}
-                height={sceneHeight / 3}
-                fit={"contain"}
-                opacity={backgroundOpacity}
-            />
-        </Group>
+            </Animated.View>
+        </>
     );
 }

@@ -16,26 +16,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import {
-    Canvas,
-    LinearGradient,
-    Rect,
-    interpolateColors,
-    vec,
-} from "@shopify/react-native-skia";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { View, useWindowDimensions } from "react-native";
-import {
-    useDerivedValue,
+import { StyleSheet, View, useWindowDimensions } from "react-native";
+import Animated, {
+    SharedValue,
+    useAnimatedStyle,
     useSharedValue,
     withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useInproxyStatus } from "@/src/inproxy/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 export type SkyBoxGradientState = 0 | 1 | 2 | 3;
+
+// Bottom-to-top color stops per state. Rendered as four static gradient
+// layers whose opacities crossfade with the fractional gradient state:
+// animating layer opacity stays on the compositor, where continuously
+// re-interpolating gradient color arrays (the old Skia approach) re-rasterized
+// every frame.
+const SKYBOX_GRADIENT_STATES: [string, string, string][] = [
+    [palette.mauve, palette.fadedMauve, palette.white],
+    [palette.peach, palette.mauve, palette.fadedMauve],
+    ["#F59F86", "#BB89AD", "#B3D4FF"],
+    ["#F59F86", "#BB89AD", "#9C81C9"],
+];
 
 export function SkyBox({
     gradientState = 0,
@@ -66,6 +73,43 @@ export function SkyBox({
                 gradientState={gradientState}
             />
         </View>
+    );
+}
+
+function SkyBoxGradientLayer({
+    index,
+    fader,
+    colors,
+}: {
+    index: number;
+    fader: SharedValue<number>;
+    colors: [string, string, string];
+}) {
+    const layerStyle = useAnimatedStyle(() => {
+        // The bottom layer stays opaque; each higher layer fades in over the
+        // one below as the state passes it, so mid-transition compositing
+        // never drops below full coverage.
+        const opacity =
+            index === 0
+                ? 1
+                : Math.min(1, Math.max(0, fader.value - (index - 1)));
+        return { opacity };
+    }, [fader, index]);
+
+    return (
+        <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, layerStyle]}
+        >
+            <LinearGradient
+                // The Skia gradient ran bottom -> top; expo-linear-gradient
+                // colors run start -> end, so start at the bottom edge.
+                colors={colors}
+                start={{ x: 0.5, y: 1 }}
+                end={{ x: 0.5, y: 0 }}
+                style={StyleSheet.absoluteFillObject}
+            />
+        </Animated.View>
     );
 }
 
@@ -105,64 +149,6 @@ export function InproxyStatusColorCanvas({
         fader.value = withTiming(targetGradientState, { duration: 900 });
     }, [fader, targetGradientState]);
 
-    const gradientStates = [
-        {
-            start: palette.mauve,
-            middle: palette.fadedMauve,
-            end: palette.white,
-        },
-        {
-            start: palette.peach,
-            middle: palette.mauve,
-            end: palette.fadedMauve,
-        },
-        {
-            start: "#F59F86",
-            middle: "#BB89AD",
-            end: "#B3D4FF",
-        },
-        {
-            start: "#F59F86",
-            middle: "#BB89AD",
-            end: "#9C81C9",
-        },
-    ];
-
-    const backgroundGradientColors = useDerivedValue(() => {
-        return [
-            interpolateColors(
-                fader.value,
-                [0, 1, 2, 3],
-                [
-                    gradientStates[0].start,
-                    gradientStates[1].start,
-                    gradientStates[2].start,
-                    gradientStates[3].start,
-                ],
-            ),
-            interpolateColors(
-                fader.value,
-                [0, 1, 2, 3],
-                [
-                    gradientStates[0].middle,
-                    gradientStates[1].middle,
-                    gradientStates[2].middle,
-                    gradientStates[3].middle,
-                ],
-            ),
-            interpolateColors(
-                fader.value,
-                [0, 1, 2, 3],
-                [
-                    gradientStates[0].end,
-                    gradientStates[1].end,
-                    gradientStates[2].end,
-                    gradientStates[3].end,
-                ],
-            ),
-        ];
-    });
-
     return (
         <View
             style={[
@@ -174,15 +160,14 @@ export function InproxyStatusColorCanvas({
                 },
             ]}
         >
-            <Canvas style={ss.flex}>
-                <Rect x={0} y={0} width={width} height={height}>
-                    <LinearGradient
-                        start={vec(width / 2, height)}
-                        end={vec(width / 2, 0)}
-                        colors={backgroundGradientColors}
-                    />
-                </Rect>
-            </Canvas>
+            {SKYBOX_GRADIENT_STATES.map((colors, index) => (
+                <SkyBoxGradientLayer
+                    key={`skybox-layer-${index}`}
+                    index={index}
+                    fader={fader}
+                    colors={colors}
+                />
+            ))}
             <View
                 style={{
                     position: "absolute",

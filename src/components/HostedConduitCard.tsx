@@ -22,8 +22,8 @@ import { useTranslation } from "react-i18next";
 import { StyleProp, Text, View, ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 
-import { HostedMiniOrb } from "@/src/components/HostedMiniOrb";
 import { Identicon } from "@/src/components/Identicon";
+import { HostedMiniOrbNative as HostedMiniOrb } from "@/src/components/orb-scene/native/HostedMiniOrbNative";
 import { getScopeIcon, getScopeLabel } from "@/src/hosted/conduitDisplay";
 import { ConduitView } from "@/src/hosted/contracts";
 import { palette, sharedStyles as ss } from "@/src/styles";

@@ -16,7 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { Group } from "@shopify/react-native-skia";
+import React from "react";
+import { View } from "react-native";
 import { SharedValue } from "react-native-reanimated";
 
 import { Chains } from "@/src/components/canvas/Chains";
@@ -35,14 +36,24 @@ export function OnboardingScene({
 }: OnboardingSceneProps) {
     const commonProps = { currentView, sceneWidth, sceneHeight };
     return (
-        <Group>
+        <View
+            pointerEvents="none"
+            style={{ width: sceneWidth, height: sceneHeight }}
+        >
             <FlexibleOrb {...commonProps} />
-            <Group
-                transform={[{ translateY: sceneHeight / 2 }, { rotate: 0.03 }]}
+            <View
+                style={{
+                    position: "absolute",
+                    left: 0,
+                    top: sceneHeight / 2,
+                    width: sceneWidth,
+                    height: sceneHeight,
+                    transform: [{ rotate: "0.03rad" }],
+                }}
             >
                 <Chains {...commonProps} size={sceneWidth / 3} />
-            </Group>
+            </View>
             <Phone {...commonProps} />
-        </Group>
+        </View>
     );
 }

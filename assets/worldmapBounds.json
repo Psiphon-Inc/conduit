@@ -1,0 +1,1322 @@
+{
+  "Afghanistan": {
+    "x": 1311.6,
+    "y": 254.8,
+    "width": 72.9,
+    "height": 58.8
+  },
+  "Angola": {
+    "x": 1051.5,
+    "y": 530.3,
+    "width": 70.5,
+    "height": 86.6
+  },
+  "Albania": {
+    "x": 1086.1,
+    "y": 228,
+    "width": 9.7,
+    "height": 19.5
+  },
+  "United Arab Emirates": {
+    "x": 1271.4,
+    "y": 334.5,
+    "width": 26.1,
+    "height": 22.9
+  },
+  "Argentina": {
+    "x": 604.1,
+    "y": 642,
+    "width": 87.6,
+    "height": 211.8
+  },
+  "Armenia": {
+    "x": 1212.8,
+    "y": 237.2,
+    "width": 18,
+    "height": 16
+  },
+  "Australia": {
+    "x": 1603.2,
+    "y": 570.3,
+    "width": 225.9,
+    "height": 211.3
+  },
+  "Austria": {
+    "x": 1033.9,
+    "y": 188,
+    "width": 37.1,
+    "height": 16.4
+  },
+  "Azerbaijan": {
+    "x": 1219.8,
+    "y": 233.3,
+    "width": 29.5,
+    "height": 22.9
+  },
+  "Burundi": {
+    "x": 1150.8,
+    "y": 516.9,
+    "width": 9.8,
+    "height": 13.6
+  },
+  "Belgium": {
+    "x": 998.6,
+    "y": 172.9,
+    "width": 17.9,
+    "height": 12.1
+  },
+  "Benin": {
+    "x": 990.7,
+    "y": 423.3,
+    "width": 17.1,
+    "height": 39.1
+  },
+  "Burkina Faso": {
+    "x": 955.5,
+    "y": 404.8,
+    "width": 43.1,
+    "height": 35.3
+  },
+  "Bangladesh": {
+    "x": 1472.1,
+    "y": 332,
+    "width": 29.1,
+    "height": 37.1
+  },
+  "Bulgaria": {
+    "x": 1100.9,
+    "y": 218.2,
+    "width": 31.7,
+    "height": 19.1
+  },
+  "Bosnia and Herzegovina": {
+    "x": 1066.5,
+    "y": 211.9,
+    "width": 20,
+    "height": 16.4
+  },
+  "Belarus": {
+    "x": 1098.4,
+    "y": 144.3,
+    "width": 44.8,
+    "height": 29.6
+  },
+  "Belize": {
+    "x": 486.1,
+    "y": 383,
+    "width": 8.2,
+    "height": 16.8
+  },
+  "Bolivia": {
+    "x": 594.3,
+    "y": 564.5,
+    "width": 70.9,
+    "height": 84.2
+  },
+  "Brazil": {
+    "x": 568,
+    "y": 468.2,
+    "width": 222,
+    "height": 250.4
+  },
+  "Brunei Darussalam": {
+    "x": 1633.1,
+    "y": 466.8,
+    "width": 6.8,
+    "height": 9.3
+  },
+  "Bhutan": {
+    "x": 1473.6,
+    "y": 320.2,
+    "width": 18.3,
+    "height": 10.1
+  },
+  "Botswana": {
+    "x": 1096.2,
+    "y": 615.2,
+    "width": 53.5,
+    "height": 58.9
+  },
+  "Central African Republic": {
+    "x": 1068.2,
+    "y": 430.3,
+    "width": 73.1,
+    "height": 57
+  },
+  "Canada": {
+    "x": 348.2,
+    "y": 2.5,
+    "width": 429.6,
+    "height": 229.8
+  },
+  "Switzerland": {
+    "x": 1016.7,
+    "y": 195.6,
+    "width": 22.1,
+    "height": 12.9
+  },
+  "China": {
+    "x": 1372.3,
+    "y": 160.7,
+    "width": 289.8,
+    "height": 224.3
+  },
+  "Côte d'Ivoire": {
+    "x": 937.7,
+    "y": 434.3,
+    "width": 34.2,
+    "height": 39.7
+  },
+  "Cameroon": {
+    "x": 1034.4,
+    "y": 419.3,
+    "width": 42.7,
+    "height": 71.4
+  },
+  "Democratic Republic of the Congo": {
+    "x": 1055.3,
+    "y": 468.1,
+    "width": 107.8,
+    "height": 118.8
+  },
+  "Republic of Congo": {
+    "x": 1049.2,
+    "y": 477.9,
+    "width": 41.7,
+    "height": 56.3
+  },
+  "Colombia": {
+    "x": 538.6,
+    "y": 422,
+    "width": 68.6,
+    "height": 107.4
+  },
+  "Costa Rica": {
+    "x": 501.7,
+    "y": 429.8,
+    "width": 18.6,
+    "height": 19.2
+  },
+  "Cuba": {
+    "x": 514.7,
+    "y": 352.9,
+    "width": 58.7,
+    "height": 21.4
+  },
+  "Czech Republic": {
+    "x": 1046.5,
+    "y": 175.1,
+    "width": 33,
+    "height": 16
+  },
+  "Germany": {
+    "x": 1015.4,
+    "y": 151.5,
+    "width": 44.3,
+    "height": 47.4
+  },
+  "Djibouti": {
+    "x": 1221.1,
+    "y": 420.3,
+    "width": 9.2,
+    "height": 11.4
+  },
+  "Denmark": {
+    "x": 1024.2,
+    "y": 134.9,
+    "width": 21.9,
+    "height": 17.7
+  },
+  "Dominican Republic": {
+    "x": 584.7,
+    "y": 374.2,
+    "width": 20.3,
+    "height": 14.6
+  },
+  "Algeria": {
+    "x": 938.7,
+    "y": 263.5,
+    "width": 114.1,
+    "height": 116
+  },
+  "Ecuador": {
+    "x": 527.4,
+    "y": 493,
+    "width": 32.4,
+    "height": 40.7
+  },
+  "Egypt": {
+    "x": 1120.8,
+    "y": 299,
+    "width": 70.2,
+    "height": 61.6
+  },
+  "Eritrea": {
+    "x": 1190.3,
+    "y": 386.3,
+    "width": 38.6,
+    "height": 35.6
+  },
+  "Estonia": {
+    "x": 1092.8,
+    "y": 123.8,
+    "width": 21.8,
+    "height": 12.7
+  },
+  "Ethiopia": {
+    "x": 1172.6,
+    "y": 405.8,
+    "width": 83.9,
+    "height": 74.1
+  },
+  "Finland": {
+    "x": 1071.4,
+    "y": 64.2,
+    "width": 53.7,
+    "height": 58.2
+  },
+  "Gabon": {
+    "x": 1036.2,
+    "y": 486.9,
+    "width": 31.9,
+    "height": 40.5
+  },
+  "United Kingdom": {
+    "x": 950.2,
+    "y": 129.5,
+    "width": 44.3,
+    "height": 52.8
+  },
+  "Georgia": {
+    "x": 1191.3,
+    "y": 222.5,
+    "width": 37.3,
+    "height": 15.8
+  },
+  "Ghana": {
+    "x": 968,
+    "y": 430.6,
+    "width": 24.4,
+    "height": 41
+  },
+  "Guinea": {
+    "x": 901,
+    "y": 421,
+    "width": 41.1,
+    "height": 33.9
+  },
+  "The Gambia": {
+    "x": 891.6,
+    "y": 412.7,
+    "width": 16.9,
+    "height": 4.8
+  },
+  "Guinea-Bissau": {
+    "x": 892.4,
+    "y": 420.7,
+    "width": 16.8,
+    "height": 10.2
+  },
+  "Equatorial Guinea": {
+    "x": 1039.1,
+    "y": 487.2,
+    "width": 11.2,
+    "height": 8.1
+  },
+  "Greece": {
+    "x": 1091.8,
+    "y": 233.5,
+    "width": 34.9,
+    "height": 44.1
+  },
+  "Greenland": {
+    "x": 719.6,
+    "y": 1,
+    "width": 224.7,
+    "height": 120.3
+  },
+  "Guatemala": {
+    "x": 468.3,
+    "y": 387.4,
+    "width": 23.3,
+    "height": 26.2
+  },
+  "Guyana": {
+    "x": 638.8,
+    "y": 448.1,
+    "width": 27,
+    "height": 45.6
+  },
+  "Honduras": {
+    "x": 484.4,
+    "y": 399.1,
+    "width": 35.2,
+    "height": 19.4
+  },
+  "Croatia": {
+    "x": 1055.7,
+    "y": 203.9,
+    "width": 29,
+    "height": 25.4
+  },
+  "Haiti": {
+    "x": 570.5,
+    "y": 374,
+    "width": 16.4,
+    "height": 12.1
+  },
+  "Hungary": {
+    "x": 1067.8,
+    "y": 190.6,
+    "width": 31.9,
+    "height": 18
+  },
+  "Indonesia": {
+    "x": 1525.8,
+    "y": 466.6,
+    "width": 259.7,
+    "height": 101.7
+  },
+  "India": {
+    "x": 1363.5,
+    "y": 273.9,
+    "width": 156.4,
+    "height": 176.8
+  },
+  "Ireland": {
+    "x": 937.9,
+    "y": 150.6,
+    "width": 19.5,
+    "height": 21.1
+  },
+  "Iran": {
+    "x": 1217.5,
+    "y": 246.9,
+    "width": 116.7,
+    "height": 93.9
+  },
+  "Iraq": {
+    "x": 1195,
+    "y": 261.8,
+    "width": 55.8,
+    "height": 53.2
+  },
+  "Iceland": {
+    "x": 882.2,
+    "y": 84.1,
+    "width": 45.6,
+    "height": 17.1
+  },
+  "Israel": {
+    "x": 1172.1,
+    "y": 288.2,
+    "width": 7.4,
+    "height": 24.2
+  },
+  "Italy": {
+    "x": 1020.6,
+    "y": 200.1,
+    "width": 62.2,
+    "height": 66.6
+  },
+  "Jamaica": {
+    "x": 548.8,
+    "y": 382.9,
+    "width": 11.7,
+    "height": 5.3
+  },
+  "Jordan": {
+    "x": 1176.7,
+    "y": 287.5,
+    "width": 21.4,
+    "height": 26.9
+  },
+  "Japan": {
+    "x": 1682.7,
+    "y": 209.9,
+    "width": 53.5,
+    "height": 92.7
+  },
+  "Kazakhstan": {
+    "x": 1217.4,
+    "y": 149,
+    "width": 201.2,
+    "height": 91.9
+  },
+  "Kenya": {
+    "x": 1178.5,
+    "y": 466.5,
+    "width": 45,
+    "height": 65.3
+  },
+  "Kyrgyzstan": {
+    "x": 1349.6,
+    "y": 224.1,
+    "width": 50.9,
+    "height": 25.6
+  },
+  "Cambodia": {
+    "x": 1562,
+    "y": 408.3,
+    "width": 29.7,
+    "height": 26.2
+  },
+  "Republic of Korea": {
+    "x": 1652.9,
+    "y": 254,
+    "width": 23.7,
+    "height": 27
+  },
+  "Kuwait": {
+    "x": 1240.5,
+    "y": 308.8,
+    "width": 10.6,
+    "height": 9.9
+  },
+  "Lao PDR": {
+    "x": 1543.5,
+    "y": 357.6,
+    "width": 46.5,
+    "height": 55.1
+  },
+  "Lebanon": {
+    "x": 1175.5,
+    "y": 279.4,
+    "width": 7.2,
+    "height": 10
+  },
+  "Liberia": {
+    "x": 921.6,
+    "y": 447,
+    "width": 22.1,
+    "height": 26.9
+  },
+  "Libya": {
+    "x": 1037.6,
+    "y": 289.1,
+    "width": 88,
+    "height": 87
+  },
+  "Sri Lanka": {
+    "x": 1436.8,
+    "y": 438.8,
+    "width": 12,
+    "height": 24.7
+  },
+  "Lesotho": {
+    "x": 1133.4,
+    "y": 685.7,
+    "width": 12.9,
+    "height": 12.9
+  },
+  "Lithuania": {
+    "x": 1085.2,
+    "y": 143.1,
+    "width": 26.9,
+    "height": 14.9
+  },
+  "Luxembourg": {
+    "x": 1014.4,
+    "y": 181.3,
+    "width": 2.7,
+    "height": 4.2
+  },
+  "Latvia": {
+    "x": 1084.7,
+    "y": 133.5,
+    "width": 33.7,
+    "height": 14.1
+  },
+  "Morocco": {
+    "x": 891.8,
+    "y": 272.2,
+    "width": 88.5,
+    "height": 92.1
+  },
+  "Moldova": {
+    "x": 1118.9,
+    "y": 191.6,
+    "width": 18.7,
+    "height": 18.7
+  },
+  "Madagascar": {
+    "x": 1226.4,
+    "y": 579.1,
+    "width": 43.2,
+    "height": 87.1
+  },
+  "Mexico": {
+    "x": 354.3,
+    "y": 291.7,
+    "width": 149.7,
+    "height": 116.8
+  },
+  "Macedonia": {
+    "x": 1092.4,
+    "y": 230.3,
+    "width": 13.1,
+    "height": 9.4
+  },
+  "Mali": {
+    "x": 918,
+    "y": 341.5,
+    "width": 92.3,
+    "height": 95.5
+  },
+  "Myanmar": {
+    "x": 1499.1,
+    "y": 319.9,
+    "width": 49.3,
+    "height": 118.2
+  },
+  "Montenegro": {
+    "x": 1081.5,
+    "y": 222.7,
+    "width": 9.5,
+    "height": 10.5
+  },
+  "Mongolia": {
+    "x": 1420.3,
+    "y": 169.4,
+    "width": 167.9,
+    "height": 65.5
+  },
+  "Mozambique": {
+    "x": 1155.8,
+    "y": 568.1,
+    "width": 59.5,
+    "height": 105.4
+  },
+  "Mauritania": {
+    "x": 891.5,
+    "y": 325.9,
+    "width": 67.7,
+    "height": 82.1
+  },
+  "Malawi": {
+    "x": 1170.1,
+    "y": 561.1,
+    "width": 16.8,
+    "height": 48.6
+  },
+  "Malaysia": {
+    "x": 1552.6,
+    "y": 457.3,
+    "width": 108.4,
+    "height": 39.6
+  },
+  "Namibia": {
+    "x": 1052,
+    "y": 610.6,
+    "width": 74.6,
+    "height": 77.7
+  },
+  "Niger": {
+    "x": 988,
+    "y": 351.1,
+    "width": 86.9,
+    "height": 75.9
+  },
+  "Nigeria": {
+    "x": 1001.6,
+    "y": 412.8,
+    "width": 66.9,
+    "height": 61.8
+  },
+  "Nicaragua": {
+    "x": 493,
+    "y": 405.4,
+    "width": 26.6,
+    "height": 27.6
+  },
+  "Norway": {
+    "x": 1008.5,
+    "y": 12.6,
+    "width": 105.2,
+    "height": 120.2
+  },
+  "Nepal": {
+    "x": 1423.9,
+    "y": 306.5,
+    "width": 46.8,
+    "height": 25.8
+  },
+  "Oman": {
+    "x": 1276.4,
+    "y": 332.4,
+    "width": 41.7,
+    "height": 62.5
+  },
+  "Pakistan": {
+    "x": 1317.9,
+    "y": 263.4,
+    "width": 83.7,
+    "height": 86.3
+  },
+  "Panama": {
+    "x": 517.5,
+    "y": 440.1,
+    "width": 32.2,
+    "height": 15.4
+  },
+  "Peru": {
+    "x": 525.3,
+    "y": 502.2,
+    "width": 74.8,
+    "height": 117.4
+  },
+  "Philippines": {
+    "x": 1648.5,
+    "y": 383,
+    "width": 53.5,
+    "height": 83
+  },
+  "Papua New Guinea": {
+    "x": 1782.9,
+    "y": 517.9,
+    "width": 86.1,
+    "height": 52.3
+  },
+  "Poland": {
+    "x": 1053.9,
+    "y": 152.3,
+    "width": 50.1,
+    "height": 35.8
+  },
+  "Dem. Rep. Korea": {
+    "x": 1635.9,
+    "y": 226.1,
+    "width": 25.8,
+    "height": 33.9
+  },
+  "Paraguay": {
+    "x": 638.6,
+    "y": 626,
+    "width": 47.9,
+    "height": 52.7
+  },
+  "Palestine": {
+    "x": 1175.5,
+    "y": 293,
+    "width": 3.2,
+    "height": 7.5
+  },
+  "Qatar": {
+    "x": 1266,
+    "y": 334.2,
+    "width": 4.9,
+    "height": 10
+  },
+  "Romania": {
+    "x": 1088.4,
+    "y": 193.1,
+    "width": 48.5,
+    "height": 28.6
+  },
+  "Rwanda": {
+    "x": 1150.8,
+    "y": 509.1,
+    "width": 10.2,
+    "height": 11.5
+  },
+  "Western Sahara": {
+    "x": 891.5,
+    "y": 324.3,
+    "width": 47.4,
+    "height": 42.7
+  },
+  "Saudi Arabia": {
+    "x": 1176,
+    "y": 295.3,
+    "width": 119.3,
+    "height": 101.6
+  },
+  "Sudan": {
+    "x": 1109.9,
+    "y": 360.6,
+    "width": 91.1,
+    "height": 85.9
+  },
+  "South Sudan": {
+    "x": 1121.3,
+    "y": 423.2,
+    "width": 64.9,
+    "height": 56.1
+  },
+  "Senegal": {
+    "x": 887.4,
+    "y": 395.3,
+    "width": 34.4,
+    "height": 27.3
+  },
+  "Sierra Leone": {
+    "x": 911.5,
+    "y": 437.3,
+    "width": 17,
+    "height": 21
+  },
+  "El Salvador": {
+    "x": 479.8,
+    "y": 409.2,
+    "width": 13.4,
+    "height": 8.2
+  },
+  "Serbia": {
+    "x": 1081.5,
+    "y": 206,
+    "width": 22.9,
+    "height": 24.8
+  },
+  "Suriname": {
+    "x": 657.6,
+    "y": 463.1,
+    "width": 23.4,
+    "height": 27.1
+  },
+  "Slovakia": {
+    "x": 1070.3,
+    "y": 184.7,
+    "width": 27.8,
+    "height": 11.3
+  },
+  "Slovenia": {
+    "x": 1055.5,
+    "y": 201.7,
+    "width": 14.3,
+    "height": 8.8
+  },
+  "Sweden": {
+    "x": 1036.8,
+    "y": 69.9,
+    "width": 51.4,
+    "height": 79.3
+  },
+  "Swaziland": {
+    "x": 1154.9,
+    "y": 666.6,
+    "width": 7.7,
+    "height": 10.4
+  },
+  "Syria": {
+    "x": 1177.9,
+    "y": 262.8,
+    "width": 32.7,
+    "height": 31.6
+  },
+  "Chad": {
+    "x": 1062.4,
+    "y": 351.5,
+    "width": 57.9,
+    "height": 102.7
+  },
+  "Togo": {
+    "x": 986.1,
+    "y": 431.1,
+    "width": 10.8,
+    "height": 32.7
+  },
+  "Thailand": {
+    "x": 1530.1,
+    "y": 370.7,
+    "width": 48.9,
+    "height": 94.6
+  },
+  "Tajikistan": {
+    "x": 1340.3,
+    "y": 239,
+    "width": 42.7,
+    "height": 27
+  },
+  "Turkmenistan": {
+    "x": 1258.1,
+    "y": 227.6,
+    "width": 80.2,
+    "height": 47.8
+  },
+  "Timor-Leste": {
+    "x": 1692.3,
+    "y": 554.9,
+    "width": 13.6,
+    "height": 7.2
+  },
+  "Tunisia": {
+    "x": 1026.7,
+    "y": 262.1,
+    "width": 21.5,
+    "height": 45.1
+  },
+  "Turkey": {
+    "x": 1121.5,
+    "y": 231.5,
+    "width": 102,
+    "height": 40.3
+  },
+  "Taiwan": {
+    "x": 1651,
+    "y": 339.4,
+    "width": 8.2,
+    "height": 21.4
+  },
+  "Tanzania": {
+    "x": 1154,
+    "y": 508.3,
+    "width": 59.8,
+    "height": 68.8
+  },
+  "Uganda": {
+    "x": 1154,
+    "y": 474.5,
+    "width": 31,
+    "height": 36.6
+  },
+  "Ukraine": {
+    "x": 1096.2,
+    "y": 167.6,
+    "width": 88.8,
+    "height": 49.8
+  },
+  "Uruguay": {
+    "x": 672,
+    "y": 695.1,
+    "width": 27.7,
+    "height": 31.1
+  },
+  "Uzbekistan": {
+    "x": 1270.6,
+    "y": 209.7,
+    "width": 95.8,
+    "height": 53.7
+  },
+  "Venezuela": {
+    "x": 572.3,
+    "y": 423.7,
+    "width": 76.4,
+    "height": 73.5
+  },
+  "Vietnam": {
+    "x": 1552.9,
+    "y": 351.9,
+    "width": 48.8,
+    "height": 94.7
+  },
+  "Yemen": {
+    "x": 1225.4,
+    "y": 379.8,
+    "width": 58.4,
+    "height": 41.2
+  },
+  "Zambia": {
+    "x": 1109,
+    "y": 554.7,
+    "width": 66.3,
+    "height": 62.4
+  },
+  "Zimbabwe": {
+    "x": 1127.6,
+    "y": 601.4,
+    "width": 42.7,
+    "height": 43.4
+  },
+  "Somalia": {
+    "x": 1218.6,
+    "y": 424.6,
+    "width": 55.9,
+    "height": 88
+  },
+  "Kosovo": {
+    "x": 1089.8,
+    "y": 224.3,
+    "width": 8.7,
+    "height": 9.1
+  },
+  "South Africa": {
+    "x": 1075.7,
+    "y": 643.7,
+    "width": 91,
+    "height": 81.7
+  },
+  "New Zealand": {
+    "x": 1827.1,
+    "y": 723,
+    "width": 102.5,
+    "height": 77.6
+  },
+  "Chile": {
+    "x": 593.3,
+    "y": 614.7,
+    "width": 75.8,
+    "height": 241.3
+  },
+  "Netherlands": {
+    "x": 601,
+    "y": 160.4,
+    "width": 419.4,
+    "height": 264.2
+  },
+  "Portugal": {
+    "x": 936.3,
+    "y": 230.6,
+    "width": 16.9,
+    "height": 34.7
+  },
+  "Russian Federation": {
+    "x": 1079.9,
+    "y": 10.2,
+    "width": 700.1,
+    "height": 227.6
+  },
+  "Spain": {
+    "x": 938.1,
+    "y": 221.3,
+    "width": 64,
+    "height": 49.7
+  },
+  "France": {
+    "x": 963.5,
+    "y": 174.9,
+    "width": 72.2,
+    "height": 61.4
+  },
+  "United States": {
+    "x": 99.6,
+    "y": 57.9,
+    "width": 546.6,
+    "height": 322.5
+  },
+  "French Guiana": {
+    "x": 677.3,
+    "y": 464.9,
+    "width": 16.4,
+    "height": 23.7
+  },
+  "Aruba": {
+    "x": 591.9,
+    "y": 420.7,
+    "width": 1,
+    "height": 1.3
+  },
+  "Anguilla": {
+    "x": 634,
+    "y": 384.5,
+    "width": 0.6,
+    "height": 0.4
+  },
+  "American Samoa": {
+    "x": 26.6,
+    "y": 593.1,
+    "width": 7.7,
+    "height": 1
+  },
+  "Antigua and Barbuda": {
+    "x": 640,
+    "y": 388.2,
+    "width": 1.3,
+    "height": 4.4
+  },
+  "Bahrain": {
+    "x": 1264,
+    "y": 333.3,
+    "width": 1,
+    "height": 2.9
+  },
+  "Bahamas": {
+    "x": 552.5,
+    "y": 328.9,
+    "width": 30.3,
+    "height": 38.6
+  },
+  "Saint-Barthélemy": {
+    "x": 635.1,
+    "y": 386.7,
+    "width": 0.3,
+    "height": 0.3
+  },
+  "Bermuda": {
+    "x": 636.5,
+    "y": 293.9,
+    "width": 0.8,
+    "height": 0.6
+  },
+  "Barbados": {
+    "x": 650.8,
+    "y": 416.1,
+    "width": 1.2,
+    "height": 1.9
+  },
+  "Comoros": {
+    "x": 1229.9,
+    "y": 574.8,
+    "width": 7.2,
+    "height": 6.5
+  },
+  "Cape Verde": {
+    "x": 844.5,
+    "y": 391.4,
+    "width": 14.7,
+    "height": 15.4
+  },
+  "Curaçao": {
+    "x": 596.8,
+    "y": 422.3,
+    "width": 2.3,
+    "height": 2.2
+  },
+  "Cayman Islands": {
+    "x": 532.5,
+    "y": 375,
+    "width": 9.6,
+    "height": 3.1
+  },
+  "Cyprus": {
+    "x": 1158.8,
+    "y": 275.9,
+    "width": 9.8,
+    "height": 3.6
+  },
+  "Dominica": {
+    "x": 641.5,
+    "y": 401.5,
+    "width": 1.2,
+    "height": 2.7
+  },
+  "Falkland Islands": {
+    "x": 687.8,
+    "y": 828,
+    "width": 17.6,
+    "height": 8.5
+  },
+  "Faeroe Islands": {
+    "x": 953.4,
+    "y": 107.6,
+    "width": 5,
+    "height": 5.7
+  },
+  "Federated States of Micronesia": {
+    "x": 1765.9,
+    "y": 440.3,
+    "width": 143.5,
+    "height": 27.7
+  },
+  "Grenada": {
+    "x": 638.5,
+    "y": 423.3,
+    "width": 0.9,
+    "height": 1.5
+  },
+  "Guam": {
+    "x": 1800,
+    "y": 414.2,
+    "width": 1.5,
+    "height": 2.6
+  },
+  "Saint Kitts and Nevis": {
+    "x": 634.7,
+    "y": 390,
+    "width": 1.7,
+    "height": 2
+  },
+  "Saint Lucia": {
+    "x": 643,
+    "y": 411.3,
+    "width": 1.1,
+    "height": 2.5
+  },
+  "Saint-Martin": {
+    "x": 633.8,
+    "y": 385.5,
+    "width": 0.5,
+    "height": 0.5
+  },
+  "Maldives": {
+    "x": 1402.7,
+    "y": 474.7,
+    "width": 0.2,
+    "height": 0.3
+  },
+  "Marshall Islands": {
+    "x": 1953.8,
+    "y": 456,
+    "width": 1,
+    "height": 0.4
+  },
+  "Malta": {
+    "x": 1061.8,
+    "y": 270.2,
+    "width": 2.1,
+    "height": 1.8
+  },
+  "Northern Mariana Islands": {
+    "x": 1799.1,
+    "y": 381.1,
+    "width": 5.4,
+    "height": 30.1
+  },
+  "Montserrat": {
+    "x": 637.9,
+    "y": 393.9,
+    "width": 0.5,
+    "height": 0.9
+  },
+  "Mauritius": {
+    "x": 1305.3,
+    "y": 628.1,
+    "width": 34.8,
+    "height": 5.4
+  },
+  "New Caledonia": {
+    "x": 1898.1,
+    "y": 628.3,
+    "width": 22.3,
+    "height": 19.1
+  },
+  "Nauru": {
+    "x": 1932.7,
+    "y": 505,
+    "width": 0.3,
+    "height": 0.3
+  },
+  "Palau": {
+    "x": 1746.8,
+    "y": 452.8,
+    "width": 0.9,
+    "height": 1.8
+  },
+  "Puerto Rico": {
+    "x": 606.8,
+    "y": 382.9,
+    "width": 14.9,
+    "height": 3.8
+  },
+  "French Polynesia": {
+    "x": 137.7,
+    "y": 558.2,
+    "width": 67.9,
+    "height": 121.1
+  },
+  "Solomon Islands": {
+    "x": 1865.7,
+    "y": 544.2,
+    "width": 61.6,
+    "height": 33.7
+  },
+  "São Tomé and Principe": {
+    "x": 1023,
+    "y": 490.9,
+    "width": 5.6,
+    "height": 10.7
+  },
+  "Sint Maarten": {
+    "x": 633.8,
+    "y": 385.9,
+    "width": 0.4,
+    "height": 0.2
+  },
+  "Seychelles": {
+    "x": 1247.4,
+    "y": 531.2,
+    "width": 53.4,
+    "height": 31.3
+  },
+  "Turks and Caicos Islands": {
+    "x": 584.7,
+    "y": 360.8,
+    "width": 4,
+    "height": 1.2
+  },
+  "Tonga": {
+    "x": 1,
+    "y": 601.8,
+    "width": 14.5,
+    "height": 37.7
+  },
+  "Trinidad and Tobago": {
+    "x": 636.9,
+    "y": 429,
+    "width": 8.3,
+    "height": 8.3
+  },
+  "Tuvalu": {
+    "x": 1998.9,
+    "y": 556.4,
+    "width": 0.1,
+    "height": 0.2
+  },
+  "Saint Vincent and the Grenadines": {
+    "x": 641.6,
+    "y": 416,
+    "width": 0.9,
+    "height": 1.5
+  },
+  "British Virgin Islands": {
+    "x": 625.2,
+    "y": 383.3,
+    "width": 0.9,
+    "height": 0.5
+  },
+  "United States Virgin Islands": {
+    "x": 623.2,
+    "y": 383.8,
+    "width": 2,
+    "height": 4.5
+  },
+  "Vanuatu": {
+    "x": 1921.1,
+    "y": 585.9,
+    "width": 11.1,
+    "height": 45.9
+  },
+  "Samoa": {
+    "x": 14.7,
+    "y": 588.3,
+    "width": 8.1,
+    "height": 3.7
+  },
+  "St. Eustatius (Netherlands)": {
+    "x": 634.1,
+    "y": 389.4,
+    "width": 0.2,
+    "height": 0.3
+  },
+  "Saba (Netherlands)": {
+    "x": 632.7,
+    "y": 388.5,
+    "width": 0.2,
+    "height": 0.2
+  },
+  "Martinique": {
+    "x": 642.6,
+    "y": 406.3,
+    "width": 2.2,
+    "height": 3
+  },
+  "Canary Islands (Spain)": {
+    "x": 886.8,
+    "y": 314.1,
+    "width": 26.3,
+    "height": 10.3
+  },
+  "Mayotte": {
+    "x": 1239.9,
+    "y": 583.1,
+    "width": 1,
+    "height": 2.1
+  },
+  "Reunion": {
+    "x": 1293.4,
+    "y": 635.8,
+    "width": 3.4,
+    "height": 3.2
+  },
+  "Guadeloupe": {
+    "x": 640.1,
+    "y": 395.8,
+    "width": 3.4,
+    "height": 4.1
+  },
+  "Fiji": {
+    "x": 1976.9,
+    "y": 605.5,
+    "width": 18.2,
+    "height": 19.5
+  }
+}

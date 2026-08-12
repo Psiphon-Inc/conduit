@@ -11,14 +11,18 @@ npm-debug.*
 *.orig.*
 web-build/
 /conduit-e2e-*.apk
+/conduit-perf*.apk
+/artifacts/perf-android/
 /conduit-sim.zip
-/public/canvaskit/
 
 # Playwright generated artifacts
 .playwright-mcp/
 playwright-report/
 test-results/
 blob-report/
+
+# Visual golden-state capture artifacts (accepted goldens live in visual/baselines/)
+artifacts/
 
 # macOS
 .DS_Store

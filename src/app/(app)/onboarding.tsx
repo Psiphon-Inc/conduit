@@ -17,22 +17,6 @@
  *
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-    Canvas,
-    Circle,
-    ColorMatrix,
-    Group,
-    Paint,
-    Paragraph,
-    RoundedRect,
-    SkParagraphStyle,
-    SkTextStyle,
-    Skia,
-    TextAlign,
-    TextDirection,
-    useFonts,
-    vec,
-} from "@shopify/react-native-skia";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -41,6 +25,7 @@ import {
     BackHandler,
     LayoutChangeEvent,
     Platform,
+    Text,
     View,
     useWindowDimensions,
 } from "react-native";
@@ -50,10 +35,8 @@ import {
     GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-    SharedValue,
     runOnJS,
     useAnimatedStyle,
-    useDerivedValue,
     useSharedValue,
     withTiming,
 } from "react-native-reanimated";
@@ -71,7 +54,7 @@ import {
     PRIVACY_POLICY_URL,
 } from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
-import { fonts, palette, sharedStyles as ss } from "@/src/styles";
+import { palette, sharedStyles as ss } from "@/src/styles";
 
 export default function OnboardingScreen() {
     const win = useWindowDimensions();
@@ -86,15 +69,12 @@ export default function OnboardingScreen() {
     const [shouldAskForNotifications, setShouldAskForNotifications] =
         useState(false);
 
-    const buttonTextChanged = useSharedValue(false);
-
     useEffect(() => {
         if (
             notificationPermissions.data &&
             notificationPermissions.data === "NOT_GRANTED_CAN_ASK"
         ) {
             setShouldAskForNotifications(true);
-            buttonTextChanged.value = true;
         }
     }, [notificationPermissions]);
 
@@ -169,54 +149,21 @@ export default function OnboardingScreen() {
     ];
     const privacyPolicyViewIndex = isIOS ? 2 : 3;
 
-    const currentView = useSharedValue(0);
+    // The scene children react to this on the UI thread; the screen's own
+    // text and dots render from plain state.
     const sceneCurrentView = useSharedValue(0);
-    const [currentBodyText, setCurrentBodyText] = useState(views[0].bodyText);
-    const [currentButtonText, setCurrentButtonText] = useState(
-        views[0].buttonText,
-    );
+    const [viewIndex, setViewIndex] = useState(0);
 
-    function sceneIndexForView(viewIndex: number) {
-        return isIOS && viewIndex >= privacyPolicyViewIndex
-            ? viewIndex + 1
-            : viewIndex;
+    function sceneIndexForView(index: number) {
+        return isIOS && index >= privacyPolicyViewIndex ? index + 1 : index;
     }
 
     function updateCurrentView(newIndex: number) {
-        currentView.value = newIndex;
         sceneCurrentView.value = sceneIndexForView(newIndex);
-        setCurrentBodyText(views[newIndex].bodyText);
-        setCurrentButtonText(views[newIndex].buttonText);
+        setViewIndex(newIndex);
     }
 
-    const learnMoreLinkStyle = useAnimatedStyle(() => {
-        return currentView.value === 1
-            ? {
-                  display: "flex",
-              }
-            : {
-                  display: "none",
-              };
-    });
-    const privacyPolicyLinkStyle = useAnimatedStyle(() => {
-        return currentView.value === privacyPolicyViewIndex
-            ? {
-                  display: "flex",
-              }
-            : {
-                  display: "none",
-              };
-    });
-
-    const headerText = useDerivedValue(() => {
-        return views[currentView.value].headerText;
-    });
-    const bodyText = useDerivedValue(() => {
-        return views[currentView.value].bodyText;
-    });
-    const buttonText = useDerivedValue(() => {
-        return views[currentView.value].buttonText;
-    });
+    const currentViewContent = views[viewIndex];
 
     // header takes up the first 12% of usableHeight
     const headerTransform = [
@@ -227,10 +174,7 @@ export default function OnboardingScreen() {
         width: totalUsableWidth * 0.96,
     };
     // image takes up the next 28% of usableHeight (40% total)
-    const sceneTransform = [
-        { translateY: totalUsableHeight * 0.12 },
-        //{ translateX: usableWidth * 0.18 },
-    ];
+    const sceneTransform = [{ translateY: totalUsableHeight * 0.12 }];
     const sceneSize = {
         width: totalUsableWidth,
         height: totalUsableHeight * 0.25,
@@ -266,93 +210,8 @@ export default function OnboardingScreen() {
     const privacyPolicyHeight = totalUsableHeight * 0.05;
     // 10% of usable height is left for the Privacy Policy link to appear in
 
-    const fontMgr = useFonts({
-        Rajdhani: [fonts.Rajdhani],
-        Jura: [fonts.JuraRegular],
-    });
-
     const bigFontSize = drawBigFont(win) ? 34 : 24;
     const fontSize = drawBigFont(win) ? 20 : 16;
-
-    const headerP = useDerivedValue(() => {
-        if (!fontMgr) {
-            return null;
-        }
-        const paragraphStyle: SkParagraphStyle = {
-            textAlign: TextAlign.Center,
-        };
-        if (isRTL) {
-            paragraphStyle.textDirection = TextDirection.RTL;
-        }
-        const textStyle: SkTextStyle = {
-            color: Skia.Color(palette.black),
-            fontFamilies: ["Jura"],
-            fontSize: bigFontSize,
-            fontStyle: {
-                weight: 500,
-            },
-            letterSpacing: 0.5,
-        };
-
-        return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
-            .pushStyle(textStyle)
-            .addText(headerText.value)
-            .build();
-    });
-
-    const bodyP = useDerivedValue(() => {
-        if (!fontMgr) {
-            return null;
-        }
-        const paragraphStyle: SkParagraphStyle = {
-            textAlign: isRTL ? TextAlign.Right : TextAlign.Left,
-        };
-        if (isRTL) {
-            paragraphStyle.textDirection = TextDirection.RTL;
-        }
-        const textStyle: SkTextStyle = {
-            color: Skia.Color(palette.black),
-            fontFamilies: ["Rajdhani"],
-            fontSize: fontSize,
-            fontStyle: {
-                weight: 400,
-            },
-            letterSpacing: fontSize * 0.05,
-        };
-
-        return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
-            .pushStyle(textStyle)
-            .addText(bodyText.value)
-            .build();
-    });
-
-    const buttonP = useDerivedValue(() => {
-        buttonTextChanged.value;
-        if (!fontMgr) {
-            return null;
-        }
-        const paragraphStyle: SkParagraphStyle = {
-            textAlign: TextAlign.Center,
-        };
-        if (isRTL) {
-            paragraphStyle.textDirection = TextDirection.RTL;
-        }
-
-        const textStyle: SkTextStyle = {
-            color: Skia.Color(palette.purple),
-            fontFamilies: ["Jura"],
-            fontSize: bigFontSize * 0.8,
-            fontStyle: {
-                weight: 400,
-            },
-            letterSpacing: bigFontSize * 0.05,
-        };
-
-        return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
-            .pushStyle(textStyle)
-            .addText(buttonText.value)
-            .build();
-    });
 
     // Take over "Back" Navigation from the system, we'll use gestures below
     useEffect(() => {
@@ -361,7 +220,7 @@ export default function OnboardingScreen() {
             () => {
                 // when this callback returns false, the hardware back is
                 // actuated, when it returns true the hardware back is ignored.
-                if (currentView.value === 0) {
+                if (viewIndexRef.current === 0) {
                     return false; // allow hardware back from first view only
                 } else {
                     return true;
@@ -372,7 +231,14 @@ export default function OnboardingScreen() {
         return () => {
             backListener.remove();
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Ref mirror so the stable BackHandler callback sees the latest index.
+    const viewIndexRef = { current: viewIndex };
+    viewIndexRef.current = viewIndex;
+
+    const everythingOpacity = useSharedValue(0);
 
     function replaceOrGoBack() {
         // this will be called in an animation callback using runOnJS, need to
@@ -385,13 +251,13 @@ export default function OnboardingScreen() {
     }
 
     async function goToNext() {
-        const beforeNext = views[currentView.value].beforeNext;
+        const beforeNext = views[viewIndex].beforeNext;
         if (beforeNext) {
             await beforeNext();
         }
-        if (currentView.value < views.length - 1) {
+        if (viewIndex < views.length - 1) {
             // continue onboarding
-            updateCurrentView(currentView.value + 1);
+            updateCurrentView(viewIndex + 1);
         } else {
             // onboarding done, record completion and fade to main view
             await AsyncStorage.setItem(ASYNCSTORAGE_HAS_ONBOARDED_KEY, "true");
@@ -410,40 +276,22 @@ export default function OnboardingScreen() {
                 goToNext();
             } else if (event.translationX > totalUsableWidth * 0.1) {
                 // when user swipes over 10% to the left, move view backwards
-                if (currentView.value > 0) {
-                    updateCurrentView(currentView.value - 1);
+                if (viewIndex > 0) {
+                    updateCurrentView(viewIndex - 1);
                 }
             }
         })
         .runOnJS(true);
 
-    const everythingOpacity = useSharedValue(0);
-    const everythingOpacityMatrix = useDerivedValue(() => {
-        // prettier-ignore
-        return [
-            //R, G, B, A, Bias
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, everythingOpacity.value, 0,
-        ];
-    });
-
-    const contentOpacity = useSharedValue(1);
-    const contentOpacityMatrix = useDerivedValue(() => {
-        // prettier-ignore
-        return [
-            //R, G, B, A, Bias
-            1, 0, 0, 0, 0,
-            0, 1, 0, 0, 0,
-            0, 0, 1, 0, 0,
-            0, 0, 0, contentOpacity.value, 0,
-        ];
-    });
-
     useEffect(() => {
         everythingOpacity.value = withTiming(1, { duration: 1000 });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const everythingStyle = useAnimatedStyle(
+        () => ({ opacity: everythingOpacity.value }),
+        [everythingOpacity],
+    );
 
     return (
         <GestureHandlerRootView>
@@ -458,85 +306,115 @@ export default function OnboardingScreen() {
                         alignSelf: "center",
                     }}
                 >
-                    <Canvas style={ss.flex}>
-                        <Group
-                            layer={
-                                <Paint>
-                                    <ColorMatrix
-                                        matrix={everythingOpacityMatrix}
-                                    />
-                                </Paint>
-                            }
+                    <Animated.View
+                        style={[ss.absoluteFill, everythingStyle]}
+                        pointerEvents="none"
+                    >
+                        <View
+                            style={{
+                                position: "absolute",
+                                transform: headerTransform,
+                                width: headerSize.width,
+                            }}
                         >
-                            <Group
-                                layer={
-                                    <Paint>
-                                        <ColorMatrix
-                                            matrix={contentOpacityMatrix}
-                                        />
-                                    </Paint>
-                                }
+                            <Text
+                                style={{
+                                    fontFamily: "JuraRegular",
+                                    fontSize: bigFontSize,
+                                    letterSpacing: 0.5,
+                                    color: palette.black,
+                                    textAlign: "center",
+                                    fontWeight: "500",
+                                }}
                             >
-                                <Group transform={headerTransform}>
-                                    <Paragraph
-                                        paragraph={headerP}
-                                        x={0}
-                                        y={0}
-                                        width={headerSize.width}
-                                    />
-                                </Group>
-                                <Group transform={sceneTransform}>
-                                    <OnboardingScene
-                                        currentView={sceneCurrentView}
-                                        sceneWidth={sceneSize.width}
-                                        sceneHeight={sceneSize.height}
-                                    />
-                                </Group>
-                                <Group transform={bodyTransform}>
-                                    <Paragraph
-                                        paragraph={bodyP}
-                                        x={0}
-                                        y={0}
-                                        width={bodySize.width}
-                                    />
-                                </Group>
-                                <Group transform={dotsTransform}>
-                                    <ProgressDots
-                                        dotWidth={dotWidth}
-                                        currentView={currentView}
-                                        totalViews={views.length}
-                                    />
-                                </Group>
-                                <Group transform={buttonTransform}>
-                                    <RoundedRect
-                                        x={0}
-                                        y={0}
-                                        width={buttonSize.width}
-                                        height={buttonSize.height}
-                                        style="stroke"
-                                        strokeWidth={3}
-                                        color={palette.purple}
-                                        r={buttonBorderRadius}
-                                    />
-                                    <RoundedRect
-                                        x={0}
-                                        y={0}
-                                        width={buttonSize.width}
-                                        height={buttonSize.height}
-                                        style="fill"
-                                        color={palette.white}
-                                        r={buttonBorderRadius}
-                                    />
-                                    <Paragraph
-                                        paragraph={buttonP}
-                                        x={0}
-                                        y={totalUsableHeight * 0.02}
-                                        width={buttonSize.width}
-                                    />
-                                </Group>
-                            </Group>
-                        </Group>
-                    </Canvas>
+                                {currentViewContent.headerText}
+                            </Text>
+                        </View>
+                        <View
+                            style={{
+                                position: "absolute",
+                                transform: sceneTransform,
+                            }}
+                        >
+                            <OnboardingScene
+                                currentView={sceneCurrentView}
+                                sceneWidth={sceneSize.width}
+                                sceneHeight={sceneSize.height}
+                            />
+                        </View>
+                        <View
+                            style={{
+                                position: "absolute",
+                                transform: bodyTransform,
+                                width: bodySize.width,
+                                height: bodySize.height,
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontFamily: "Rajdhani",
+                                    fontSize: fontSize,
+                                    letterSpacing: fontSize * 0.05,
+                                    color: palette.black,
+                                    textAlign: isRTL ? "right" : "left",
+                                    writingDirection: isRTL ? "rtl" : "ltr",
+                                }}
+                            >
+                                {currentViewContent.bodyText}
+                            </Text>
+                        </View>
+                        <View
+                            style={{
+                                position: "absolute",
+                                transform: dotsTransform,
+                                flexDirection: "row",
+                            }}
+                        >
+                            {views.map((_, index) => (
+                                <View
+                                    key={`dot-${index}`}
+                                    style={{
+                                        width: dotWidth / 2,
+                                        height: dotWidth / 2,
+                                        marginRight: dotWidth / 2,
+                                        borderRadius: dotWidth / 4,
+                                        borderWidth: 1,
+                                        borderColor: palette.purple,
+                                        backgroundColor:
+                                            viewIndex >= index
+                                                ? palette.purple
+                                                : palette.transparent,
+                                    }}
+                                />
+                            ))}
+                        </View>
+                        <View
+                            style={{
+                                position: "absolute",
+                                transform: buttonTransform,
+                                width: buttonSize.width,
+                                height: buttonSize.height,
+                                borderRadius: buttonBorderRadius,
+                                borderWidth: 3,
+                                borderColor: palette.purple,
+                                backgroundColor: palette.white,
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontFamily: "JuraRegular",
+                                    fontSize: bigFontSize * 0.8,
+                                    letterSpacing: bigFontSize * 0.05,
+                                    color: palette.purple,
+                                    textAlign: "center",
+                                }}
+                            >
+                                {currentViewContent.buttonText}
+                            </Text>
+                        </View>
+                    </Animated.View>
                     <GestureDetector gesture={anywhereGesture}>
                         <Animated.View
                             accessible={true}
@@ -544,7 +422,7 @@ export default function OnboardingScreen() {
                                 "ONBOARDING_INFO_ACCESSIBILITY_I18N.string",
                             )}
                             accessibilityRole={"text"}
-                            aria-valuetext={currentBodyText}
+                            aria-valuetext={currentViewContent.bodyText}
                             style={{
                                 position: "absolute",
                                 width: totalUsableWidth,
@@ -556,7 +434,7 @@ export default function OnboardingScreen() {
                         <Animated.View
                             testID="onboarding-next"
                             accessible={true}
-                            accessibilityLabel={currentButtonText}
+                            accessibilityLabel={currentViewContent.buttonText}
                             accessibilityRole={"button"}
                             style={{
                                 position: "absolute",
@@ -567,8 +445,11 @@ export default function OnboardingScreen() {
                             }}
                         />
                     </GestureDetector>
-                    <Animated.View style={{ opacity: everythingOpacity }}>
-                        <Animated.View style={learnMoreLinkStyle}>
+                    <Animated.View
+                        style={[ss.absoluteFill, everythingStyle]}
+                        pointerEvents="box-none"
+                    >
+                        {viewIndex === 1 ? (
                             <ExternalTextLink
                                 url={LEARN_MORE_URL}
                                 labelKey="LEARN_MORE_I18N.string"
@@ -576,10 +457,8 @@ export default function OnboardingScreen() {
                                 textStyle={{ ...ss.boldFont, ...ss.purpleText }}
                                 containerHeight={privacyPolicyHeight}
                             />
-                        </Animated.View>
-                    </Animated.View>
-                    <Animated.View style={{ opacity: everythingOpacity }}>
-                        <Animated.View style={privacyPolicyLinkStyle}>
+                        ) : null}
+                        {viewIndex === privacyPolicyViewIndex ? (
                             <ExternalTextLink
                                 url={PRIVACY_POLICY_URL}
                                 labelKey="PRIVACY_POLICY_I18N.string"
@@ -587,111 +466,10 @@ export default function OnboardingScreen() {
                                 textStyle={{ ...ss.boldFont, ...ss.purpleText }}
                                 containerHeight={privacyPolicyHeight}
                             />
-                        </Animated.View>
+                        ) : null}
                     </Animated.View>
                 </View>
             </SafeAreaView>
         </GestureHandlerRootView>
-    );
-}
-
-function ProgressDots({
-    dotWidth,
-    currentView,
-    totalViews,
-}: {
-    dotWidth: number;
-    currentView: SharedValue<number>;
-    totalViews: number;
-}) {
-    // Couldn't figure out a way to avoid hardcoding these
-    const dot0Fill = useDerivedValue(() => {
-        return currentView.value >= 0 ? palette.purple : palette.transparent;
-    });
-    const dot1Fill = useDerivedValue(() => {
-        return currentView.value >= 1 ? palette.purple : palette.transparent;
-    });
-    const dot2Fill = useDerivedValue(() => {
-        return currentView.value >= 2 ? palette.purple : palette.transparent;
-    });
-    const dot3Fill = useDerivedValue(() => {
-        return currentView.value >= 3 ? palette.purple : palette.transparent;
-    });
-    const dot4Fill = useDerivedValue(() => {
-        return currentView.value >= 4 ? palette.purple : palette.transparent;
-    });
-
-    return (
-        <Group>
-            <Circle
-                c={vec(dotWidth * 0, 0)}
-                r={dotWidth / 4}
-                style={"stroke"}
-                strokeWidth={1}
-                color={palette.purple}
-            />
-            <Circle
-                c={vec(dotWidth * 0, 0)}
-                r={dotWidth / 4}
-                style={"fill"}
-                color={dot0Fill}
-            />
-            <Circle
-                c={vec(dotWidth * 1, 0)}
-                r={dotWidth / 4}
-                style={"stroke"}
-                strokeWidth={1}
-                color={palette.purple}
-            />
-            <Circle
-                c={vec(dotWidth * 1, 0)}
-                r={dotWidth / 4}
-                style={"fill"}
-                color={dot1Fill}
-            />
-            <Circle
-                c={vec(dotWidth * 2, 0)}
-                r={dotWidth / 4}
-                style={"stroke"}
-                strokeWidth={1}
-                color={palette.purple}
-            />
-            <Circle
-                c={vec(dotWidth * 2, 0)}
-                r={dotWidth / 4}
-                style={"fill"}
-                color={dot2Fill}
-            />
-            <Circle
-                c={vec(dotWidth * 3, 0)}
-                r={dotWidth / 4}
-                style={"stroke"}
-                strokeWidth={1}
-                color={palette.purple}
-            />
-            <Circle
-                c={vec(dotWidth * 3, 0)}
-                r={dotWidth / 4}
-                style={"fill"}
-                color={dot3Fill}
-            />
-            {totalViews > 4 ? (
-                <Group>
-                    <Circle
-                        c={vec(dotWidth * 4, 0)}
-                        r={dotWidth / 4}
-                        style={"stroke"}
-                        strokeWidth={1}
-                        color={palette.purple}
-                    />
-                    <Circle
-                        c={vec(dotWidth * 4, 0)}
-                        r={dotWidth / 4}
-                        style={"fill"}
-                        color={dot4Fill}
-                    />
-                </Group>
-            ) : null}
-        </Group>
     );
 }

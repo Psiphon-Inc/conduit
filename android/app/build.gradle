@@ -133,6 +133,11 @@ android {
             if (findProperty('conduitE2eDebuggable')?.toBoolean() ?: false) {
                 debuggable true
             }
+            // Perf APKs install beside the normal app so repeatable fresh-state
+            // runs never wipe a developer's signed-in `npm run android` setup.
+            if (findProperty('conduitPerfApplicationId')?.toBoolean() ?: false) {
+                applicationIdSuffix ".perf"
+            }
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"

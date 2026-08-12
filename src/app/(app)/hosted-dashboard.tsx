@@ -18,13 +18,8 @@
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
-import {
-    Canvas,
-    LinearGradient as SkiaLinearGradient,
-    Rect as SkiaRect,
-    vec,
-} from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRootNavigationState, useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -876,22 +871,17 @@ function DashboardBackground({
     height: number;
 }) {
     return (
-        <Canvas
+        <LinearGradient
             style={{
                 position: "absolute",
                 width,
                 height,
             }}
-        >
-            <SkiaRect x={0} y={0} width={width} height={height}>
-                <SkiaLinearGradient
-                    start={vec(0, height)}
-                    end={vec(0, 0)}
-                    colors={["#FCDFD7", "#F0E0EB", "#E8DFF2", "#FFFFFF"]}
-                    positions={[0.08, 0.19, 0.33, 0.78]}
-                />
-            </SkiaRect>
-        </Canvas>
+            start={{ x: 0, y: 1 }}
+            end={{ x: 0, y: 0 }}
+            colors={["#FCDFD7", "#F0E0EB", "#E8DFF2", "#FFFFFF"]}
+            locations={[0.08, 0.19, 0.33, 0.78]}
+        />
     );
 }
 

@@ -16,17 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import {
-    Canvas,
-    Circle,
-    Group,
-    Path,
-    Skia,
-    fitbox,
-    rect,
-} from "@shopify/react-native-skia";
 import React from "react";
-import { LayoutChangeEvent, View } from "react-native";
+import { View } from "react-native";
+import Svg, { Circle, G, Path } from "react-native-svg";
 
 import {
     RegionalImpactRow,
@@ -44,37 +36,33 @@ type WorldMapPathValue =
           path?: string | string[];
       };
 
+interface RegionalMapBounds {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 const MAP_VIEWBOX_WIDTH = 2000;
 const MAP_VIEWBOX_HEIGHT = 857;
 const REGIONAL_GLYPH_WIDTH = 52;
 const REGIONAL_GLYPH_HEIGHT = 38;
+const REGIONAL_GLYPH_PADDING = 5;
 const worldMapPaths = require("@/assets/worldmapPaths.json") as Record<
     string,
     WorldMapPathValue
 >;
+// Precomputed by scripts/generate-worldmap-bounds.mjs (verified fresh by
+// `npm run check`); replaces runtime Skia computeTightBounds() calls.
+const worldMapBounds = require("@/assets/worldmapBounds.json") as Record<
+    string,
+    RegionalMapBounds
+>;
 const countryCodesToNames =
     require("@/assets/countryCodesToNames.json") as Record<string, string>;
 const worldMapLookup = buildWorldMapLookup();
-const regionalGlyphCache = new Map<string, RegionalMapGlyphData | null>();
 const IDLE_REGION_RGB = hexToRgb(palette.deepMauve);
 const ACTIVE_REGION_RGB = hexToRgb(palette.peach);
-const REGIONAL_GLYPH_CANVAS_STYLE = {
-    position: "absolute" as const,
-    top: 0,
-    left: 0,
-    width: REGIONAL_GLYPH_WIDTH,
-    height: REGIONAL_GLYPH_HEIGHT,
-};
-
-interface RegionalMapGlyphData {
-    bounds: {
-        height: number;
-        width: number;
-        x: number;
-        y: number;
-    };
-    paths: NonNullable<ReturnType<typeof Skia.Path.MakeFromSVGString>>[];
-}
 
 interface RegionalMapMarker {
     radius: number;
@@ -141,6 +129,7 @@ function toWorldMapPaths(value: WorldMapPathValue): string[] {
 
 function buildWorldMapLookup() {
     const lookup = new Map<string, string[]>();
+    const boundsLookup = new Map<string, RegionalMapBounds>();
     const allPaths: string[] = [];
 
     for (const [key, value] of Object.entries(worldMapPaths)) {
@@ -149,10 +138,15 @@ function buildWorldMapLookup() {
             continue;
         }
         allPaths.push(...countryPaths);
-        lookup.set(normalizeRegionalMapKey(key), countryPaths);
+        const normalizedKey = normalizeRegionalMapKey(key);
+        lookup.set(normalizedKey, countryPaths);
+        const bounds = worldMapBounds[key];
+        if (bounds) {
+            boundsLookup.set(normalizedKey, bounds);
+        }
     }
 
-    return { allPaths, lookup };
+    return { allPaths, lookup, boundsLookup };
 }
 
 function resolveRegionalPathStrings(region: string): string[] {
@@ -160,6 +154,14 @@ function resolveRegionalPathStrings(region: string): string[] {
         toRegionalMapLookupKeys(region, countryCodesToNames)
             .map((candidate) => worldMapLookup.lookup.get(candidate))
             .find((candidate) => candidate !== undefined) ?? []
+    );
+}
+
+function resolveRegionalBounds(region: string): RegionalMapBounds | null {
+    return (
+        toRegionalMapLookupKeys(region, countryCodesToNames)
+            .map((candidate) => worldMapLookup.boundsLookup.get(candidate))
+            .find((candidate) => candidate !== undefined) ?? null
     );
 }
 
@@ -171,51 +173,33 @@ function getManualRegionalMarker(region: string): RegionalMapMarker | null {
     return candidate ? MANUAL_REGIONAL_MARKERS[candidate] : null;
 }
 
+interface RegionalMapGlyphData {
+    bounds: RegionalMapBounds;
+    paths: string[];
+}
+
+function getRegionalGlyphTransform(bounds: RegionalMapBounds): string {
+    const availableWidth = REGIONAL_GLYPH_WIDTH - REGIONAL_GLYPH_PADDING * 2;
+    const availableHeight = REGIONAL_GLYPH_HEIGHT - REGIONAL_GLYPH_PADDING * 2;
+    const scale = Math.min(
+        availableWidth / Math.max(bounds.width, 1),
+        availableHeight / Math.max(bounds.height, 1),
+    );
+    const translateX =
+        (REGIONAL_GLYPH_WIDTH - bounds.width * scale) / 2 - bounds.x * scale;
+    const translateY =
+        (REGIONAL_GLYPH_HEIGHT - bounds.height * scale) / 2 - bounds.y * scale;
+
+    return `matrix(${scale} 0 0 ${scale} ${translateX} ${translateY})`;
+}
+
 function getRegionalGlyphData(region: string): RegionalMapGlyphData | null {
-    const cached = regionalGlyphCache.get(region);
-    if (cached !== undefined) {
-        return cached;
-    }
-
-    const paths = resolveRegionalPathStrings(region)
-        .map((path) => Skia.Path.MakeFromSVGString(path))
-        .filter(
-            (
-                path,
-            ): path is NonNullable<
-                ReturnType<typeof Skia.Path.MakeFromSVGString>
-            > => path !== null,
-        );
-
-    if (paths.length === 0) {
-        regionalGlyphCache.set(region, null);
+    const paths = resolveRegionalPathStrings(region);
+    const bounds = resolveRegionalBounds(region);
+    if (paths.length === 0 || !bounds) {
         return null;
     }
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
-    for (const path of paths) {
-        const bounds = path.computeTightBounds();
-        minX = Math.min(minX, bounds.x);
-        minY = Math.min(minY, bounds.y);
-        maxX = Math.max(maxX, bounds.x + bounds.width);
-        maxY = Math.max(maxY, bounds.y + bounds.height);
-    }
-
-    const glyphData = {
-        bounds: {
-            x: minX,
-            y: minY,
-            width: maxX - minX,
-            height: maxY - minY,
-        },
-        paths,
-    };
-    regionalGlyphCache.set(region, glyphData);
-    return glyphData;
+    return { bounds, paths };
 }
 
 function getRegionalMarker(region: string): RegionalMapMarker | null {
@@ -251,38 +235,6 @@ export function supportsRegionalMapRegion(region: string): boolean {
 }
 
 export function RegionalWorldMap({ rows }: { rows: RegionalImpactRow[] }) {
-    const [canvasSize, setCanvasSize] = React.useState({
-        width: 0,
-        height: 0,
-    });
-    const src = React.useMemo(
-        () => rect(0, 0, MAP_VIEWBOX_WIDTH, MAP_VIEWBOX_HEIGHT),
-        [],
-    );
-    const dst = React.useMemo(
-        () => rect(0, 0, canvasSize.width, canvasSize.height),
-        [canvasSize.height, canvasSize.width],
-    );
-    const resizeTransform = React.useMemo(
-        () => fitbox("contain", src, dst),
-        [dst, src],
-    );
-    const handleLayout = React.useCallback((event: LayoutChangeEvent) => {
-        const { height, width } = event.nativeEvent.layout;
-
-        setCanvasSize((current) => {
-            if (current.width === width && current.height === height) {
-                return current;
-            }
-
-            return { width, height };
-        });
-    }, []);
-
-    const mapPaths = React.useMemo(() => {
-        return worldMapLookup;
-    }, []);
-
     const highlightedPaths = React.useMemo(() => {
         const maxBytesTransferred = rows.reduce(
             (currentMax, row) => Math.max(currentMax, row.bytesTransferred),
@@ -333,11 +285,10 @@ export function RegionalWorldMap({ rows }: { rows: RegionalImpactRow[] }) {
                 } => value !== null,
             )
             .sort((left, right) => left.intensity - right.intensity);
-    }, [mapPaths.lookup, rows]);
+    }, [rows]);
 
     return (
         <View
-            onLayout={handleLayout}
             style={{
                 width: "100%",
                 aspectRatio: MAP_VIEWBOX_WIDTH / MAP_VIEWBOX_HEIGHT,
@@ -346,39 +297,42 @@ export function RegionalWorldMap({ rows }: { rows: RegionalImpactRow[] }) {
                 backgroundColor: "rgba(25, 18, 36, 0.06)",
             }}
         >
-            {canvasSize.width > 0 && canvasSize.height > 0 ? (
-                <Canvas
-                    style={{
-                        width: canvasSize.width,
-                        height: canvasSize.height,
-                    }}
-                    __destroyWebGLContextAfterRender
-                >
-                    <Group transform={resizeTransform}>
-                        {mapPaths.allPaths.map((path, index) => (
-                            <Path
-                                key={`base-${index}`}
-                                path={path}
-                                style="fill"
-                                color={REGIONAL_IDLE_COLOR}
-                            />
-                        ))}
-                        {highlightedPaths.flatMap(({ color, key, paths }) =>
-                            paths.map((path, index) => (
-                                <Path
-                                    key={`highlight-${key}-${index}`}
-                                    path={path}
-                                    style="fill"
-                                    color={color}
-                                />
-                            )),
-                        )}
-                    </Group>
-                </Canvas>
-            ) : null}
+            <Svg
+                width="100%"
+                height="100%"
+                viewBox={`0 0 ${MAP_VIEWBOX_WIDTH} ${MAP_VIEWBOX_HEIGHT}`}
+            >
+                {worldMapLookup.allPaths.map((path, index) => (
+                    <Path
+                        key={`base-${index}`}
+                        d={path}
+                        fill={REGIONAL_IDLE_COLOR}
+                    />
+                ))}
+                {highlightedPaths.flatMap(({ color, key, paths }) =>
+                    paths.map((path, index) => (
+                        <Path
+                            key={`highlight-${key}-${index}`}
+                            d={path}
+                            fill={color}
+                        />
+                    )),
+                )}
+            </Svg>
         </View>
     );
 }
+
+const REGIONAL_GLYPH_FRAME_STYLE = {
+    width: REGIONAL_GLYPH_WIDTH,
+    height: REGIONAL_GLYPH_HEIGHT,
+    flexShrink: 0,
+    borderRadius: 10,
+    overflow: "hidden" as const,
+    backgroundColor: "rgba(78, 54, 119, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(78, 54, 119, 0.12)",
+};
 
 export function RegionalMapGlyph({
     bytesTransferred,
@@ -407,86 +361,56 @@ export function RegionalMapGlyph({
 
     if (!glyph) {
         return (
-            <View
-                style={{
-                    width: REGIONAL_GLYPH_WIDTH,
-                    height: REGIONAL_GLYPH_HEIGHT,
-                    flexShrink: 0,
-                    borderRadius: 10,
-                    overflow: "hidden",
-                    backgroundColor: "rgba(78, 54, 119, 0.08)",
-                    borderWidth: 1,
-                    borderColor: "rgba(78, 54, 119, 0.12)",
-                }}
-            >
+            <View style={REGIONAL_GLYPH_FRAME_STYLE}>
                 {marker ? (
-                    <Canvas
-                        style={REGIONAL_GLYPH_CANVAS_STYLE}
-                        __destroyWebGLContextAfterRender
+                    <Svg
+                        width={REGIONAL_GLYPH_WIDTH}
+                        height={REGIONAL_GLYPH_HEIGHT}
                     >
                         <Circle
                             cx={REGIONAL_GLYPH_WIDTH / 2}
                             cy={REGIONAL_GLYPH_HEIGHT / 2}
                             r={9}
-                            color="rgba(25, 18, 36, 0.18)"
+                            fill="rgba(25, 18, 36, 0.18)"
                         />
                         <Circle
                             cx={REGIONAL_GLYPH_WIDTH / 2}
                             cy={REGIONAL_GLYPH_HEIGHT / 2}
                             r={6}
-                            color={heatColor}
+                            fill={heatColor}
                         />
-                    </Canvas>
+                    </Svg>
                 ) : null}
             </View>
         );
     }
 
-    const padding = 12;
-    const src = rect(
-        glyph.bounds.x - padding,
-        glyph.bounds.y - padding,
-        glyph.bounds.width + padding * 2,
-        glyph.bounds.height + padding * 2,
-    );
-    const dst = rect(0, 0, REGIONAL_GLYPH_WIDTH, REGIONAL_GLYPH_HEIGHT);
+    const transform = getRegionalGlyphTransform(glyph.bounds);
 
     return (
-        <View
-            style={{
-                width: REGIONAL_GLYPH_WIDTH,
-                height: REGIONAL_GLYPH_HEIGHT,
-                flexShrink: 0,
-                borderRadius: 10,
-                overflow: "hidden",
-                backgroundColor: "rgba(78, 54, 119, 0.08)",
-                borderWidth: 1,
-                borderColor: "rgba(78, 54, 119, 0.12)",
-            }}
-        >
-            <Canvas
-                style={REGIONAL_GLYPH_CANVAS_STYLE}
-                __destroyWebGLContextAfterRender
+        <View style={REGIONAL_GLYPH_FRAME_STYLE}>
+            <Svg
+                width={REGIONAL_GLYPH_WIDTH}
+                height={REGIONAL_GLYPH_HEIGHT}
+                viewBox={`0 0 ${REGIONAL_GLYPH_WIDTH} ${REGIONAL_GLYPH_HEIGHT}`}
             >
-                <Group transform={fitbox("contain", src, dst)}>
+                <G transform={transform}>
                     {glyph.paths.map((path, index) => (
                         <Path
                             key={`glyph-base-${region}-${index}`}
-                            path={path}
-                            style="fill"
-                            color={REGIONAL_IDLE_COLOR}
+                            d={path}
+                            fill={REGIONAL_IDLE_COLOR}
                         />
                     ))}
                     {glyph.paths.map((path, index) => (
                         <Path
                             key={`glyph-highlight-${region}-${index}`}
-                            path={path}
-                            style="fill"
-                            color={heatColor}
+                            d={path}
+                            fill={heatColor}
                         />
                     ))}
-                </Group>
-            </Canvas>
+                </G>
+            </Svg>
         </View>
     );
 }
