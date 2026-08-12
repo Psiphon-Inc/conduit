@@ -10,7 +10,8 @@
     "web": "npm run get-git-hash && expo start --web",
     "build:web": "npm run get-git-hash && expo export --platform web --output-dir dist",
     "get-git-hash": "node scripts/write-git-hash.js",
-    "build-release": "npm run get-git-hash && cd android && NODE_ENV=production ./gradlew assembleRelease && cd ..",
+    "native:generate": "expo prebuild --clean",
+    "build-release": "npm run get-git-hash && npm run native:generate -- --platform android && cd android && NODE_ENV=production ./gradlew assembleRelease && cd ..",
     "perf:build:android": "bash scripts/perf-build-android.sh",
     "perf:build:android:mock": "PERF_MOCK=1 PERF_APK_OUT=conduit-perf-mock.apk bash scripts/perf-build-android.sh",
     "perf:build:android:stress": "PERF_MOCK=1 PERF_STRESS_SCENE=1 PERF_APK_OUT=conduit-perf-stress.apk bash scripts/perf-build-android.sh",
@@ -155,11 +156,6 @@
     "typescript": "~5.9.2"
   },
   "expo": {
-    "doctor": {
-      "appConfigFieldsNotSyncedCheck": {
-        "enabled": false
-      }
-    },
     "install": {
       "exclude": [
         "typescript"

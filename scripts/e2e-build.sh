@@ -36,6 +36,23 @@ write_git_hash() {
   npm run get-git-hash
 }
 
+generate_native_projects() {
+  case "$1" in
+    android-real|android-mock|android)
+      log "Generating Android project"
+      npm run native:generate -- --platform android
+      ;;
+    ios)
+      log "Generating iOS project"
+      npm run native:generate -- --platform ios
+      ;;
+    all)
+      log "Generating Android and iOS projects"
+      npm run native:generate
+      ;;
+  esac
+}
+
 find_android_tool() {
   local tool="$1"
   local sdk_dir="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
@@ -169,6 +186,7 @@ esac
 
 load_e2e_env
 write_git_hash
+generate_native_projects "${1:-}"
 
 case "${1:-}" in
   android-real) build_android_real ;;
