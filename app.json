@@ -42,7 +42,7 @@
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 94,
+            "versionCode": 95,
             "permissions": [
                 "android.permission.POST_NOTIFICATIONS",
                 "com.android.vending.BILLING"
@@ -82,7 +82,14 @@
                     "root": "./src/app"
                 }
             ],
-            "expo-audio",
+            [
+                "expo-audio",
+                {
+                    "enableBackgroundPlayback": false,
+                    "recordAudioAndroid": false,
+                    "microphonePermission": false
+                }
+            ],
             "expo-localization",
             "expo-font",
             "expo-secure-store",
