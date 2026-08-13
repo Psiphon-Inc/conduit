@@ -148,6 +148,7 @@ build_android_mock() {
 
 build_ios() {
   log "Building iOS simulator .app"
+  "$SCRIPT_DIR/prepare-ios-rncore-release.sh"
   NODE_ENV=production EXPO_PUBLIC_E2E=true xcodebuild \
     -workspace "$PROJECT_DIR/ios/conduit.xcworkspace" \
     -scheme conduit \
