@@ -42,7 +42,7 @@
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 93,
+            "versionCode": 94,
             "permissions": [
                 "android.permission.POST_NOTIFICATIONS",
                 "com.android.vending.BILLING"
