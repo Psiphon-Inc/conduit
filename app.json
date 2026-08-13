@@ -2,7 +2,7 @@
     "expo": {
         "name": "conduit",
         "slug": "conduit",
-        "version": "2.3.2",
+        "version": "2.4.0",
         "orientation": "portrait",
         "scheme": "ca.psiphon.conduit",
         "userInterfaceStyle": "automatic",
@@ -19,7 +19,11 @@
                 "NSPrivacyAccessedAPITypes": [
                     {
                         "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
-                        "NSPrivacyAccessedAPITypeReasons": ["C617.1", "0A2A.1", "3B52.1"]
+                        "NSPrivacyAccessedAPITypeReasons": [
+                            "C617.1",
+                            "0A2A.1",
+                            "3B52.1"
+                        ]
                     },
                     {
                         "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
@@ -38,7 +42,7 @@
         },
         "android": {
             "package": "ca.psiphon.conduit",
-            "versionCode": 91,
+            "versionCode": 93,
             "permissions": [
                 "android.permission.POST_NOTIFICATIONS",
                 "com.android.vending.BILLING"
