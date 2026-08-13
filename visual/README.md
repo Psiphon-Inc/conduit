@@ -2,17 +2,14 @@
 
 Deterministic screenshot capture and comparison for Conduit's orb rendering,
 built for the React Native Skia migration
-(`docs/plans/react-native-skia-migration.md`). The native renderer's output
-is the accepted golden set; the pre-migration Skia captures are archived
-under `visual/baselines/skia` and can still be compared against with
-`node visual/compare.mjs --baseline=skia`.
+(`docs/plans/react-native-skia-migration.md`). Baselines are generated locally
+when a visual comparison is needed and are intentionally not committed.
 
 ## Layout
 
 ```text
 visual/
-|-- baselines/native/{mobile,desktop}/<scenario>.png  accepted goldens (committed)
-|-- baselines/skia/...                               archived pre-migration reference
+|-- baselines/native/{mobile,desktop}/<scenario>.png  local, gitignored goldens
 |-- tolerances.json                                  optional per-scenario tolerances
 |-- capture.mjs, compare.mjs, lib.mjs                toolchain
 `-- README.md
@@ -34,18 +31,19 @@ sync. Scenario ids are baseline filenames — renaming one orphans its golden.
 # 1. Serve the web app (no browser window is opened; port 8090)
 npm run visual:serve
 
-# 2. Capture the renderer into artifacts/
+# 2. Generate a local baseline, then capture the renderer into artifacts/
+npm run visual:update-baselines
 npm run visual:capture-native
 
-# 3. Compare captures against accepted goldens
+# 3. Compare captures against the local goldens
 npm run visual:compare
 open artifacts/visual-diff/reports/report.html
 ```
 
 Point the tools at a different server with `CONDUIT_WEB_URL=http://...`.
 
-`visual:compare` compares `current/native` against the accepted native
-goldens; `--baseline=skia` targets the archived pre-migration captures.
+`visual:compare` compares `current/native` against the locally generated
+native goldens.
 
 ## The lab route
 
@@ -93,8 +91,8 @@ commit are byte-identical.
 ## Baseline policy
 
 - `visual:capture-*` and `visual:compare` never write to `visual/baselines/`.
-- Goldens change only via the explicit `npm run visual:update-baselines`,
-  and those diffs are reviewed like code.
+- Generate or refresh local goldens explicitly with
+  `npm run visual:update-baselines`. The output is gitignored.
 - There is intentionally no universal pass/fail pixel threshold: CanvasKit
   and DOM/SVG antialiasing legitimately differ. Add opt-in, scenario-specific
   tolerances to `visual/tolerances.json` after observing real output:
@@ -122,13 +120,13 @@ auto-opens your default browser.
    progress range, and orb references).
 2. Inspect it interactively at `/orb-lab?scenario=<id>` and scrub `progress`
    to the state you want frozen.
-3. Run `npm run visual:update-baselines` and commit the new goldens with the
-   scenario.
+3. Run `npm run visual:update-baselines` when you need a fresh local comparison
+   set.
 
 ## Caveats
 
 - Goldens are captured on macOS Chromium at `deviceScaleFactor: 1`. Other
-  OS/GPU stacks may rasterize CanvasKit slightly differently; recapture
-  baselines rather than comparing across machines.
+  OS/GPU stacks may rasterize differently; recapture baselines rather than
+  comparing across machines.
 - The `native` renderer is a placeholder panel until the migration's native
   orb primitives land (plan phases 5-8).

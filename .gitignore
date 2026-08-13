@@ -21,8 +21,9 @@ playwright-report/
 test-results/
 blob-report/
 
-# Visual golden-state capture artifacts (accepted goldens live in visual/baselines/)
+# Visual capture artifacts and locally generated comparison baselines
 artifacts/
+/visual/baselines/
 
 # macOS
 .DS_Store
