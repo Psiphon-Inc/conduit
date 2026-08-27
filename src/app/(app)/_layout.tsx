@@ -20,7 +20,7 @@ import { Stack, usePathname } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
-import { isE2E } from "@/src/common/e2e";
+import { isE2E, isPerf } from "@/src/common/e2e";
 import { AppBottomNav } from "@/src/components/AppBottomNav";
 import { ConduitActionsProvider } from "@/src/components/ConduitActionsContext";
 import { ModalHost, ModalProvider } from "@/src/components/ModalStore";
@@ -157,16 +157,18 @@ const styles = StyleSheet.create({
         left: 0,
         width: 8,
         height: 8,
-        backgroundColor: "#000",
+        backgroundColor: isPerf() ? "rgba(0, 0, 0, 0.01)" : "#000",
         zIndex: 1,
     },
     hostedApiOfflineMarker: {
-        top: 0,
+        // SDK 57 edge-to-edge content extends behind the Android status bar.
+        // Keep E2E markers within Maestro's visible-content bounds.
+        top: 32,
     },
     localPairingReadyMarker: {
-        top: 8,
+        top: 40,
     },
     conduitRunningMarker: {
-        top: 16,
+        top: 48,
     },
 });

@@ -36,6 +36,23 @@ write_git_hash() {
   npm run get-git-hash
 }
 
+generate_native_projects() {
+  case "$1" in
+    android-real|android-mock|android)
+      log "Generating Android project"
+      npm run native:generate -- --platform android
+      ;;
+    ios)
+      log "Generating iOS project"
+      npm run native:generate -- --platform ios
+      ;;
+    all)
+      log "Generating Android and iOS projects"
+      npm run native:generate
+      ;;
+  esac
+}
+
 find_android_tool() {
   local tool="$1"
   local sdk_dir="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
@@ -96,13 +113,15 @@ copy_android_release_apk() {
 # project build dirs without wiring the producing tasks, so build those prefab
 # packages explicitly first.
 ANDROID_E2E_GRADLE_TARGETS=(
-  :shopify_react-native-skia:prefabReleasePackage
   :react-native-reanimated:prefabReleasePackage
   assembleRelease
 )
 
 build_android_real() {
   log "Building Android real release APK"
+  # npm ci replaces generated native code while Gradle's external-build cache
+  # can still refer to the previous node_modules tree.
+  rm -rf "$PROJECT_DIR/android/app/.cxx"
   (
     cd "$PROJECT_DIR/android"
     ./gradlew clean --console=plain
@@ -115,6 +134,8 @@ build_android_real() {
 
 build_android_mock() {
   log "Building Android mock release APK"
+  # Keep Gradle clean reproducible after npm ci replaces generated codegen dirs.
+  rm -rf "$PROJECT_DIR/android/app/.cxx"
   (
     cd "$PROJECT_DIR/android"
     ./gradlew clean --console=plain
@@ -127,6 +148,7 @@ build_android_mock() {
 
 build_ios() {
   log "Building iOS simulator .app"
+  "$SCRIPT_DIR/prepare-ios-rncore-release.sh"
   NODE_ENV=production EXPO_PUBLIC_E2E=true xcodebuild \
     -workspace "$PROJECT_DIR/ios/conduit.xcworkspace" \
     -scheme conduit \
@@ -165,6 +187,7 @@ esac
 
 load_e2e_env
 write_git_hash
+generate_native_projects "${1:-}"
 
 case "${1:-}" in
   android-real) build_android_real ;;

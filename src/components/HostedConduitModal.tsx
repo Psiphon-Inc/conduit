@@ -16,7 +16,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, Text, View } from "react-native";
 
@@ -47,7 +46,8 @@ export function HostedConduitModal({
 }) {
     const { t } = useTranslation();
     const { data: conduitName } = useConduitName();
-    const { openRyveClaimModal } = useConduitActions();
+    const { openPersonalPairingModal, openRyveClaimModal } =
+        useConduitActions();
 
     const scopeLabel = getScopeLabel(
         conduit.traffic_scope,
@@ -55,6 +55,7 @@ export function HostedConduitModal({
         Platform.OS === "android",
     );
     const showClaimButton = Boolean(conduit.ryve_claim);
+    const showPersonalPairingButton = conduit.traffic_scope === "personal";
     const stationAlias =
         resolvePreferredRyveName(conduitName) ??
         t("HOSTED_CONDUIT_FALLBACK_I18N.string");
@@ -212,6 +213,47 @@ export function HostedConduitModal({
                             </View>
                         ) : null}
                     </View>
+
+                    {showPersonalPairingButton ? (
+                        <Pressable
+                            testID="hosted-modal-share"
+                            accessibilityRole="button"
+                            onPress={() => {
+                                onClose();
+                                openPersonalPairingModal();
+                            }}
+                            style={{
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                gap: 8,
+                                paddingVertical: 10,
+                                paddingHorizontal: 20,
+                                borderWidth: 1.5,
+                                borderColor: palette.purple,
+                                borderRadius: 15,
+                                alignSelf: "stretch",
+                            }}
+                        >
+                            <Text
+                                style={[
+                                    ss.bodyFont,
+                                    {
+                                        fontSize: 16,
+                                        color: palette.purple,
+                                        letterSpacing: 0.3,
+                                    },
+                                ]}
+                            >
+                                {t("SHARE_PERSONAL_PAIRING_I18N.string")}
+                            </Text>
+                            <Icon
+                                name="right-arrow"
+                                color={palette.purple}
+                                size={12}
+                            />
+                        </Pressable>
+                    ) : null}
 
                     {/* Claim in Ryve CTA (common scope) */}
                     {showClaimButton ? (

@@ -16,8 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { useIsFocused } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import { useIsFocused } from "expo-router/react-navigation";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,6 +31,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useConduitKeyPair } from "@/src/auth/hooks";
+import { isPerf } from "@/src/common/e2e";
 import { formatExpiresAt } from "@/src/common/formatters";
 import { ActionsArea } from "@/src/components/ActionsArea";
 import { useConduitActions } from "@/src/components/ConduitActionsContext";
@@ -345,11 +346,15 @@ export default function HomeScreen() {
             }),
         [hostedConduitsForScene, personalConnected, publicConnected],
     );
-    const useSimulatedSceneData =
+    const usePerfStressScene =
+        isPerf() && process.env.EXPO_PUBLIC_PERF_STRESS_SCENE === "1";
+    const useDevSimulatedSceneData =
         __DEV__ && runtimeConfig.devSimulatedDataEnabled;
+    const useSimulatedSceneData =
+        useDevSimulatedSceneData || usePerfStressScene;
     const [simulatedHostedTick, setSimulatedHostedTick] = React.useState(0);
     React.useEffect(() => {
-        if (!useSimulatedSceneData) {
+        if (!useDevSimulatedSceneData || usePerfStressScene) {
             return;
         }
         const interval = setInterval(() => {
@@ -358,10 +363,25 @@ export default function HomeScreen() {
         return () => {
             clearInterval(interval);
         };
-    }, [useSimulatedSceneData]);
+    }, [useDevSimulatedSceneData, usePerfStressScene]);
     const simulatedHostedTracks = React.useMemo<OrbHostedTrack[]>(() => {
         if (!useSimulatedSceneData) {
             return [];
+        }
+
+        if (usePerfStressScene) {
+            return [
+                {
+                    id: "perf-hosted-active",
+                    connectedCount: 12,
+                    conduitStatus: "active",
+                },
+                {
+                    id: "perf-hosted-idle",
+                    connectedCount: 0,
+                    conduitStatus: "active",
+                },
+            ];
         }
 
         const cycleA = [2, 3, 1, 4, 2];
@@ -381,7 +401,7 @@ export default function HomeScreen() {
                 conduitStatus: "active",
             },
         ];
-    }, [simulatedHostedTick, useSimulatedSceneData]);
+    }, [simulatedHostedTick, usePerfStressScene, useSimulatedSceneData]);
     const orbSceneHostedTracks = isIosNoSubscriptionState
         ? []
         : useSimulatedSceneData

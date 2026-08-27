@@ -137,7 +137,7 @@ export function ModalHost() {
 
 const styles = StyleSheet.create({
     androidOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         backgroundColor: "transparent",
         elevation: 1000,
         zIndex: 1000,

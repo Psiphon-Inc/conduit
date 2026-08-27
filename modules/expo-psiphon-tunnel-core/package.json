@@ -7,7 +7,6 @@
     "sideEffects": false,
     "peerDependencies": {
         "expo": "*",
-        "expo-modules-core": "*",
         "react-native": "*"
     },
     "license": "GPL-3.0-or-later",

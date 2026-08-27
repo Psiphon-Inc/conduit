@@ -1,0 +1,6 @@
+appId: ca.psiphon.conduit.perf
+---
+- extendedWaitUntil:
+      visible:
+          id: "app-ready"
+      timeout: 180000

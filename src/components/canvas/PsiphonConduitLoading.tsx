@@ -17,7 +17,6 @@
  *
  */
 import { Image } from "expo-image";
-import React from "react";
 
 export function PsiphonConduitLoading() {
     return (

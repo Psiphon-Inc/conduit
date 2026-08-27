@@ -19,6 +19,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { EventSubscription } from "expo-modules-core";
 
+import { isPerf } from "@/src/common/e2e";
 import { timedLog } from "@/src/common/utils";
 import { ASYNCSTORAGE_MOCK_INPROXY_RUNNING_KEY } from "@/src/constants";
 import type { ConduitModuleAPI } from "@/src/inproxy/module";
@@ -38,6 +39,16 @@ async function* generateMockData(
     // initial empty data, representing no usage
     // TODO: this is a crappy way to clone
     const data = getZeroedInproxyActivityStats();
+    const deterministicPerfWorkload = isPerf();
+
+    if (deterministicPerfWorkload) {
+        // Perf builds need the same continuously animated workload on every
+        // run. Start all lights immediately and keep their identities stable;
+        // random client churn otherwise looks like mount/unmount flicker.
+        data.currentConnectedClients = maxClients;
+        data.currentConnectingClients = 0;
+        data.currentAnnouncingWorkers = 0;
+    }
 
     function syncSegments() {
         data.segments.total.totalBytesUp = data.totalBytesUp;
@@ -61,6 +72,22 @@ async function* generateMockData(
         data.dataByPeriod["1000ms"].announcingWorkers.shift();
         data.dataByPeriod["1000ms"].bytesUp.shift();
         data.dataByPeriod["1000ms"].bytesDown.shift();
+
+        if (deterministicPerfWorkload) {
+            const bytesUp = Math.max(1, Math.floor(limitBandwidth / 200));
+            const bytesDown = Math.max(1, Math.floor(limitBandwidth / 160));
+            data.dataByPeriod["1000ms"].connectedClients.push(0);
+            data.dataByPeriod["1000ms"].connectingClients.push(0);
+            data.dataByPeriod["1000ms"].announcingWorkers.push(0);
+            data.dataByPeriod["1000ms"].bytesUp.push(bytesUp);
+            data.dataByPeriod["1000ms"].bytesDown.push(bytesDown);
+            data.totalBytesUp += bytesUp;
+            data.totalBytesDown += bytesDown;
+            data.elapsedTime += 1000;
+            syncSegments();
+            await sleep(1000);
+            return;
+        }
 
         // 25% chance to drop a connected client
         if (Math.random() > 0.75 && data.currentConnectedClients > 0) {
@@ -263,7 +290,10 @@ class ConduitModuleMock {
         );
         this.emitState();
         if (this.running) {
-            await this.emitMockData(
+            // Data generation lasts until the proxy is stopped. Do not keep
+            // the toggle promise pending for that entire lifetime: React 19
+            // may defer state flushed from the event until this action yields.
+            void this.emitMockData(
                 totalMaxClients,
                 limitUpstreamBytesPerSecond + limitDownstreamBytesPerSecond,
             );

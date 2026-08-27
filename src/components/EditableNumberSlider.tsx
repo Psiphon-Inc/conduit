@@ -16,17 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import {
-    Canvas,
-    Circle,
-    LinearGradient,
-    RoundedRect,
-    vec,
-} from "@shopify/react-native-skia";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import { LayoutChangeEvent, Text, View } from "react-native";
+import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
     clamp,
@@ -49,6 +43,16 @@ interface EditableNumberSliderProps {
     onChange: (newValue: number) => Promise<void>;
     scrollRef: RefObject<any>;
 }
+
+export function sliderFillWidth(
+    thumbCenterX: number,
+    trackLeft: number,
+    trackWidth: number,
+): number {
+    "worklet";
+    return Math.max(0, Math.min(trackWidth, thumbCenterX - trackLeft));
+}
+
 export function EditableNumberSlider({
     label,
     originalValue,
@@ -85,11 +89,10 @@ export function EditableNumberSlider({
         [canvasSize],
     );
 
-    // The Circle to slide
+    // The circle to slide
     const circleR = useDerivedValue(() => {
         return canvasSize.value.height / 4;
     });
-    const outlineWidth = useSharedValue(1);
     const usableWidth = useDerivedValue(() => {
         return canvasSize.value.width - circleR.value * 2;
     });
@@ -121,31 +124,53 @@ export function EditableNumberSlider({
             (circleCxPct.value / 100) * effectiveUsableWidth;
         return newValue;
     });
-    const circleCy = useDerivedValue(() => {
-        return canvasSize.value.height / 2;
-    });
 
-    // track area
-    const trackHeight = useDerivedValue(() => {
-        return circleR.value * 2;
-    });
-    const trackY = useDerivedValue(() => {
-        return circleCy.value / 2;
-    });
-    const filledStart = useDerivedValue(() => {
-        return vec(circleR.value, circleCy.value);
-    });
-    const filledEnd = useDerivedValue(() => {
-        return vec(circleR.value + usableWidth.value, circleCy.value);
-    });
+    const trackStyle = useAnimatedStyle(() => {
+        const height = circleR.value * 2;
+        return {
+            position: "absolute" as const,
+            left: circleR.value,
+            top: canvasSize.value.height / 4,
+            width: usableWidth.value,
+            height,
+            borderRadius: circleR.value,
+            backgroundColor: palette.black,
+            borderWidth: 1,
+            borderColor: palette.midGrey,
+            overflow: "hidden" as const,
+        };
+    }, [canvasSize, circleR, usableWidth]);
 
-    // Overlay for GestureDetector
-    const overlayStyle = useAnimatedStyle(() => ({
-        flex: 1,
-        position: "absolute",
-        width: "100%",
-        height: "100%",
-    }));
+    // The filled portion clips a full-width gradient to the thumb position.
+    const filledClipStyle = useAnimatedStyle(
+        () => ({
+            width: sliderFillWidth(
+                circleCx.value,
+                circleR.value,
+                usableWidth.value,
+            ),
+        }),
+        [circleCx, circleR, usableWidth],
+    );
+    const filledGradientStyle = useAnimatedStyle(
+        () => ({ width: usableWidth.value }),
+        [usableWidth],
+    );
+
+    const thumbStyle = useAnimatedStyle(() => {
+        const radius = circleR.value;
+        return {
+            position: "absolute" as const,
+            left: circleCx.value - radius,
+            top: canvasSize.value.height / 2 - radius,
+            width: radius * 2,
+            height: radius * 2,
+            borderRadius: radius,
+            backgroundColor: palette.white,
+            borderWidth: 1,
+            borderColor: palette.purple,
+        };
+    }, [canvasSize, circleCx, circleR]);
 
     const sliderGesture = Gesture.Pan()
         .blocksExternalGesture(scrollRef)
@@ -176,63 +201,36 @@ export function EditableNumberSlider({
                     onLayout={onSliderLayout}
                     style={[ss.flex, isRTL ? { transform: "scaleX(-1)" } : {}]}
                 >
-                    <Canvas style={ss.flex}>
-                        <RoundedRect
-                            x={circleR}
-                            y={trackY}
-                            width={usableWidth}
-                            height={trackHeight}
-                            style="fill"
-                            color={palette.black}
-                            r={circleR}
-                        />
-                        <RoundedRect
-                            x={circleR}
-                            y={trackY}
-                            width={circleCx}
-                            height={trackHeight}
-                            style="fill"
-                            color={palette.peach}
-                            r={circleR}
+                    <Animated.View style={trackStyle}>
+                        <Animated.View
+                            style={[
+                                StyleSheet.absoluteFill,
+                                { overflow: "hidden" },
+                                filledClipStyle,
+                            ]}
                         >
-                            <LinearGradient
-                                start={filledStart}
-                                end={filledEnd}
-                                colors={[
-                                    palette.mauve,
-                                    palette.peachyMauve,
-                                    palette.peach,
+                            <Animated.View
+                                style={[
+                                    { height: "100%" },
+                                    filledGradientStyle,
                                 ]}
-                            />
-                        </RoundedRect>
-                        <RoundedRect
-                            x={circleR}
-                            y={trackY}
-                            width={usableWidth}
-                            height={trackHeight}
-                            style="stroke"
-                            strokeWidth={outlineWidth}
-                            color={palette.midGrey}
-                            r={circleR}
-                        />
-                        <Circle
-                            cx={circleCx}
-                            cy={circleCy}
-                            r={circleR}
-                            style="fill"
-                            color={palette.white}
-                        />
-                        <Circle
-                            cx={circleCx}
-                            cy={circleCy}
-                            r={circleR}
-                            style="stroke"
-                            strokeWidth={1}
-                            color={palette.purple}
-                        />
-                    </Canvas>
+                            >
+                                <LinearGradient
+                                    style={StyleSheet.absoluteFill}
+                                    start={{ x: 0, y: 0.5 }}
+                                    end={{ x: 1, y: 0.5 }}
+                                    colors={[
+                                        palette.mauve,
+                                        palette.peachyMauve,
+                                        palette.peach,
+                                    ]}
+                                />
+                            </Animated.View>
+                        </Animated.View>
+                    </Animated.View>
+                    <Animated.View style={thumbStyle} />
                     <GestureDetector gesture={sliderGesture}>
-                        <Animated.View style={[overlayStyle]} />
+                        <Animated.View style={StyleSheet.absoluteFill} />
                     </GestureDetector>
                 </View>
                 <View style={[ss.row, ss.alignCenter]}>

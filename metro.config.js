@@ -1,5 +1,11 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require("expo/metro-config");
+const {
+    wrapWithReanimatedMetroConfig,
+} = require("react-native-reanimated/metro-config");
+const {
+    getBundleModeMetroConfig,
+} = require("react-native-worklets/bundleMode");
 
 const revenueCatPurchasesUmdPath = require.resolve("@revenuecat/purchases-js");
 
@@ -47,9 +53,6 @@ if (expoSerializer) {
     };
 }
 
-// TODO: this is a hack to not bundle all of the @expo/vector-icons fonts
-config.resolver.assetExts = config.resolver.assetExts.filter(
-    (ext) => ext !== "ttf",
+module.exports = wrapWithReanimatedMetroConfig(
+    getBundleModeMetroConfig(config),
 );
-
-module.exports = config;

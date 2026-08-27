@@ -17,13 +17,13 @@
  *
  */
 import { Image } from "expo-image";
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { StyleProp, Text, View, ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
+import type { AnimatedStyle } from "react-native-reanimated";
 
-import { HostedMiniOrb } from "@/src/components/HostedMiniOrb";
 import { Identicon } from "@/src/components/Identicon";
+import { HostedMiniOrbNative as HostedMiniOrb } from "@/src/components/orb-scene/native/HostedMiniOrbNative";
 import { getScopeIcon, getScopeLabel } from "@/src/hosted/conduitDisplay";
 import { ConduitView } from "@/src/hosted/contracts";
 import { palette, sharedStyles as ss } from "@/src/styles";
@@ -39,7 +39,7 @@ export function HostedConduitCard({
     connectedCount: number;
     variant?: "inline" | "stacked";
     style?: StyleProp<ViewStyle>;
-    orbStyle?: StyleProp<ViewStyle>;
+    orbStyle?: AnimatedStyle<ViewStyle>;
 }) {
     const { t } = useTranslation();
     const scopeIcon = getScopeIcon(conduit.traffic_scope);

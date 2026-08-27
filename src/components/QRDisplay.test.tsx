@@ -16,85 +16,77 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import React from "react";
 import { act, create } from "react-test-renderer";
 
-import { isE2E } from "@/src/common/e2e";
 import { QRDisplay } from "@/src/components/QRDisplay";
-import { useReducedMotionPreference } from "@/src/hooks";
 
-jest.mock("@shopify/react-native-skia", () => ({
-    Canvas: "Canvas",
-    Rect: "Rect",
-    RoundedRect: "RoundedRect",
-}));
-jest.mock("@/src/common/e2e", () => ({ isE2E: jest.fn() }));
-jest.mock("@/src/hooks", () => ({
-    useReducedMotionPreference: jest.fn(),
-}));
+jest.mock("react-native-svg", () => {
+    const React = require("react");
+    const mock = (name: string) => {
+        const Component = (props: Record<string, unknown>) =>
+            React.createElement(name, props);
+        Component.displayName = name;
+        return Component;
+    };
+    return {
+        __esModule: true,
+        default: mock("Svg"),
+        Rect: mock("Rect"),
+    };
+});
 
-describe("QRDisplay motion", () => {
-    let reducedMotion = false;
-    let e2e = false;
+describe("QRDisplay", () => {
     let requestAnimationFrameMock: jest.SpyInstance;
-    let cancelAnimationFrameMock: jest.SpyInstance;
 
     beforeEach(() => {
-        reducedMotion = false;
-        e2e = false;
-        (useReducedMotionPreference as jest.Mock).mockImplementation(
-            () => reducedMotion,
-        );
-        (isE2E as jest.Mock).mockImplementation(() => e2e);
         requestAnimationFrameMock = jest
             .spyOn(global, "requestAnimationFrame")
             .mockImplementation(() => 17);
-        cancelAnimationFrameMock = jest.spyOn(global, "cancelAnimationFrame");
     });
 
     afterEach(() => {
         jest.restoreAllMocks();
     });
 
-    test.each([
-        { reduced: true, e2eBuild: false },
-        { reduced: false, e2eBuild: true },
-    ])(
-        "uses a stable radius when reduced=$reduced and e2e=$e2eBuild",
-        ({ reduced, e2eBuild }) => {
-            reducedMotion = reduced;
-            e2e = e2eBuild;
-            let renderer: ReturnType<typeof create>;
-
-            act(() => {
-                renderer = create(<QRDisplay data="test" />);
-            });
-
-            expect(requestAnimationFrameMock).not.toHaveBeenCalled();
-            expect(
-                renderer!.root.findAll(
-                    (node) => String(node.type) === "RoundedRect",
-                )[0].props.r,
-            ).toBeCloseTo((200 / 21) * 0.2);
-            act(() => renderer!.unmount());
-        },
-    );
-
-    test("starts and stops RAF when the preference changes", () => {
+    test("renders static rounded modules without frame callbacks", () => {
         let renderer: ReturnType<typeof create>;
+
         act(() => {
             renderer = create(<QRDisplay data="test" />);
         });
-        expect(requestAnimationFrameMock).toHaveBeenCalledTimes(1);
 
-        reducedMotion = true;
-        act(() => renderer!.update(<QRDisplay data="test" />));
-        expect(cancelAnimationFrameMock).toHaveBeenCalledWith(17);
-        expect(requestAnimationFrameMock).toHaveBeenCalledTimes(1);
+        // The Skia predecessor pulsed corner radii from a rAF loop through
+        // React state; the SVG treatment must stay fully static.
+        expect(requestAnimationFrameMock).not.toHaveBeenCalled();
 
-        reducedMotion = false;
-        act(() => renderer!.update(<QRDisplay data="test" />));
-        expect(requestAnimationFrameMock).toHaveBeenCalledTimes(2);
+        const rects = renderer!.root.findAll(
+            (node) => String(node.type) === "Rect",
+        );
+        // Background rect plus at least the finder-pattern modules.
+        expect(rects.length).toBeGreaterThan(100);
+
+        const moduleRects = rects.filter((rect) => rect.props.rx != null);
+        // "test" fits QR version 1: 21x21 modules of size 200/21.
+        const expectedRadius = (200 / 21) * 0.2;
+        for (const rect of moduleRects) {
+            expect(rect.props.rx).toBeCloseTo(expectedRadius);
+        }
+        expect(moduleRects.length).toBeGreaterThan(0);
+
+        act(() => renderer!.unmount());
+    });
+
+    test("scales module size with the rendered size", () => {
+        let renderer: ReturnType<typeof create>;
+
+        act(() => {
+            renderer = create(<QRDisplay data="test" size={420} />);
+        });
+
+        const moduleRects = renderer!.root.findAll(
+            (node) => String(node.type) === "Rect" && node.props.rx != null,
+        );
+        expect(moduleRects[0].props.width).toBeCloseTo(420 / 21);
 
         act(() => renderer!.unmount());
     });

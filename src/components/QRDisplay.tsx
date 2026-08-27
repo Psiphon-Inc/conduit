@@ -16,12 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { Canvas, Rect, RoundedRect } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
+import Svg, { Rect } from "react-native-svg";
 
-import { isE2E } from "@/src/common/e2e";
-import { useReducedMotionPreference } from "@/src/hooks";
 import { palette } from "@/src/styles";
 
 interface QRDisplayProps {
@@ -857,8 +855,6 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({
     backgroundColor = palette.white,
     foregroundColor = palette.black,
 }) => {
-    const reducedMotionPreferred = useReducedMotionPreference();
-    const animationDisabled = reducedMotionPreferred || isE2E();
     const modules = React.useMemo(() => {
         const generator = new QRCodeGenerator();
         generator.addData(data);
@@ -883,62 +879,35 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({
         return { modules: result, moduleSize };
     }, [data, size]);
 
-    const [cornerRadius, setCornerRadius] = React.useState(0);
-
-    React.useEffect(() => {
-        const maxRadius = modules.moduleSize / 2;
-        if (animationDisabled) {
-            setCornerRadius(modules.moduleSize * 0.2);
-            return;
-        }
-
-        const duration = 6000;
-        let startTime: number | null = null;
-        let animationFrame: number;
-
-        const animate = (timestamp: number) => {
-            if (!startTime) startTime = timestamp;
-            const elapsed = timestamp - startTime;
-            const progress = (elapsed % (duration * 2)) / duration;
-
-            // Oscillate between 0 and maxRadius
-            const value =
-                progress <= 1
-                    ? progress * maxRadius // 0 to maxRadius
-                    : (2 - progress) * maxRadius; // maxRadius back to 0
-
-            setCornerRadius(value);
-            animationFrame = requestAnimationFrame(animate);
-        };
-
-        animationFrame = requestAnimationFrame(animate);
-
-        return () => cancelAnimationFrame(animationFrame);
-    }, [animationDisabled, modules.moduleSize]);
+    // Static rounded-module treatment. The former Skia version pulsed the
+    // corner radius from a requestAnimationFrame loop, re-rendering hundreds
+    // of rects through React state every frame; scannability is the hard
+    // requirement here, decoration is not.
+    const cornerRadius = modules.moduleSize * 0.2;
 
     return (
         <View style={{ width: size, height: size }}>
-            <Canvas style={{ width: size, height: size }}>
+            <Svg width={size} height={size}>
                 <Rect
                     x={0}
                     y={0}
                     width={size}
                     height={size}
-                    color={backgroundColor}
+                    fill={backgroundColor}
                 />
                 {modules.modules.map((module, index) => (
-                    <RoundedRect
+                    <Rect
                         key={index}
                         x={module.x}
                         y={module.y}
                         width={module.width}
                         height={module.height}
-                        r={cornerRadius}
-                        color={foregroundColor}
-                        style="fill"
+                        rx={cornerRadius}
+                        ry={cornerRadius}
+                        fill={foregroundColor}
                     />
                 ))}
-            </Canvas>
+            </Svg>
         </View>
     );
 };

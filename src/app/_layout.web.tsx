@@ -1,11 +1,12 @@
-import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
+import { DefaultTheme, ThemeProvider } from "expo-router";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 
+import { PERF_ENABLED, PerfRecorderHost } from "@/src/common/perfProbe";
 import { HostedAuthProvider } from "@/src/hosted/auth/provider";
 import i18nService from "@/src/i18n/i18n";
 import { hydrateSoundPreference } from "@/src/sound";
@@ -32,6 +33,7 @@ export default function RootLayout() {
         <ThemeProvider value={DefaultTheme}>
             <QueryClientProvider client={queryClient}>
                 <HostedAuthProvider>
+                    {PERF_ENABLED ? <PerfRecorderHost /> : null}
                     <StatusBar style="dark" />
                     <Stack
                         screenOptions={{

@@ -7,8 +7,6 @@ const readline = require("node:readline/promises");
 
 const root = path.resolve(__dirname, "..");
 const appJsonPath = path.join(root, "app.json");
-const buildGradlePath = path.join(root, "android", "app", "build.gradle");
-const infoPlistPath = path.join(root, "ios", "conduit", "Info.plist");
 
 const ALL_PLATFORMS = ["android", "ios", "web"];
 
@@ -24,13 +22,13 @@ Options:
   --platforms <list>        Comma-separated: android, ios, web. Default: prompt.
   --android-build <number>  Android versionCode. Default: current + 1.
   --ios-build <number>      iOS buildNumber. Default: current + 1.
-  --web-rc <number>         Web RC number. Default: highest existing
-                            release-web-<version>-RC.* tag + 1 (fetch tags first!).
+  --web-rc <number>         Web RC number. Default: the selected Android or iOS
+                            build number; for web-only cuts, the next global RC.
   --help                    Show this help.
 
-This prepares, but does not commit, tag, or push, a release cut. It keeps the
-marketing version in sync across app.json, android/app/build.gradle, and
-ios/conduit/Info.plist, and bumps the build counters for selected platforms:
+This prepares, but does not commit, tag, or push, a release cut. It updates the
+Expo config that generates the native projects and bumps the build counters for
+selected platforms:
 
   release-android-<version>-RC.<versionCode>
   release-ios-<version>-RC.<buildNumber>
@@ -38,7 +36,7 @@ ios/conduit/Info.plist, and bumps the build counters for selected platforms:
 
 Build counters must be greater than their current values. Reusing an Android
 versionCode will be rejected by Google Play. Run 'git fetch origin --tags'
-beforehand so the web RC default is computed against the latest tags.
+beforehand so web-only cuts use the latest release-candidate number.
 `);
     process.exit(exitCode);
 }
@@ -119,10 +117,10 @@ function parseBuildNumber(value, name) {
     return parsed;
 }
 
-function highestWebRc(version) {
+function highestReleaseRc() {
     let tags;
     try {
-        tags = execFileSync("git", ["tag", "--list", `release-web-${version}-RC.*`], {
+        tags = execFileSync("git", ["tag", "--list", "release-*-RC.*"], {
             cwd: root,
             encoding: "utf8",
         });
@@ -225,7 +223,15 @@ function resolveBuildNumbers(args, current) {
         }
     }
     if (args.platforms.includes("web")) {
-        args.webRc = args.webRc ?? highestWebRc(args.version) + 1;
+        args.webRc =
+            args.webRc ??
+            args.androidBuild ??
+            args.iosBuild ??
+            Math.max(
+                current.androidVersionCode,
+                current.iosBuildNumber,
+                highestReleaseRc(),
+            ) + 1;
     }
     return args;
 }
@@ -250,54 +256,6 @@ function updateAppJson(args) {
     }
 }
 
-function replaceOnce(content, pattern, replacement, description) {
-    const matches = content.match(new RegExp(pattern.source, `${pattern.flags}g`));
-    if (!matches || matches.length !== 1) {
-        throw new Error(
-            `Expected exactly one match for ${description}, found ${matches ? matches.length : 0}`,
-        );
-    }
-    return content.replace(pattern, replacement);
-}
-
-function updateBuildGradle(args) {
-    let content = fs.readFileSync(buildGradlePath, "utf8");
-    content = replaceOnce(
-        content,
-        /versionName "[^"]*"/,
-        `versionName "${args.version}"`,
-        "versionName in build.gradle",
-    );
-    if (args.platforms.includes("android")) {
-        content = replaceOnce(
-            content,
-            /versionCode \d+/,
-            `versionCode ${args.androidBuild}`,
-            "versionCode in build.gradle",
-        );
-    }
-    fs.writeFileSync(buildGradlePath, content);
-}
-
-function updateInfoPlist(args) {
-    let content = fs.readFileSync(infoPlistPath, "utf8");
-    content = replaceOnce(
-        content,
-        /(<key>CFBundleShortVersionString<\/key>\s*<string>)[^<]*(<\/string>)/,
-        `$1${args.version}$2`,
-        "CFBundleShortVersionString in Info.plist",
-    );
-    if (args.platforms.includes("ios")) {
-        content = replaceOnce(
-            content,
-            /(<key>CFBundleVersion<\/key>\s*<string>)[^<]*(<\/string>)/,
-            `$1${args.iosBuild}$2`,
-            "CFBundleVersion in Info.plist",
-        );
-    }
-    fs.writeFileSync(infoPlistPath, content);
-}
-
 async function main() {
     let args;
     try {
@@ -312,8 +270,6 @@ async function main() {
 
     try {
         updateAppJson(args);
-        updateBuildGradle(args);
-        updateInfoPlist(args);
     } catch (error) {
         console.error(error.message);
         process.exit(1);
@@ -337,8 +293,8 @@ async function main() {
     console.log(`Updated: ${summary.join(", ")}`);
     console.log(`
 Next steps:
-  git diff -- app.json android/app/build.gradle ios/conduit/Info.plist
-  git add app.json android/app/build.gradle ios/conduit/Info.plist
+  git diff -- app.json
+  git add app.json
   git commit -m "Cut release ${args.version} (${args.platforms.join(", ")})"
 ${tags.map((tag) => `  git tag ${tag}`).join("\n")}
   git push origin main

@@ -15,30 +15,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
+import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { LayoutChangeEvent, StyleSheet, View, ViewProps } from "react-native";
+import { StyleSheet, View, ViewProps } from "react-native";
 
 export function DropdownSection(props: React.PropsWithChildren<ViewProps>) {
     const { children, style, ...rest } = props;
-    const [size, setSize] = React.useState({ width: 0, height: 0 });
-
-    const handleLayout = React.useCallback((event: LayoutChangeEvent) => {
-        const { width, height } = event.nativeEvent.layout;
-
-        setSize((current) => {
-            if (current.width === width && current.height === height) {
-                return current;
-            }
-
-            return { width, height };
-        });
-    }, []);
 
     return (
         <View
             {...rest}
-            onLayout={handleLayout}
             style={[
                 {
                     marginHorizontal: -10,
@@ -49,27 +35,16 @@ export function DropdownSection(props: React.PropsWithChildren<ViewProps>) {
                 style,
             ]}
         >
-            <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-                {size.width > 0 && size.height > 0 ? (
-                    <Canvas style={StyleSheet.absoluteFillObject}>
-                        <Rect
-                            x={0}
-                            y={0}
-                            width={size.width}
-                            height={size.height}
-                        >
-                            <LinearGradient
-                                start={vec(0, 0)}
-                                end={vec(0, size.height)}
-                                colors={[
-                                    "rgba(255, 255, 255, 0.94)",
-                                    "rgba(157, 129, 201, 0.52)",
-                                ]}
-                            />
-                        </Rect>
-                    </Canvas>
-                ) : null}
-            </View>
+            <LinearGradient
+                pointerEvents="none"
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                colors={[
+                    "rgba(255, 255, 255, 0.94)",
+                    "rgba(157, 129, 201, 0.52)",
+                ]}
+            />
             <View>{children}</View>
         </View>
     );

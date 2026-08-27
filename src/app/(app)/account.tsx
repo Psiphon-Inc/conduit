@@ -16,8 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
-import React from "react";
+import { LinearGradient } from "expo-linear-gradient";
 import { ScrollView, View, useWindowDimensions } from "react-native";
 
 import { HostedConduitAccountPage } from "@/src/components/HostedConduitAccountPage";
@@ -29,22 +28,17 @@ export default function AccountScreen() {
 
     return (
         <View style={{ flex: 1 }}>
-            <Canvas
+            <LinearGradient
                 style={{
                     position: "absolute",
                     width: win.width,
                     height: win.height,
                 }}
-            >
-                <Rect x={0} y={0} width={win.width} height={win.height}>
-                    <LinearGradient
-                        start={vec(0, win.height)}
-                        end={vec(0, 0)}
-                        colors={["#FCDFD7", "#F0E0EB", "#E8DFF2", "#FFFFFF"]}
-                        positions={[0.08, 0.19, 0.33, 0.78]}
-                    />
-                </Rect>
-            </Canvas>
+                start={{ x: 0, y: 1 }}
+                end={{ x: 0, y: 0 }}
+                colors={["#FCDFD7", "#F0E0EB", "#E8DFF2", "#FFFFFF"]}
+                locations={[0.08, 0.19, 0.33, 0.78]}
+            />
             <SafeAreaView includeBottomInset={false}>
                 <ScrollView
                     contentContainerStyle={{

@@ -1,0 +1,194 @@
+{
+    "mobile/mini-idle": {
+        "maxChangedPct": 1
+    },
+    "mobile/mini-active": {
+        "maxChangedPct": 1.5
+    },
+    "desktop/mini-idle": {
+        "maxChangedPct": 1
+    },
+    "desktop/mini-active": {
+        "maxChangedPct": 1.5
+    },
+    "desktop/light-absorbed": {
+        "maxChangedPct": 2
+    },
+    "desktop/light-approaching": {
+        "maxChangedPct": 2
+    },
+    "desktop/light-far": {
+        "maxChangedPct": 2
+    },
+    "desktop/light-touching": {
+        "maxChangedPct": 2
+    },
+    "desktop/lights-multi-lane": {
+        "maxChangedPct": 2
+    },
+    "desktop/lights-multiple": {
+        "maxChangedPct": 2
+    },
+    "desktop/provisioning-marker": {
+        "maxChangedPct": 2
+    },
+    "desktop/scene-blur": {
+        "maxChangedPct": 2
+    },
+    "desktop/single-active": {
+        "maxChangedPct": 2
+    },
+    "desktop/single-announcing": {
+        "maxChangedPct": 2
+    },
+    "desktop/single-off": {
+        "maxChangedPct": 2
+    },
+    "desktop/skybox-0": {
+        "maxChangedPct": 0.5
+    },
+    "desktop/skybox-1": {
+        "maxChangedPct": 0.5
+    },
+    "desktop/skybox-2": {
+        "maxChangedPct": 0.5
+    },
+    "desktop/skybox-3": {
+        "maxChangedPct": 0.5
+    },
+    "desktop/swap-000": {
+        "maxChangedPct": 2
+    },
+    "desktop/swap-025": {
+        "maxChangedPct": 2
+    },
+    "desktop/swap-050": {
+        "maxChangedPct": 2
+    },
+    "desktop/swap-075": {
+        "maxChangedPct": 2
+    },
+    "desktop/swap-100": {
+        "maxChangedPct": 2
+    },
+    "desktop/theme-level-0": {
+        "maxChangedPct": 2
+    },
+    "desktop/theme-level-2": {
+        "maxChangedPct": 2
+    },
+    "desktop/theme-level-3": {
+        "maxChangedPct": 2
+    },
+    "desktop/three-idle": {
+        "maxChangedPct": 2
+    },
+    "desktop/three-pairwise-bridge": {
+        "maxChangedPct": 2
+    },
+    "desktop/two-approaching": {
+        "maxChangedPct": 2
+    },
+    "desktop/two-far": {
+        "maxChangedPct": 2
+    },
+    "desktop/two-first-contact": {
+        "maxChangedPct": 2
+    },
+    "desktop/two-overlapping": {
+        "maxChangedPct": 2
+    },
+    "desktop/two-strong-bridge": {
+        "maxChangedPct": 2
+    },
+    "mobile/light-absorbed": {
+        "maxChangedPct": 2
+    },
+    "mobile/light-approaching": {
+        "maxChangedPct": 2
+    },
+    "mobile/light-far": {
+        "maxChangedPct": 2
+    },
+    "mobile/light-touching": {
+        "maxChangedPct": 2
+    },
+    "mobile/lights-multi-lane": {
+        "maxChangedPct": 2
+    },
+    "mobile/lights-multiple": {
+        "maxChangedPct": 2
+    },
+    "mobile/provisioning-marker": {
+        "maxChangedPct": 2
+    },
+    "mobile/scene-blur": {
+        "maxChangedPct": 2
+    },
+    "mobile/single-active": {
+        "maxChangedPct": 2
+    },
+    "mobile/single-announcing": {
+        "maxChangedPct": 2
+    },
+    "mobile/single-off": {
+        "maxChangedPct": 2
+    },
+    "mobile/skybox-0": {
+        "maxChangedPct": 0.5
+    },
+    "mobile/skybox-1": {
+        "maxChangedPct": 0.5
+    },
+    "mobile/skybox-2": {
+        "maxChangedPct": 0.5
+    },
+    "mobile/skybox-3": {
+        "maxChangedPct": 0.5
+    },
+    "mobile/swap-000": {
+        "maxChangedPct": 2
+    },
+    "mobile/swap-025": {
+        "maxChangedPct": 2
+    },
+    "mobile/swap-050": {
+        "maxChangedPct": 2
+    },
+    "mobile/swap-075": {
+        "maxChangedPct": 2
+    },
+    "mobile/swap-100": {
+        "maxChangedPct": 2
+    },
+    "mobile/theme-level-0": {
+        "maxChangedPct": 2
+    },
+    "mobile/theme-level-2": {
+        "maxChangedPct": 2
+    },
+    "mobile/theme-level-3": {
+        "maxChangedPct": 2
+    },
+    "mobile/three-idle": {
+        "maxChangedPct": 2
+    },
+    "mobile/three-pairwise-bridge": {
+        "maxChangedPct": 2
+    },
+    "mobile/two-approaching": {
+        "maxChangedPct": 2
+    },
+    "mobile/two-far": {
+        "maxChangedPct": 2
+    },
+    "mobile/two-first-contact": {
+        "maxChangedPct": 2
+    },
+    "mobile/two-overlapping": {
+        "maxChangedPct": 2
+    },
+    "mobile/two-strong-bridge": {
+        "maxChangedPct": 2
+    }
+}

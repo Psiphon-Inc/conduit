@@ -17,7 +17,6 @@
  *
  */
 import { Image } from "expo-image";
-import React from "react";
 import { View } from "react-native";
 
 import { palette } from "@/src/styles";
