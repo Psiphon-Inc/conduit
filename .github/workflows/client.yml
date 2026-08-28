@@ -29,9 +29,9 @@ jobs:
       - name: Generate expo types
         run: |
             npx expo customize tsconfig.json
-      - name: run tsc
+      - name: run typecheck
         run: |
-            npm run tsc
+            npm run typecheck
   test:
     runs-on: ubuntu-latest
     defaults:
