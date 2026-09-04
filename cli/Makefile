@@ -10,12 +10,12 @@ EMBED_TAG := embed_config
 # Psiphon config file for embedded builds
 PSIPHON_CONFIG ?= psiphon_config.json
 
-# Go 1.24.x is REQUIRED due to psiphon-tls compatibility (Go 1.25+ breaks it)
-GO_REQUIRED_VERSION := 1.24
+# Go version required by the pinned psiphon-tunnel-core revision
+GO_REQUIRED_VERSION := 1.26
 GO := $(shell which go)
 
-# Psiphon tunnel-core branch with inproxy support
-PSIPHON_BRANCH ?= staging-client
+# Psiphon tunnel-core staging-client revision with inproxy support
+PSIPHON_REV ?= 96f782c6f662cb0a884029d70e1375ab3c1dece2
 PSIPHON_REPO := https://github.com/Psiphon-Labs/psiphon-tunnel-core.git
 
 # Compute build-info and invoke go build:
@@ -66,9 +66,8 @@ check-go:
 	@GO_VERSION=$$($(GO) version | grep -oE 'go[0-9]+\.[0-9]+' | sed 's/go//'); \
 	GO_MAJOR=$$(echo $$GO_VERSION | cut -d. -f1); \
 	GO_MINOR=$$(echo $$GO_VERSION | cut -d. -f2); \
-	if [ "$$GO_MAJOR" -gt 1 ] || ([ "$$GO_MAJOR" -eq 1 ] && [ "$$GO_MINOR" -ge 25 ]); then \
+	if [ "$$GO_MAJOR" -ne 1 ] || [ "$$GO_MINOR" -ne 26 ]; then \
 		echo "Error: Go $$GO_VERSION detected, but Go $(GO_REQUIRED_VERSION).x is required."; \
-		echo "Go 1.25+ breaks psiphon-tls due to internal TLS struct changes."; \
 		echo ""; \
 		exit 1; \
 	fi
@@ -77,12 +76,17 @@ check-go:
 # Setup: Clone psiphon-tunnel-core for its forked pion dependencies
 setup: check-go
 	@if [ ! -d "psiphon-tunnel-core" ]; then \
-		echo "Cloning psiphon-tunnel-core ($(PSIPHON_BRANCH) branch)..."; \
-		git clone --depth 1 --branch $(PSIPHON_BRANCH) $(PSIPHON_REPO) psiphon-tunnel-core; \
+		echo "Initializing psiphon-tunnel-core at $(PSIPHON_REV)..."; \
+		mkdir psiphon-tunnel-core && \
+		git -C psiphon-tunnel-core init && \
+		git -C psiphon-tunnel-core remote add origin $(PSIPHON_REPO); \
 	else \
-		echo "psiphon-tunnel-core already exists, updating..."; \
-		cd psiphon-tunnel-core && git fetch origin $(PSIPHON_BRANCH) && git checkout -B $(PSIPHON_BRANCH) FETCH_HEAD; \
-	fi
+		echo "Updating psiphon-tunnel-core to $(PSIPHON_REV)..."; \
+	fi; \
+	cd psiphon-tunnel-core && \
+	git fetch --depth 1 origin $(PSIPHON_REV) && \
+	git checkout --detach FETCH_HEAD && \
+	test "$$(git rev-parse HEAD)" = "$(PSIPHON_REV)"
 	$(GO) mod tidy
 
 # Check if psiphon config exists for embedded builds
@@ -231,7 +235,7 @@ help:
 	@echo "  make build-all-embedded PSIPHON_CONFIG=path/to/config.json"
 	@echo ""
 	@echo "Requirements:"
-	@echo "  Go 1.24.x (Go 1.25+ is NOT supported due to psiphon-tls)"
+	@echo "  Go $(GO_REQUIRED_VERSION).x"
 	@echo "  Go must be available on PATH"
 	@echo ""
 	@echo "First time setup:"

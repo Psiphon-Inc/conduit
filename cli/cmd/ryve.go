@@ -131,9 +131,15 @@ func runRyveClaim(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to generate QR code: %w", err)
 	}
 	writer := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(writer, "Station Name:\t%s\n", nameValue)
-	fmt.Fprintf(writer, "Proxy ID:\t%s\n", proxyID)
-	writer.Flush()
+	if _, err := fmt.Fprintf(writer, "Station Name:\t%s\n", nameValue); err != nil {
+		return fmt.Errorf("failed to write station name: %w", err)
+	}
+	if _, err := fmt.Fprintf(writer, "Proxy ID:\t%s\n", proxyID); err != nil {
+		return fmt.Errorf("failed to write proxy ID: %w", err)
+	}
+	if err := writer.Flush(); err != nil {
+		return fmt.Errorf("failed to write claim details: %w", err)
+	}
 	fmt.Printf("claim QR code created at %s, scan this to claim this station in Ryve\n", pngOutput)
 	fmt.Println(qrOutput)
 
