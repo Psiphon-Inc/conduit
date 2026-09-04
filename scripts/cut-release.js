@@ -24,11 +24,12 @@ Options:
   --ios-build <number>      iOS buildNumber. Default: current + 1.
   --web-rc <number>         Web RC number. Default: the selected Android or iOS
                             build number; for web-only cuts, the next global RC.
+  --current-branch          Use the current branch for the merge request instead
+                            of creating a release branch. Rejected on main.
   --help                    Show this help.
 
-This prepares, but does not commit, tag, or push, a release cut. It updates the
-Expo config that generates the native projects and bumps the build counters for
-selected platforms:
+This updates the Expo config, commits and pushes the release cut, opens a merge
+request, waits for it to merge, and tags the resulting commit:
 
   release-android-<version>-RC.<versionCode>
   release-ios-<version>-RC.<buildNumber>
@@ -70,6 +71,10 @@ function parseArgs(argv) {
             args.webRc = argv[++i];
             continue;
         }
+        if (arg === "--current-branch") {
+            args.currentBranch = true;
+            continue;
+        }
         throw new Error(`Unknown argument: ${arg}`);
     }
 
@@ -79,7 +84,9 @@ function parseArgs(argv) {
 function validateArgs(args) {
     if (!args.version) throw new Error("--version is required");
     if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(args.version)) {
-        throw new Error(`--version must look like semver, got: ${args.version}`);
+        throw new Error(
+            `--version must look like semver, got: ${args.version}`,
+        );
     }
     if (!args.platforms || args.platforms.length === 0) {
         throw new Error("--platforms is required");
@@ -94,25 +101,42 @@ function validateArgs(args) {
     for (const key of ["androidBuild", "iosBuild", "webRc"]) {
         if (args[key] === undefined) continue;
         if (!/^[1-9]\d*$/.test(args[key])) {
-            throw new Error(`--${key} must be a positive integer, got: ${args[key]}`);
+            throw new Error(
+                `--${key} must be a positive integer, got: ${args[key]}`,
+            );
         }
         args[key] = Number(args[key]);
     }
     return args;
 }
 
-function readAppJson() {
-    const appJson = JSON.parse(fs.readFileSync(appJsonPath, "utf8"));
+function normalizeAppJson(contents) {
+    const appJson = JSON.parse(contents);
     appJson.expo = appJson.expo || {};
     appJson.expo.android = appJson.expo.android || {};
     appJson.expo.ios = appJson.expo.ios || {};
     return appJson;
 }
 
+function readAppJson() {
+    return normalizeAppJson(fs.readFileSync(appJsonPath, "utf8"));
+}
+
+function readAppJsonAtRef(ref) {
+    return normalizeAppJson(
+        execFileSync("git", ["show", `${ref}:app.json`], {
+            cwd: root,
+            encoding: "utf8",
+        }),
+    );
+}
+
 function parseBuildNumber(value, name) {
     const parsed = Number(value);
     if (!Number.isSafeInteger(parsed) || parsed < 0) {
-        throw new Error(`${name} must be a non-negative integer, got: ${value}`);
+        throw new Error(
+            `${name} must be a non-negative integer, got: ${value}`,
+        );
     }
     return parsed;
 }
@@ -135,8 +159,7 @@ function highestReleaseRc() {
     return highest;
 }
 
-function currentReleaseValues() {
-    const appJson = readAppJson();
+function releaseValues(appJson) {
     return {
         version: appJson.expo.version,
         androidVersionCode: parseBuildNumber(
@@ -148,6 +171,14 @@ function currentReleaseValues() {
             "expo.ios.buildNumber",
         ),
     };
+}
+
+function currentReleaseValues() {
+    return releaseValues(readAppJson());
+}
+
+function releaseValuesAtRef(ref) {
+    return releaseValues(readAppJsonAtRef(ref));
 }
 
 async function promptForMissingArgs(args, current) {
@@ -256,50 +287,214 @@ function updateAppJson(args) {
     }
 }
 
+function currentGitBranch() {
+    return execFileSync("git", ["branch", "--show-current"], {
+        cwd: root,
+        encoding: "utf8",
+    }).trim();
+}
+
+function requireCleanWorkingTree() {
+    const status = execFileSync("git", ["status", "--porcelain"], {
+        cwd: root,
+        encoding: "utf8",
+    });
+    if (status.trim()) {
+        throw new Error(
+            "release:cut requires a clean working tree; commit or stash changes first",
+        );
+    }
+}
+
+function requireGitLabAuthentication() {
+    try {
+        execFileSync("glab", ["auth", "status"], {
+            cwd: root,
+            stdio: "inherit",
+        });
+    } catch (_error) {
+        throw new Error(
+            "glab authentication is required before cutting a release",
+        );
+    }
+}
+
+function releaseDetails(args) {
+    const summary = [`version ${args.version}`];
+    const tags = [];
+    const branchParts = [];
+    if (args.platforms.includes("android")) {
+        summary.push(`Android versionCode ${args.androidBuild}`);
+        tags.push(`release-android-${args.version}-RC.${args.androidBuild}`);
+        branchParts.push(`android.${args.androidBuild}`);
+    }
+    if (args.platforms.includes("ios")) {
+        summary.push(`iOS buildNumber ${args.iosBuild}`);
+        tags.push(`release-ios-${args.version}-RC.${args.iosBuild}`);
+        branchParts.push(`ios.${args.iosBuild}`);
+    }
+    if (args.platforms.includes("web")) {
+        summary.push(`web RC ${args.webRc}`);
+        tags.push(`release-web-${args.version}-RC.${args.webRc}`);
+        branchParts.push(`web.${args.webRc}`);
+    }
+    return {
+        summary,
+        tags,
+        releaseBranch: `release/${args.version}-${branchParts.join("-")}`,
+    };
+}
+
+function runGit(args, options = {}) {
+    return execFileSync("git", args, {
+        cwd: root,
+        stdio: "inherit",
+        ...options,
+    });
+}
+
+function createMergeRequest(branch, removeSourceBranch) {
+    const createArgs = [
+        "mr",
+        "create",
+        "--fill",
+        "--source-branch",
+        branch,
+        "--target-branch",
+        "main",
+        "--yes",
+    ];
+    if (removeSourceBranch) createArgs.push("--remove-source-branch");
+    const output = execFileSync("glab", createArgs, {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["inherit", "pipe", "inherit"],
+    });
+    process.stdout.write(output);
+    const id = output.match(/\/merge_requests\/(\d+)/)?.[1];
+    if (!id) {
+        throw new Error("Could not determine the created merge request ID");
+    }
+    return id;
+}
+
+function delay(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function waitForMerge(mergeRequestId) {
+    console.log(`Waiting for merge request !${mergeRequestId} to be merged...`);
+    for (;;) {
+        const mergeRequest = JSON.parse(
+            execFileSync(
+                "glab",
+                ["mr", "view", mergeRequestId, "--output", "json"],
+                {
+                    cwd: root,
+                    encoding: "utf8",
+                },
+            ),
+        );
+        const state = String(mergeRequest.state).toLowerCase();
+        if (state === "merged") {
+            return (
+                mergeRequest.merge_commit_sha ??
+                mergeRequest.mergeCommitSha ??
+                mergeRequest.squash_commit_sha ??
+                mergeRequest.squashCommitSha
+            );
+        }
+        if (state === "closed") {
+            throw new Error("Merge request was closed without being merged");
+        }
+        await delay(10_000);
+    }
+}
+
+function tagMergedRelease(tags, mergeCommit) {
+    if (!mergeCommit) {
+        throw new Error(
+            "GitLab did not report the merged commit SHA; refusing to tag origin/main",
+        );
+    }
+    runGit(["fetch", "origin", "main"]);
+    try {
+        execFileSync(
+            "git",
+            ["merge-base", "--is-ancestor", mergeCommit, "origin/main"],
+            {
+                cwd: root,
+                stdio: "ignore",
+            },
+        );
+    } catch (_error) {
+        throw new Error(
+            `Merged commit ${mergeCommit} is not present on origin/main; refusing to tag`,
+        );
+    }
+    for (const tag of tags) runGit(["tag", tag, mergeCommit]);
+    runGit(["push", "origin", ...tags.map((tag) => `refs/tags/${tag}`)]);
+}
+
 async function main() {
     let args;
+    let branch;
+    let current;
     try {
         args = parseArgs(process.argv.slice(2));
-        args = await promptForMissingArgs(args, currentReleaseValues());
+        requireCleanWorkingTree();
+        branch = currentGitBranch();
+        if (!branch)
+            throw new Error("release:cut cannot run from detached HEAD");
+        if (args.currentBranch && branch === "main") {
+            throw new Error("--current-branch cannot be used on main");
+        }
+        requireGitLabAuthentication();
+        if (args.currentBranch) {
+            runGit(["fetch", "origin", "--tags"]);
+            current = currentReleaseValues();
+        } else {
+            runGit(["fetch", "origin", "main", "--tags"]);
+            current = releaseValuesAtRef("origin/main");
+        }
+        args = await promptForMissingArgs(args, current);
         args = validateArgs(args);
-        args = resolveBuildNumbers(args, currentReleaseValues());
+        args = resolveBuildNumbers(args, current);
     } catch (error) {
         console.error(error.message);
         usage(1);
     }
 
+    const { summary, tags, releaseBranch } = releaseDetails(args);
+    if (!args.currentBranch) {
+        try {
+            runGit(["switch", "-c", releaseBranch, "origin/main"]);
+            branch = releaseBranch;
+        } catch (error) {
+            console.error(error.message);
+            process.exit(1);
+        }
+    }
+
     try {
         updateAppJson(args);
+        runGit(["add", "app.json"]);
+        runGit([
+            "commit",
+            "-m",
+            `Cut release ${args.version} (${args.platforms.join(", ")})`,
+        ]);
+        runGit(["push", "-u", "origin", branch]);
+        const mergeRequestId = createMergeRequest(branch, !args.currentBranch);
+        const mergeCommit = await waitForMerge(mergeRequestId);
+        tagMergedRelease(tags, mergeCommit);
     } catch (error) {
         console.error(error.message);
         process.exit(1);
     }
 
-    const summary = [`version ${args.version}`];
-    const tags = [];
-    if (args.platforms.includes("android")) {
-        summary.push(`Android versionCode ${args.androidBuild}`);
-        tags.push(`release-android-${args.version}-RC.${args.androidBuild}`);
-    }
-    if (args.platforms.includes("ios")) {
-        summary.push(`iOS buildNumber ${args.iosBuild}`);
-        tags.push(`release-ios-${args.version}-RC.${args.iosBuild}`);
-    }
-    if (args.platforms.includes("web")) {
-        summary.push(`web RC ${args.webRc}`);
-        tags.push(`release-web-${args.version}-RC.${args.webRc}`);
-    }
-
-    console.log(`Updated: ${summary.join(", ")}`);
-    console.log(`
-Next steps:
-  git diff -- app.json
-  git add app.json
-  git commit -m "Cut release ${args.version} (${args.platforms.join(", ")})"
-${tags.map((tag) => `  git tag ${tag}`).join("\n")}
-  git push origin main
-${tags.map((tag) => `  git push origin tag ${tag}`).join("\n")}
-`);
+    console.log(`Released: ${summary.join(", ")}`);
+    console.log(`Tags: ${tags.join(", ")}`);
 }
 
 main().catch((error) => {
