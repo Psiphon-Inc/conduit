@@ -514,7 +514,9 @@ func (s *Supervisor) scrapeBytesUsed() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	// Check HTTP status code
 	if resp.StatusCode != http.StatusOK {

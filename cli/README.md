@@ -31,25 +31,14 @@ docker compose up
 
 The compose file enables Prometheus metrics on `:9090` inside the container. To scrape from the host, publish the port or run Prometheus on the same Docker network and scrape `conduit:9090`.
 
-## Commands
+## Commands and Options
 
-- `conduit start` - start the Conduit inproxy service
-- `conduit ryve-claim` - output Conduit claim data for Ryve
+Use the built-in help to see the commands and options available in your version:
 
-## Start Command Flags
-
-| Flag                       | Default | Description                                                                       |
-| -------------------------- | ------- | --------------------------------------------------------------------------------- |
-| `--psiphon-config, -c`     | -       | Path to Psiphon network config file (required when no embedded config is present) |
-| `--max-common-clients, -m` | `50`    | Maximum common proxy clients (`0-1000`)                                           |
-| `--bandwidth, -b`          | `40`    | Total bandwidth limit in Mbps (`-1` for unlimited)                                |
-| `--set`                    | -       | Override allowlisted config keys (`key=value`), repeatable                        |
-| `--metrics-addr`           | -       | Prometheus metrics listen address (for example, `:9090`)                          |
-
-Global flags:
-
-- `--data-dir, -d` (default `./data`)
-- `--verbose, -v` (repeatable count flag)
+```bash
+conduit --help
+conduit <command> --help
+```
 
 ## `--set` Overrides
 
@@ -138,10 +127,8 @@ make build
 
 ## Requirements
 
-- Go `1.24.x` (Go `1.25+` is not supported due to `psiphon-tls` compatibility)
+- Go `1.26.x`
 - Psiphon network configuration file (JSON), unless using an embedded-config build
-
-The Makefile automatically installs Go `1.24.12` if not present.
 
 ## Build Targets
 
