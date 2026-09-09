@@ -218,7 +218,7 @@ function LocalConduitSettingsCard({
                         <EditableNumberSlider
                             label={t("MAX_PERSONAL_PEERS_I18N.string")}
                             originalValue={inproxyParameters.maxPersonalClients}
-                            min={0}
+                            min={1}
                             max={INPROXY_MAX_CLIENTS_MAX}
                             style={[...expandedLineItemStyle, ss.alignCenter]}
                             onChange={updateMaxPersonalClients}
