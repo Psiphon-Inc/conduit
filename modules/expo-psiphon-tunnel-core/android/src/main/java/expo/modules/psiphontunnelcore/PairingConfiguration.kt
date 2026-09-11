@@ -9,6 +9,15 @@ internal class PairingConfiguration(
     var snapshot: Map<String, Any?> = emptyMap()
         private set
 
+    // A captured null ID is distinct from not receiving getPsiphonConfig at all.
+    private class CoreReadback(val personalCompartmentId: String?)
+    @Volatile
+    private var coreReadback: CoreReadback? = null
+
+    fun recordCoreReadback(personalCompartmentId: String?) {
+        coreReadback = CoreReadback(personalCompartmentId)
+    }
+
     // Caller must establish that the core is stopped before restoring persisted settings.
     fun restorePersisted(personalCompartmentId: String?) {
         update("persisted", personalCompartmentId)
@@ -16,12 +25,14 @@ internal class PairingConfiguration(
 
     fun applying() = update("applying", null)
 
-    // Caller serializes core operations; the result is read back from getPsiphonConfig.
-    fun applyToCore(startOrRestart: () -> String?) {
+    // Caller serializes core operations; only fresh getPsiphonConfig readback can acknowledge one.
+    fun applyToCore(startOrRestart: () -> Unit) {
+        coreReadback = null
         val revision = applying()
-        val appliedId = startOrRestart() // Failure intentionally leaves sharing unavailable.
+        startOrRestart() // Failure intentionally leaves sharing unavailable.
+        val readback = coreReadback ?: return
         synchronized(this) {
-            if (snapshot["revision"] == revision) update("applied", appliedId)
+            if (snapshot["revision"] == revision) update("applied", readback.personalCompartmentId)
         }
     }
 

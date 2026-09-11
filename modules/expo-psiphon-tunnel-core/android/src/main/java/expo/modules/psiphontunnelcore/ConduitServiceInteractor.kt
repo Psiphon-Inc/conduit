@@ -99,7 +99,7 @@ class ConduitServiceInteractor(private val context: Context) {
             // Do not use the UI's current clock: a replacement service may already
             // have created its readback by the time this death notification arrives.
             val revision = synchronized(this@ConduitServiceInteractor) { latestPairingRevision + 1 }
-            callback?.invoke("proxyState", InproxyForegroundService.unavailablePairingStateBundle(revision))
+            callback?.invoke("proxyState", InproxyForegroundService.unavailableProxyStateBundle(revision))
             conduitService = null
             isServiceBound = false
 

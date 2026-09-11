@@ -200,18 +200,28 @@ export function InproxyProvider({
                         break;
                     }
 
-                    const fallbackStatus = InproxyStatusEnumSchema.safeParse(
-                        (inproxyEvent.data as { status?: unknown })?.status,
+                    queryClient.setQueryData(
+                        NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+                        null,
                     );
+                    // Zod errors can contain payload values, including private identity.
+                    logErrorToDiagnostic(
+                        new Error(
+                            "Invalid native proxy state; pairing unavailable",
+                        ),
+                    );
+                    const fallbackStatus = ProxyStateSchema.pick({
+                        status: true,
+                    }).safeParse(inproxyEvent.data);
                     if (fallbackStatus.success) {
                         handleProxyState({
-                            status: fallbackStatus.data,
+                            status: fallbackStatus.data.status,
                             networkState: null,
                         });
                         break;
                     }
 
-                    throw parsedProxyState.error;
+                    break;
                 } catch (error) {
                     logErrorToDiagnostic(
                         wrapError(error, "Failed to handle proxyState"),

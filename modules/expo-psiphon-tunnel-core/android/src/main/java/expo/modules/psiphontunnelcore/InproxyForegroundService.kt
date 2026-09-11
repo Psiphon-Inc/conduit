@@ -326,7 +326,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             return pairingRevision
         }
 
-        fun unavailablePairingStateBundle(revision: Long): android.os.Bundle = android.os.Bundle().apply {
+        fun unavailableProxyStateBundle(revision: Long): android.os.Bundle = android.os.Bundle().apply {
             putString("status", "UNKNOWN")
             putString("networkState", null)
             putBundle("pairingConfiguration", android.os.Bundle().apply {
@@ -471,8 +471,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     private val pairingConfiguration = PairingConfiguration(::nextPairingRevision) {
         publishProxyState(state)
     }
-    // Only accessed under psiphonTunnel's monitor, including its getPsiphonConfig callback.
-    private var corePersonalCompartmentId: String? = null
     private var tunnelStoppedLatch = CountDownLatch(0)
     private var serviceDestroyed = false
 
@@ -508,6 +506,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     private var personalProxyActivityStats = ProxyActivityStats()
     private var commonProxyActivityStats = ProxyActivityStats()
     private var stats = latestStats
+    @Volatile
     private var state = latestProxyState
     private var activityEmitter: ScheduledExecutorService? = null
     private var activityCallbackCount = 0L
@@ -707,7 +706,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 pairingConfiguration.applyToCore {
                     psiphonTunnel.restartPsiphon()
                     if (tunnelStopRequested.get()) pairingConfiguration.applying()
-                    corePersonalCompartmentId
                 }
             }
         } catch (_: Exception) {
@@ -780,7 +778,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                         pairingConfiguration.applyToCore {
                             psiphonTunnel.startTunneling(Utils.getEmbeddedServers(this))
                             if (tunnelStopRequested.get()) pairingConfiguration.applying()
-                            corePersonalCompartmentId
                         }
                     }
                 }
@@ -1987,7 +1984,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             }
 
             val config = psiphonConfig.toString()
-            corePersonalCompartmentId = personalCompartmentId
+            pairingConfiguration.recordCoreReadback(personalCompartmentId)
             return config
         } catch (e: PackageManager.NameNotFoundException) {
             throw IllegalStateException("Failed to get package info", e)

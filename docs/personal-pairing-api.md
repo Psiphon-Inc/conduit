@@ -13,6 +13,8 @@
   or `applying` means no shareable identity.
 - `applied` means the configuration passed to the core was accepted by a successful
   `startTunneling`/`restartPsiphon` return, **not** broker announcement or health.
+  Each attempt requires fresh `getPsiphonConfig` readback; without it sharing remains
+  unavailable, even if the core call returns successfully. A fresh null ID is valid readback.
   `persisted` means the core is stopped and the identity is read from native settings
   for next start. Failed restart remains unshareable until actual stop completes.
   Unchanged parameters still publish readback; listener registration and foreground
@@ -20,6 +22,8 @@
   Observation teardown/foreground refresh clears the share cache pending readback;
   service disconnection emits unavailable state. Native identity is never persisted
   in the React Query cache across app launches.
+  Invalid proxy-state payloads clear the share cache and log a payload-free diagnostic;
+  valid current readback can recover it without requiring a newer revision.
 - `paramsChanged` keeps its existing dispatch-only promise. Desired React state and
   that promise are never application acknowledgements. Async parameter loads/selections
   discard superseded work before native dispatch.

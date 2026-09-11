@@ -28,7 +28,7 @@ class PairingConfigurationTest {
         pairing.applyToCore {
             assertEquals("applying", pairing.snapshot["status"])
             assertNull(pairing.snapshot["personalCompartmentId"])
-            "B" // Read back from the config actually supplied to the core.
+            pairing.recordCoreReadback("B")
         }
         assertEquals(mapOf("revision" to 3L, "status" to "applied", "personalCompartmentId" to "B"), pairing.snapshot)
         try {
@@ -46,7 +46,7 @@ class PairingConfigurationTest {
         val pairing = PairingConfiguration({ ++revision }) {}
         pairing.restorePersisted(null)
         assertNull(pairing.snapshot["personalCompartmentId"])
-        pairing.applyToCore { "A" }
+        pairing.applyToCore { pairing.recordCoreReadback("A") }
         val acknowledged = pairing.snapshot
         val restartedService = PairingConfiguration({ ++revision }) {}
         restartedService.restorePersisted("B")
@@ -59,9 +59,37 @@ class PairingConfigurationTest {
         val pairing = PairingConfiguration({ ++revision }) {}
         pairing.applyToCore {
             pairing.applying() // A stop supersedes the in-flight core application.
-            "B"
+            pairing.recordCoreReadback("B")
         }
         assertEquals("applying", pairing.snapshot["status"])
         assertNull(pairing.snapshot["personalCompartmentId"])
+    }
+
+    @Test fun requiresFreshReadbackForEveryCoreApplicationIncludingEmptyIdentity() {
+        var revision = 0L
+        val pairing = PairingConfiguration({ ++revision }) {}
+        pairing.applyToCore { pairing.recordCoreReadback("A") }
+        assertEquals("A", pairing.snapshot["personalCompartmentId"])
+        pairing.applyToCore { /* Core returned without calling getPsiphonConfig. */ }
+        assertEquals("applying", pairing.snapshot["status"])
+        assertNull(pairing.snapshot["personalCompartmentId"])
+        pairing.applyToCore { pairing.recordCoreReadback(null) }
+        assertEquals("applied", pairing.snapshot["status"])
+        assertNull(pairing.snapshot["personalCompartmentId"])
+    }
+
+    @Test fun publishesApplyingBeforeCoreCallAndAppliedOnlyAfterItReturns() {
+        var revision = 0L
+        val events = mutableListOf<String>()
+        lateinit var pairing: PairingConfiguration
+        pairing = PairingConfiguration({ ++revision }) {
+            events.add("published ${pairing.snapshot["status"]}")
+        }
+        pairing.applyToCore {
+            events.add("core called")
+            pairing.recordCoreReadback("A")
+            events.add("core returning")
+        }
+        assertEquals(listOf("published applying", "core called", "core returning", "published applied"), events)
     }
 }
