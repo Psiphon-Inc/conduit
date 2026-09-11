@@ -1,5 +1,10 @@
 # React Native Conduit native module
 
+Personal pairing uses revisioned native readback, not the `paramsChanged`
+dispatch promise. See [the pairing API contract](../../docs/personal-pairing-api.md).
+`InproxyProvider` accepts a `ConduitModuleAPI` adapter or lazily resolves the
+production adapter with `getConduitModule()`.
+
 ## Usage
 
 ```js
@@ -124,7 +129,7 @@ emitter.addListener("ConduitEvent", (event) => {
     const { type, data } = event;
 
     if (type === "proxyState") {
-        console.log("Proxy State Updated:", data);
+        console.log("Proxy State Updated:", data.status); // Pairing identity is private.
     } else if (type === "inProxyActivityStats") {
         console.log("Proxy Stats Updated:", data);
     } else if (type === "proxyError") {
@@ -139,12 +144,11 @@ emitter.addListener("ConduitEvent", (event) => {
 ## Mock Module
 
 To help with developing and testing the UI, there is a mocked implementation of
-the module available in `mockModule.ts`. To use this, replace the import in the
-`context.tsx` file:
+the module available in `mockModule.ts`. Pass it as the provider's `module` prop:
 
 ```
-- import { ConduitModule } from "@/src/inproxy/module";
-+ import { ConduitModule } from "@/src/inproxy/mockModule";
+import { ConduitModule } from "@/src/inproxy/mockModule";
+<InproxyProvider module={ConduitModule}>...</InproxyProvider>
 ```
 
 The mock simulates inproxy activity and emits events like the real module, but

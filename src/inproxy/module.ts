@@ -23,6 +23,7 @@ import { InproxyEvent, InproxyParameters, IpcEvent } from "@/src/inproxy/types";
 
 export interface ConduitModuleAPI {
     toggleInProxy: (params: InproxyParameters) => Promise<void>;
+    /** Dispatch only; Android application acknowledgement arrives in proxyState readback. */
     paramsChanged: (params: InproxyParameters) => Promise<void>;
     emitCurrentInproxyState: () => void;
     addInproxyEventListener: (
@@ -148,4 +149,24 @@ function resolveConduitModule(): ConduitModuleAPI {
     );
 }
 
-export const ConduitModule: ConduitModuleAPI = resolveConduitModule();
+let conduitModule: ConduitModuleAPI | undefined;
+
+/** Resolve the native or simulator adapter once, lazily rather than at import time. */
+export function getConduitModule(): ConduitModuleAPI {
+    return (conduitModule ??= resolveConduitModule());
+}
+
+/** Backward-compatible facade; importing it does not load the native runtime. */
+export const ConduitModule: ConduitModuleAPI = {
+    toggleInProxy: (params) => getConduitModule().toggleInProxy(params),
+    paramsChanged: (params) => getConduitModule().paramsChanged(params),
+    emitCurrentInproxyState: () => getConduitModule().emitCurrentInproxyState(),
+    addInproxyEventListener: (listener) =>
+        getConduitModule().addInproxyEventListener(listener),
+    addIpcEventListener: (listener) =>
+        getConduitModule().addIpcEventListener(listener),
+    sendFeedback: (id) => getConduitModule().sendFeedback(id),
+    logInfo: (tag, message) => getConduitModule().logInfo(tag, message),
+    logError: (tag, message) => getConduitModule().logError(tag, message),
+    logWarn: (tag, message) => getConduitModule().logWarn(tag, message),
+};

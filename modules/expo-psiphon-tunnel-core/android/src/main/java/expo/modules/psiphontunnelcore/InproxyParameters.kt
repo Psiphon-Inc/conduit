@@ -382,6 +382,17 @@ data class InproxyParameters(
         return true
     }
 
+    /** Map personal pairing into the core config and return the identity actually written. */
+    fun applyPersonalPairingConfig(config: JSONObject): String? {
+        config.put("InproxyMaxPersonalClients", maxPersonalClients)
+        if (personalCompartmentId.isNullOrBlank()) {
+            config.remove("InproxyProxyPersonalCompartmentID")
+        } else {
+            config.put("InproxyProxyPersonalCompartmentID", personalCompartmentId)
+        }
+        return config.optString("InproxyProxyPersonalCompartmentID", "").takeIf { it.isNotEmpty() }
+    }
+
     private fun isValid(): Boolean {
         if (maxClients < 0 || maxPersonalClients < 0) return false
         if (maxClients + maxPersonalClients <= 0) return false

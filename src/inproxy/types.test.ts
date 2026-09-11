@@ -20,7 +20,11 @@ import {
     generateEd25519KeyPair,
     keyPairToBase64nopad,
 } from "@/src/common/cryptography";
-import { InproxyParametersSchema, ProxyErrorSchema } from "@/src/inproxy/types";
+import {
+    InproxyParametersSchema,
+    ProxyErrorSchema,
+    ProxyStateSchema,
+} from "@/src/inproxy/types";
 
 describe("inproxy types", () => {
     const personalCompartmentId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
@@ -57,6 +61,23 @@ describe("inproxy types", () => {
             message: "In-proxy station mode is not implemented on iOS",
         });
     });
+
+    it.each([
+        { revision: -1, status: "applied", personalCompartmentId },
+        { revision: 1.5, status: "applied", personalCompartmentId },
+        { revision: 1, status: "applying", personalCompartmentId },
+        { revision: 1, status: "applied", personalCompartmentId: "invalid" },
+    ])(
+        "rejects invalid native pairing readback: $status / $revision",
+        (pairingConfiguration) => {
+            expect(
+                ProxyStateSchema.safeParse({
+                    status: "RUNNING",
+                    pairingConfiguration,
+                }).success,
+            ).toBe(false);
+        },
+    );
 
     it("accepts personal pairing parameters within the total cap", () => {
         expect(InproxyParametersSchema.parse(makeBaseParams())).toMatchObject({

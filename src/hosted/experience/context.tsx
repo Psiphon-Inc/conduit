@@ -348,6 +348,10 @@ function HostedExperienceProviderInner(
                         queryClient,
                         sessionDeps,
                     });
+                // A read begun before reconciliation must not overwrite its result.
+                await queryClient.cancelQueries({
+                    queryKey: [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+                });
                 queryClient.setQueryData(
                     [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
                     personalCompartmentId,
@@ -1038,8 +1042,9 @@ async function syncAndroidPersonalCompartmentId(input: {
             return error.currentPersonalCompartmentId;
         }
 
+        // Server/transport error text may contain the private compartment ID.
         timedLog(
-            `Hosted personal compartment sync deferred: ${toErrorMessage(error)}`,
+            "Hosted personal compartment sync deferred; retaining local identity",
         );
         return localPersonalCompartmentId;
     }

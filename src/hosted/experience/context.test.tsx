@@ -16,13 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+import { base64urlnopad } from "@scure/base";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
+import { createInstance } from "i18next";
 import React from "react";
-import { Platform } from "react-native";
+import { I18nextProvider } from "react-i18next";
+import { Platform, Share } from "react-native";
 import type { CustomerInfo } from "react-native-purchases";
 import { ReactTestRenderer, act, create } from "react-test-renderer";
 
+import {
+    ConduitActionsProvider,
+    useConduitActions,
+} from "@/src/components/ConduitActionsContext";
+import { ModalHost, ModalProvider } from "@/src/components/ModalStore";
+import { PersonalPairingShareModal } from "@/src/components/PersonalPairingShareModal";
 import {
     QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
     SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
@@ -46,6 +55,11 @@ import {
     HostedSession,
     createHostedSessionClient,
 } from "@/src/hosted/sessionClient";
+import { InproxyProvider, useInproxyContext } from "@/src/inproxy/context";
+import type { ConduitModuleAPI } from "@/src/inproxy/module";
+import type { PairingConfiguration } from "@/src/inproxy/pairingConfiguration";
+import type { InproxyEvent, InproxyParameters } from "@/src/inproxy/types";
+import { PairingTokenPayloadV1Schema } from "@/src/pairing/token";
 
 describe("hosted experience context", () => {
     const originalPlatformOs = Platform.OS;
@@ -77,6 +91,268 @@ describe("hosted experience context", () => {
             value: originalPlatformOs,
         });
     });
+
+    it.each(["failed login sync", "restored session"])(
+        "shares native A instead of hosted B after %s, and keeps the open modal live",
+        async (sessionMode) => {
+            const i18n = createInstance();
+            await i18n.init({ lng: "en", resources: {} });
+            const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+            const hostedId = "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
+            await SecureStore.setItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                localId,
+            );
+            await SecureStore.setItemAsync(
+                SECURESTORE_CONDUIT_NAME_KEY,
+                "Pairing Station",
+            );
+            const session = makeSession({
+                accessToken: "access.pairing",
+                accessTokenExpiresAtMs: 90_000,
+                refreshTokenExpiresAtMs: 1_000_000,
+            });
+            const listeners = new Set<(event: InproxyEvent) => void>();
+            let nativeEvent: InproxyEvent = {
+                type: "proxyState",
+                data: {
+                    status: "RUNNING",
+                    networkState: "NO_INTERNET",
+                    pairingConfiguration: {
+                        revision: 10,
+                        status: "applied",
+                        personalCompartmentId: localId,
+                    },
+                },
+            };
+            const emitNativeState = (event: InproxyEvent) => {
+                nativeEvent = event;
+                listeners.forEach((listener) => listener(event));
+            };
+            async function receiveNativePairing(
+                pairingConfiguration: PairingConfiguration,
+                status: "RUNNING" | "STOPPED" = "RUNNING",
+            ) {
+                await act(async () => {
+                    emitNativeState({
+                        type: "proxyState",
+                        data: {
+                            status,
+                            networkState: "NO_INTERNET",
+                            pairingConfiguration,
+                        },
+                    });
+                });
+                await flushPromises();
+            }
+            let desiredParams: InproxyParameters | undefined;
+            let failDispatch = false;
+            const nativeModule: ConduitModuleAPI = {
+                addInproxyEventListener: (listener) => {
+                    listeners.add(listener);
+                    return {
+                        remove: () => {
+                            listeners.delete(listener);
+                        },
+                    };
+                },
+                addIpcEventListener: () => ({ remove: () => {} }),
+                emitCurrentInproxyState: () => emitNativeState(nativeEvent),
+                paramsChanged: async (params) => {
+                    if (failDispatch)
+                        throw new Error("Pairing test dispatch failed");
+                    desiredParams = params;
+                },
+                toggleInProxy: async () => {},
+                sendFeedback: async () => null,
+                logInfo: () => {},
+                logWarn: () => {},
+                logError: () => {},
+            };
+            let actions: ReturnType<typeof useConduitActions> | undefined;
+            let inproxy: ReturnType<typeof useInproxyContext> | undefined;
+            let hosted: HostedExperienceContextValue | undefined;
+            function Consumer() {
+                actions = useConduitActions();
+                inproxy = useInproxyContext();
+                hosted = useHostedExperienceContext();
+                return null;
+            }
+            let renderer: ReactTestRenderer;
+            await act(async () => {
+                renderer = renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 20_000,
+                        authService: makeAuthService({
+                            signIn: async () => ({
+                                provider: "google",
+                                tokenType: "clerk_broker_jwt",
+                                brokerToken: "test",
+                                platform: "android",
+                                clientVersion: "test",
+                            }),
+                        }),
+                        sessionClient: makeSessionClient({
+                            login: async () => session,
+                            loadHostedSession: async () =>
+                                sessionMode === "restored session"
+                                    ? session
+                                    : null,
+                        }),
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async () => {
+                                throw new Error(
+                                    "Pairing test sync unavailable",
+                                );
+                            },
+                            getConduitsSnapshot: async () => ({
+                                entitlement: { status: "active" },
+                                conduits: [
+                                    {
+                                        conduit_id: "cond_1",
+                                        proxy_id: "st_1",
+                                        status: "active",
+                                        traffic_scope: "personal",
+                                        personal_compartment_id: hostedId,
+                                    },
+                                ],
+                            }),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <I18nextProvider i18n={i18n}>
+                        <ModalProvider>
+                            <InproxyProvider module={nativeModule}>
+                                <ConduitActionsProvider>
+                                    <Consumer />
+                                    <ModalHost />
+                                </ConduitActionsProvider>
+                            </InproxyProvider>
+                        </ModalProvider>
+                    </I18nextProvider>,
+                );
+            });
+            await waitFor(() =>
+                expect(hosted?.initialSessionResolved).toBe(true),
+            );
+            if (sessionMode === "failed login sync") {
+                await act(async () => {
+                    await hosted?.signIn("google");
+                });
+            }
+            await waitFor(() =>
+                expect(
+                    hosted?.state.conduitsSnapshot?.conduits[0]
+                        ?.personal_compartment_id,
+                ).toBe(hostedId),
+            );
+            expect(actions?.personalCompartmentId).toBeNull();
+            await act(async () => {
+                emitNativeState(nativeEvent);
+            });
+            await flushPromises();
+            expect(actions?.personalCompartmentId).toBe(localId);
+            await act(async () => {
+                actions?.openPersonalPairingModal();
+            });
+            const modal = () =>
+                renderer.root.findByType(PersonalPairingShareModal);
+            expect(modal().props.personalCompartmentId).toBe(localId);
+            await waitFor(() =>
+                expect(desiredParams?.personalCompartmentId).toBe(localId),
+            );
+            if (!desiredParams)
+                throw new Error("Pairing test parameters unavailable");
+            async function expectSharedIdentity(expectedId: string) {
+                const share = jest
+                    .spyOn(Share, "share")
+                    .mockResolvedValue({ action: Share.sharedAction });
+                try {
+                    await act(async () => {
+                        modal()
+                            .findByProps({ disabled: false })
+                            .props.onPress();
+                    });
+                    const token = (
+                        share.mock.calls[0]?.[0].message ?? ""
+                    ).split("/pair/")[1];
+                    expect(
+                        PairingTokenPayloadV1Schema.parse(
+                            JSON.parse(
+                                new TextDecoder().decode(
+                                    base64urlnopad.decode(token),
+                                ),
+                            ),
+                        ).data.id,
+                    ).toBe(expectedId);
+                } finally {
+                    share.mockRestore();
+                }
+            }
+            await expectSharedIdentity(localId);
+            const nextParams = {
+                ...desiredParams,
+                personalCompartmentId: hostedId,
+            };
+            await act(async () => {
+                await inproxy?.selectInproxyParameters(nextParams);
+            });
+            // Dispatch returning is not acknowledgement; an open modal still shares A.
+            expect(modal().props.personalCompartmentId).toBe(localId);
+            await receiveNativePairing({
+                revision: 11,
+                status: "applying",
+                personalCompartmentId: null,
+            });
+            expect(modal().props.personalCompartmentId).toBeNull();
+            expect(modal().findByProps({ disabled: true })).toBeDefined();
+            await receiveNativePairing({
+                revision: 12,
+                status: "applied",
+                personalCompartmentId: hostedId,
+            });
+            expect(modal().props.personalCompartmentId).toBe(hostedId);
+            await expectSharedIdentity(hostedId);
+            await receiveNativePairing({
+                revision: 10,
+                status: "applied",
+                personalCompartmentId: localId,
+            });
+            expect(modal().props.personalCompartmentId).toBe(hostedId);
+            failDispatch = true;
+            const errorLog = jest
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
+            try {
+                await act(async () => {
+                    await inproxy?.selectInproxyParameters({
+                        ...nextParams,
+                        personalCompartmentId: localId,
+                    });
+                });
+                expect(modal().props.personalCompartmentId).toBe(hostedId);
+            } finally {
+                errorLog.mockRestore();
+            }
+            // Restart failure may persist a new ID, but only actual STOPPED readback enables it.
+            await receiveNativePairing({
+                revision: 13,
+                status: "applying",
+                personalCompartmentId: null,
+            });
+            expect(modal().props.personalCompartmentId).toBeNull();
+            await receiveNativePairing(
+                {
+                    revision: 14,
+                    status: "persisted",
+                    personalCompartmentId: localId,
+                },
+                "STOPPED",
+            );
+            expect(modal().props.personalCompartmentId).toBe(localId);
+        },
+    );
 
     it("fails clearly without an injected or context auth service", () => {
         const queryClient = new QueryClient({
@@ -227,7 +503,9 @@ describe("hosted experience context", () => {
             hostedClient.getConduitsSnapshot as jest.Mock
         ).mock.invocationCallOrder[0];
         expect(setIdCallOrder).toBeLessThan(getConduitsCallOrder);
-        expect(getContextValue().state.authPhase).toBe("authenticated");
+        await waitFor(() =>
+            expect(getContextValue().state.authPhase).toBe("authenticated"),
+        );
         expect(getContextValue().state.revenuecatPhase).toBe("ready");
         expect(getContextValue().state.stationPhase).toBe("active");
         expect(getContextValue().state.entitlementSnapshot).toBe("active");
@@ -304,8 +582,20 @@ describe("hosted experience context", () => {
             );
         });
 
+        const queryClient = mountedQueryClients[mountedQueryClients.length - 1];
+        const staleIdentityRead = createDeferred<string>();
+        const pendingRead = queryClient
+            .fetchQuery({
+                queryKey: [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+                queryFn: () => staleIdentityRead.promise,
+            })
+            .catch(() => undefined); // Cancellation is expected after reconciliation.
         await act(async () => {
             await contextValue!.signIn("google");
+            staleIdentityRead.resolve(
+                "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g",
+            );
+            await pendingRead;
         });
         await waitFor(() => {
             expect(contextValue!.state.authPhase).toBe("authenticated");

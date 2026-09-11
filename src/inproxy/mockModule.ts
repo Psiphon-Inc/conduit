@@ -187,9 +187,17 @@ class ConduitModuleMock {
             data: {
                 status: this.running ? "RUNNING" : "STOPPED",
                 networkState: "HAS_INTERNET",
+                pairingConfiguration: {
+                    revision: ++this.pairingRevision,
+                    status: this.running ? "applied" : "persisted",
+                    personalCompartmentId: this.personalCompartmentId,
+                },
             },
         });
     }
+
+    private pairingRevision = Date.now() * 1000;
+    private personalCompartmentId: string | null = null;
 
     private emitEvent(event: InproxyEvent) {
         for (const listener of this.listeners) {
@@ -272,6 +280,7 @@ class ConduitModuleMock {
     }
 
     public async toggleInProxy(params: InproxyParameters) {
+        this.personalCompartmentId = params.personalCompartmentId ?? null;
         const {
             maxClients,
             maxPersonalClients,
@@ -303,6 +312,7 @@ class ConduitModuleMock {
     }
 
     public async paramsChanged(params: InproxyParameters) {
+        this.personalCompartmentId = params.personalCompartmentId ?? null;
         const {
             maxClients,
             maxPersonalClients,
