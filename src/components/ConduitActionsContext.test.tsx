@@ -24,8 +24,11 @@ import {
     ConduitActionsProvider,
     useConduitActions,
 } from "@/src/components/ConduitActionsContext";
-import { QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID } from "@/src/constants";
 import { useHostedExperienceState } from "@/src/hosted/experience/hooks";
+import {
+    NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+    PairingConfigurationSchema,
+} from "@/src/inproxy/pairingConfiguration";
 
 jest.mock("expo-haptics", () => ({
     ImpactFeedbackStyle: { Medium: "medium" },
@@ -87,8 +90,13 @@ describe("ConduitActionsProvider", () => {
 
         const queryClient = createTestQueryClient();
         queryClient.setQueryData(
-            [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
-            "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g",
+            NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+            PairingConfigurationSchema.parse({
+                revision: 1,
+                status: "applied",
+                personalCompartmentId:
+                    "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g",
+            }),
         );
 
         const contextValue = renderProvider(queryClient);
@@ -121,8 +129,13 @@ describe("ConduitActionsProvider", () => {
 
         const queryClient = createTestQueryClient();
         queryClient.setQueryData(
-            [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
-            "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g",
+            NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+            PairingConfigurationSchema.parse({
+                revision: 1,
+                status: "applied",
+                personalCompartmentId:
+                    "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g",
+            }),
         );
 
         const contextValue = renderProvider(queryClient);
