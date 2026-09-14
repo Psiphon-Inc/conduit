@@ -24,8 +24,8 @@
   Late endpoint results
   cannot publish identity. Initialization, fallback persistence, and reconciliation
   share a serialized SecureStore queue. A write already in progress cannot be
-  canceled, so a superseded write puts the prior value back before returning `stale`;
-  if that fails the result is `unavailable` and the burst retries.
+  canceled, so a superseded write restores the prior value before another queued
+  reader/writer runs; failed restoration is retried before subsequent operations.
   This is in-process ordering, not a crash-atomic storage transaction. Reconciliation
   cancels older identity queries and only caches a successfully persisted, still-current
   result. A fallback is generated only after confirmed absence, never during a read.

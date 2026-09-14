@@ -972,6 +972,88 @@ describe("hosted experience context", () => {
         expect(hosted?.state.authPhase).toBe("authenticated");
     });
 
+    it("waits for a late local identity without spending sync attempts", async () => {
+        const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+        const session = makeSession({
+            accessToken: "access.late",
+            accessTokenExpiresAtMs: 90_000,
+            refreshTokenExpiresAtMs: 1_000_000,
+        });
+        // No stored ID and no account keys: local identity cannot be derived yet.
+        const write = jest
+            .mocked(SecureStore.setItemAsync)
+            .getMockImplementation();
+        if (!write) throw new Error("Pairing test storage unavailable");
+        const store = jest
+            .spyOn(SecureStore, "setItemAsync")
+            .mockImplementation(async (key, value, options) => {
+                if (key === SECURESTORE_MNEMONIC_KEY)
+                    throw new Error("Pairing test keys unavailable");
+                return write(key, value, options);
+            });
+        const submittedIds: string[] = [];
+        const retryDelays: number[] = [];
+        let desiredId: string | null | undefined;
+        let loaded = false;
+        function Consumer() {
+            const query = useAndroidPersonalCompartmentId();
+            desiredId = query.data;
+            loaded = query.isFetched;
+            return null;
+        }
+        try {
+            await act(async () => {
+                renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 10_000,
+                        delay: async (ms) => {
+                            retryDelays.push(ms);
+                        },
+                        authService: makeAuthService(),
+                        sessionClient: makeSessionClient({
+                            loadHostedSession: async () => session,
+                        }),
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async (_token, id) => {
+                                submittedIds.push(id);
+                                return id;
+                            },
+                            getConduitsSnapshot: async () =>
+                                makeConduitsSnapshot("active"),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <Consumer />,
+                );
+            });
+            await waitFor(() => expect(loaded).toBe(true));
+            expect(desiredId).toBeNull();
+            await flushPromises();
+            expect(submittedIds).toEqual([]);
+            expect(retryDelays).toEqual([]);
+            // InproxyProvider's fallback publishes the derived ID once keys exist.
+            const queryClient =
+                mountedQueryClients[mountedQueryClients.length - 1];
+            await act(async () => {
+                queryClient.setQueryData(
+                    [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+                    localId,
+                );
+            });
+            await waitFor(() => expect(submittedIds).toEqual([localId]));
+            expect(retryDelays).toEqual([]);
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(localId);
+        } finally {
+            // setItemAsync is the shared jestSetup mock; mockRestore would erase it.
+            store.mockImplementation(write);
+        }
+    });
+
     it("reconciles personal compartment id conflicts during Android login", async () => {
         await SecureStore.setItemAsync(
             SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
