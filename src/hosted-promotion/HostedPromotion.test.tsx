@@ -166,6 +166,16 @@ test("late hydration cannot undo dismissal; ordered writes keep the latest times
     await flush();
     expectVisible(renderer, false);
     expect(writes).toEqual([String(START), String(START + 1000)]);
+    // Hidden alone could also mean a missing/pending query. Expiry proves the
+    // latest dismissal survived the cancelled hydration in the query cache.
+    await act(async () => {
+        await jest.advanceTimersByTimeAsync(HOSTED_PROMOTION_COOLDOWN_MS - 1);
+    });
+    expectVisible(renderer, false);
+    await act(async () => {
+        await jest.advanceTimersByTimeAsync(1);
+    });
+    expectVisible(renderer, true);
 });
 
 test.each([

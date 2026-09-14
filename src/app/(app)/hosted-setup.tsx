@@ -854,14 +854,22 @@ export default function HostedSetupScreen() {
                                         <HostedPromotionCloseButton />
                                     </View>
                                 ) : (
-                                    <Text
-                                        style={[
-                                            ss.extraLargeFont,
-                                            ss.blackText,
-                                        ]}
-                                    >
-                                        {onboarding.headline}
-                                    </Text>
+                                    <View style={[ss.column]}>
+                                        <Text
+                                            style={[
+                                                ss.extraLargeFont,
+                                                ss.blackText,
+                                            ]}
+                                        >
+                                            {onboarding.headline}
+                                        </Text>
+                                        <Text
+                                            testID="hosted-setup-explanation"
+                                            style={[ss.bodyFont, ss.blackText]}
+                                        >
+                                            {storyParagraph}
+                                        </Text>
+                                    </View>
                                 )
                             ) : null}
                             {onboarding.primaryAction !== "sign_in" ? (

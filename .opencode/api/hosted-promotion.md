@@ -10,9 +10,9 @@ lifecycle hook, and app-appearance paint tokens for the dismiss control.
 - Home: only the `setup` acquisition card without a recent hosted sign-in is
   promotional. Restore, renew, loading, provisioning, share and view/manage
   actions remain available regardless of dismissal.
-- Hosted setup: the sign-in hero (introductory artwork and marketing copy) is
-  optional. Suppression leaves the headline and all primary sign-in/setup/
-  purchase controls. Plan selection and actionable status/empty states remain.
+- Hosted setup: the illustrated sign-in hero is optional. Suppression leaves the
+  headline, explanatory `storyParagraph`, and all primary sign-in/setup/purchase
+  controls. Plan selection and actionable status/empty states remain.
 - Dashboard's hosting entry point and Account sign-in remain explicit paths to
   hosting. Dismissal never disables navigation or a purchase workflow.
 
@@ -21,6 +21,9 @@ lifecycle hook, and app-appearance paint tokens for the dismiss control.
 - `HostedPromotionProvider` is mounted once in each app layout under QueryClient.
   `useHostedPromotion` supplies shared `visible` and immediate `dismiss` behavior.
   Pending or failed hydration hides promos (not the app), avoiding a promo flash.
+  This intentionally allows eligible marketing to appear after hydration rather
+  than holding the whole app splash for an optional prompt. Essential setup copy
+  and actions render while hydration is pending or unavailable.
 - `HostedPromotionCloseButton` is an accessible, localized 44px dismissal target.
   It is a sibling, not a child, of the promotional navigation button.
 - AsyncStorage key `ASYNCSTORAGE_HOSTED_PROMOTION_DISMISSED_AT_KEY` contains raw

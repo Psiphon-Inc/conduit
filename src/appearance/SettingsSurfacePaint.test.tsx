@@ -3,7 +3,8 @@ import { StyleSheet, Text } from "react-native";
 import { type ReactTestRenderer, act, create } from "react-test-renderer";
 
 import { AppSkinPreview } from "@/src/appearance/AppAppearance";
-import type { AppSkinId } from "@/src/appearance/appSkins";
+import { SkinRadioOption } from "@/src/appearance/SkinRadioOption";
+import { APP_SKINS, type AppSkinId } from "@/src/appearance/appSkins";
 import { DropdownSection } from "@/src/components/DropdownSection";
 import { ActionButton } from "@/src/components/HostedSetupSections";
 import { HostedStatusPanel } from "@/src/components/HostedStatusPanel";
@@ -11,6 +12,49 @@ import i18nService from "@/src/i18n/i18n";
 import { palette } from "@/src/styles";
 
 beforeAll(() => i18nService.initI18n());
+
+test.each(Object.values(APP_SKINS))(
+    "native options retain their own gradient and text under active $id",
+    async (activeSkin) => {
+        let renderer: ReactTestRenderer | undefined;
+        await act(async () => {
+            renderer = create(
+                <AppSkinPreview skinId={activeSkin.id}>
+                    {Object.values(APP_SKINS).map((option) => (
+                        <SkinRadioOption
+                            key={option.id}
+                            id={option.id}
+                            label={option.id}
+                            onSelect={() => {}}
+                        />
+                    ))}
+                </AppSkinPreview>,
+            );
+        });
+        if (!renderer)
+            throw new Error("Native skin options renderer did not mount");
+        for (const option of Object.values(APP_SKINS)) {
+            const row = renderer.root.findByProps({
+                testID: `skin-${option.id}`,
+            });
+            expect(row.findByType(LinearGradient).props.colors).toEqual(
+                option.screenGradient,
+            );
+            const label = row
+                .findAllByType(Text)
+                .find((node) => node.props.children === option.id);
+            if (!label)
+                throw new Error("Native skin option label did not render");
+            expect(StyleSheet.flatten(label.props.style).color).toBe(
+                option.text,
+            );
+            expect(row.props.accessibilityState.checked).toBe(
+                option.id === activeSkin.id,
+            );
+        }
+        await act(async () => renderer?.unmount());
+    },
+);
 
 async function renderedGradients(skinId: AppSkinId) {
     let renderer: ReactTestRenderer | undefined;

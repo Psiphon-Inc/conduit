@@ -70,6 +70,7 @@ try {
 
     await navigate("/hosted-setup");
     await setupAction.waitFor();
+    await page.getByTestId("hosted-setup-explanation").waitFor();
     assert.equal(
         await hero.count(),
         0,
@@ -80,6 +81,7 @@ try {
     });
     await page.reload();
     await setupAction.waitFor();
+    await page.getByTestId("hosted-setup-explanation").waitFor();
     assert.equal(await hero.count(), 0, "Saved cooldown must survive reload");
 
     await resumeAt(start + cooldown - 1);
