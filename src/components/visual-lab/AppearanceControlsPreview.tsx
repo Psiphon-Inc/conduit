@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 import {
@@ -8,10 +9,17 @@ import { DropdownSection } from "@/src/components/DropdownSection";
 import { ActionButton } from "@/src/components/HostedSetupSections";
 import { HostedStatusPanel } from "@/src/components/HostedStatusPanel";
 
+const paddedHistory = [
+    { time: new Date(0), value: 0, isPadded: true },
+    { time: new Date(60_000), value: 0, isPadded: true },
+];
+const emptySeries = { personal: paddedHistory, public: paddedHistory };
+
 /** Deterministic appearance preview of real settings/hosted controls without backend credentials. */
 export function AppearanceControlsPreview() {
     const { skin } = useAppAppearance();
     const ss = useAppearanceStyles();
+    const { t } = useTranslation();
     return (
         <View
             style={{
@@ -51,7 +59,20 @@ export function AppearanceControlsPreview() {
                 disabled
                 onPress={() => {}}
             />
-            <HostedStatusPanel mode="bytes" onModeChange={() => {}} />
+            <HostedStatusPanel
+                mode="bytes"
+                onModeChange={() => {}}
+                timeseries={{
+                    bytesTransferred: emptySeries,
+                    connectedUsers: emptySeries,
+                    connectingUsers: emptySeries,
+                }}
+                chartNotice={t(
+                    "LOCAL_DASHBOARD_HISTORY_START_PROMPT_I18N.string",
+                )}
+                onChartNoticePress={() => {}}
+                referenceTimeMs={60_000}
+            />
         </View>
     );
 }

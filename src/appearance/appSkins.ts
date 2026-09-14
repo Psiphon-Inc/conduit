@@ -37,6 +37,10 @@ export interface AppSkinTokens {
         readonly idleSurface: string;
         readonly groupSurface: string;
     };
+    readonly chartNoticeButton: {
+        readonly surface: string;
+        readonly text: string;
+    };
     readonly navigationDivider: string;
     readonly switchActiveTrack: string;
     readonly selectedBackground: string;
@@ -143,6 +147,10 @@ export const APP_SKINS: {
             selectedSurface: palette.selectedPurple,
             idleSurface: "rgba(25, 18, 36, 0.08)",
             groupSurface: "rgba(25, 18, 36, 0.06)",
+        },
+        chartNoticeButton: {
+            surface: "rgba(255, 255, 255, 0.78)",
+            text: palette.midGrey,
         },
         navigationDivider: palette.thinPurple,
         switchActiveTrack: palette.purple,
@@ -260,6 +268,10 @@ export const APP_SKINS: {
             selectedSurface: classicOrbColors.deepBlue,
             idleSurface: "#10161c",
             groupSurface: "#10161c",
+        },
+        chartNoticeButton: {
+            surface: classicOrbColors.deepBlue,
+            text: classicOrbColors.rim,
         },
         navigationDivider: "rgba(196,215,223,0.24)",
         switchActiveTrack: "#9dbcca",

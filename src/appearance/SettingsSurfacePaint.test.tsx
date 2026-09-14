@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { StyleSheet, Text } from "react-native";
+import { ActivityIndicator, StyleSheet, Text } from "react-native";
 import { type ReactTestRenderer, act, create } from "react-test-renderer";
 
 import { AppSkinPreview } from "@/src/appearance/AppAppearance";
@@ -8,10 +8,111 @@ import { APP_SKINS, type AppSkinId } from "@/src/appearance/appSkins";
 import { DropdownSection } from "@/src/components/DropdownSection";
 import { ActionButton } from "@/src/components/HostedSetupSections";
 import { HostedStatusPanel } from "@/src/components/HostedStatusPanel";
+import { TimeseriesPlot } from "@/src/components/TimeseriesPlot";
 import i18nService from "@/src/i18n/i18n";
 import { palette } from "@/src/styles";
 
 beforeAll(() => i18nService.initI18n());
+
+test.each(Object.values(APP_SKINS))(
+    "$id loading chart retains its themed indicator instead of an activation CTA",
+    async (skin) => {
+        let renderer: ReactTestRenderer | undefined;
+        await act(async () => {
+            renderer = create(
+                <AppSkinPreview skinId={skin.id}>
+                    <HostedStatusPanel
+                        mode="bytes"
+                        onModeChange={() => {}}
+                        isLoading
+                        chartNotice="Start Local Conduit to load history."
+                        onChartNoticePress={() => {}}
+                    />
+                </AppSkinPreview>,
+            );
+        });
+        if (!renderer) throw new Error("Loading dashboard chart did not mount");
+        try {
+            expect(
+                renderer.root.findAllByProps({
+                    testID: "dashboard-plot-notice",
+                }),
+            ).toHaveLength(0);
+            expect(
+                renderer.root.findByType(ActivityIndicator).props.color,
+            ).toBe(skin.mutedText);
+        } finally {
+            await act(async () => renderer?.unmount());
+        }
+    },
+);
+
+test.each([
+    ["current", "rgba(255, 255, 255, 0.78)", palette.midGrey],
+    ["classic-dark", "#23495a", "#c4d7df"],
+] as const)(
+    "%s local-off chart notice has a readable foreground/surface pair in actionable and disabled states",
+    async (skinId, surface, foreground) => {
+        for (const actionable of [true, false]) {
+            let renderer: ReactTestRenderer | undefined;
+            let presses = 0;
+            const notice = "Start Local Conduit to load history.";
+            await act(async () => {
+                renderer = create(
+                    <AppSkinPreview skinId={skinId}>
+                        <TimeseriesPlot
+                            width={350}
+                            height={235}
+                            data={[
+                                { time: new Date(0), value: 0, isPadded: true },
+                                {
+                                    time: new Date(60_000),
+                                    value: 0,
+                                    isPadded: true,
+                                },
+                            ]}
+                            plotNotice={notice}
+                            onPlotNoticePress={
+                                actionable
+                                    ? () => {
+                                          presses++;
+                                      }
+                                    : undefined
+                            }
+                        />
+                    </AppSkinPreview>,
+                );
+            });
+            if (!renderer)
+                throw new Error("Local-off chart notice did not mount");
+            try {
+                const button = renderer.root.findByProps({
+                    testID: "dashboard-plot-notice",
+                });
+                expect(
+                    StyleSheet.flatten(button.props.style).backgroundColor,
+                ).toBe(surface);
+                const label = button
+                    .findAllByType(Text)
+                    .find((node) => node.props.children === notice);
+                if (!label)
+                    throw new Error(
+                        "Local-off chart notice label did not render",
+                    );
+                expect(StyleSheet.flatten(label.props.style).color).toBe(
+                    foreground,
+                );
+                expect(button.props.disabled).toBe(!actionable);
+                if (actionable) {
+                    await act(async () => button.props.onPress());
+                    expect(presses).toBe(1);
+                }
+            } finally {
+                await act(async () => renderer?.unmount());
+            }
+        }
+    },
+);
 
 test.each(Object.values(APP_SKINS))(
     "native options retain their own gradient and text under active $id",

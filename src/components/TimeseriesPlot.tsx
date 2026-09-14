@@ -754,6 +754,7 @@ export function TimeseriesPlot({
                     }}
                 >
                     <Pressable
+                        testID="dashboard-plot-notice"
                         accessibilityRole={
                             onPlotNoticePress ? "button" : undefined
                         }
@@ -761,7 +762,7 @@ export function TimeseriesPlot({
                         onPress={onPlotNoticePress}
                         style={[
                             {
-                                backgroundColor: "rgba(255, 255, 255, 0.78)",
+                                backgroundColor: skin.chartNoticeButton.surface,
                                 borderRadius: 999,
                                 paddingHorizontal: 12,
                                 paddingVertical: 7,
@@ -772,7 +773,7 @@ export function TimeseriesPlot({
                             style={[
                                 ss.tinyFont,
                                 {
-                                    color: skin.mutedText,
+                                    color: skin.chartNoticeButton.text,
                                     textAlign: "center",
                                 },
                             ]}

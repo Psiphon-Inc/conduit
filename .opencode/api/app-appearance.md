@@ -32,6 +32,11 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   selected-plan shadows are skin paint; account danger-confirmation panels have
   their own surface role. Destructive text/borders and sign-in brand badges keep
   their semantic red and brand colors. No action or dismissal behavior changes.
+  `chartNoticeButton` pairs the local-off dashboard activation/notice pill's
+  surface and foreground in `TimeseriesPlot`. Classic Light retains its original
+  translucent-white/mid-grey pair; Classic Dark uses deep blue and the icy rim
+  foreground. Disabled notices use the same readable pair; loading replaces the
+  plot with the existing themed indicator, and activation availability is unchanged.
 - `loadAppSkinPreference` / `saveAppSkinPreference`: default to AsyncStorage,
   following the existing sound/onboarding UX-preference convention. Both accept
   the narrow `SkinPreferenceStorage` capability (`getItem`/`setItem`), also

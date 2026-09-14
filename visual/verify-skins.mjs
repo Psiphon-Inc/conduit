@@ -276,6 +276,24 @@ try {
             await page.goto(labUrl({ skin, scenario, chrome: "0" }));
             await page.waitForSelector(READY_SELECTOR);
             if (scenario === "appearance-controls") {
+                const notice = page.getByTestId("dashboard-plot-notice");
+                const noticePaint = await notice.evaluate((button) => ({
+                    surface: getComputedStyle(button).backgroundColor,
+                    text: getComputedStyle(button.firstElementChild).color,
+                }));
+                assert.deepEqual(
+                    noticePaint,
+                    skin === "classic-dark"
+                        ? {
+                              surface: "rgb(35, 73, 90)",
+                              text: "rgb(196, 215, 223)",
+                          }
+                        : {
+                              surface: "rgba(255, 255, 255, 0.78)",
+                              text: "rgb(25, 18, 36)",
+                          },
+                    "Local-off dashboard notice must have the skin's readable foreground/surface pair",
+                );
                 const gradientPaint = async (testID) =>
                     page.getByTestId(testID).evaluate((root) =>
                         Array.from(root.querySelectorAll("div"))
