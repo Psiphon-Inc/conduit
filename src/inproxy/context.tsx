@@ -457,9 +457,7 @@ export function InproxyProvider({
                 INPROXY_MAX_CLIENTS_MAX,
             );
             const personalCompartmentId =
-                androidPersonalCompartmentId === undefined
-                    ? undefined
-                    : androidPersonalCompartmentId;
+                androidPersonalCompartmentId ?? undefined;
             const maxPersonalClients = personalCompartmentId
                 ? Math.min(
                       storedInproxyMaxPersonalClients

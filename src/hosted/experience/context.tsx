@@ -793,10 +793,18 @@ function HostedExperienceProviderInner(
             await authService.signOut();
         } catch {}
 
-        await clearHostedLastAuthProvider();
-        setCachedAuthProviderHint(queryClient, baseUrl, null);
-        await clearHostedSessionState(queryClient, sessionDeps);
-        clearHostedExperienceQueryCache(queryClient, baseUrl);
+        try {
+            await clearHostedLastAuthProvider();
+        } catch {
+            timedLog("Hosted auth provider hint cleanup deferred");
+        } finally {
+            setCachedAuthProviderHint(queryClient, baseUrl, null);
+            try {
+                await clearHostedSessionState(queryClient, sessionDeps);
+            } finally {
+                clearHostedExperienceQueryCache(queryClient, baseUrl);
+            }
+        }
     }, [
         baseUrl,
         stopPersonalCompartmentSync,
@@ -974,6 +982,8 @@ function clearHostedExperienceQueryCache(
     queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_RECENT] });
     queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_LIVE] });
     queryClient.setQueryData(hostedQueryKeys.session(baseUrl), null);
+    // Keep a failed hint deletion from immediately triggering auth restoration.
+    setCachedAuthProviderHint(queryClient, baseUrl, null);
 }
 
 async function configureRevenueCatForSession(input: {

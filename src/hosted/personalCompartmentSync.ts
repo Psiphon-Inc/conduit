@@ -39,8 +39,7 @@ import {
 
 interface CompartmentSyncScope {
     accountId: string;
-    running: boolean;
-    complete: boolean;
+    status: "idle" | "running" | "complete";
 }
 
 /** Reconciles once per hosted account session; failed bursts recover on reconnect/foreground. */
@@ -70,16 +69,15 @@ export function useHostedPersonalCompartmentSync(input: {
         const currentSession = () =>
             queryClient.getQueryData<HostedSession | null>(sessionKey);
 
-        async function run() {
+        async function runSyncBurst() {
             const attemptScope = scope;
             if (
                 !attemptScope ||
-                attemptScope.running ||
-                attemptScope.complete ||
+                attemptScope.status !== "idle" ||
                 offline.current
             )
                 return;
-            attemptScope.running = true;
+            attemptScope.status = "running";
             const isCurrent = () =>
                 scope === attemptScope &&
                 currentSession()?.accountId === attemptScope.accountId;
@@ -141,7 +139,7 @@ export function useHostedPersonalCompartmentSync(input: {
                             [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
                             canonicalId,
                         );
-                        attemptScope.complete = true;
+                        attemptScope.status = "complete";
                         return;
                     } catch {
                         // No API/error payloads: they can contain the private identity.
@@ -152,33 +150,32 @@ export function useHostedPersonalCompartmentSync(input: {
                     }
                 }
             } finally {
-                attemptScope.running = false;
+                if (attemptScope.status === "running")
+                    attemptScope.status = "idle";
             }
         }
 
-        // Observe transitions synchronously, not a render later. Token refreshes
-        // keep the same scope; sign-out and account switches invalidate old work.
+        // Token refreshes keep the same scope; account changes invalidate old work.
         function sessionChanged() {
             const nextAccountId = currentSession()?.accountId ?? null;
             if (nextAccountId === accountId) return;
             accountId = nextAccountId;
-            scope = accountId
-                ? { accountId, running: false, complete: false }
-                : null;
-            void run();
+            scope = accountId ? { accountId, status: "idle" } : null;
+            void runSyncBurst();
         }
         const unsubscribe = queryClient
             .getQueryCache()
             .subscribe(sessionChanged);
         recover.current = () => {
-            void run();
+            void runSyncBurst();
         };
         stop.current = () => {
             scope = null;
         };
         let previousAppState = AppState.currentState;
         const subscription = AppState.addEventListener("change", (state) => {
-            if (state === "active" && previousAppState !== "active") void run();
+            if (state === "active" && previousAppState !== "active")
+                void runSyncBurst();
             previousAppState = state;
         });
         sessionChanged();

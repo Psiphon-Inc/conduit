@@ -17,7 +17,10 @@
   reset its budget. A successful sync is not repeated until the account session
   changes or the provider remounts. Retries and completion are in-memory, not durable.
 - Sign-out invalidates sync immediately, before upstream auth cleanup; account
-  changes and provider teardown also invalidate old work. Late endpoint results
+  changes and provider teardown also invalidate old work. Auth-provider hint deletion
+  failure is diagnostic-only: hosted session cleanup still runs, and runtime auth
+  caches clear in `finally` without immediately restoring from the stale hint.
+  Late endpoint results
   cannot publish identity. Initialization, fallback persistence, and reconciliation
   share a serialized SecureStore queue. A write already in progress cannot be
   canceled, so a superseded write restores the prior value before another queued
@@ -25,6 +28,10 @@
   This is in-process ordering, not a crash-atomic storage transaction. Reconciliation
   cancels older identity queries and only caches a successfully persisted, still-current
   result. A fallback is generated only after confirmed absence, never during a read.
+- `reconcileAndroidPersonalCompartmentId` returns the shared
+  `PersonalCompartmentReconciliationResult`: `committed`, `stale` (scope lost), or
+  `unavailable` (storage failure or unsupported web persistence). Optional native
+  parameters represent an absent compartment ID as `undefined`, never `null`.
 - Hosted snapshots never independently select Android sharing identity. Reconciliation
   changes desired configuration only; native readback remains the sharing authority.
 - Android `proxyState.data.pairingConfiguration` is native readback:

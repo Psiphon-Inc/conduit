@@ -141,7 +141,12 @@ it("waits for SecureStore before deciding to generate a new pairing identity", a
         publicKey: new Uint8Array(32),
     });
     let releaseRead: (id: string) => void = () => {};
-    const read = jest.spyOn(SecureStore, "getItemAsync").mockReturnValueOnce(
+    const readImplementation = jest
+        .mocked(SecureStore.getItemAsync)
+        .getMockImplementation();
+    if (!readImplementation)
+        throw new Error("Pairing test storage unavailable");
+    const read = jest.mocked(SecureStore.getItemAsync).mockReturnValueOnce(
         new Promise((resolve) => {
             releaseRead = resolve;
         }),
@@ -182,11 +187,75 @@ it("waits for SecureStore before deciding to generate a new pairing identity", a
             dispatched.map((params) => params.personalCompartmentId),
         ).toEqual([persistedId]);
     } finally {
-        read.mockRestore();
+        read.mockImplementation(readImplementation);
         await act(async () => {
             renderer?.unmount();
         });
         queryClient.clear();
+        Object.defineProperty(Platform, "OS", {
+            configurable: true,
+            value: platform,
+        });
+    }
+});
+
+it("loads optional parameters without null while generating an absent identity fallback", async () => {
+    const platform = Platform.OS;
+    Object.defineProperty(Platform, "OS", {
+        configurable: true,
+        value: "android",
+    });
+    const queryClient = new QueryClient({
+        defaultOptions: {
+            queries: { retry: false, staleTime: Infinity, gcTime: Infinity },
+        },
+    });
+    queryClient.setQueryData([QUERYKEY_INPROXY_KEYPAIR], {
+        privateKey: new Uint8Array(32),
+        publicKey: new Uint8Array(32),
+    });
+    queryClient.setQueryData([QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID], null);
+    const fallbackId = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    const { nativeModule, dispatched, diagnostics } = recordingNativeDispatch();
+    const errorLog = jest.spyOn(console, "error").mockImplementation(() => {});
+    let renderer: ReturnType<typeof create> | undefined;
+    try {
+        await act(async () => {
+            renderer = create(
+                <QueryClientProvider client={queryClient}>
+                    <InproxyProvider module={nativeModule}>
+                        {null}
+                    </InproxyProvider>
+                </QueryClientProvider>,
+            );
+        });
+        for (
+            let attempt = 0;
+            dispatched.at(-1)?.personalCompartmentId !== fallbackId &&
+            attempt < 10;
+            attempt++
+        ) {
+            await act(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            });
+        }
+        expect(dispatched.at(-1)?.personalCompartmentId).toBe(fallbackId);
+        expect(
+            dispatched.every((params) => params.personalCompartmentId !== null),
+        ).toBe(true);
+        expect(diagnostics).toEqual([]);
+        expect(errorLog).not.toHaveBeenCalled();
+        await expect(
+            SecureStore.getItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+            ),
+        ).resolves.toBe(fallbackId);
+    } finally {
+        await act(async () => {
+            renderer?.unmount();
+        });
+        queryClient.clear();
+        errorLog.mockRestore();
         Object.defineProperty(Platform, "OS", {
             configurable: true,
             value: platform,

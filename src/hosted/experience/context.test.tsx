@@ -1288,6 +1288,85 @@ describe("hosted experience context", () => {
         expect(contextValue!.state.accountProfile?.alias).toBe("New Alias");
     });
 
+    it("retries a live compartment 401 with the refreshed token and commits the endpoint identity", async () => {
+        const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+        const canonicalId = "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
+        await SecureStore.setItemAsync(
+            SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+            localId,
+        );
+        const session = makeSession({
+            accessToken: "access.old",
+            accessTokenExpiresAtMs: 200_000,
+            refreshTokenExpiresAtMs: 400_000,
+        });
+        const sessionClient = makeSessionClient({
+            loadHostedSession: async () => session,
+            refresh: jest.fn().mockResolvedValue({
+                ...session,
+                accessToken: "access.new",
+                accessTokenExpiresAtMs: 400_000,
+            }),
+        });
+        const requests: { token: string; id: string }[] = [];
+        const delays: number[] = [];
+        let hosted: HostedExperienceContextValue | undefined;
+        let desiredId: string | null | undefined;
+        function Consumer() {
+            hosted = useHostedExperienceContext();
+            desiredId = useAndroidPersonalCompartmentId().data;
+            return null;
+        }
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 20_000,
+                    delay: async (ms) => {
+                        delays.push(ms);
+                    },
+                    authService: makeAuthService(),
+                    sessionClient,
+                    apiClient: makeHostedClient({
+                        setPersonalCompartmentId: async (token, id) => {
+                            requests.push({ token, id });
+                            if (token === "access.old")
+                                throw new HostedApiClientRequestError(
+                                    "Pairing test rejected token",
+                                    401,
+                                );
+                            return canonicalId;
+                        },
+                        getConduitsSnapshot: async () =>
+                            makeConduitsSnapshot("active"),
+                    }),
+                    revenueCat: makeRevenueCatContext(),
+                },
+                <Consumer />,
+            );
+        });
+        await waitFor(() => {
+            expect(desiredId).toBe(canonicalId);
+            expect(hosted?.state.session?.accessToken).toBe("access.new");
+        });
+        expect(requests).toEqual([
+            { token: "access.old", id: localId },
+            { token: "access.new", id: localId },
+        ]);
+        expect(sessionClient.refresh).toHaveBeenCalledTimes(1);
+        expect(delays).toEqual([]);
+        await expect(
+            SecureStore.getItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+            ),
+        ).resolves.toBe(canonicalId);
+        await act(async () => {
+            appStateListeners.forEach((listener) => listener("background"));
+            appStateListeners.forEach((listener) => listener("active"));
+        });
+        expect(requests).toHaveLength(2);
+    });
+
     it("refreshes and retries hosted API calls after a still-current token 401", async () => {
         const now = jest.fn().mockReturnValue(20_000);
         const currentSession = makeSession({
@@ -1591,6 +1670,103 @@ describe("hosted experience context", () => {
             SecureStore.getItemAsync(SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY),
         ).resolves.toBeNull();
     });
+
+    it.each(["successful hint cleanup", "failed hint cleanup"])(
+        "clears the session after %s and gives same-account sign-in a fresh sync budget",
+        async (cleanup) => {
+            const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+            await SecureStore.setItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                localId,
+            );
+            const session = makeSession({
+                accessToken: "access.login",
+                accessTokenExpiresAtMs: 90_000,
+                refreshTokenExpiresAtMs: 1_000_000,
+            });
+            const sessionClient = makeSessionClient({
+                login: async () => session,
+            });
+            const authService = makeAuthService({
+                signIn: async () => ({
+                    provider: "google",
+                    tokenType: "clerk_broker_jwt",
+                    brokerToken: "test",
+                    platform: "android",
+                    clientVersion: "test",
+                }),
+            });
+            let attempts = 0;
+            let available = false;
+            let hosted: HostedExperienceContextValue | undefined;
+            let desiredId: string | null | undefined;
+            function Consumer() {
+                hosted = useHostedExperienceContext();
+                desiredId = useAndroidPersonalCompartmentId().data;
+                return null;
+            }
+            await act(async () => {
+                renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 10_000,
+                        authService,
+                        sessionClient,
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async () => {
+                                attempts++;
+                                if (available) return localId;
+                                throw new Error("Pairing test unavailable");
+                            },
+                            getConduitsSnapshot: async () =>
+                                makeConduitsSnapshot("active"),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <Consumer />,
+                );
+            });
+            await waitFor(() =>
+                expect(hosted?.initialSessionResolved).toBe(true),
+            );
+            await act(async () => {
+                await hosted?.signIn("google");
+            });
+            await waitFor(() => expect(attempts).toBe(3));
+            if (cleanup === "failed hint cleanup") {
+                jest.mocked(SecureStore.deleteItemAsync).mockRejectedValueOnce(
+                    new Error("Pairing test hint cleanup unavailable"),
+                );
+            }
+            await act(async () => {
+                await hosted?.signOut();
+            });
+            await waitFor(() => {
+                expect(hosted?.state.session).toBeNull();
+                expect(hosted?.state.conduitsSnapshot).toBeNull();
+                expect(hosted?.lastAuthProvider).toBeNull();
+            });
+            expect(sessionClient.clearHostedSession).toHaveBeenCalledTimes(1);
+            expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(
+                SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
+            );
+            expect(authService.restoreSignIn).not.toHaveBeenCalled();
+            expect(desiredId).toBe(localId);
+            // Deliberately reuse both account ID and token: only the session boundary resets retries.
+            await act(async () => {
+                await hosted?.signIn("google");
+            });
+            await waitFor(() => expect(attempts).toBe(6));
+            expect(hosted?.state.session?.accountId).toBe(session.accountId);
+            available = true;
+            await act(async () => {
+                appStateListeners.forEach((listener) => listener("background"));
+                appStateListeners.forEach((listener) => listener("active"));
+            });
+            await waitFor(() => expect(attempts).toBe(7));
+            expect(desiredId).toBe(localId);
+        },
+    );
 
     it("clears the auth hint and upstream auth session on explicit sign out", async () => {
         const session = makeSession({
