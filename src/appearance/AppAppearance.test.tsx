@@ -7,7 +7,8 @@ import {
     AppAppearanceProvider,
     useAppAppearance,
 } from "@/src/appearance/AppAppearance";
-import { SkinPicker } from "@/src/appearance/SkinPicker";
+import { SkinRadioOption } from "@/src/appearance/SkinRadioOption";
+import { APP_SKINS } from "@/src/appearance/appSkins";
 import {
     type SkinPreferenceStorage,
     loadAppSkinPreference,
@@ -37,6 +38,25 @@ function RendererPaintProbe() {
     );
 }
 
+// Exercise preference ordering independently of the dropdown's measured layout.
+// The real browser verifier covers the compact row and modal interactions.
+function PreferenceControls() {
+    const { selectSkin, persistence } = useAppAppearance();
+    return (
+        <>
+            {Object.values(APP_SKINS).map((skin) => (
+                <SkinRadioOption
+                    key={skin.id}
+                    id={skin.id}
+                    label={skin.id}
+                    onSelect={selectSkin}
+                />
+            ))}
+            <Text testID="skin-persistence">{persistence}</Text>
+        </>
+    );
+}
+
 async function mountAppearance(storage: SkinPreferenceStorage) {
     const client = new QueryClient({
         defaultOptions: { queries: { retry: false, gcTime: Infinity } },
@@ -46,7 +66,7 @@ async function mountAppearance(storage: SkinPreferenceStorage) {
         renderer = create(
             <QueryClientProvider client={client}>
                 <AppAppearanceProvider storage={storage}>
-                    <SkinPicker />
+                    <PreferenceControls />
                     <RendererPaintProbe />
                 </AppAppearanceProvider>
             </QueryClientProvider>,
@@ -66,7 +86,7 @@ beforeAll(() => i18nService.initI18n());
 beforeEach(() => jest.useFakeTimers());
 afterEach(() => jest.useRealTimers());
 
-test("Settings skin radio selection updates renderer paint and survives a new query client", async () => {
+test("Skin option selection updates renderer paint and survives a new query client", async () => {
     const storage = new MemorySkinStorage();
     const first = await mountAppearance(storage);
     await settleQueryUpdates();
@@ -193,8 +213,9 @@ test("storage failure keeps selected paint usable and exposes a retryable warnin
         renderer.root.findByProps({ testID: "renderer-paint" }).props.children,
     ).toBe("classic-dark");
     expect(
-        renderer.root.findAllByProps({ accessibilityRole: "alert" }).length,
-    ).toBeGreaterThan(0);
+        renderer.root.findByProps({ testID: "skin-persistence" }).props
+            .children,
+    ).toBe("unavailable");
     await act(async () => renderer.unmount());
     client.clear();
 });

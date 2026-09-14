@@ -54,12 +54,24 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   with skin colors. `navigationDivider`, `switchActiveTrack` (native switch), and
   `aliasPlaceholder` are independent roles: Classic has a muted alias placeholder
   and a high-contrast active switch track instead of the deep action surface.
-- Settings exposes localized radio options. `/orb-lab?skin=classic-dark` previews
+- `SkinPicker`: shared native/web settings control occupies one compact row with
+  Appearance, the localized current skin label, and a downward chevron. Pressing
+  it measures the row and opens an anchored dropdown in a transparent native/RN
+  Web `Modal`, never expanding settings layout. The menu fits the viewport,
+  flips above the row when needed, and closes on selection, outside tap, native
+  back/accessibility escape, web Escape, or window resize. The web modal traps
+  focus and restores it to the trigger; the selected option receives initial
+  focus. Native options expose radio checked state and accessibility focus.
+  Save failures leave only an accessible warning indicator in the row; reopening
+  reveals the full localized explanation. Selecting the checked option retries
+  saving and closes the menu. No additional settings screen or sheet is involved.
+- `/orb-lab?skin=classic-dark` previews
   deterministic renderer paint without changing the stored preference; omitted or
   invalid lab skin selects `current`.
-  `SkinRadioOption` uses native accessibility radio state on mobile and a real
-  HTML radio on web (Space and arrow keys, focus, and checked state).
-  Clicking an already-checked radio retries a failed write, as the warning directs.
+  `SkinRadioOption` takes an `onSelect(AppSkinId)` callback and optional
+  `focusOnMount`; it uses native accessibility radio state on mobile and a real
+  HTML radio on web (Space and arrow keys, focus, and checked state). The picker
+  owns applying the selection and closing the overlay.
 
 Dependencies: AsyncStorage (native app storage; localStorage on web), shared
 `common/colorUtils` for hex-to-RGB paint, TanStack Query cache, i18next, existing SVG/native/

@@ -1,4 +1,5 @@
-import { Pressable, Text } from "react-native";
+import React from "react";
+import { AccessibilityInfo, Pressable, Text, View } from "react-native";
 
 import {
     useAppAppearance,
@@ -10,26 +11,37 @@ import type { AppSkinId } from "@/src/appearance/appSkins";
 export function SkinRadioOption({
     id,
     label,
+    onSelect,
+    focusOnMount = false,
 }: {
     id: AppSkinId;
     label: string;
+    onSelect: (id: AppSkinId) => void;
+    focusOnMount?: boolean;
 }) {
-    const { skin, selectSkin } = useAppAppearance();
+    const { skin } = useAppAppearance();
+    const option = React.useRef<View>(null);
     const ss = useAppearanceStyles();
     const checked = skin.id === id;
     return (
         <Pressable
+            ref={option}
+            onLayout={() => {
+                if (focusOnMount && checked && option.current)
+                    AccessibilityInfo.sendAccessibilityEvent(
+                        option.current,
+                        "focus",
+                    );
+            }}
             testID={`skin-${id}`}
             accessibilityRole="radio"
             accessibilityState={{ checked }}
             accessibilityLabel={label}
-            onPress={() => selectSkin(id)}
+            onPress={() => onSelect(id)}
             style={{
                 minHeight: 48,
                 padding: 12,
-                borderWidth: 1,
-                borderRadius: 12,
-                borderColor: skin.border,
+                borderRadius: 8,
                 backgroundColor: checked
                     ? skin.selectedBackground
                     : "transparent",
