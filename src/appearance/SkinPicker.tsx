@@ -6,16 +6,14 @@ import {
     useAppearanceStyles,
 } from "@/src/appearance/AppAppearance";
 import { SkinRadioOption } from "@/src/appearance/SkinRadioOption";
+import { APP_SKINS } from "@/src/appearance/appSkins";
 
 /** Accessible skin radio choices; changes apply before persistence finishes. */
 export function SkinPicker() {
     const { t } = useTranslation();
     const { persistence } = useAppAppearance();
     const ss = useAppearanceStyles();
-    const options = [
-        { id: "current", label: t("SKIN_CURRENT_I18N.string") },
-        { id: "classic-dark", label: t("SKIN_CLASSIC_DARK_I18N.string") },
-    ] as const;
+    const options = Object.values(APP_SKINS);
     return (
         <View style={{ gap: 8, paddingVertical: 12 }}>
             <Text
@@ -33,7 +31,7 @@ export function SkinPicker() {
                     <SkinRadioOption
                         key={option.id}
                         id={option.id}
-                        label={option.label}
+                        label={t(option.labelKey)}
                     />
                 ))}
             </View>

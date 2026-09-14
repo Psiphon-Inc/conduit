@@ -16,8 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { APP_SKINS, type AppSkinId } from "@/src/appearance/appSkins";
-import { rgbaFromRgb } from "@/src/common/colorUtils";
+import {
+    APP_SKINS,
+    type AppSkinId,
+    type AppSkinTokens,
+} from "@/src/appearance/appSkins";
+import { rgbFromHexColor, rgbaFromRgb } from "@/src/common/colorUtils";
 import { palette } from "@/src/styles";
 
 // Shared visual contract for the orb scene: theme tables, slot layouts, and
@@ -190,67 +194,76 @@ export const PROVISIONING_MARKER_GLOW_COLORS = [
 ];
 export const PROVISIONING_MARKER_GLOW_POSITIONS = [0, 0.34, 1];
 
-// Orb body profiles consume rgb() channels; skin tokens remain ordinary hex paint.
-function skinHexToRgb(hex: string): string {
-    return `rgb(${Number.parseInt(hex.slice(1, 3), 16)},${Number.parseInt(hex.slice(3, 5), 16)},${Number.parseInt(hex.slice(5, 7), 16)})`;
-}
-
-const classicSkin = APP_SKINS["classic-dark"];
-const classicOrb = classicSkin.orb;
-function makeClassicSceneTheme(level: OrbEvolutionLevel): OrbSceneTheme {
+function makeColdSceneTheme(
+    skin: AppSkinTokens,
+    level: OrbEvolutionLevel,
+): OrbSceneTheme {
+    const orb = skin.orb;
     return {
         orb: {
-            radialInner: { rgb: skinHexToRgb(classicOrb.center), alpha: 1 },
+            radialInner: { rgb: rgbFromHexColor(orb.center), alpha: 1 },
             radialOuter: {
-                rgb: skinHexToRgb(
-                    level === 0 || level === 2
-                        ? classicOrb.deepBlue
-                        : classicOrb.deepPurple,
+                rgb: rgbFromHexColor(
+                    level === 0 || level === 2 ? orb.deepBlue : orb.deepPurple,
                 ),
                 alpha: 1,
             },
-            innerShadowBR: { rgb: skinHexToRgb(classicOrb.purple), alpha: 1 },
-            innerShadowTL: { rgb: skinHexToRgb(classicOrb.blue), alpha: 1 },
+            innerShadowBR: { rgb: rgbFromHexColor(orb.purple), alpha: 1 },
+            innerShadowTL: { rgb: rgbFromHexColor(orb.blue), alpha: 1 },
             outerGlow: {
-                rgb: skinHexToRgb(
-                    level === 0 || level === 2
-                        ? classicOrb.blue
-                        : classicOrb.purple,
+                rgb: rgbFromHexColor(
+                    level === 0 || level === 2 ? orb.blue : orb.purple,
                 ),
                 alpha: 0.54,
             },
-            rimColor: classicOrb.rim,
+            rimColor: orb.rim,
         },
-        titleColor: classicSkin.text,
-        statusLeadColor: classicSkin.text,
-        metricColor: classicSkin.mutedText,
-        hintColor: classicSkin.text,
+        titleColor: skin.text,
+        statusLeadColor: skin.text,
+        metricColor: skin.mutedText,
+        hintColor: skin.text,
     };
 }
 
-const CLASSIC_SCENE_THEMES: Record<OrbEvolutionLevel, OrbSceneTheme> = {
-    0: makeClassicSceneTheme(0),
-    1: makeClassicSceneTheme(1),
-    2: makeClassicSceneTheme(2),
-    3: makeClassicSceneTheme(3),
-};
+// Paint is computed once, not in the animation/render loop. The pastel profile
+// preserves the original translucent evolution tables; cold-rim adds opaque
+// centers, the second inner shadow and the rim. This is a renderer distinction,
+// not a skin-ID switch: another cold-rim skin only needs token definitions.
+const sceneThemesBySkin: ReadonlyMap<
+    AppSkinId,
+    Record<OrbEvolutionLevel, OrbSceneTheme>
+> = new Map(
+    Object.values(APP_SKINS).map((skin) => [
+        skin.id,
+        skin.orb.sceneProfile === "pastel"
+            ? SCENE_THEMES
+            : {
+                  0: makeColdSceneTheme(skin, 0),
+                  1: makeColdSceneTheme(skin, 1),
+                  2: makeColdSceneTheme(skin, 2),
+                  3: makeColdSceneTheme(skin, 3),
+              },
+    ]),
+);
 
 /** Select renderer paint without changing evolution state, geometry or animations. */
 export function getOrbSceneTheme(
     skinId: AppSkinId,
     level: OrbEvolutionLevel,
 ): OrbSceneTheme {
-    return skinId === "current"
-        ? SCENE_THEMES[level]
-        : CLASSIC_SCENE_THEMES[level];
+    const themes = sceneThemesBySkin.get(skinId);
+    if (!themes)
+        throw new Error("Orb scene skin profile missing from skin registry");
+    return themes[level];
 }
 
 /** Provisioning markers use the same skin as hosted orbs, including during swaps. */
 export function getProvisioningGlowColors(skinId: AppSkinId): string[] {
-    if (skinId === "current") return PROVISIONING_MARKER_GLOW_COLORS;
+    const orb = APP_SKINS[skinId].orb;
+    if (orb.sceneProfile === "pastel") return PROVISIONING_MARKER_GLOW_COLORS;
     return [
-        rgbaFromRgb(skinHexToRgb(classicOrb.rim), 0.72),
-        rgbaFromRgb(skinHexToRgb(classicOrb.blue), 0.42),
-        rgbaFromRgb(skinHexToRgb(classicOrb.purple), 0),
+        rgbaFromRgb(rgbFromHexColor(orb.rim), 0.72),
+        rgbaFromRgb(rgbFromHexColor(orb.blue), 0.42),
+        rgbaFromRgb(rgbFromHexColor(orb.purple), 0),
     ];
 }

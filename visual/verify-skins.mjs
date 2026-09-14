@@ -56,6 +56,30 @@ try {
         () => localStorage.getItem("appSkin") === "classic-dark",
     );
     assert(await classic.isChecked());
+    await page.evaluate(() => {
+        const originalSetItem = Storage.prototype.setItem;
+        window.restoreSkinStorage = () => {
+            Storage.prototype.setItem = originalSetItem;
+        };
+        Storage.prototype.setItem = function (key, value) {
+            if (key === "appSkin")
+                throw new Error("Blocked skin preference write");
+            originalSetItem.call(this, key, value);
+        };
+    });
+    await current.check();
+    await page.getByRole("alert").waitFor();
+    assert(
+        await current.isChecked(),
+        "Persistence failure must not undo the selected paint",
+    );
+    await page.evaluate(() => window.restoreSkinStorage());
+    await current.click(); // Already checked: onChange alone cannot perform this retry.
+    await page.waitForFunction(
+        () => localStorage.getItem("appSkin") === "current",
+    );
+    await page.getByRole("alert").waitFor({ state: "detached" });
+    await classic.check();
     await page.getByTestId("nav-home").click();
     await page.waitForTimeout(1200);
     await page.screenshot({ path: join(output, "home-classic-dark.png") });
@@ -95,7 +119,7 @@ try {
     );
     assert.deepEqual(errors, [], "No uncaught browser errors");
     console.log(
-        `Skin verification passed: selection, reload, keyboard, invalid storage, isolated previews and 16 scene captures in ${output}`,
+        `Skin verification passed: selection, reload, keyboard, failed-write retry, invalid storage, isolated previews and 16 scene captures in ${output}`,
     );
 } finally {
     await browser.close();

@@ -9,7 +9,7 @@ export function SkinRadioOption({
     id: AppSkinId;
     label: string;
 }) {
-    const { skin, selectSkin } = useAppAppearance();
+    const { skin, selectSkin, persistence } = useAppAppearance();
     const checked = skin.id === id;
     return (
         <label
@@ -38,6 +38,12 @@ export function SkinRadioOption({
                 checked={checked}
                 data-testid={`skin-${id}`}
                 onChange={() => selectSkin(id)}
+                onClick={() => {
+                    // Checked HTML radios do not fire change again. Keep the
+                    // picker warning's "select it again to retry" action usable.
+                    if (checked && persistence === "unavailable")
+                        selectSkin(id);
+                }}
                 style={{ accentColor: skin.accent, margin: 0 }}
             />
             {label}

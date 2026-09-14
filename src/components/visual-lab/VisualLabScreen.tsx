@@ -18,6 +18,7 @@
  */
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 import { AppSkinPreview } from "@/src/appearance/AppAppearance";
@@ -260,6 +261,7 @@ const CONTROL_STYLE: React.CSSProperties = {
 };
 
 export function VisualLabScreen() {
+    const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams<{
         scenario?: string;
@@ -280,10 +282,9 @@ export function VisualLabScreen() {
     const playing = firstString(params.play) === "1";
     const chromeVisible = firstString(params.chrome) !== "0";
     const backgroundId = firstString(params.bg) ?? "black";
-    const background =
-        firstString(params.bg) || skinId === "current"
-            ? (BACKGROUNDS[backgroundId] ?? BACKGROUNDS.black)
-            : APP_SKINS[skinId].background;
+    const background = firstString(params.bg)
+        ? (BACKGROUNDS[backgroundId] ?? BACKGROUNDS.black)
+        : APP_SKINS[skinId].labBackground;
     const viewportParam = firstString(params.viewport) ?? "mobile";
     const themeParam = firstString(params.theme);
     const themeOverride =
@@ -401,8 +402,11 @@ export function VisualLabScreen() {
                                 setParam("skin", event.target.value)
                             }
                         >
-                            <option value="current">Current</option>
-                            <option value="classic-dark">Classic Dark</option>
+                            {Object.values(APP_SKINS).map((skin) => (
+                                <option key={skin.id} value={skin.id}>
+                                    {t(skin.labelKey)}
+                                </option>
+                            ))}
                         </select>
                     </label>
                     <label>

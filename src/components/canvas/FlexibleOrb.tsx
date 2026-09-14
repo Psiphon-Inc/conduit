@@ -35,7 +35,6 @@ import {
     InnerShadowLayer,
     OrbBodyGradient,
 } from "@/src/components/orb-scene/native/orbLayers";
-import { palette } from "@/src/styles";
 
 interface FlexibleOrbProps {
     currentView: SharedValue<number>;
@@ -211,30 +210,20 @@ export function FlexibleOrb({
                 <OrbBodyGradient
                     id="onboarding-orb-body"
                     radius={baseRadius}
-                    innerColor={
-                        skin.id === "current"
-                            ? palette.fadedMauve
-                            : skin.orb.center
-                    }
-                    outerColor={
-                        skin.id === "current"
-                            ? palette.purple
-                            : skin.orb.deepBlue
-                    }
+                    innerColor={skin.onboardingOrb.center}
+                    outerColor={skin.onboardingOrb.outer}
                 />
                 <InnerShadowLayer
                     id="onboarding-orb-shadow-mauve"
                     radius={baseRadius}
-                    color={
-                        skin.id === "current" ? palette.mauve : skin.orb.blue
-                    }
+                    color={skin.onboardingOrb.topLeftShadow}
                     dx={10}
                     dy={10}
                 />
                 <InnerShadowLayer
                     id="onboarding-orb-shadow-peach"
                     radius={baseRadius}
-                    color={skin.orb.purple}
+                    color={skin.onboardingOrb.bottomRightShadow}
                     dx={-10}
                     dy={-10}
                 />

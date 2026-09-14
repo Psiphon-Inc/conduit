@@ -32,45 +32,17 @@ import {
     useAppAppearance,
     useAppearanceStyles,
 } from "@/src/appearance/AppAppearance";
-
-const BAND_COLORS = [
-    "rgba(219,211,236,0)",
-    "rgba(187,174,227,0.18)",
-    "rgba(161,143,212,0.42)",
-    "rgba(136, 99, 189, 1)",
-    "rgba(136, 99, 189, 1)",
-    "rgba(161,143,212,0.42)",
-    "rgba(187,174,227,0.18)",
-    "rgba(219,211,236,0)",
-] as const;
-const BAND_POSITIONS = [0, 0.16, 0.25, 0.4, 0.6, 0.75, 0.84, 1] as const;
-
-// The Skia hero pulsed its colors with interpolateColors over a 7s sine;
-// the native version renders both pulse endpoints as static layers and
-// crossfades the top one.
-const PULSE_VARIANTS = [
-    {
-        gradient: ["#8E77C3", "#EFA48D"],
-        glowAlpha: 0.5,
-        innerShadow: "rgba(246,198,185,0.72)",
-    },
-    {
-        gradient: ["#9C85CD", "#F2B09A"],
-        glowAlpha: 0.68,
-        innerShadow: "rgba(234,182,168,0.88)",
-    },
-];
+import type { SkinHeroPulsePaint } from "@/src/appearance/appSkins";
 
 function HeroOrbLayer({
     variant,
     idSuffix,
     orbRadius,
 }: {
-    variant: (typeof PULSE_VARIANTS)[number];
+    variant: SkinHeroPulsePaint;
     idSuffix: string;
     orbRadius: number;
 }) {
-    const { skin } = useAppAppearance();
     // Box is 3x the orb radius so the soft white glow (formerly a Skia
     // Shadow blur) fits around the body.
     const box = orbRadius * 3;
@@ -86,20 +58,12 @@ function HeroOrbLayer({
                 >
                     <Stop
                         offset={orbRadius / (box / 2) - 0.05}
-                        stopColor={
-                            skin.id === "current" ? "#FFFFFF" : skin.orb.blue
-                        }
-                        stopOpacity={
-                            skin.id === "current"
-                                ? variant.glowAlpha
-                                : variant.glowAlpha * 0.65
-                        }
+                        stopColor={variant.glowColor}
+                        stopOpacity={variant.glowAlpha}
                     />
                     <Stop
                         offset={1}
-                        stopColor={
-                            skin.id === "current" ? "#FFFFFF" : skin.orb.blue
-                        }
+                        stopColor={variant.glowColor}
                         stopOpacity={0}
                     />
                 </RadialGradient>
@@ -109,22 +73,8 @@ function HeroOrbLayer({
                     cy="50%"
                     r="50%"
                 >
-                    <Stop
-                        offset={0.4}
-                        stopColor={
-                            skin.id === "current"
-                                ? variant.gradient[0]
-                                : skin.orb.center
-                        }
-                    />
-                    <Stop
-                        offset={1}
-                        stopColor={
-                            skin.id === "current"
-                                ? variant.gradient[1]
-                                : skin.orb.deepBlue
-                        }
-                    />
+                    <Stop offset={0.4} stopColor={variant.gradient[0]} />
+                    <Stop offset={1} stopColor={variant.gradient[1]} />
                 </RadialGradient>
                 <RadialGradient
                     id={`hero-shadow-${idSuffix}`}
@@ -137,14 +87,7 @@ function HeroOrbLayer({
                         stopColor="rgba(246,255,255,1)"
                         stopOpacity={0}
                     />
-                    <Stop
-                        offset={1}
-                        stopColor={
-                            skin.id === "current"
-                                ? variant.innerShadow
-                                : skin.orb.purple
-                        }
-                    />
+                    <Stop offset={1} stopColor={variant.innerShadow} />
                 </RadialGradient>
             </Defs>
             <Circle
@@ -252,21 +195,8 @@ export function HostedSetupSignInHero({
                     style={StyleSheet.absoluteFill}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 1 }}
-                    colors={
-                        skin.id === "current"
-                            ? BAND_COLORS
-                            : [
-                                  "#00000000",
-                                  skin.orb.deepPurple,
-                                  skin.orb.deepBlue,
-                                  "#00000000",
-                              ]
-                    }
-                    locations={
-                        skin.id === "current"
-                            ? BAND_POSITIONS
-                            : [0, 0.4, 0.6, 1]
-                    }
+                    colors={skin.hero.bandColors}
+                    locations={skin.hero.bandPositions}
                 />
                 <Svg
                     width={haloRadius * 2}
@@ -318,7 +248,7 @@ export function HostedSetupSignInHero({
                     }}
                 >
                     <HeroOrbLayer
-                        variant={PULSE_VARIANTS[0]}
+                        variant={skin.hero.pulseVariants[0]}
                         idSuffix="rest"
                         orbRadius={orbRadius}
                     />
@@ -326,7 +256,7 @@ export function HostedSetupSignInHero({
                         style={[StyleSheet.absoluteFill, pulseStyle]}
                     >
                         <HeroOrbLayer
-                            variant={PULSE_VARIANTS[1]}
+                            variant={skin.hero.pulseVariants[1]}
                             idSuffix="peak"
                             orbRadius={orbRadius}
                         />

@@ -56,20 +56,8 @@ import {
     visualTestLightElapsedMs,
 } from "@/src/components/orb-scene/visualTestControl";
 import { useAppIsActive } from "@/src/hooks";
-import { palette } from "@/src/styles";
 
 const MAX_HOSTED_LIGHTS = 8;
-
-// The Skia version cycled the body gradient's outer color through this
-// palette with interpolateColors; the native version renders one static
-// gradient layer per stop and crossfades wrapper opacity.
-const ORB_CYCLE_COLORS = [
-    palette.deepMauve,
-    palette.peach,
-    palette.fadedMauve,
-    palette.mauve,
-    palette.fadedMauve,
-];
 
 // Shared static SVG layers live in orbLayers.tsx.
 
@@ -103,16 +91,6 @@ export function HostedMiniOrbNative({
     const { t } = useTranslation();
     const { skin } = useAppAppearance();
     const ss = useAppearanceStyles();
-    const cycleColors =
-        skin.id === "current"
-            ? ORB_CYCLE_COLORS
-            : [
-                  skin.orb.center,
-                  skin.orb.deepBlue,
-                  skin.orb.deepPurple,
-                  skin.orb.blue,
-                  skin.orb.deepPurple,
-              ];
     const appIsActive = useAppIsActive();
     const finalOrbRadius = width / 4;
     const orbCenterY = height / 2;
@@ -300,7 +278,7 @@ export function HostedMiniOrbNative({
                         orbWrapperStyle,
                     ]}
                 >
-                    {cycleColors.map((color, index) => (
+                    {skin.miniOrb.cycleColors.map((color, index) => (
                         <OrbCycleLayer
                             key={`cycle-${index}`}
                             index={index}
@@ -312,11 +290,7 @@ export function HostedMiniOrbNative({
                     <InnerShadowLayer
                         id="mini-shadow-mauve"
                         radius={finalOrbRadius}
-                        color={
-                            skin.id === "current"
-                                ? palette.mauve
-                                : skin.orb.blue
-                        }
+                        color={skin.miniOrb.topLeftShadow}
                         dx={10}
                         dy={10}
                     />
@@ -333,11 +307,7 @@ export function HostedMiniOrbNative({
                             cx={finalOrbRadius}
                             cy={finalOrbRadius}
                             r={finalOrbRadius - 1}
-                            stroke={
-                                skin.id === "current"
-                                    ? palette.deepMauve
-                                    : skin.orb.rim
-                            }
+                            stroke={skin.miniOrb.rim}
                             strokeWidth={1.5}
                             strokeOpacity={0.3}
                             fill="none"
@@ -449,11 +419,7 @@ function IdleActiveShadow({
                 <InnerShadowLayer
                     id="mini-shadow-idle"
                     radius={radius}
-                    color={
-                        skin.id === "current"
-                            ? palette.peachyMauve
-                            : skin.orb.purple
-                    }
+                    color={skin.miniOrb.idleBottomRightShadow}
                     dx={-10}
                     dy={-10}
                 />
@@ -462,7 +428,7 @@ function IdleActiveShadow({
                 <InnerShadowLayer
                     id="mini-shadow-active"
                     radius={radius}
-                    color={skin.orb.purple}
+                    color={skin.miniOrb.activeBottomRightShadow}
                     dx={-10}
                     dy={-10}
                 />

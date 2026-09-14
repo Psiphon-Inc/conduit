@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 
@@ -11,14 +12,13 @@ import {
     loadAppSkinPreference,
     saveAppSkinPreference,
 } from "@/src/appearance/skinPreference";
-import * as secureStorage from "@/src/common/secureStorage";
+import { QUERYKEY_APP_SKIN } from "@/src/constants";
 import { sharedStyles } from "@/src/styles";
 
-const skinQueryKey = ["appSkin"];
+const skinQueryKey = [QUERYKEY_APP_SKIN];
 
 interface AppAppearanceValue {
     readonly skin: AppSkinTokens;
-    readonly loading: boolean;
     readonly persistence: "idle" | "saving" | "saved" | "unavailable";
     readonly selectSkin: (skinId: AppSkinId) => void;
 }
@@ -26,7 +26,6 @@ interface AppAppearanceValue {
 // Static consumers/tests outside the app shell retain the original appearance.
 const AppAppearanceContext = React.createContext<AppAppearanceValue>({
     skin: APP_SKINS.current,
-    loading: false,
     persistence: "idle",
     selectSkin: () => {},
 });
@@ -34,7 +33,7 @@ const AppAppearanceContext = React.createContext<AppAppearanceValue>({
 /** Owns preference hydration and ordered writes inside the app query provider. */
 export function AppAppearanceProvider({
     children,
-    storage = secureStorage,
+    storage = AsyncStorage,
 }: {
     children: React.ReactNode;
     storage?: SkinPreferenceStorage;
@@ -42,7 +41,7 @@ export function AppAppearanceProvider({
     const queryClient = useQueryClient();
     const query = useQuery({
         queryKey: skinQueryKey,
-        queryFn: () => loadAppSkinPreference(storage),
+        queryFn: async () => (await loadAppSkinPreference(storage)).skinId,
         staleTime: Infinity,
         gcTime: Infinity,
     });
@@ -69,11 +68,10 @@ export function AppAppearanceProvider({
     const value = React.useMemo<AppAppearanceValue>(
         () => ({
             skin: APP_SKINS[query.data ?? "current"],
-            loading: query.isPending,
             persistence,
             selectSkin,
         }),
-        [query.data, query.isPending, persistence, selectSkin],
+        [query.data, persistence, selectSkin],
     );
     return (
         <AppAppearanceContext.Provider value={value}>
@@ -98,7 +96,6 @@ export function AppSkinPreview({
     const value = React.useMemo<AppAppearanceValue>(
         () => ({
             skin: APP_SKINS[skinId],
-            loading: false,
             persistence: "idle",
             selectSkin: () => {},
         }),
@@ -115,28 +112,25 @@ export function AppSkinPreview({
 export function useAppearanceStyles(): typeof sharedStyles {
     const { skin } = useAppAppearance();
     return React.useMemo(
-        () =>
-            skin.id === "current"
-                ? sharedStyles
-                : {
-                      ...sharedStyles,
-                      blackText: { color: skin.text },
-                      greyText: { color: skin.mutedText },
-                      purpleText: { color: skin.accent },
-                      whiteBg: { backgroundColor: skin.surface },
-                      greyBorderBottom: {
-                          ...sharedStyles.greyBorderBottom,
-                          borderColor: skin.border,
-                      },
-                      greyBorderTop: {
-                          ...sharedStyles.greyBorderTop,
-                          borderColor: skin.border,
-                      },
-                      purpleBorder: {
-                          ...sharedStyles.purpleBorder,
-                          borderColor: skin.accent,
-                      },
-                  },
+        () => ({
+            ...sharedStyles,
+            blackText: { color: skin.text },
+            greyText: { color: skin.mutedText },
+            purpleText: { color: skin.accent },
+            whiteBg: { backgroundColor: skin.sharedSurface },
+            greyBorderBottom: {
+                ...sharedStyles.greyBorderBottom,
+                borderColor: skin.border,
+            },
+            greyBorderTop: {
+                ...sharedStyles.greyBorderTop,
+                borderColor: skin.border,
+            },
+            purpleBorder: {
+                ...sharedStyles.purpleBorder,
+                borderColor: skin.accent,
+            },
+        }),
         [skin],
     );
 }

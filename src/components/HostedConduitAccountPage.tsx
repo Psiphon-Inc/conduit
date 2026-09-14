@@ -378,10 +378,7 @@ export function HostedConduitAccountPage() {
                                     borderWidth: 1,
                                     borderColor: palette.thinPurple,
                                     borderRadius: 16,
-                                    backgroundColor:
-                                        skin.id === "current"
-                                            ? "rgba(255, 255, 255, 0.42)"
-                                            : skin.surface,
+                                    backgroundColor: skin.panelSurface,
                                     padding: 12,
                                     marginBottom: 18,
                                     gap: 10,
@@ -819,18 +816,16 @@ function AccountPanelButton({
     const isDanger = variant === "danger";
     const isPrimary = variant === "primary";
     const borderColor = isDanger ? ACCOUNT_DANGER_RED : skin.accent;
-    const backgroundColor =
-        skin.id === "classic-dark"
-            ? isPrimary
-                ? skin.action
-                : skin.surface
-            : disabled
-              ? isDanger
-                  ? palette.redTint5
-                  : palette.fadedMauve
-              : isPrimary
-                ? palette.purple
-                : palette.white;
+    const buttonPaint = skin.accountButtons;
+    const backgroundColor = disabled
+        ? isDanger
+            ? buttonPaint.disabledDanger
+            : isPrimary
+              ? buttonPaint.disabledPrimary
+              : buttonPaint.disabledSecondary
+        : isPrimary
+          ? buttonPaint.primary
+          : buttonPaint.secondary;
     const textColor = isDanger
         ? ACCOUNT_DANGER_RED
         : isPrimary

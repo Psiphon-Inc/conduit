@@ -134,12 +134,7 @@ export function EditableConduitAlias({
                 style={{
                     fontSize,
                     fontFamily: "JuraRegular",
-                    color:
-                        skin.id === "classic-dark"
-                            ? skin.text
-                            : hasStoredName
-                              ? palette.black
-                              : palette.peachyMauve,
+                    color: hasStoredName ? skin.text : skin.aliasPlaceholder,
                 }}
             >
                 {displayName}

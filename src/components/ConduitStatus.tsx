@@ -71,8 +71,7 @@ export function ConduitStatus(props: ConduitStatusProps) {
     }
 
     const metricFontSize = 17;
-    const metricColor =
-        skin.id === "current" ? "rgba(35, 30, 40, 0.78)" : skin.mutedText;
+    const metricColor = skin.metricsText;
     const showPersonalPairing = localIsOnline || showHosted;
     const summaryRows = [
         showLocal

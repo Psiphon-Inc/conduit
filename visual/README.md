@@ -72,7 +72,7 @@ the selection applies immediately and survives a reload. QR codes and sign-in
 brand badges intentionally retain their original high-contrast colors.
 
 Run `CONDUIT_WEB_URL=http://localhost:8090 node visual/verify-skins.mjs` for a
-browser smoke test of click/keyboard selection, reload persistence, invalid
+browser smoke test of click/keyboard selection, reload persistence, failed-write retry, invalid
 localStorage fallback, and non-persisting lab previews. It saves Settings/Home
 screenshots and eight deterministic scenes per skin under
 `artifacts/visual-diff/skins/`. Production exports must enable the lab with

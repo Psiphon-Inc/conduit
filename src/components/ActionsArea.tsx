@@ -144,10 +144,7 @@ export function ActionsArea({
                             borderRadius: 30,
                             borderWidth: 2,
                             borderColor: skin.accent,
-                            backgroundColor:
-                                skin.id === "current"
-                                    ? "rgba(255, 255, 255, 0.35)"
-                                    : skin.surface,
+                            backgroundColor: skin.controlSurface,
                             paddingHorizontal: compact ? 16 : 20,
                             paddingTop: compact ? 12 : 14,
                             paddingBottom: compact ? 13 : 16,
@@ -230,10 +227,7 @@ function ProvisioningStatusLine() {
                 borderRadius: 20,
                 borderWidth: 2,
                 borderColor: skin.accent,
-                backgroundColor:
-                    skin.id === "current"
-                        ? "rgba(255, 255, 255, 0.35)"
-                        : skin.surface,
+                backgroundColor: skin.controlSurface,
                 paddingVertical: 10,
                 paddingHorizontal: 20,
                 gap: 10,
@@ -279,10 +273,7 @@ function HostedCallToAction({
                     borderRadius: compact ? 18 : 20,
                     borderWidth: 2,
                     borderColor: skin.accent,
-                    backgroundColor:
-                        skin.id === "current"
-                            ? "rgba(255, 255, 255, 0.35)"
-                            : skin.surface,
+                    backgroundColor: skin.controlSurface,
                     paddingHorizontal: compact
                         ? 14
                         : mode === "share"
@@ -351,10 +342,7 @@ function HostedCallToAction({
                 borderRadius: compact ? 24 : 30,
                 borderWidth: 2,
                 borderColor: skin.accent,
-                backgroundColor:
-                    skin.id === "current"
-                        ? "rgba(255, 255, 255, 0.35)"
-                        : skin.surface,
+                backgroundColor: skin.controlSurface,
                 paddingHorizontal: compact ? 16 : 20,
                 paddingTop: compact ? 12 : 14,
                 paddingBottom: compact ? 13 : 16,

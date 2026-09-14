@@ -44,8 +44,6 @@ type ActionButtonVariant = "primary" | "secondary";
 
 const GOOGLE_SIGN_IN_ICON = require("@/assets/images/google.png");
 const APPLE_SIGN_IN_ICON = require("@/assets/images/apple.png");
-const HOSTED_PRIMARY_GRADIENT_START = "#7E5CB8";
-const HOSTED_PRIMARY_GRADIENT_END = "rgba(156, 129, 201, 0.69)";
 
 export function HostedPlanSelection({
     offeringsLoading,
@@ -95,12 +93,10 @@ export function HostedPlanSelection({
                                   paddingHorizontal: 14,
                                   paddingVertical: 12,
                                   backgroundColor: selected
-                                      ? skin.id === "current"
-                                          ? HOSTED_PRIMARY_GRADIENT_START
-                                          : skin.action
+                                      ? skin.setupButtons.selectedPlanSurface
                                       : skin.background,
                                   shadowColor: selected
-                                      ? HOSTED_PRIMARY_GRADIENT_START
+                                      ? skin.setupButtons.selectedPlanShadow
                                       : palette.transparent,
                                   shadowOpacity: selected ? 0.34 : 0,
                                   shadowRadius: selected ? 12 : 0,
@@ -502,10 +498,7 @@ export function StatusText(props: React.PropsWithChildren) {
                     borderColor: palette.thinPurple,
                     borderRadius: 10,
                     padding: 10,
-                    backgroundColor:
-                        skin.id === "current"
-                            ? palette.whiteHighlight
-                            : skin.surface,
+                    backgroundColor: skin.statusSurface,
                 },
             ]}
         >
@@ -551,16 +544,13 @@ export function ActionButton({
                 justifyContent: "center",
                 alignItems: "center",
                 overflow: "hidden",
-                backgroundColor:
-                    skin.id === "classic-dark"
-                        ? skin.surface
-                        : disabled
-                          ? palette.fadedMauve
-                          : showGradient
-                            ? palette.transparent
-                            : isPrimary
-                              ? palette.purpleTint3
-                              : palette.white,
+                backgroundColor: disabled
+                    ? skin.setupButtons.disabledSurface
+                    : showGradient
+                      ? skin.setupButtons.gradientSurface
+                      : isPrimary
+                        ? skin.setupButtons.primarySurface
+                        : skin.setupButtons.secondarySurface,
             }}
             onPress={onPress}
             disabled={disabled}
@@ -571,10 +561,7 @@ export function ActionButton({
                     pointerEvents="none"
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
-                    colors={[
-                        HOSTED_PRIMARY_GRADIENT_START,
-                        HOSTED_PRIMARY_GRADIENT_END,
-                    ]}
+                    colors={skin.setupButtons.gradient}
                 />
             ) : null}
             <View style={[ss.row, ss.alignCenter, ss.justifyCenter]}>
