@@ -1104,7 +1104,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                             testID="settings-sound-toggle"
                             value={soundEnabled}
                             onValueChange={onSoundEnabledToggle}
-                            trackColor={{ true: skin.action }}
+                            trackColor={{ true: skin.switchActiveTrack }}
                             thumbColor={palette.white}
                         />
                     </View>

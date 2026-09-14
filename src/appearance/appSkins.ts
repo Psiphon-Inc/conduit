@@ -20,13 +20,15 @@ export interface SkinHeroPulsePaint {
 export interface AppSkinTokens {
     readonly id: AppSkinId;
     readonly labelKey: string;
-    readonly navigationMode: "light" | "dark";
+    readonly navigationMode: "default" | "dark";
     readonly background: string;
     readonly surface: string;
     readonly text: string;
     readonly mutedText: string;
     readonly accent: string;
     readonly border: string;
+    readonly navigationDivider: string;
+    readonly switchActiveTrack: string;
     readonly selectedBackground: string;
     readonly action: string;
     readonly strongSurface: string;
@@ -110,13 +112,15 @@ export const APP_SKINS: {
     current: {
         id: "current",
         labelKey: "SKIN_CURRENT_I18N.string",
-        navigationMode: "light",
+        navigationMode: "default",
         background: palette.white,
         surface: "#FFFFFF",
         text: palette.black,
         mutedText: palette.midGrey,
         accent: palette.purple,
         border: "rgba(0, 0, 0, 0.12)",
+        navigationDivider: palette.thinPurple,
+        switchActiveTrack: palette.purple,
         selectedBackground: "rgba(126, 92, 184, 0.16)",
         action: palette.purple,
         strongSurface: palette.black,
@@ -220,6 +224,8 @@ export const APP_SKINS: {
         mutedText: "#c4d7df",
         accent: "#9dbcca",
         border: "rgba(196,215,223,0.24)",
+        navigationDivider: "rgba(196,215,223,0.24)",
+        switchActiveTrack: "#9dbcca",
         selectedBackground: "#23495a",
         action: "#23495a",
         strongSurface: "#23495a",
@@ -231,7 +237,7 @@ export const APP_SKINS: {
         panelSurface: "#10161c",
         statusSurface: "#10161c",
         metricsText: classicOrbColors.rim,
-        aliasPlaceholder: "#E0E0E0",
+        aliasPlaceholder: "#A0A0A0",
         setupButtons: {
             selectedPlanSurface: classicOrbColors.deepBlue,
             selectedPlanShadow: "#7E5CB8",

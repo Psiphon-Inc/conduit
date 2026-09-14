@@ -18,7 +18,10 @@ export function AppearanceChrome({ children }: { children: React.ReactNode }) {
         );
     }, [skin.systemBackground]);
     const theme = React.useMemo(() => {
-        const base = skin.navigationMode === "light" ? DefaultTheme : DarkTheme;
+        // Current keeps the original navigation defaults, including notification,
+        // border and primary colors. App surfaces have explicit skin paint.
+        if (skin.navigationMode === "default") return DefaultTheme;
+        const base = DarkTheme;
         return {
             ...base,
             colors: {

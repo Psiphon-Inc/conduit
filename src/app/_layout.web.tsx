@@ -3,7 +3,11 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { useEffect } from "react";
 
-import { AppAppearanceProvider } from "@/src/appearance/AppAppearance";
+import {
+    AppAppearanceProvider,
+    useAppAppearance,
+} from "@/src/appearance/AppAppearance";
+import { AppStartupGate } from "@/src/appearance/AppStartupGate";
 import { AppearanceChrome } from "@/src/appearance/AppearanceChrome";
 import { PERF_ENABLED, PerfRecorderHost } from "@/src/common/perfProbe";
 import { HostedAuthProvider } from "@/src/hosted/auth/provider";
@@ -17,7 +21,18 @@ i18nService.initI18n();
 const queryClient = createAppQueryClient();
 
 export default function RootLayout() {
-    useFonts({
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AppAppearanceProvider>
+                <WebRootContent />
+            </AppAppearanceProvider>
+        </QueryClientProvider>
+    );
+}
+
+function WebRootContent() {
+    const { skin } = useAppAppearance();
+    const [loaded, fontError] = useFonts({
         JuraRegular: fonts.JuraRegular,
         JuraBold: fonts.JuraBold,
         Rajdhani: fonts.Rajdhani,
@@ -28,23 +43,22 @@ export default function RootLayout() {
     }, []);
 
     return (
-        <QueryClientProvider client={queryClient}>
-            <AppAppearanceProvider>
-                <AppearanceChrome>
-                    <HostedAuthProvider>
-                        {PERF_ENABLED ? <PerfRecorderHost /> : null}
-                        <Stack
-                            screenOptions={{
-                                headerShown: false,
-                                animation: "none",
-                            }}
-                        >
-                            <Stack.Screen name="index" />
-                            <Stack.Screen name="(app)" />
-                        </Stack>
-                    </HostedAuthProvider>
-                </AppearanceChrome>
-            </AppAppearanceProvider>
-        </QueryClientProvider>
+        <AppStartupGate assetsReady={loaded || Boolean(fontError)}>
+            <AppearanceChrome>
+                <HostedAuthProvider>
+                    {PERF_ENABLED ? <PerfRecorderHost /> : null}
+                    <Stack
+                        screenOptions={{
+                            headerShown: false,
+                            animation: "none",
+                            contentStyle: { backgroundColor: skin.background },
+                        }}
+                    >
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="(app)" />
+                    </Stack>
+                </HostedAuthProvider>
+            </AppearanceChrome>
+        </AppStartupGate>
     );
 }

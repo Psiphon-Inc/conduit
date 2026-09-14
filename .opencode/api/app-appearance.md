@@ -10,9 +10,18 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
 - `AppAppearanceProvider`: mounted inside the existing QueryClientProvider; loads
   the non-secret preference through existing cross-platform storage. Missing or
   invalid data selects `current`. Read failures leave the default usable.
-- `useAppAppearance`: selected tokens, persistence state and selection action.
+- `useAppAppearance`: selected tokens, consumed startup `hydrated` readiness,
+  persistence state and selection action. Hydration reads local storage even
+  when TanStack Query's online manager reports offline. Failed reads resolve
+  readiness with Current; a never-settling adapter remains pending.
   Selection updates all consumers immediately, serializes writes, and reports
   persistence failure without discarding the in-session selection.
+- `AppStartupGate`: both root layouts mount the provider before this gate. It
+  waits for fonts (success or error) and appearance hydration, then commits the
+  app before invoking `onReady` (native splash removal). The existing two-second
+  native startup deadline bounds both waits and is shared with web. Partial
+  progress does not restart it; release is latched. A stalled read reveals
+  Current at the deadline and applies the saved skin if it eventually resolves.
 - `useAppearanceStyles`: skin-aware shared styles for legacy UI consumers; static
   layout/font styles and the existing palette remain unchanged.
 - `loadAppSkinPreference` / `saveAppSkinPreference`: default to AsyncStorage,
@@ -38,6 +47,13 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   compatibility branch, not a skin-ID switch. Cold-rim tables are derived once
   from each registered skin's tokens. UI roles, hero pulse endpoints, mini orb
   cycle paint and onboarding colors are defined entirely in skin tokens.
+  Local and hosted SVG body definition keys include skin identity so live skin
+  switches remount native gradient definitions without resetting scene motion.
+- Current navigation uses the original `DefaultTheme` object unchanged; root
+  stacks explicitly paint their skin background. Classic uses dark navigation
+  with skin colors. `navigationDivider`, `switchActiveTrack` (native switch), and
+  `aliasPlaceholder` are independent roles: Classic has a muted alias placeholder
+  and a high-contrast active switch track instead of the deep action surface.
 - Settings exposes localized radio options. `/orb-lab?skin=classic-dark` previews
   deterministic renderer paint without changing the stored preference; omitted or
   invalid lab skin selects `current`.

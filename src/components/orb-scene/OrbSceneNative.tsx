@@ -1175,8 +1175,8 @@ export function OrbSceneNative(props: OrbSceneProps) {
                             }
                             themeKey={
                                 usesLocalTheme
-                                    ? `local-${targetThemeLevel}`
-                                    : "hosted"
+                                    ? `${skin.id}-local-${targetThemeLevel}`
+                                    : `${skin.id}-hosted`
                             }
                             modeIndex={orbColorIndexValues[index]}
                             pulse={colorLfo}

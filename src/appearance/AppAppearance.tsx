@@ -19,6 +19,8 @@ const skinQueryKey = [QUERYKEY_APP_SKIN];
 
 interface AppAppearanceValue {
     readonly skin: AppSkinTokens;
+    /** Startup may reveal the app after the persisted skin has resolved or failed. */
+    readonly hydrated: boolean;
     readonly persistence: "idle" | "saving" | "saved" | "unavailable";
     readonly selectSkin: (skinId: AppSkinId) => void;
 }
@@ -26,6 +28,7 @@ interface AppAppearanceValue {
 // Static consumers/tests outside the app shell retain the original appearance.
 const AppAppearanceContext = React.createContext<AppAppearanceValue>({
     skin: APP_SKINS.current,
+    hydrated: true,
     persistence: "idle",
     selectSkin: () => {},
 });
@@ -44,6 +47,8 @@ export function AppAppearanceProvider({
         queryFn: async () => (await loadAppSkinPreference(storage)).skinId,
         staleTime: Infinity,
         gcTime: Infinity,
+        // This is local storage, not a network request. Offline startup must read it.
+        networkMode: "always",
     });
     const [persistence, setPersistence] =
         React.useState<AppAppearanceValue["persistence"]>("idle");
@@ -68,10 +73,11 @@ export function AppAppearanceProvider({
     const value = React.useMemo<AppAppearanceValue>(
         () => ({
             skin: APP_SKINS[query.data ?? "current"],
+            hydrated: !query.isPending,
             persistence,
             selectSkin,
         }),
-        [query.data, persistence, selectSkin],
+        [query.data, query.isPending, persistence, selectSkin],
     );
     return (
         <AppAppearanceContext.Provider value={value}>
@@ -96,6 +102,7 @@ export function AppSkinPreview({
     const value = React.useMemo<AppAppearanceValue>(
         () => ({
             skin: APP_SKINS[skinId],
+            hydrated: true,
             persistence: "idle",
             selectSkin: () => {},
         }),

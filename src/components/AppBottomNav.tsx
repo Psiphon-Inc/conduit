@@ -114,7 +114,7 @@ export function AppBottomNav() {
         <View
             style={{
                 borderTopWidth: 1,
-                borderTopColor: palette.thinPurple,
+                borderTopColor: skin.navigationDivider,
                 backgroundColor: skin.background,
                 paddingTop: 8,
                 paddingBottom: Math.max(8, insets.bottom),
