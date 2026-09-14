@@ -49,7 +49,7 @@ describe("personalCompartmentId", () => {
         });
     });
 
-    it("repairs a failed stale-write rollback before exposing persisted identity", async () => {
+    it("restores the previous identity when a write is superseded mid-flight", async () => {
         const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
         const obsoleteId = "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
         await SecureStore.setItemAsync(
@@ -66,26 +66,17 @@ describe("personalCompartmentId", () => {
             .mockImplementationOnce(async (key, value, options) => {
                 await write(key, value, options);
                 current = false;
-            })
-            .mockRejectedValueOnce(
-                new Error("Pairing test rollback unavailable"),
-            );
+            });
         try {
             await expect(
                 reconcileAndroidPersonalCompartmentId(
                     obsoleteId,
                     () => current,
                 ),
-            ).resolves.toBe("unavailable");
-            // The next reader must retry compensation, not accept the obsolete write.
+            ).resolves.toBe("stale");
             await expect(loadAndroidPersonalCompartmentId()).resolves.toBe(
                 localId,
             );
-            await expect(
-                SecureStore.getItemAsync(
-                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
-                ),
-            ).resolves.toBe(localId);
         } finally {
             store.mockRestore();
         }

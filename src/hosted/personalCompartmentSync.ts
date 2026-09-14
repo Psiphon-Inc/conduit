@@ -95,7 +95,8 @@ export function useHostedPersonalCompartmentSync(input: {
                             queryFn: loadAndroidPersonalCompartmentId,
                         });
                         if (!isCurrent() || offline.current) return;
-                        if (!localId) continue;
+                        // Nothing to sync yet; localIdChanged restarts the burst once one exists.
+                        if (!localId) return;
                         const canonicalId = await withHostedSessionRecovery(
                             queryClient,
                             sessionDeps,
@@ -163,9 +164,21 @@ export function useHostedPersonalCompartmentSync(input: {
             scope = accountId ? { accountId, status: "idle" } : null;
             void runSyncBurst();
         }
-        const unsubscribe = queryClient
-            .getQueryCache()
-            .subscribe(sessionChanged);
+        // A fresh install derives its local ID after the key pair exists, which
+        // can be later than session restore.
+        let hadLocalId = false;
+        function localIdChanged() {
+            const hasLocalId =
+                queryClient.getQueryData([
+                    QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
+                ]) != null;
+            if (hasLocalId && !hadLocalId) void runSyncBurst();
+            hadLocalId = hasLocalId;
+        }
+        const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+            sessionChanged();
+            localIdChanged();
+        });
         recover.current = () => {
             void runSyncBurst();
         };
@@ -179,6 +192,7 @@ export function useHostedPersonalCompartmentSync(input: {
             previousAppState = state;
         });
         sessionChanged();
+        localIdChanged();
         return () => {
             scope = null;
             recover.current = () => {};

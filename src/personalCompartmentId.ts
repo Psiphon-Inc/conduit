@@ -32,36 +32,14 @@ import {
     PersonalCompartmentReconciliationResult,
 } from "@/src/pairing/compartmentId";
 
-// SecureStore cannot cancel an in-flight write. Serialize initialization and
-// reconciliation so an obsolete write can be restored before the next reader/writer.
+// Serialize initialization and reconciliation so they cannot interleave their
+// SecureStore reads and writes.
 let identityOperations: Promise<unknown> = Promise.resolve();
-type IdentityRestore =
-    | { status: "none" }
-    | { status: "remove" }
-    | { status: "replace"; value: string };
-
-let pendingIdentityRestore: IdentityRestore = { status: "none" };
-
-async function restoreObsoleteIdentityWrite(): Promise<void> {
-    if (pendingIdentityRestore.status === "none") return;
-    if (pendingIdentityRestore.status === "remove") {
-        await SecureStore.deleteItemAsync(
-            SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
-        );
-    } else {
-        await writeAndroidPersonalCompartmentId(pendingIdentityRestore.value);
-    }
-    pendingIdentityRestore = { status: "none" };
-}
 
 function serializeIdentityOperation<T>(
     operation: () => Promise<T>,
 ): Promise<T> {
-    const result = identityOperations.then(async () => {
-        // A failed compensation must not expose obsolete data to later readers.
-        await restoreObsoleteIdentityWrite();
-        return operation();
-    });
+    const result = identityOperations.then(operation);
     identityOperations = result.catch(() => {});
     return result;
 }
@@ -115,18 +93,17 @@ export function reconcileAndroidPersonalCompartmentId(
                 SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
             );
             if (!isCurrent()) return "stale";
-            try {
-                await writeAndroidPersonalCompartmentId(personalCompartmentId);
-            } finally {
-                if (!isCurrent()) {
-                    pendingIdentityRestore =
-                        previous === null
-                            ? { status: "remove" }
-                            : { status: "replace", value: previous };
-                    await restoreObsoleteIdentityWrite();
-                }
+            await writeAndroidPersonalCompartmentId(personalCompartmentId);
+            if (isCurrent()) return "committed";
+            // SecureStore cannot cancel an in-flight write; put the prior value back.
+            if (previous === null) {
+                await SecureStore.deleteItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                );
+            } else {
+                await writeAndroidPersonalCompartmentId(previous);
             }
-            return isCurrent() ? "committed" : "stale";
+            return "stale";
         },
     ).catch(() => "unavailable");
 }

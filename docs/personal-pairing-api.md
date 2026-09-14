@@ -12,7 +12,8 @@
   refresh and retry a 401 once within an attempt. Only one burst runs at a time
   for the current account. Known-offline state prevents new attempts; errors retain
   local proxy identity and do not fail sign-in. Exhausted/interrupted bursts restart
-  on offline-to-online transition or non-active-to-active transition.
+  on offline-to-online transition or non-active-to-active transition. A burst with
+  no local ID yet ends without consuming attempts and restarts when one appears.
   Events during a burst coalesce; polling and same-account token refresh do not
   reset its budget. A successful sync is not repeated until the account session
   changes or the provider remounts. Retries and completion are in-memory, not durable.
@@ -23,8 +24,8 @@
   Late endpoint results
   cannot publish identity. Initialization, fallback persistence, and reconciliation
   share a serialized SecureStore queue. A write already in progress cannot be
-  canceled, so a superseded write restores the prior value before another queued
-  reader/writer runs; failed restoration is retried before subsequent operations.
+  canceled, so a superseded write puts the prior value back before returning `stale`;
+  if that fails the result is `unavailable` and the burst retries.
   This is in-process ordering, not a crash-atomic storage transaction. Reconciliation
   cancels older identity queries and only caches a successfully persisted, still-current
   result. A fallback is generated only after confirmed absence, never during a read.

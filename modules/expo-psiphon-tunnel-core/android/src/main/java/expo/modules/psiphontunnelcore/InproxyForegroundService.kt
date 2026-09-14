@@ -641,13 +641,14 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         super.onDestroy()
         serviceDestroyed = true
         logInfo("Inproxy foreground service destroyed")
-        stopTunnelOnce("service destroyed")
-        awaitTunnelStopped()
+        // Stop the core off the main thread. shutdown() (not shutdownNow()) lets an
+        // already-queued stop run, so the worker's awaitTunnelStopped() cannot hang.
+        tunnelStopExecutor.submit { stopTunnelOnce("service destroyed") }
+        tunnelStopExecutor.shutdown()
         waitForRegionalAccumulatorLoad()
         maybePersistRegionalAccumulators(force = true)
         stopActivityEmitter()
         executor.shutdownNow()
-        tunnelStopExecutor.shutdownNow()
         synchronized(clientsLock) {
             clients.clear()
         }
