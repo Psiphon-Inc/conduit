@@ -33,6 +33,20 @@ try {
     });
     const trigger = page.getByTestId("skin-picker");
     const dropdown = page.getByTestId("skin-picker-dropdown");
+    async function optionPaints() {
+        return page.locator('input[name="app-skin"]').evaluateAll((inputs) =>
+            inputs.map((input) => {
+                const label = input.closest("label");
+                return {
+                    id: input.value,
+                    text: getComputedStyle(label).color,
+                    gradient: Array.from(label.querySelectorAll("div"))
+                        .map((node) => getComputedStyle(node).backgroundImage)
+                        .find((paint) => paint !== "none"),
+                };
+            }),
+        );
+    }
     async function openPicker() {
         await trigger.click();
         await dropdown.waitFor();
@@ -66,6 +80,30 @@ try {
         "Dropdown must fit the viewport",
     );
     assert(await current.isChecked(), "Classic Light must be the initial skin");
+    const initialOptionPaints = await optionPaints();
+    assert.equal(initialOptionPaints[0].text, "rgb(35, 31, 32)");
+    assert.equal(initialOptionPaints[1].text, "rgb(224, 224, 224)");
+    for (const color of [
+        "rgb(252, 223, 215)",
+        "rgb(240, 224, 235)",
+        "rgb(232, 223, 242)",
+        "rgb(255, 255, 255)",
+    ]) {
+        assert(
+            initialOptionPaints[0].gradient.includes(color),
+            `Light option must show its complete screen gradient: ${color}`,
+        );
+    }
+    for (const color of [
+        "rgb(27, 19, 30)",
+        "rgb(11, 24, 30)",
+        "rgb(0, 0, 0)",
+    ]) {
+        assert(
+            initialOptionPaints[1].gradient.includes(color),
+            `Dark option must show its complete screen gradient: ${color}`,
+        );
+    }
     await page.screenshot({
         path: join(output, "settings-dropdown-current.png"),
     });
@@ -114,6 +152,11 @@ try {
     await expectClosed("Classic Dark");
     await openPicker();
     assert(await classic.isChecked());
+    assert.deepEqual(
+        await optionPaints(),
+        initialOptionPaints,
+        "Each option's preview must be independent of the selected skin",
+    );
     await page.screenshot({
         path: join(output, "settings-dropdown-classic-dark.png"),
     });

@@ -76,6 +76,10 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   Appearance uses the `paint-palette` SVG in the shared `Icon` registry; its
   `chevron-down` Icon uses the same size (16), text tint and expanded rotation as
   Local Station.
+  Each open option previews its own complete `screenGradient` from left to
+  right, with evenly distributed stops to show the full palette in a compact
+  row. Text, radio and selected outline use that option's skin tokens, regardless
+  of the active skin. The closed row still follows the active skin.
 - `/orb-lab?skin=classic-dark` previews
   deterministic renderer paint without changing the stored preference; omitted or
   invalid lab skin selects `current`.
