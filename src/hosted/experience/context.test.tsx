@@ -18,11 +18,12 @@
  */
 import { base64nopad, base64urlnopad } from "@scure/base";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as Network from "expo-network";
 import * as SecureStore from "expo-secure-store";
 import { createInstance } from "i18next";
 import React from "react";
 import { I18nextProvider } from "react-i18next";
-import { Platform, Share } from "react-native";
+import { AppState, AppStateStatus, Platform, Share } from "react-native";
 import type { CustomerInfo } from "react-native-purchases";
 import { ReactTestRenderer, act, create } from "react-test-renderer";
 
@@ -41,6 +42,7 @@ import {
     SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
     SECURESTORE_MNEMONIC_KEY,
 } from "@/src/constants";
+import { useAndroidPersonalCompartmentId } from "@/src/hooks";
 import {
     HostedAccountProfileConflictError,
     HostedApiClientRequestError,
@@ -48,11 +50,13 @@ import {
     createHostedApiClient,
 } from "@/src/hosted/apiClient";
 import { HostedAuthService } from "@/src/hosted/auth/types";
+import { ConduitsSnapshot } from "@/src/hosted/contracts";
 import {
     HostedExperienceContextValue,
     HostedExperienceProvider,
     useHostedExperienceContext,
 } from "@/src/hosted/experience/context";
+import { hostedQueryKeys } from "@/src/hosted/queryKeys";
 import { RevenueCatContextValue } from "@/src/hosted/revenuecatContext";
 import {
     HostedSession,
@@ -66,9 +70,21 @@ import { PairingTokenPayloadV1Schema } from "@/src/pairing/token";
 
 describe("hosted experience context", () => {
     const originalPlatformOs = Platform.OS;
+    const appStateListeners = new Set<(state: AppStateStatus) => void>();
 
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.mocked(Network.useNetworkState).mockReturnValue({
+            isConnected: true,
+            isInternetReachable: true,
+        });
+        appStateListeners.clear();
+        jest.spyOn(AppState, "addEventListener").mockImplementation(
+            (_, listener) => {
+                appStateListeners.add(listener);
+                return { remove: () => appStateListeners.delete(listener) };
+            },
+        );
         // @ts-expect-error test-only mock helper
         SecureStore.__resetStore();
         Object.defineProperty(Platform, "OS", {
@@ -86,6 +102,7 @@ describe("hosted experience context", () => {
         mountedQueryClients.splice(0).forEach((queryClient) => {
             queryClient.clear();
         });
+        jest.restoreAllMocks();
     });
 
     afterAll(() => {
@@ -96,7 +113,7 @@ describe("hosted experience context", () => {
     });
 
     it.each(["failed login sync", "restored session"])(
-        "shares native A instead of hosted B after %s, and keeps the open modal live",
+        "recovers compartment sync after %s while sharing only native readback",
         async (sessionMode) => {
             const i18n = createInstance();
             await i18n.init({ lng: "en", resources: {} });
@@ -262,16 +279,13 @@ describe("hosted experience context", () => {
             await waitFor(() =>
                 expect(desiredParams?.personalCompartmentId).toBe(localId),
             );
-            // Characterize the unresolved coordination bug, not just share selection:
-            // recovering the API, refreshing the token, and polling do not retry sync.
-            syncAvailable = true;
+            await waitFor(() => expect(syncAttempts).toBe(3));
+            // Same-account token refresh/polling must not reset the retry budget.
             await act(async () => {
                 await hosted?.refreshSession();
                 await hosted?.pollConduitsOnce();
             });
-            expect(syncAttempts).toBe(
-                sessionMode === "failed login sync" ? 1 : 0,
-            );
+            expect(syncAttempts).toBe(3);
             expect(
                 hosted?.state.conduitsSnapshot?.conduits[0]
                     ?.personal_compartment_id,
@@ -326,13 +340,24 @@ describe("hosted experience context", () => {
                 }
             }
             await expectSharedIdentity(localId);
+            syncAvailable = true;
+            await act(async () => {
+                appStateListeners.forEach((listener) => listener("background"));
+                appStateListeners.forEach((listener) => listener("active"));
+            });
+            await waitFor(() =>
+                expect(desiredParams?.personalCompartmentId).toBe(hostedId),
+            );
+            expect(syncAttempts).toBe(4);
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(hostedId);
             const nextParams = {
                 ...desiredParams,
                 personalCompartmentId: hostedId,
             };
-            await act(async () => {
-                await inproxy?.selectInproxyParameters(nextParams);
-            });
             // Dispatch returning is not acknowledgement; an open modal still shares A.
             expect(modal().props.personalCompartmentId).toBe(localId);
             await receiveNativePairing({
@@ -659,6 +684,11 @@ describe("hosted experience context", () => {
             });
             expect(dispatched.at(-1)?.personalCompartmentId).toBe(localId);
             await act(async () => {
+                appStateListeners.forEach((listener) => listener("background"));
+                appStateListeners.forEach((listener) => listener("active"));
+            });
+            expect(submittedIds).toEqual([localId]);
+            await act(async () => {
                 if (accountMode === "second device conflict") {
                     syncResponse.reject(
                         new HostedPersonalCompartmentIdConflictError(hostedId),
@@ -678,6 +708,269 @@ describe("hosted experience context", () => {
             ).resolves.toBe(hostedId);
         },
     );
+
+    it.each([
+        "sign out",
+        "sign out with stale 401",
+        "sign out during storage write",
+        "switch account",
+        "switch during storage write",
+    ])(
+        "discards obsolete compartment reconciliation after %s",
+        async (transition) => {
+            const signingOut = transition.startsWith("sign out");
+            const writing = transition.endsWith("storage write");
+            const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+            const obsoleteId = "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
+            const canonicalId = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+            await SecureStore.setItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                localId,
+            );
+            const session = makeSession({
+                accessToken: "access.old",
+                accessTokenExpiresAtMs: 90_000,
+                refreshTokenExpiresAtMs: 1_000_000,
+            });
+            const nextSession = {
+                ...session,
+                accountId: "acc_next",
+                accessToken: "access.next",
+            };
+            const oldResponse = createDeferred<string>();
+            const storageWrite = createDeferred<void>();
+            const storageStarted = createDeferred<void>();
+            const upstreamSignOut = createDeferred<void>();
+            const write = jest
+                .mocked(SecureStore.setItemAsync)
+                .getMockImplementation();
+            if (!write) throw new Error("Pairing test storage unavailable");
+            if (writing) {
+                jest.spyOn(SecureStore, "setItemAsync").mockImplementation(
+                    async (key, value, options) => {
+                        if (
+                            key ===
+                                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY &&
+                            value === obsoleteId
+                        ) {
+                            storageStarted.resolve();
+                            await storageWrite.promise;
+                        }
+                        return write(key, value, options);
+                    },
+                );
+            }
+            const requests: string[] = [];
+            let hosted: HostedExperienceContextValue | undefined;
+            let desiredId: string | null | undefined;
+            function Consumer() {
+                hosted = useHostedExperienceContext();
+                desiredId = useAndroidPersonalCompartmentId().data;
+                return null;
+            }
+            await act(async () => {
+                renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 10_000,
+                        authService: makeAuthService({
+                            signOut: async () => upstreamSignOut.promise,
+                            signIn: async () => ({
+                                provider: "google",
+                                tokenType: "clerk_broker_jwt",
+                                brokerToken: "test",
+                                platform: "android",
+                                clientVersion: "test",
+                            }),
+                        }),
+                        sessionClient: makeSessionClient({
+                            loadHostedSession: async () => session,
+                            login: async () => nextSession,
+                        }),
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async (token) => {
+                                requests.push(token);
+                                if (token === "access.old")
+                                    return oldResponse.promise;
+                                throw new HostedPersonalCompartmentIdConflictError(
+                                    canonicalId,
+                                );
+                            },
+                            getConduitsSnapshot: async () =>
+                                makeConduitsSnapshot("active"),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <Consumer />,
+                );
+            });
+            await waitFor(() => {
+                expect(requests).toEqual(["access.old"]);
+                expect(desiredId).toBe(localId);
+            });
+            if (writing) {
+                await act(async () => {
+                    oldResponse.resolve(obsoleteId);
+                    await storageStarted.promise;
+                });
+            }
+            let signOut: Promise<void> | undefined;
+            await act(async () => {
+                if (signingOut) signOut = hosted?.signOut();
+                else await hosted?.signIn("google");
+            });
+            await act(async () => {
+                if (transition === "sign out with stale 401") {
+                    oldResponse.reject(
+                        new HostedApiClientRequestError(
+                            "Pairing test stale token",
+                            401,
+                            "unauthorized",
+                        ),
+                    );
+                } else {
+                    oldResponse.resolve(obsoleteId);
+                }
+                storageWrite.resolve();
+            });
+            if (signingOut) {
+                // Invalidated at sign-out invocation, before upstream auth completes.
+                expect(desiredId).toBe(localId);
+                await expect(
+                    SecureStore.getItemAsync(
+                        SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                    ),
+                ).resolves.toBe(localId);
+                await act(async () => {
+                    upstreamSignOut.resolve();
+                    await signOut;
+                });
+            }
+            const expectedId = signingOut ? localId : canonicalId;
+            await waitFor(() => {
+                expect(desiredId).toBe(expectedId);
+                expect(hosted?.state.session?.accountId ?? null).toBe(
+                    signingOut ? null : "acc_next",
+                );
+            });
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(expectedId);
+            expect(requests).toEqual(
+                signingOut ? ["access.old"] : ["access.old", "access.next"],
+            );
+        },
+    );
+
+    it("bounds failed sync bursts and recovers on reconnect without blocking offline auth or local identity", async () => {
+        const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+        await SecureStore.setItemAsync(
+            SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+            localId,
+        );
+        const session = makeSession({
+            accessToken: "access.offline",
+            accessTokenExpiresAtMs: 90_000,
+            refreshTokenExpiresAtMs: 1_000_000,
+        });
+        let attempts = 0;
+        let available = false;
+        const retryDelays: number[] = [];
+        let hosted: HostedExperienceContextValue | undefined;
+        let desiredId: string | null | undefined;
+        function Consumer() {
+            hosted = useHostedExperienceContext();
+            desiredId = useAndroidPersonalCompartmentId().data;
+            return null;
+        }
+        jest.mocked(Network.useNetworkState).mockReturnValue({
+            isConnected: false,
+            isInternetReachable: false,
+        });
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 10_000,
+                    delay: async (ms) => {
+                        retryDelays.push(ms);
+                    },
+                    authService: makeAuthService(),
+                    sessionClient: makeSessionClient({
+                        loadHostedSession: async () => session,
+                        refresh: async () => ({
+                            ...session,
+                            accessToken: "access.refreshed",
+                            accessTokenExpiresAtMs: 180_000,
+                        }),
+                    }),
+                    apiClient: makeHostedClient({
+                        setPersonalCompartmentId: async () => {
+                            attempts++;
+                            if (available) return localId;
+                            throw new Error("Pairing test unavailable");
+                        },
+                        getConduitsSnapshot: async () =>
+                            makeConduitsSnapshot("active"),
+                    }),
+                    revenueCat: makeRevenueCatContext(),
+                },
+                <Consumer />,
+            );
+        });
+        await waitFor(() => expect(desiredId).toBe(localId));
+        expect(hosted?.state.authPhase).toBe("authenticated");
+        expect(attempts).toBe(0);
+        const queryClient = mountedQueryClients[mountedQueryClients.length - 1];
+        async function setOnline(online: boolean) {
+            jest.mocked(Network.useNetworkState).mockReturnValue({
+                isConnected: online,
+                isInternetReachable: online,
+            });
+            await act(async () => {
+                // Token changes force the provider to observe the external network state.
+                queryClient.setQueryData(
+                    hostedQueryKeys.session("https://hcb.example.test"),
+                    {
+                        ...session,
+                        accessToken: online
+                            ? "access.online"
+                            : "access.offline",
+                    },
+                );
+            });
+            await waitFor(() => expect(hosted?.isOffline).toBe(!online));
+        }
+        await setOnline(true);
+        await waitFor(() => expect(attempts).toBe(3));
+        expect(retryDelays).toEqual([1000, 4000]);
+        await act(async () => {
+            await hosted?.refreshSession();
+            await hosted?.pollConduitsOnce();
+        });
+        expect(attempts).toBe(3);
+        await setOnline(false);
+        await act(async () => {
+            appStateListeners.forEach((listener) => listener("background"));
+            appStateListeners.forEach((listener) => listener("active"));
+        });
+        expect(attempts).toBe(3);
+        await setOnline(true);
+        await waitFor(() => expect(attempts).toBe(6));
+        expect(retryDelays).toEqual([1000, 4000, 1000, 4000]);
+        await setOnline(false);
+        available = true;
+        await setOnline(true);
+        await waitFor(() => expect(attempts).toBe(7));
+        await flushPromises();
+        await setOnline(false);
+        await setOnline(true);
+        expect(attempts).toBe(7);
+        expect(desiredId).toBe(localId);
+        expect(hosted?.state.authPhase).toBe("authenticated");
+    });
 
     it("reconciles personal compartment id conflicts during Android login", async () => {
         await SecureStore.setItemAsync(
@@ -2283,7 +2576,7 @@ function makeHostedClient(overrides?: Partial<HostedClient>): HostedClient {
     };
 }
 
-function makeConduitsSnapshot(entitlementStatus: string) {
+function makeConduitsSnapshot(entitlementStatus: string): ConduitsSnapshot {
     return {
         entitlement: {
             status: entitlementStatus,

@@ -83,7 +83,7 @@ import {
 } from "@/src/inproxy/utils";
 import {
     parsePersonalCompartmentId,
-    persistAndroidPersonalCompartmentId,
+    reconcileAndroidPersonalCompartmentId,
 } from "@/src/personalCompartmentId";
 import { playSound } from "@/src/sound";
 
@@ -701,7 +701,13 @@ export function InproxyProvider({
             [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
             personalCompartmentId,
         );
-        void persistAndroidPersonalCompartmentId(personalCompartmentId);
+        void reconcileAndroidPersonalCompartmentId(
+            personalCompartmentId,
+            () =>
+                queryClient.getQueryData([
+                    QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
+                ]) === personalCompartmentId,
+        );
     }, [androidPersonalCompartmentId, conduitKeyPair.data, queryClient]);
 
     const value = {

@@ -1,11 +1,32 @@
 # Personal pairing configuration contract
 
-- Android SecureStore/query identity is **desired** configuration. Hosted login
-  reconciles it (including conflicts); sync failure retains it. Hosted snapshots
-  never independently select Android sharing identity. iOS/web keep hosted selection.
-  A fallback identity is generated only after SecureStore confirms absence, never
-  while its read is pending. Login cancels older identity queries before caching
-  the reconciled desired identity.
+- Android SecureStore/query identity is **desired** configuration. One session-scoped
+  owner (`useHostedPersonalCompartmentSync`) reconciles it when an account session
+  appears, including fresh login, auth-provider restore, and persisted-session
+  bootstrap. Authentication and hosted snapshots do not wait for reconciliation.
+  Only the account personal-compartment endpoint's validated 200 value or 409
+  current value is authoritative for reconciliation; snapshots are never copied
+  into local identity. iOS/web keep hosted selection and do not run this sync.
+- A sync burst has at most three attempts: immediately, then after 1 second and
+  4 seconds following the preceding failed attempt. Existing session recovery may
+  refresh and retry a 401 once within an attempt. Only one burst runs at a time
+  for the current account. Known-offline state prevents new attempts; errors retain
+  local proxy identity and do not fail sign-in. Exhausted/interrupted bursts restart
+  on offline-to-online transition or non-active-to-active transition.
+  Events during a burst coalesce; polling and same-account token refresh do not
+  reset its budget. A successful sync is not repeated until the account session
+  changes or the provider remounts. Retries and completion are in-memory, not durable.
+- Sign-out invalidates sync immediately, before upstream auth cleanup; account
+  changes and provider teardown also invalidate old work. Late endpoint results
+  cannot publish identity. Initialization, fallback persistence, and reconciliation
+  share a serialized SecureStore queue. A write already in progress cannot be
+  canceled, so a superseded write restores the prior value before another queued
+  reader/writer runs; failed restoration is retried before subsequent operations.
+  This is in-process ordering, not a crash-atomic storage transaction. Reconciliation
+  cancels older identity queries and only caches a successfully persisted, still-current
+  result. A fallback is generated only after confirmed absence, never during a read.
+- Hosted snapshots never independently select Android sharing identity. Reconciliation
+  changes desired configuration only; native readback remains the sharing authority.
 - Android `proxyState.data.pairingConfiguration` is native readback:
   `{ revision, status: "persisted" | "applying" | "applied", personalCompartmentId }`.
   Revisions increase across service instances within a device boot. Older revisions
@@ -33,5 +54,6 @@
 - The share modal subscribes to current platform identity and wrapper URL while open.
   Pairing IDs are private; neither the ID nor previews belong in diagnostics.
 
-Dependencies: `src/hosted/contracts.ts`, `src/inproxy/types.ts`,
+Dependencies: `src/hosted/contracts.ts`, `src/hosted/sessionQueries.ts`,
+`src/personalCompartmentId.ts`, `src/inproxy/types.ts`,
 `modules/expo-psiphon-tunnel-core/index.ts`, existing proxy-state AIDL callbacks.

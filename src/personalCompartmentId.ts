@@ -31,7 +31,41 @@ import {
     PersonalCompartmentIdSchema,
 } from "@/src/pairing/compartmentId";
 
-export async function loadAndroidPersonalCompartmentId(): Promise<PersonalCompartmentId | null> {
+// SecureStore cannot cancel an in-flight write. Serialize initialization and
+// reconciliation so an obsolete write can be restored before the next reader/writer.
+let identityOperations: Promise<unknown> = Promise.resolve();
+let pendingIdentityRestore: string | null | undefined;
+
+async function restoreObsoleteIdentityWrite(): Promise<void> {
+    if (pendingIdentityRestore === undefined) return;
+    if (pendingIdentityRestore === null) {
+        await SecureStore.deleteItemAsync(
+            SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+        );
+    } else {
+        await writeAndroidPersonalCompartmentId(pendingIdentityRestore);
+    }
+    pendingIdentityRestore = undefined;
+}
+
+function serializeIdentityOperation<T>(
+    operation: () => Promise<T>,
+): Promise<T> {
+    const result = identityOperations.then(async () => {
+        // A failed compensation must not expose obsolete data to later readers.
+        await restoreObsoleteIdentityWrite();
+        return operation();
+    });
+    identityOperations = result.catch(() => {});
+    return result;
+}
+
+/** Loads or initializes desired Android identity, serialized with hosted reconciliation. */
+export function loadAndroidPersonalCompartmentId(): Promise<PersonalCompartmentId | null> {
+    return serializeIdentityOperation(loadAndroidPersonalCompartmentIdOnce);
+}
+
+async function loadAndroidPersonalCompartmentIdOnce(): Promise<PersonalCompartmentId | null> {
     if (Platform.OS !== "android") {
         return null;
     }
@@ -53,15 +87,49 @@ export async function loadAndroidPersonalCompartmentId(): Promise<PersonalCompar
             return null;
         }
 
-        await persistAndroidPersonalCompartmentId(accountPersonalCompartmentId);
+        await writeAndroidPersonalCompartmentId(accountPersonalCompartmentId);
         return accountPersonalCompartmentId;
     }
 
-    await persistAndroidPersonalCompartmentId(derivedPersonalCompartmentId);
+    await writeAndroidPersonalCompartmentId(derivedPersonalCompartmentId);
     return derivedPersonalCompartmentId;
 }
 
-export async function persistAndroidPersonalCompartmentId(
+/** Persists desired identity in the same queue used by initialization and reconciliation. */
+export function persistAndroidPersonalCompartmentId(
+    personalCompartmentId: PersonalCompartmentId,
+): Promise<void> {
+    return serializeIdentityOperation(() =>
+        writeAndroidPersonalCompartmentId(personalCompartmentId),
+    );
+}
+
+/** Commits only for a current session; restores an already-started write if superseded. */
+export function reconcileAndroidPersonalCompartmentId(
+    personalCompartmentId: PersonalCompartmentId,
+    isCurrent: () => boolean,
+): Promise<"committed" | "stale" | "unavailable"> {
+    return serializeIdentityOperation<"committed" | "stale" | "unavailable">(
+        async () => {
+            if (!isCurrent()) return "stale";
+            const previous = await SecureStore.getItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+            );
+            if (!isCurrent()) return "stale";
+            try {
+                await writeAndroidPersonalCompartmentId(personalCompartmentId);
+            } finally {
+                if (!isCurrent()) {
+                    pendingIdentityRestore = previous;
+                    await restoreObsoleteIdentityWrite();
+                }
+            }
+            return isCurrent() ? "committed" : "stale";
+        },
+    ).catch(() => "unavailable");
+}
+
+async function writeAndroidPersonalCompartmentId(
     personalCompartmentId: PersonalCompartmentId,
 ): Promise<void> {
     await SecureStore.setItemAsync(
