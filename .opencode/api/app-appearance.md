@@ -3,7 +3,8 @@
 Scope: persisted skin selection, renderer paint, and consuming app surfaces. No
 changes to tunnel behavior, hosted state, geometry, gestures, or animation timing.
 
-- `AppSkinId`: `current` (default) or `classic-dark`; IDs are stable storage values.
+- `AppSkinId`: `current` (Classic Light, default) or `classic-dark` (Classic Dark);
+  IDs are stable storage values. Classic Light retains the `SKIN_CURRENT_I18N` key.
 - `APP_SKINS`: centralized typed surface, text, gradient and renderer paint roles.
   IDs derive from `AppSkinIdSchema`; each keyed definition owns its matching ID
   and localized `labelKey`. Settings and lab choices enumerate this registry.
@@ -13,7 +14,7 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
 - `useAppAppearance`: selected tokens, consumed startup `hydrated` readiness,
   persistence state and selection action. Hydration reads local storage even
   when TanStack Query's online manager reports offline. Failed reads resolve
-  readiness with Current; a never-settling adapter remains pending.
+  readiness with Classic Light; a never-settling adapter remains pending.
   Selection updates all consumers immediately, serializes writes, and reports
   persistence failure without discarding the in-session selection.
 - `AppStartupGate`: both root layouts mount the provider before this gate. It
@@ -21,7 +22,7 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   app before invoking `onReady` (native splash removal). The existing two-second
   native startup deadline bounds both waits and is shared with web. Partial
   progress does not restart it; release is latched. A stalled read reveals
-  Current at the deadline and applies the saved skin if it eventually resolves.
+  Classic Light at the deadline and applies the saved skin if it eventually resolves.
 - `useAppearanceStyles`: skin-aware shared styles for legacy UI consumers; static
   layout/font styles and the existing palette remain unchanged.
 - `loadAppSkinPreference` / `saveAppSkinPreference`: default to AsyncStorage,
@@ -40,7 +41,7 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
 - Orb scene evolution levels still express scene state, not skin. Renderer theme
   selection combines the skin with the existing 0–3 evolution theme level.
   `getOrbSceneTheme(skinId, level)` preserves the original `SCENE_THEMES` objects
-  for Current. Optional `OrbTheme.innerShadowTL` and `rimColor` add the cold
+  for Classic Light. Optional `OrbTheme.innerShadowTL` and `rimColor` add the cold
   top-left shadow and rim without affecting existing callers.
   `orb.sceneProfile` distinguishes the original translucent `pastel` evolution
   tables from opaque `cold-rim` paint. It is the remaining structural renderer
@@ -49,7 +50,7 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   cycle paint and onboarding colors are defined entirely in skin tokens.
   Local and hosted SVG body definition keys include skin identity so live skin
   switches remount native gradient definitions without resetting scene motion.
-- Current navigation uses the original `DefaultTheme` object unchanged; root
+- Classic Light navigation uses the original `DefaultTheme` object unchanged; root
   stacks explicitly paint their skin background. Classic uses dark navigation
   with skin colors. `navigationDivider`, `switchActiveTrack` (native switch), and
   `aliasPlaceholder` are independent roles: Classic has a muted alias placeholder

@@ -24,7 +24,7 @@ try {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(new URL("/settings", BASE_URL).toString());
     const current = page.getByRole("radio", {
-        name: "Current (default)",
+        name: "Classic Light",
         exact: true,
     });
     const classic = page.getByRole("radio", {
@@ -65,12 +65,12 @@ try {
         menuBounds.y + menuBounds.height <= 844,
         "Dropdown must fit the viewport",
     );
-    assert(await current.isChecked(), "Current must be the initial skin");
+    assert(await current.isChecked(), "Classic Light must be the initial skin");
     await page.screenshot({
         path: join(output, "settings-dropdown-current.png"),
     });
     await page.keyboard.press("Escape");
-    await expectClosed("Current (default)");
+    await expectClosed("Classic Light");
     await page.waitForFunction(
         () =>
             document.activeElement?.getAttribute("data-testid") ===
@@ -81,7 +81,7 @@ try {
     await page
         .getByTestId("skin-picker-backdrop")
         .click({ position: { x: 4, y: 4 } });
-    await expectClosed("Current (default)");
+    await expectClosed("Classic Light");
     await openPicker();
     await classic.click();
     await expectClosed("Classic Dark");
@@ -102,7 +102,7 @@ try {
     await page.waitForFunction(
         () => localStorage.getItem("appSkin") === "current",
     );
-    await expectClosed("Current (default)");
+    await expectClosed("Classic Light");
     await openPicker();
     await page.waitForFunction(
         () => document.activeElement?.getAttribute("value") === "current",
@@ -132,7 +132,7 @@ try {
     await openPicker();
     await current.click();
     await page.getByRole("alert").waitFor();
-    await expectClosed("Current (default)");
+    await expectClosed("Classic Light");
     assert.deepEqual(
         await trigger.boundingBox(),
         rowBounds,
@@ -150,7 +150,7 @@ try {
         () => localStorage.getItem("appSkin") === "current",
     );
     await page.getByRole("alert").waitFor({ state: "detached" });
-    await expectClosed("Current (default)");
+    await expectClosed("Classic Light");
     await openPicker();
     await classic.click();
     await expectClosed("Classic Dark");
@@ -162,12 +162,12 @@ try {
         localStorage.setItem("appSkin", "unknown-future-skin"),
     );
     await page.goto(new URL("/settings", BASE_URL).toString());
-    await expectClosed("Current (default)");
+    await expectClosed("Classic Light");
     await page.screenshot({ path: join(output, "settings-current.png") });
 
     await openPicker();
     await page.setViewportSize({ width: 1280, height: 800 });
-    await expectClosed("Current (default)");
+    await expectClosed("Classic Light");
     await openPicker();
     await page.waitForFunction(
         () => document.activeElement?.getAttribute("value") === "current",

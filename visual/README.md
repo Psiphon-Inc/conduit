@@ -64,7 +64,7 @@ override), `skin` (`current | classic-dark`), `chrome=0` (controls hidden, used
 for capture).
 
 Skin is a URL-only preview: it never reads or changes the saved Settings choice.
-Missing or invalid skin selects Current. Current retains the lab's original
+Missing or invalid skin selects Classic Light (`current`). Classic Light retains the lab's original
 `black` background (#231F20); Classic Dark defaults to true black (#000000).
 An explicit `bg` overrides either. Readiness resets when the skin changes.
 For full app inspection, use Settings → Appearance, then return Home or Account;

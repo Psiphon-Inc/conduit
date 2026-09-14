@@ -8,7 +8,7 @@
         "developer_comment": "Accessible label for the group of app color skin choices."
     },
     "SKIN_CURRENT_I18N": {
-        "string": "Current (default)",
+        "string": "Classic Light",
         "developer_comment": "Name of the original light peach and mauve skin."
     },
     "SKIN_CLASSIC_DARK_I18N": {
