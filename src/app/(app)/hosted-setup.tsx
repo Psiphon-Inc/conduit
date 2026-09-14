@@ -880,7 +880,7 @@ export default function HostedSetupScreen() {
                                                     ss.padded,
                                                     {
                                                         backgroundColor:
-                                                            palette.white,
+                                                            skin.sharedSurface,
                                                         minWidth: 140,
                                                         gap: 5,
                                                         flex: 1,

@@ -25,6 +25,13 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   Classic Light at the deadline and applies the saved skin if it eventually resolves.
 - `useAppearanceStyles`: skin-aware shared styles for legacy UI consumers; static
   layout/font styles and the existing palette remain unchanged.
+- Additional control paint roles: `dropdown` owns expanded settings surfaces;
+  `segmentedControl` owns dashboard station/window and hosted chart-mode button
+  surfaces; `subtleBorder` retains Classic Light's thin purple borders without
+  leaking them into Classic Dark. Hosted setup primary/rewards gradients and
+  selected-plan shadows are skin paint; account danger-confirmation panels have
+  their own surface role. Destructive text/borders and sign-in brand badges keep
+  their semantic red and brand colors. No action or dismissal behavior changes.
 - `loadAppSkinPreference` / `saveAppSkinPreference`: default to AsyncStorage,
   following the existing sound/onboarding UX-preference convention. Both accept
   the narrow `SkinPreferenceStorage` capability (`getItem`/`setItem`), also
@@ -66,6 +73,9 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   Save failures leave only an accessible warning indicator in the row; reopening
   reveals the full localized explanation. Selecting the checked option retries
   saving and closes the menu. No additional settings screen or sheet is involved.
+  Appearance uses the `paint-palette` SVG in the shared `Icon` registry; its
+  `chevron-down` Icon uses the same size (16), text tint and expanded rotation as
+  Local Station.
 - `/orb-lab?skin=classic-dark` previews
   deterministic renderer paint without changing the stored preference; omitted or
   invalid lab skin selects `current`.
@@ -73,6 +83,8 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   `focusOnMount`; it uses native accessibility radio state on mobile and a real
   HTML radio on web (Space and arrow keys, focus, and checked state). The picker
   owns applying the selection and closing the overlay.
+  `scenario=appearance-controls` renders real expanded dropdown, hosted action,
+  and chart-mode controls without backend credentials for paint inspection.
 
 Dependencies: AsyncStorage (native app storage; localStorage on web), shared
 `common/colorUtils` for hex-to-RGB paint, TanStack Query cache, i18next, existing SVG/native/

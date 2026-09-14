@@ -896,7 +896,10 @@ function DashboardBackground({
 /**
  * Generates a style object for a selectable window button based on selected state.
  */
-function buttonStyle(selected?: boolean) {
+function buttonStyle(
+    paint: { selectedSurface: string; idleSurface: string },
+    selected?: boolean,
+) {
     return {
         borderRadius: 8,
         paddingVertical: 8,
@@ -904,9 +907,7 @@ function buttonStyle(selected?: boolean) {
         minWidth: 68,
         alignItems: "center" as const,
         justifyContent: "center" as const,
-        backgroundColor: selected
-            ? palette.selectedPurple
-            : "rgba(25, 18, 36, 0.08)",
+        backgroundColor: selected ? paint.selectedSurface : paint.idleSurface,
     };
 }
 
@@ -935,7 +936,7 @@ function DashboardStationSelector({
                     }
                     onSelect("local");
                 }}
-                style={buttonStyle(mode === "local")}
+                style={buttonStyle(skin.segmentedControl, mode === "local")}
             >
                 <Text
                     style={[
@@ -962,7 +963,7 @@ function DashboardStationSelector({
                     onSelect("hosted");
                 }}
                 style={[
-                    buttonStyle(mode === "hosted"),
+                    buttonStyle(skin.segmentedControl, mode === "hosted"),
                     !hostedEnabled ? { opacity: 0.45 } : null,
                 ]}
             >
@@ -1013,11 +1014,12 @@ function DashboardStationSelector({
 }
 
 function DashboardSectionDivider() {
+    const { skin } = useAppAppearance();
     return (
         <View
             style={{
                 borderTopWidth: 1,
-                borderTopColor: palette.thinPurple,
+                borderTopColor: skin.subtleBorder,
                 width: "100%",
             }}
         />
@@ -1040,7 +1042,7 @@ function RecentWindowButton({
     return (
         <Pressable
             testID={testID}
-            style={buttonStyle(selected)}
+            style={buttonStyle(skin.segmentedControl, selected)}
             onPress={() => {
                 if (!isE2E()) {
                     Haptics.selectionAsync();

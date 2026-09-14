@@ -376,7 +376,7 @@ export function HostedConduitAccountPage() {
                             <View
                                 style={{
                                     borderWidth: 1,
-                                    borderColor: palette.thinPurple,
+                                    borderColor: skin.subtleBorder,
                                     borderRadius: 16,
                                     backgroundColor: skin.panelSurface,
                                     padding: 12,
@@ -508,7 +508,9 @@ export function HostedConduitAccountPage() {
                                     borderRadius: 12,
                                     padding: 12,
                                     gap: 10,
-                                    backgroundColor: palette.redTint5,
+                                    backgroundColor:
+                                        skin.accountButtons
+                                            .dangerConfirmationSurface,
                                     marginTop: 4,
                                 }}
                             >

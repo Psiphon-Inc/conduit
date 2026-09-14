@@ -88,7 +88,7 @@ export function HostedPlanSelection({
                                   borderWidth: 2,
                                   borderColor: selected
                                       ? skin.accent
-                                      : palette.thinPurple,
+                                      : skin.subtleBorder,
                                   borderRadius: 14,
                                   paddingHorizontal: 14,
                                   paddingVertical: 12,
@@ -293,7 +293,7 @@ export function PrimaryActionBlock({
                                 ss.blackText,
                                 {
                                     borderWidth: 1,
-                                    borderColor: palette.thinPurple,
+                                    borderColor: skin.subtleBorder,
                                     borderRadius: 12,
                                     minHeight: 48,
                                     paddingHorizontal: 12,
@@ -314,7 +314,7 @@ export function PrimaryActionBlock({
                                 ss.blackText,
                                 {
                                     borderWidth: 1,
-                                    borderColor: palette.thinPurple,
+                                    borderColor: skin.subtleBorder,
                                     borderRadius: 12,
                                     minHeight: 48,
                                     paddingHorizontal: 12,
@@ -495,7 +495,7 @@ export function StatusText(props: React.PropsWithChildren) {
                 ss.blackText,
                 {
                     borderWidth: 1,
-                    borderColor: palette.thinPurple,
+                    borderColor: skin.subtleBorder,
                     borderRadius: 10,
                     padding: 10,
                     backgroundColor: skin.statusSurface,

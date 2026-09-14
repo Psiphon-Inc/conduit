@@ -110,7 +110,7 @@ export function HostedStatusPanel({
             style={{
                 position: "relative",
                 borderRadius: 12,
-                backgroundColor: "rgba(25, 18, 36, 0.06)",
+                backgroundColor: skin.segmentedControl.groupSurface,
                 padding: 10,
                 gap: 8,
             }}
@@ -218,8 +218,8 @@ function HostedStatusModeButton({
             style={{
                 borderRadius: 8,
                 backgroundColor: selected
-                    ? palette.selectedPurple
-                    : "rgba(25, 18, 36, 0.08)",
+                    ? skin.segmentedControl.selectedSurface
+                    : skin.segmentedControl.idleSurface,
                 paddingHorizontal: 10,
                 paddingVertical: 6,
             }}

@@ -35,6 +35,7 @@ const ICONS: Record<IconName, ImageSource> = {
     send: require("@/assets/images/icons/send.svg"),
     home: require("@/assets/images/icons/home.svg"),
     settings: require("@/assets/images/icons/settings.svg"),
+    "paint-palette": require("@/assets/images/icons/paint-palette.svg"),
     question: require("@/assets/images/icons/question.svg"),
     "external-link": require("@/assets/images/icons/external-link.svg"),
     analytics: require("@/assets/images/icons/analytics.svg"),
@@ -54,6 +55,7 @@ type IconName =
     | "send"
     | "home"
     | "settings"
+    | "paint-palette"
     | "question"
     | "external-link"
     | "analytics"

@@ -89,7 +89,13 @@ export interface SkyBoxVisualScenario {
 export type OrbVisualScenario =
     | OrbSceneVisualScenario
     | HostedMiniOrbVisualScenario
-    | SkyBoxVisualScenario;
+    | SkyBoxVisualScenario
+    | {
+          kind: "appearance-controls";
+          id: string;
+          description: string;
+          progress: number;
+      };
 
 const LOCAL_LANE: OrbSceneActivityLane = {
     id: "local",
@@ -378,6 +384,12 @@ export const ORB_VISUAL_SCENARIOS: OrbVisualScenario[] = [
         description: "SkyBox gradient, state 3",
         state: 3,
         progress: 0.5,
+    },
+    {
+        kind: "appearance-controls",
+        id: "appearance-controls",
+        description: "Settings dropdown and hosted action surfaces",
+        progress: 0,
     },
 ];
 

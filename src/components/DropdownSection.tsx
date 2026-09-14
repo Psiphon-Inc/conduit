@@ -19,8 +19,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet, View, ViewProps } from "react-native";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
+
 export function DropdownSection(props: React.PropsWithChildren<ViewProps>) {
     const { children, style, ...rest } = props;
+    const { skin } = useAppAppearance();
 
     return (
         <View
@@ -30,7 +33,7 @@ export function DropdownSection(props: React.PropsWithChildren<ViewProps>) {
                     marginHorizontal: -10,
                     marginBottom: -10,
                     overflow: "hidden",
-                    backgroundColor: "rgba(157, 129, 201, 0.12)",
+                    backgroundColor: skin.dropdown.surface,
                 },
                 style,
             ]}
@@ -40,10 +43,7 @@ export function DropdownSection(props: React.PropsWithChildren<ViewProps>) {
                 style={StyleSheet.absoluteFill}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
-                colors={[
-                    "rgba(255, 255, 255, 0.94)",
-                    "rgba(157, 129, 201, 0.52)",
-                ]}
+                colors={skin.dropdown.gradient}
             />
             <View>{children}</View>
         </View>

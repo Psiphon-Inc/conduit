@@ -109,7 +109,7 @@ export function SkinPicker() {
                     borderBottomColor: skin.border,
                 }}
             >
-                <Icon name="settings" color={skin.text} size={20} />
+                <Icon name="paint-palette" color={skin.text} size={20} />
                 <Text style={[ss.bodyFont, ss.blackText]}>{label}</Text>
                 <Text
                     numberOfLines={1}
@@ -129,7 +129,13 @@ export function SkinPicker() {
                         !
                     </Text>
                 ) : null}
-                <Icon name="chevron-down" color={skin.accent} size={16} />
+                <View
+                    style={{
+                        transform: [{ rotate: anchor ? "180deg" : "0deg" }],
+                    }}
+                >
+                    <Icon name="chevron-down" color={skin.text} size={16} />
+                </View>
             </Pressable>
             {anchor ? (
                 <Modal

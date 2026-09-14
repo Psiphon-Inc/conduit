@@ -202,11 +202,50 @@ try {
         "provisioning-marker",
         "mini-active",
         "skybox-3",
+        "appearance-controls",
     ];
     for (const skin of ["current", "classic-dark"]) {
         for (const scenario of scenarios) {
             await page.goto(labUrl({ skin, scenario, chrome: "0" }));
             await page.waitForSelector(READY_SELECTOR);
+            if (scenario === "appearance-controls") {
+                const gradientPaint = async (testID) =>
+                    page.getByTestId(testID).evaluate((root) =>
+                        Array.from(root.querySelectorAll("div"))
+                            .map(
+                                (node) =>
+                                    getComputedStyle(node).backgroundImage,
+                            )
+                            .find((paint) => paint !== "none"),
+                    );
+                const dropdownPaint = await gradientPaint(
+                    "preview-local-dropdown",
+                );
+                const buttonPaint = await gradientPaint(
+                    "preview-hosted-primary",
+                );
+                if (skin === "classic-dark") {
+                    assert(
+                        dropdownPaint.includes("rgb(16, 22, 28)") &&
+                            dropdownPaint.includes("rgb(35, 73, 90)"),
+                        dropdownPaint,
+                    );
+                    assert(
+                        buttonPaint.includes("rgb(35, 73, 90)") &&
+                            buttonPaint.includes("rgb(46, 33, 50)"),
+                        buttonPaint,
+                    );
+                } else {
+                    assert(
+                        dropdownPaint.includes("rgba(255, 255, 255, 0.94)"),
+                        dropdownPaint,
+                    );
+                    assert(
+                        buttonPaint.includes("rgb(126, 92, 184)"),
+                        buttonPaint,
+                    );
+                }
+            }
             await page
                 .locator('[data-visualstage="native"]')
                 .screenshot({ path: join(output, `${skin}-${scenario}.png`) });
@@ -219,7 +258,7 @@ try {
     );
     assert.deepEqual(errors, [], "No uncaught browser errors");
     console.log(
-        `Skin verification passed: compact anchored dropdown, dismissal/focus, selection, reload, keyboard, failed-write retry, invalid storage, isolated previews and 16 scene captures in ${output}`,
+        `Skin verification passed: compact anchored dropdown, dismissal/focus, selection, reload, keyboard, failed-write retry, invalid storage, control gradient paint, isolated previews and 18 scene captures in ${output}`,
     );
 } finally {
     await browser.close();

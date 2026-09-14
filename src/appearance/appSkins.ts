@@ -27,6 +27,16 @@ export interface AppSkinTokens {
     readonly mutedText: string;
     readonly accent: string;
     readonly border: string;
+    readonly subtleBorder: string;
+    readonly dropdown: {
+        readonly surface: string;
+        readonly gradient: readonly [string, string];
+    };
+    readonly segmentedControl: {
+        readonly selectedSurface: string;
+        readonly idleSurface: string;
+        readonly groupSurface: string;
+    };
     readonly navigationDivider: string;
     readonly switchActiveTrack: string;
     readonly selectedBackground: string;
@@ -49,6 +59,7 @@ export interface AppSkinTokens {
         readonly secondarySurface: string;
         readonly gradientSurface: string;
         readonly gradient: readonly [string, string];
+        readonly rewardsGradient: readonly [string, string];
     };
     readonly accountButtons: {
         readonly disabledPrimary: string;
@@ -56,6 +67,7 @@ export interface AppSkinTokens {
         readonly disabledSecondary: string;
         readonly primary: string;
         readonly secondary: string;
+        readonly dangerConfirmationSurface: string;
     };
     readonly hero: {
         readonly bandColors: readonly [string, string, ...string[]];
@@ -119,6 +131,19 @@ export const APP_SKINS: {
         mutedText: palette.midGrey,
         accent: palette.purple,
         border: "rgba(0, 0, 0, 0.12)",
+        subtleBorder: palette.thinPurple,
+        dropdown: {
+            surface: "rgba(157, 129, 201, 0.12)",
+            gradient: [
+                "rgba(255, 255, 255, 0.94)",
+                "rgba(157, 129, 201, 0.52)",
+            ],
+        },
+        segmentedControl: {
+            selectedSurface: palette.selectedPurple,
+            idleSurface: "rgba(25, 18, 36, 0.08)",
+            groupSurface: "rgba(25, 18, 36, 0.06)",
+        },
         navigationDivider: palette.thinPurple,
         switchActiveTrack: palette.purple,
         selectedBackground: "rgba(126, 92, 184, 0.16)",
@@ -141,6 +166,7 @@ export const APP_SKINS: {
             secondarySurface: palette.white,
             gradientSurface: palette.transparent,
             gradient: ["#7E5CB8", "rgba(156, 129, 201, 0.69)"],
+            rewardsGradient: ["#A475E3", "rgba(156, 129, 201, 0.69)"],
         },
         accountButtons: {
             disabledPrimary: palette.fadedMauve,
@@ -148,6 +174,7 @@ export const APP_SKINS: {
             disabledSecondary: palette.fadedMauve,
             primary: palette.purple,
             secondary: palette.white,
+            dangerConfirmationSurface: palette.redTint5,
         },
         hero: {
             bandColors: [
@@ -224,6 +251,16 @@ export const APP_SKINS: {
         mutedText: "#c4d7df",
         accent: "#9dbcca",
         border: "rgba(196,215,223,0.24)",
+        subtleBorder: "rgba(196,215,223,0.24)",
+        dropdown: {
+            surface: "#10161c",
+            gradient: ["#10161c", classicOrbColors.deepBlue],
+        },
+        segmentedControl: {
+            selectedSurface: classicOrbColors.deepBlue,
+            idleSurface: "#10161c",
+            groupSurface: "#10161c",
+        },
         navigationDivider: "rgba(196,215,223,0.24)",
         switchActiveTrack: "#9dbcca",
         selectedBackground: "#23495a",
@@ -240,12 +277,16 @@ export const APP_SKINS: {
         aliasPlaceholder: "#A0A0A0",
         setupButtons: {
             selectedPlanSurface: classicOrbColors.deepBlue,
-            selectedPlanShadow: "#7E5CB8",
+            selectedPlanShadow: classicOrbColors.deepBlue,
             disabledSurface: "#10161c",
             primarySurface: "#10161c",
             secondarySurface: "#10161c",
             gradientSurface: "#10161c",
-            gradient: ["#7E5CB8", "rgba(156, 129, 201, 0.69)"],
+            gradient: [classicOrbColors.deepBlue, classicOrbColors.deepPurple],
+            rewardsGradient: [
+                classicOrbColors.deepBlue,
+                classicOrbColors.deepPurple,
+            ],
         },
         accountButtons: {
             disabledPrimary: classicOrbColors.deepBlue,
@@ -253,6 +294,7 @@ export const APP_SKINS: {
             disabledSecondary: "#10161c",
             primary: classicOrbColors.deepBlue,
             secondary: "#10161c",
+            dangerConfirmationSurface: "#261719",
         },
         hero: {
             bandColors: [

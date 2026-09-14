@@ -37,6 +37,7 @@ import {
     findVisualScenario,
 } from "@/src/components/orb-scene/visualScenarios";
 import { clampVisualProgress } from "@/src/components/orb-scene/visualTestControl";
+import { AppearanceControlsPreview } from "@/src/components/visual-lab/AppearanceControlsPreview";
 import { palette } from "@/src/styles";
 
 /**
@@ -108,6 +109,13 @@ function ScenarioMount({
         progress,
         reducedMotion: false,
     };
+    if (scenario.kind === "appearance-controls") {
+        return (
+            <View style={{ width, height }}>
+                <AppearanceControlsPreview />
+            </View>
+        );
+    }
     if (scenario.kind === "skybox") {
         return (
             <View style={{ width, height }}>

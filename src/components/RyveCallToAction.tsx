@@ -48,7 +48,6 @@ import {
 import { useConduitName } from "@/src/hooks";
 import { palette } from "@/src/styles";
 
-const RYVE_GRADIENT_COLORS = ["#A475E3", "rgba(156, 129, 201, 0.69)"] as const;
 const COMPACT_WEB_MODAL_WIDTH = 430;
 
 function RyveModalShell({
@@ -260,7 +259,7 @@ export function RyveClaimModalContent({
                         pointerEvents="none"
                         start={{ x: 0, y: 0.5 }}
                         end={{ x: 1, y: 0.5 }}
-                        colors={RYVE_GRADIENT_COLORS}
+                        colors={skin.setupButtons.rewardsGradient}
                     />
                     <Text style={[ss.whiteText, ss.bodyFont, { fontSize: 24 }]}>
                         {primaryActionLabel}
