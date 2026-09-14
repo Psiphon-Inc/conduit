@@ -28,7 +28,10 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
-import { palette, sharedStyles as ss } from "@/src/styles";
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 
 const BAND_COLORS = [
     "rgba(219,211,236,0)",
@@ -67,6 +70,7 @@ function HeroOrbLayer({
     idSuffix: string;
     orbRadius: number;
 }) {
+    const { skin } = useAppAppearance();
     // Box is 3x the orb radius so the soft white glow (formerly a Skia
     // Shadow blur) fits around the body.
     const box = orbRadius * 3;
@@ -82,10 +86,22 @@ function HeroOrbLayer({
                 >
                     <Stop
                         offset={orbRadius / (box / 2) - 0.05}
-                        stopColor="#FFFFFF"
-                        stopOpacity={variant.glowAlpha}
+                        stopColor={
+                            skin.id === "current" ? "#FFFFFF" : skin.orb.blue
+                        }
+                        stopOpacity={
+                            skin.id === "current"
+                                ? variant.glowAlpha
+                                : variant.glowAlpha * 0.65
+                        }
                     />
-                    <Stop offset={1} stopColor="#FFFFFF" stopOpacity={0} />
+                    <Stop
+                        offset={1}
+                        stopColor={
+                            skin.id === "current" ? "#FFFFFF" : skin.orb.blue
+                        }
+                        stopOpacity={0}
+                    />
                 </RadialGradient>
                 <RadialGradient
                     id={`hero-body-${idSuffix}`}
@@ -93,8 +109,22 @@ function HeroOrbLayer({
                     cy="50%"
                     r="50%"
                 >
-                    <Stop offset={0.4} stopColor={variant.gradient[0]} />
-                    <Stop offset={1} stopColor={variant.gradient[1]} />
+                    <Stop
+                        offset={0.4}
+                        stopColor={
+                            skin.id === "current"
+                                ? variant.gradient[0]
+                                : skin.orb.center
+                        }
+                    />
+                    <Stop
+                        offset={1}
+                        stopColor={
+                            skin.id === "current"
+                                ? variant.gradient[1]
+                                : skin.orb.deepBlue
+                        }
+                    />
                 </RadialGradient>
                 <RadialGradient
                     id={`hero-shadow-${idSuffix}`}
@@ -107,7 +137,14 @@ function HeroOrbLayer({
                         stopColor="rgba(246,255,255,1)"
                         stopOpacity={0}
                     />
-                    <Stop offset={1} stopColor={variant.innerShadow} />
+                    <Stop
+                        offset={1}
+                        stopColor={
+                            skin.id === "current"
+                                ? variant.innerShadow
+                                : skin.orb.purple
+                        }
+                    />
                 </RadialGradient>
             </Defs>
             <Circle
@@ -141,6 +178,8 @@ export function HostedSetupSignInHero({
     body: string;
     width: number;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const pulse = useSharedValue(0);
 
     React.useEffect(() => {
@@ -175,7 +214,7 @@ export function HostedSetupSignInHero({
                 width: "100%",
                 minHeight: cardHeight,
                 borderRadius: 28,
-                backgroundColor: palette.white,
+                backgroundColor: skin.background,
                 overflow: "hidden",
             }}
         >
@@ -213,8 +252,21 @@ export function HostedSetupSignInHero({
                     style={StyleSheet.absoluteFill}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 1 }}
-                    colors={BAND_COLORS}
-                    locations={BAND_POSITIONS}
+                    colors={
+                        skin.id === "current"
+                            ? BAND_COLORS
+                            : [
+                                  "#00000000",
+                                  skin.orb.deepPurple,
+                                  skin.orb.deepBlue,
+                                  "#00000000",
+                              ]
+                    }
+                    locations={
+                        skin.id === "current"
+                            ? BAND_POSITIONS
+                            : [0, 0.4, 0.6, 1]
+                    }
                 />
                 <Svg
                     width={haloRadius * 2}

@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { InteractionManager, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import { isE2E } from "@/src/common/e2e";
 import { Icon } from "@/src/components/Icon";
 import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
@@ -38,6 +39,7 @@ type BottomNavItem = {
 };
 
 export function AppBottomNav() {
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const router = useRouter();
     const pathname = usePathname();
@@ -113,7 +115,7 @@ export function AppBottomNav() {
             style={{
                 borderTopWidth: 1,
                 borderTopColor: palette.thinPurple,
-                backgroundColor: palette.white,
+                backgroundColor: skin.background,
                 paddingTop: 8,
                 paddingBottom: Math.max(8, insets.bottom),
                 paddingHorizontal: 8,
@@ -130,11 +132,9 @@ export function AppBottomNav() {
                 }}
             >
                 {items.map((item) => {
-                    const color = item.isActive
-                        ? palette.purple
-                        : palette.black;
+                    const color = item.isActive ? skin.accent : skin.text;
                     const activeBackgroundColor = item.isActive
-                        ? "rgba(126, 92, 184, 0.16)"
+                        ? skin.selectedBackground
                         : palette.transparent;
 
                     return (

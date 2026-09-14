@@ -35,6 +35,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import { isE2E, isPerf } from "@/src/common/e2e";
 import {
     ConnectionLightMotionSpec,
@@ -56,10 +57,10 @@ import {
     HOSTED_ORB_THEME_LEVEL,
     ORB_LAYOUTS,
     OrbTheme,
-    PROVISIONING_MARKER_GLOW_COLORS,
     PROVISIONING_MARKER_GLOW_POSITIONS,
     PROVISIONING_MARKER_ORBIT_DURATION_MS,
-    SCENE_THEMES,
+    getOrbSceneTheme,
+    getProvisioningGlowColors,
 } from "@/src/components/orb-scene/orbSceneTheme";
 import {
     clampLights,
@@ -279,6 +280,49 @@ function OrbThemeLayers({
                     r={bodyRadius}
                     fill={`url(#${idPrefix}-shadow)`}
                 />
+                {theme.innerShadowTL ? (
+                    <>
+                        <Defs>
+                            <RadialGradient
+                                id={`${idPrefix}-shadow-tl`}
+                                cx="56.5%"
+                                cy="56.5%"
+                                r="62.5%"
+                            >
+                                <Stop
+                                    offset={0.66}
+                                    stopColor={theme.innerShadowTL.rgb}
+                                    stopOpacity={0}
+                                />
+                                <Stop
+                                    offset={1}
+                                    stopColor={theme.innerShadowTL.rgb}
+                                    stopOpacity={
+                                        theme.innerShadowTL.alpha *
+                                        ORB_SHADOW_ALPHA_SCALE
+                                    }
+                                />
+                            </RadialGradient>
+                        </Defs>
+                        <Circle
+                            cx={center}
+                            cy={center}
+                            r={bodyRadius}
+                            fill={`url(#${idPrefix}-shadow-tl)`}
+                        />
+                    </>
+                ) : null}
+                {theme.rimColor ? (
+                    <Circle
+                        cx={center}
+                        cy={center}
+                        r={bodyRadius - 0.75}
+                        fill="none"
+                        stroke={theme.rimColor}
+                        strokeWidth={1.5}
+                        strokeOpacity={0.48}
+                    />
+                ) : null}
             </Svg>
         </>
     );
@@ -302,6 +346,7 @@ function NativeProvisioningMarker({
     onExited: (id: string) => void;
 }) {
     const orbit = useSharedValue(0);
+    const { skin } = useAppAppearance();
     const opacity = useSharedValue(0);
     const scale = useSharedValue(0.55);
     const frozen = frozenProgress != null;
@@ -310,8 +355,8 @@ function NativeProvisioningMarker({
         [marker.id],
     );
     const gradientStops = React.useMemo(
-        () => PROVISIONING_MARKER_GLOW_COLORS.map(parseRgba),
-        [],
+        () => getProvisioningGlowColors(skin.id).map(parseRgba),
+        [skin.id],
     );
 
     React.useEffect(() => {
@@ -478,7 +523,8 @@ export function OrbSceneNative(props: OrbSceneProps) {
         ? visualTestLightElapsedMs(frozenProgress)
         : undefined;
     const targetThemeLevel = themeLevel ?? evolutionLevel;
-    const sceneTheme = SCENE_THEMES[targetThemeLevel];
+    const { skin } = useAppAppearance();
+    const sceneTheme = getOrbSceneTheme(skin.id, targetThemeLevel);
     const sceneScale = Math.min(width, height);
     const resolvedOrbRadiusScale = Number.isFinite(orbRadiusScale)
         ? Math.max(0, orbRadiusScale)
@@ -1122,7 +1168,10 @@ export function OrbSceneNative(props: OrbSceneProps) {
                             theme={
                                 usesLocalTheme
                                     ? sceneTheme.orb
-                                    : SCENE_THEMES[HOSTED_ORB_THEME_LEVEL].orb
+                                    : getOrbSceneTheme(
+                                          skin.id,
+                                          HOSTED_ORB_THEME_LEVEL,
+                                      ).orb
                             }
                             themeKey={
                                 usesLocalTheme

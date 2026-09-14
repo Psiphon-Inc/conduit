@@ -38,6 +38,11 @@ import {
     withTiming,
 } from "react-native-reanimated";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
+import { SkinPicker } from "@/src/appearance/SkinPicker";
 import { wrapError } from "@/src/common/errors";
 import { MBToBytes, bytesToMB } from "@/src/common/utils";
 import { AnimatedText } from "@/src/components/AnimatedText";
@@ -73,7 +78,7 @@ import {
     InproxyParametersSchema,
 } from "@/src/inproxy/types";
 import { playSound, setSoundEnabled, useSoundEnabled } from "@/src/sound";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 // ---------------------------------------------------------------------------
 // LocalConduitSettingsCard — expandable card for phone-hosted conduit (Android)
@@ -130,10 +135,12 @@ function LocalConduitSettingsCard({
     disableReducedWindow: () => void;
     showReducedSelector: boolean;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
 
     const statusLabel = isRunning ? "ON" : "OFF";
-    const statusColor = isRunning ? palette.peach : palette.black;
+    const statusColor = isRunning ? palette.peach : skin.text;
     const expandedLineItemStyle = [
         ss.paddedHorizontal,
         ss.row,
@@ -197,7 +204,7 @@ function LocalConduitSettingsCard({
                         >
                             <Icon
                                 name="chevron-down"
-                                color={palette.black}
+                                color={skin.text}
                                 size={16}
                             />
                         </View>
@@ -283,7 +290,7 @@ function LocalConduitSettingsCard({
                             </Text>
                             <AnimatedText
                                 text={displayTotalMBps}
-                                color={palette.black}
+                                color={skin.text}
                                 fontFamily={ss.bodyFont.fontFamily}
                                 fontSize={ss.bodyFont.fontSize}
                             />
@@ -321,6 +328,8 @@ function LocalConduitSettingsCard({
 // ---------------------------------------------------------------------------
 
 export function ConduitSettings({ inline = false }: { inline?: boolean }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const router = useRouter();
 
@@ -828,7 +837,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                 </View>
                 <Icon
                     name="chevron-right"
-                    color={disabled ? palette.lightGrey : palette.black}
+                    color={disabled ? palette.lightGrey : skin.text}
                     size={16}
                 />
             </Pressable>
@@ -895,7 +904,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                                     ss.rounded10,
                                     {
                                         backgroundColor: hasStagedChanges
-                                            ? palette.black
+                                            ? skin.strongSurface
                                             : "transparent",
                                         opacity:
                                             canSaveChanges && pressed
@@ -949,7 +958,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         <EditableConduitAlias
                             fallbackName={t("CONDUIT_STATION_I18N.string")}
                             fontSize={18}
-                            labelBackground="#FFFFFF"
+                            labelBackground={skin.surface}
                         />
                     </View>
 
@@ -998,7 +1007,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                               icon: (
                                   <ExpoImage
                                       source={require("@/assets/images/icons/p2p_24px.svg")}
-                                      tintColor={palette.black}
+                                      tintColor={skin.text}
                                       style={{ width: 20, height: 20 }}
                                       contentFit="contain"
                                   />
@@ -1019,7 +1028,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                               icon: (
                                   <ExpoImage
                                       source={require("@/assets/images/icons/ryve.svg")}
-                                      tintColor={palette.black}
+                                      tintColor={skin.text}
                                       style={{ width: 20, height: 20 }}
                                       contentFit="contain"
                                   />
@@ -1043,7 +1052,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                                     icon: (
                                         <ExpoImage
                                             source={require("@/assets/images/icons/ryve.svg")}
-                                            tintColor={palette.black}
+                                            tintColor={skin.text}
                                             style={{ width: 20, height: 20 }}
                                             contentFit="contain"
                                         />
@@ -1062,7 +1071,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         icon: (
                             <ExpoImage
                                 source={require("@/assets/images/icons/account.svg")}
-                                tintColor={palette.black}
+                                tintColor={skin.text}
                                 style={{ width: 20, height: 20 }}
                                 contentFit="contain"
                             />
@@ -1073,6 +1082,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         testID: "settings-account",
                     })}
 
+                    <SkinPicker />
                     {/* Sound effects toggle */}
                     <View
                         style={[
@@ -1085,11 +1095,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         ]}
                     >
                         <View style={[ss.row, ss.alignCenter, { gap: 10 }]}>
-                            <Icon
-                                name="speaker"
-                                color={palette.black}
-                                size={20}
-                            />
+                            <Icon name="speaker" color={skin.text} size={20} />
                             <Text style={[ss.bodyFont, ss.blackText]}>
                                 {t("SETTINGS_SOUND_EFFECTS_I18N.string")}
                             </Text>
@@ -1098,18 +1104,14 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                             testID="settings-sound-toggle"
                             value={soundEnabled}
                             onValueChange={onSoundEnabledToggle}
-                            trackColor={{ true: palette.purple }}
+                            trackColor={{ true: skin.action }}
                             thumbColor={palette.white}
                         />
                     </View>
 
                     {renderSettingsAction({
                         icon: (
-                            <Icon
-                                name="question"
-                                color={palette.black}
-                                size={20}
-                            />
+                            <Icon name="question" color={skin.text} size={20} />
                         ),
                         label: t("MORE_INFO_I18N.string"),
                         onPress: () => router.push("/(app)/onboarding"),
@@ -1121,7 +1123,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                               icon: (
                                   <Icon
                                       name="send"
-                                      color={palette.black}
+                                      color={skin.text}
                                       size={20}
                                   />
                               ),
@@ -1168,11 +1170,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
 
                     {renderSettingsAction({
                         icon: (
-                            <Icon
-                                name="shield"
-                                color={palette.black}
-                                size={20}
-                            />
+                            <Icon name="shield" color={skin.text} size={20} />
                         ),
                         label: t("PRIVACY_POLICY_I18N.string"),
                         onPress: () => void Linking.openURL(PRIVACY_POLICY_URL),
@@ -1180,11 +1178,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
 
                     {renderSettingsAction({
                         icon: (
-                            <Icon
-                                name="notepad"
-                                color={palette.black}
-                                size={20}
-                            />
+                            <Icon name="notepad" color={skin.text} size={20} />
                         ),
                         label: t("TERMS_OF_USE_I18N.string"),
                         onPress: () => void Linking.openURL(termsOfUseUrl),
@@ -1222,6 +1216,8 @@ function RestartConfirmation({
     onConfirm: () => void;
     onCancel: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
 
     return (
@@ -1249,7 +1245,7 @@ function RestartConfirmation({
                         style={[
                             ss.padded,
                             ss.rounded10,
-                            { backgroundColor: palette.white },
+                            { backgroundColor: skin.background },
                         ]}
                         onPress={onConfirm}
                     >

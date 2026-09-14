@@ -35,6 +35,10 @@ import Animated, {
 import Svg, { Circle } from "react-native-svg";
 
 import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
+import {
     ConnectionLightMotionSpec,
     connectionLightSeed,
     createConnectionLightMotionPlan,
@@ -52,7 +56,7 @@ import {
     visualTestLightElapsedMs,
 } from "@/src/components/orb-scene/visualTestControl";
 import { useAppIsActive } from "@/src/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 const MAX_HOSTED_LIGHTS = 8;
 
@@ -97,6 +101,18 @@ export function HostedMiniOrbNative({
     lightSeedKey?: string;
 }) {
     const { t } = useTranslation();
+    const { skin } = useAppAppearance();
+    const ss = useAppearanceStyles();
+    const cycleColors =
+        skin.id === "current"
+            ? ORB_CYCLE_COLORS
+            : [
+                  skin.orb.center,
+                  skin.orb.deepBlue,
+                  skin.orb.deepPurple,
+                  skin.orb.blue,
+                  skin.orb.deepPurple,
+              ];
     const appIsActive = useAppIsActive();
     const finalOrbRadius = width / 4;
     const orbCenterY = height / 2;
@@ -284,7 +300,7 @@ export function HostedMiniOrbNative({
                         orbWrapperStyle,
                     ]}
                 >
-                    {ORB_CYCLE_COLORS.map((color, index) => (
+                    {cycleColors.map((color, index) => (
                         <OrbCycleLayer
                             key={`cycle-${index}`}
                             index={index}
@@ -296,7 +312,11 @@ export function HostedMiniOrbNative({
                     <InnerShadowLayer
                         id="mini-shadow-mauve"
                         radius={finalOrbRadius}
-                        color={palette.mauve}
+                        color={
+                            skin.id === "current"
+                                ? palette.mauve
+                                : skin.orb.blue
+                        }
                         dx={10}
                         dy={10}
                     />
@@ -313,7 +333,11 @@ export function HostedMiniOrbNative({
                             cx={finalOrbRadius}
                             cy={finalOrbRadius}
                             r={finalOrbRadius - 1}
-                            stroke={palette.deepMauve}
+                            stroke={
+                                skin.id === "current"
+                                    ? palette.deepMauve
+                                    : skin.orb.rim
+                            }
                             strokeWidth={1.5}
                             strokeOpacity={0.3}
                             fill="none"
@@ -380,6 +404,7 @@ function OrbCycleLayer({
     color: string;
     colorIndex: SharedValue<number>;
 }) {
+    const { skin } = useAppAppearance();
     const layerStyle = useAnimatedStyle(() => {
         // Stacked crossfade: the base layer stays opaque, each higher layer
         // fades in over the one below as the cycle position passes it.
@@ -395,7 +420,7 @@ function OrbCycleLayer({
             <OrbBodyGradient
                 id={`mini-cycle-${index}`}
                 radius={radius}
-                innerColor={palette.white}
+                innerColor={skin.orb.center}
                 outerColor={color}
             />
         </Animated.View>
@@ -409,6 +434,7 @@ function IdleActiveShadow({
     radius: number;
     activityWeight: SharedValue<number>;
 }) {
+    const { skin } = useAppAppearance();
     const idleStyle = useAnimatedStyle(
         () => ({ opacity: 1 - activityWeight.value }),
         [activityWeight],
@@ -423,7 +449,11 @@ function IdleActiveShadow({
                 <InnerShadowLayer
                     id="mini-shadow-idle"
                     radius={radius}
-                    color={palette.peachyMauve}
+                    color={
+                        skin.id === "current"
+                            ? palette.peachyMauve
+                            : skin.orb.purple
+                    }
                     dx={-10}
                     dy={-10}
                 />
@@ -432,7 +462,7 @@ function IdleActiveShadow({
                 <InnerShadowLayer
                     id="mini-shadow-active"
                     radius={radius}
-                    color={palette.peach}
+                    color={skin.orb.purple}
                     dx={-10}
                     dy={-10}
                 />

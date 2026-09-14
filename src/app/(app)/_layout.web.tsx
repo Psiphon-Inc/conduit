@@ -2,6 +2,7 @@ import { Stack, usePathname } from "expo-router";
 import React from "react";
 import { View, useWindowDimensions } from "react-native";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import { AppBottomNav } from "@/src/components/AppBottomNav";
 import { ConduitActionsProvider } from "@/src/components/ConduitActionsContext";
 import { ModalHost, ModalProvider } from "@/src/components/ModalStore";
@@ -11,9 +12,9 @@ import { HostedExperienceProvider } from "@/src/hosted/experience/context";
 import { RevenueCatProvider } from "@/src/hosted/revenuecatContext";
 import { InproxyProvider } from "@/src/inproxy/context";
 import { SoundTriggers } from "@/src/sound/SoundTriggers";
-import { palette } from "@/src/styles";
 
 export default function AppLayout() {
+    const { skin } = useAppAppearance();
     const win = useWindowDimensions();
     const hostedConfig = React.useMemo(readHostedRuntimeConfig, []);
     const pathname = usePathname();
@@ -54,7 +55,8 @@ export default function AppLayout() {
                                             headerShown: false,
                                             animation: "fade",
                                             contentStyle: {
-                                                backgroundColor: palette.white,
+                                                backgroundColor:
+                                                    skin.background,
                                             },
                                         }}
                                     >

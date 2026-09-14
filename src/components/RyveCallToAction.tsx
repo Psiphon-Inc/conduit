@@ -29,6 +29,10 @@ import {
     useWindowDimensions,
 } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { useConduitKeyPair } from "@/src/auth/hooks";
 import { keyPairToBase64nopad } from "@/src/common/cryptography";
 import { Icon } from "@/src/components/Icon";
@@ -42,7 +46,7 @@ import {
     resolvePreferredRyveName,
 } from "@/src/components/ryveClaim";
 import { useConduitName } from "@/src/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 const RYVE_GRADIENT_COLORS = ["#A475E3", "rgba(156, 129, 201, 0.69)"] as const;
 const COMPACT_WEB_MODAL_WIDTH = 430;
@@ -54,6 +58,8 @@ function RyveModalShell({
     children: React.ReactNode;
     onClose?: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { closeModal } = useModal();
     const win = useWindowDimensions();
@@ -79,7 +85,7 @@ function RyveModalShell({
                     {
                         overflow: "hidden",
                         height: compactWeb ? "90%" : "75%",
-                        backgroundColor: palette.white,
+                        backgroundColor: skin.background,
                     },
                 ]}
             >
@@ -113,6 +119,7 @@ function RyveModalShell({
 }
 
 function RyveCenteredMessage({ message }: { message: string }) {
+    const ss = useAppearanceStyles();
     return (
         <View
             style={{
@@ -141,6 +148,8 @@ export function RyveClaimModalContent({
     openToQr?: boolean;
     onClose?: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const win = useWindowDimensions();
     const { t } = useTranslation();
     const conduitName = useConduitName();
@@ -270,7 +279,7 @@ export function RyveClaimModalContent({
                         style={{
                             width: 20,
                             borderBottomWidth: 1,
-                            borderBottomColor: palette.midGrey,
+                            borderBottomColor: skin.mutedText,
                         }}
                     />
                     <Text style={[ss.tinyFont, ss.greyText, ss.centeredText]}>
@@ -280,7 +289,7 @@ export function RyveClaimModalContent({
                         style={{
                             width: 20,
                             borderBottomWidth: 1,
-                            borderBottomColor: palette.midGrey,
+                            borderBottomColor: skin.mutedText,
                         }}
                     />
                 </View>
@@ -316,7 +325,7 @@ export function RyveClaimModalContent({
                             style={{
                                 paddingVertical: 12,
                                 paddingHorizontal: 24,
-                                borderColor: palette.purple,
+                                borderColor: skin.accent,
                                 borderWidth: 1,
                                 borderRadius: 12,
                             }}
@@ -325,7 +334,7 @@ export function RyveClaimModalContent({
                                 style={[
                                     ss.bodyFont,
                                     {
-                                        color: palette.purple,
+                                        color: skin.accent,
                                         fontSize: 14,
                                     },
                                 ]}
@@ -384,6 +393,8 @@ export function RyveCallToAction({
     openToQr?: boolean;
     renderTrigger?: (onPress: () => void) => React.ReactNode;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { openModal } = useModal();
 
@@ -407,8 +418,8 @@ export function RyveCallToAction({
                     width: compact ? undefined : "100%",
                     paddingHorizontal: compact ? 16 : 35,
                     paddingVertical: 10,
-                    backgroundColor: palette.white,
-                    borderColor: palette.purple,
+                    backgroundColor: skin.background,
+                    borderColor: skin.accent,
                     borderWidth: 1,
                 }}
             >

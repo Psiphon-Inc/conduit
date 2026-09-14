@@ -33,9 +33,13 @@ import {
     Text as SvgText,
 } from "react-native-svg";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { clamp } from "@/src/common/mathUtils";
 import { TimeseriesDataPoint } from "@/src/common/timeseries";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 export interface TimeseriesSeries {
     label: string;
@@ -98,6 +102,8 @@ export function TimeseriesPlot({
     referenceTimeMs,
     valueFormatter,
 }: TimeseriesPlotProps) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const axisMargin = { top: 30, right: 12, bottom: 36, left: 80 };
     const plotWidth = width - axisMargin.left - axisMargin.right;
@@ -174,7 +180,7 @@ export function TimeseriesPlot({
                     alignItems: "center",
                 }}
             >
-                <Text style={{ color: palette.midGrey, fontSize: 12 }}>
+                <Text style={{ color: skin.mutedText, fontSize: 12 }}>
                     {t("NO_RECENT_DATA_YET_I18N.string")}
                 </Text>
             </View>
@@ -520,7 +526,7 @@ export function TimeseriesPlot({
                                 y={0}
                                 width={paddedBoundaryX}
                                 height={plotHeight}
-                                fill={palette.purple}
+                                fill={skin.accent}
                                 fillOpacity={0.06}
                             />
                         ) : null}
@@ -598,7 +604,7 @@ export function TimeseriesPlot({
                             y1={plotHeight}
                             x2={plotWidth}
                             y2={plotHeight}
-                            stroke={palette.midGrey}
+                            stroke={skin.mutedText}
                             strokeWidth={1}
                         />
                     )}
@@ -608,7 +614,7 @@ export function TimeseriesPlot({
                             y1={0}
                             x2={0}
                             y2={plotHeight}
-                            stroke={palette.midGrey}
+                            stroke={skin.mutedText}
                             strokeWidth={1}
                         />
                     )}
@@ -656,7 +662,7 @@ export function TimeseriesPlot({
                             right: 4,
                             top: tick.y - 14,
                             fontSize: 11,
-                            color: palette.midGrey,
+                            color: skin.mutedText,
                             textAlign: "right",
                         }}
                     >
@@ -679,7 +685,7 @@ export function TimeseriesPlot({
                             position: "absolute",
                             left: tick.x - 20,
                             fontSize: 10,
-                            color: palette.midGrey,
+                            color: skin.mutedText,
                         }}
                     >
                         {formatTime(tick.time)}
@@ -697,7 +703,7 @@ export function TimeseriesPlot({
                         maxWidth: width * 0.5,
                         fontSize: 12,
                         fontWeight: "600",
-                        color: palette.midGrey,
+                        color: skin.mutedText,
                     }}
                 >
                     {yAxisLabel}
@@ -712,7 +718,7 @@ export function TimeseriesPlot({
                         bottom: 5,
                         fontSize: 12,
                         fontWeight: "600",
-                        color: palette.midGrey,
+                        color: skin.mutedText,
                     }}
                 >
                     {xAxisLabel}
@@ -726,7 +732,7 @@ export function TimeseriesPlot({
                         left: axisMargin.left + 8,
                         top: axisMargin.top + 4,
                         fontSize: 10,
-                        color: palette.midGrey,
+                        color: skin.mutedText,
                     }}
                 >
                     {t("NO_DATA_YET_I18N.string")}
@@ -766,7 +772,7 @@ export function TimeseriesPlot({
                             style={[
                                 ss.tinyFont,
                                 {
-                                    color: palette.midGrey,
+                                    color: skin.mutedText,
                                     textAlign: "center",
                                 },
                             ]}

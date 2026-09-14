@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+import { APP_SKINS, type AppSkinId } from "@/src/appearance/appSkins";
 import { rgbaFromRgb } from "@/src/common/colorUtils";
 import { palette } from "@/src/styles";
 
@@ -41,6 +42,9 @@ export interface OrbTheme {
     radialOuter: OrbTone;
     innerShadowBR: OrbTone;
     outerGlow: OrbTone;
+    /** Optional cold top-left inner shadow and rim, used by Classic Dark. */
+    innerShadowTL?: OrbTone;
+    rimColor?: string;
 }
 
 export interface OrbSceneTheme {
@@ -185,3 +189,68 @@ export const PROVISIONING_MARKER_GLOW_COLORS = [
     rgbaFromRgb(SCENE_THEMES[HOSTED_ORB_THEME_LEVEL].orb.radialOuter.rgb, 0),
 ];
 export const PROVISIONING_MARKER_GLOW_POSITIONS = [0, 0.34, 1];
+
+// Orb body profiles consume rgb() channels; skin tokens remain ordinary hex paint.
+function skinHexToRgb(hex: string): string {
+    return `rgb(${Number.parseInt(hex.slice(1, 3), 16)},${Number.parseInt(hex.slice(3, 5), 16)},${Number.parseInt(hex.slice(5, 7), 16)})`;
+}
+
+const classicSkin = APP_SKINS["classic-dark"];
+const classicOrb = classicSkin.orb;
+function makeClassicSceneTheme(level: OrbEvolutionLevel): OrbSceneTheme {
+    return {
+        orb: {
+            radialInner: { rgb: skinHexToRgb(classicOrb.center), alpha: 1 },
+            radialOuter: {
+                rgb: skinHexToRgb(
+                    level === 0 || level === 2
+                        ? classicOrb.deepBlue
+                        : classicOrb.deepPurple,
+                ),
+                alpha: 1,
+            },
+            innerShadowBR: { rgb: skinHexToRgb(classicOrb.purple), alpha: 1 },
+            innerShadowTL: { rgb: skinHexToRgb(classicOrb.blue), alpha: 1 },
+            outerGlow: {
+                rgb: skinHexToRgb(
+                    level === 0 || level === 2
+                        ? classicOrb.blue
+                        : classicOrb.purple,
+                ),
+                alpha: 0.54,
+            },
+            rimColor: classicOrb.rim,
+        },
+        titleColor: classicSkin.text,
+        statusLeadColor: classicSkin.text,
+        metricColor: classicSkin.mutedText,
+        hintColor: classicSkin.text,
+    };
+}
+
+const CLASSIC_SCENE_THEMES: Record<OrbEvolutionLevel, OrbSceneTheme> = {
+    0: makeClassicSceneTheme(0),
+    1: makeClassicSceneTheme(1),
+    2: makeClassicSceneTheme(2),
+    3: makeClassicSceneTheme(3),
+};
+
+/** Select renderer paint without changing evolution state, geometry or animations. */
+export function getOrbSceneTheme(
+    skinId: AppSkinId,
+    level: OrbEvolutionLevel,
+): OrbSceneTheme {
+    return skinId === "current"
+        ? SCENE_THEMES[level]
+        : CLASSIC_SCENE_THEMES[level];
+}
+
+/** Provisioning markers use the same skin as hosted orbs, including during swaps. */
+export function getProvisioningGlowColors(skinId: AppSkinId): string[] {
+    if (skinId === "current") return PROVISIONING_MARKER_GLOW_COLORS;
+    return [
+        rgbaFromRgb(skinHexToRgb(classicOrb.rim), 0.72),
+        rgbaFromRgb(skinHexToRgb(classicOrb.blue), 0.42),
+        rgbaFromRgb(skinHexToRgb(classicOrb.purple), 0),
+    ];
+}

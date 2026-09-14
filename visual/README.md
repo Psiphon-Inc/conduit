@@ -52,16 +52,31 @@ native goldens.
 native). All state lives in the URL, so any view is shareable:
 
 ```text
-/orb-lab?scenario=two-first-contact&renderer=skia&progress=0.45
-/orb-lab?scenario=swap-050&renderer=compare&viewport=desktop
-/orb-lab?scenario=light-touching&renderer=overlay&overlay=0.4
+/orb-lab?scenario=two-first-contact&skin=classic-dark&progress=0.45
+/orb-lab?scenario=swap-050&skin=current&viewport=desktop
+/orb-lab?scenario=light-touching&skin=classic-dark&chrome=0
 ```
 
-Params: `scenario`, `renderer` (`skia | native | compare | overlay`),
+The lab uses the production SVG/native/Reanimated renderer only. Params: `scenario`,
 `progress` (0..1 frozen scrub), `play=1` (live animation), `viewport`
 (`mobile | desktop | fit`), `bg` (`black | white | mauve`), `theme` (0-3
-override), `overlay` (top-layer opacity), `chrome=0` (controls hidden, used
+override), `skin` (`current | classic-dark`), `chrome=0` (controls hidden, used
 for capture).
+
+Skin is a URL-only preview: it never reads or changes the saved Settings choice.
+Missing or invalid skin selects Current. Current retains the lab's original
+`black` background (#231F20); Classic Dark defaults to true black (#000000).
+An explicit `bg` overrides either. Readiness resets when the skin changes.
+For full app inspection, use Settings → Appearance, then return Home or Account;
+the selection applies immediately and survives a reload. QR codes and sign-in
+brand badges intentionally retain their original high-contrast colors.
+
+Run `CONDUIT_WEB_URL=http://localhost:8090 node visual/verify-skins.mjs` for a
+browser smoke test of click/keyboard selection, reload persistence, invalid
+localStorage fallback, and non-persisting lab previews. It saves Settings/Home
+screenshots and eight deterministic scenes per skin under
+`artifacts/visual-diff/skins/`. Production exports must enable the lab with
+`EXPO_PUBLIC_VISUAL_LAB=1` when building.
 
 ## Determinism
 

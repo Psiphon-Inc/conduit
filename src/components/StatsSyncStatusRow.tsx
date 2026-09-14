@@ -28,8 +28,9 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import { formatUpdatedAtTime } from "@/src/common/formatters";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { sharedStyles as ss } from "@/src/styles";
 
 export function StatsSyncStatusRow({
     updatedAt,
@@ -38,6 +39,7 @@ export function StatsSyncStatusRow({
     updatedAt: string | null;
     isSyncing: boolean;
 }) {
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const syncingOpacity = useSharedValue(isSyncing ? 1 : 0);
 
@@ -71,7 +73,7 @@ export function StatsSyncStatusRow({
                 gap: 8,
             }}
         >
-            <Text style={[ss.tinyFont, { color: palette.midGrey }]}>
+            <Text style={[ss.tinyFont, { color: skin.mutedText }]}>
                 {t("UPDATED_AT_I18N.string", {
                     time: formatUpdatedAtTime(updatedAt) ?? "--",
                 })}
@@ -80,7 +82,7 @@ export function StatsSyncStatusRow({
                 <Animated.Text
                     style={[
                         ss.tinyFont,
-                        { color: palette.midGrey },
+                        { color: skin.mutedText },
                         syncingStyle,
                     ]}
                 >

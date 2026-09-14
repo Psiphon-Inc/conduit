@@ -27,8 +27,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
-import { palette } from "@/src/styles";
 
 export type SkyBoxGradientState = 0 | 1 | 2 | 3;
 
@@ -37,12 +37,6 @@ export type SkyBoxGradientState = 0 | 1 | 2 | 3;
 // animating layer opacity stays on the compositor, where continuously
 // re-interpolating gradient color arrays (the old Skia approach) re-rasterized
 // every frame.
-const SKYBOX_GRADIENT_STATES: [string, string, string][] = [
-    [palette.mauve, palette.fadedMauve, palette.white],
-    [palette.peach, palette.mauve, palette.fadedMauve],
-    ["#F59F86", "#BB89AD", "#B3D4FF"],
-    ["#F59F86", "#BB89AD", "#9C81C9"],
-];
 
 export function SkyBox({
     gradientState = 0,
@@ -125,6 +119,7 @@ export function InproxyStatusColorCanvas({
     gradientState?: SkyBoxGradientState;
 }) {
     const insets = useSafeAreaInsets();
+    const { skin } = useAppAppearance();
     const { data: inproxyStatus } = useInproxyStatus();
 
     const initialValue = React.useMemo(() => {
@@ -160,7 +155,7 @@ export function InproxyStatusColorCanvas({
                 },
             ]}
         >
-            {SKYBOX_GRADIENT_STATES.map((colors, index) => (
+            {skin.skyGradients.map((colors, index) => (
                 <SkyBoxGradientLayer
                     key={`skybox-layer-${index}`}
                     index={index}
@@ -174,7 +169,7 @@ export function InproxyStatusColorCanvas({
                     bottom: 0,
                     width: "100%",
                     height: insets.bottom,
-                    backgroundColor: palette.black,
+                    backgroundColor: skin.systemBackground,
                 }}
             />
         </View>

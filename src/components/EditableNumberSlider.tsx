@@ -30,8 +30,12 @@ import Animated, {
     useSharedValue,
 } from "react-native-reanimated";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { AnimatedText } from "@/src/components/AnimatedText";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import { lineItemStyle, palette } from "@/src/styles";
 
 interface EditableNumberSliderProps {
     label: string;
@@ -63,6 +67,8 @@ export function EditableNumberSlider({
     onChange,
     scrollRef,
 }: EditableNumberSliderProps) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { i18n } = useTranslation();
     const isRTL = i18n.dir() === "rtl" ? true : false;
 
@@ -134,12 +140,12 @@ export function EditableNumberSlider({
             width: usableWidth.value,
             height,
             borderRadius: circleR.value,
-            backgroundColor: palette.black,
+            backgroundColor: skin.strongSurface,
             borderWidth: 1,
-            borderColor: palette.midGrey,
+            borderColor: skin.mutedText,
             overflow: "hidden" as const,
         };
-    }, [canvasSize, circleR, usableWidth]);
+    }, [canvasSize, circleR, usableWidth, skin]);
 
     // The filled portion clips a full-width gradient to the thumb position.
     const filledClipStyle = useAnimatedStyle(
@@ -166,11 +172,11 @@ export function EditableNumberSlider({
             width: radius * 2,
             height: radius * 2,
             borderRadius: radius,
-            backgroundColor: palette.white,
+            backgroundColor: skin.background,
             borderWidth: 1,
-            borderColor: palette.purple,
+            borderColor: skin.accent,
         };
-    }, [canvasSize, circleCx, circleR]);
+    }, [canvasSize, circleCx, circleR, skin]);
 
     const sliderGesture = Gesture.Pan()
         .blocksExternalGesture(scrollRef)
@@ -246,7 +252,7 @@ export function EditableNumberSlider({
                                 text={displayText}
                                 fontFamily={ss.boldFont.fontFamily}
                                 fontSize={ss.boldFont.fontSize}
-                                color={palette.black}
+                                color={skin.text}
                             />
                         </View>
                         <Text style={[ss.bodyFont, ss.blackText]}>{units}</Text>

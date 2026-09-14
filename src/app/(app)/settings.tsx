@@ -19,11 +19,13 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { Platform, View, useWindowDimensions } from "react-native";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import { ConduitSettings } from "@/src/components/ConduitSettings";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
 
 export default function SettingsScreen() {
+    const { skin } = useAppAppearance();
     const win = useWindowDimensions();
 
     return (
@@ -36,7 +38,7 @@ export default function SettingsScreen() {
                 }}
                 start={{ x: 0, y: 1 }}
                 end={{ x: 0, y: 0 }}
-                colors={["#FCDFD7", "#F0E0EB", "#E8DFF2", "#FFFFFF"]}
+                colors={skin.screenGradient}
                 locations={[0.08, 0.19, 0.33, 0.78]}
             />
             {/* Web keeps the bottom inset (matching the former

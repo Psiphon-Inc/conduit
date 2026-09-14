@@ -1,4 +1,5 @@
 import {
+    SECURESTORE_APP_SKIN_KEY,
     SECURESTORE_CONDUIT_NAME_KEY,
     SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
 } from "@/src/constants";
@@ -8,6 +9,7 @@ const memoryStorage = new Map<string, string>();
 // Web has no SecureStore equivalent. Keep auth/session tokens out of
 // localStorage by default; only non-secret UX hints survive browser restarts.
 const localStorageKeys = new Set([
+    SECURESTORE_APP_SKIN_KEY,
     SECURESTORE_CONDUIT_NAME_KEY,
     SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
 ]);

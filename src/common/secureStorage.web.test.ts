@@ -1,5 +1,10 @@
+import {
+    loadAppSkinPreference,
+    saveAppSkinPreference,
+} from "@/src/appearance/skinPreference";
 import * as secureStorage from "@/src/common/secureStorage.web";
 import {
+    SECURESTORE_APP_SKIN_KEY,
     SECURESTORE_CONDUIT_NAME_KEY,
     SECURESTORE_HOSTED_SESSION_KEY,
 } from "@/src/constants";
@@ -31,6 +36,25 @@ describe("secureStorage.web", () => {
         expect(
             window.sessionStorage.getItem(SECURESTORE_CONDUIT_NAME_KEY),
         ).toBeNull();
+    });
+
+    it("persists skin across sessions and decodes tampered browser storage", async () => {
+        expect(
+            await saveAppSkinPreference("classic-dark", secureStorage),
+        ).toEqual({ status: "saved" });
+        expect(window.localStorage.getItem(SECURESTORE_APP_SKIN_KEY)).toBe(
+            "classic-dark",
+        );
+        expect(
+            window.sessionStorage.getItem(SECURESTORE_APP_SKIN_KEY),
+        ).toBeNull();
+        window.sessionStorage.clear();
+        expect(await loadAppSkinPreference(secureStorage)).toBe("classic-dark");
+        window.localStorage.setItem(
+            SECURESTORE_APP_SKIN_KEY,
+            '{"skin":"classic-dark"}',
+        );
+        expect(await loadAppSkinPreference(secureStorage)).toBe("current");
     });
 });
 

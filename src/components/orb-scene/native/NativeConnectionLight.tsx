@@ -31,6 +31,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import {
     CONNECTION_LIGHT_PERIOD_MS,
     ConnectionLightPoint,
@@ -41,7 +42,6 @@ import {
     createConnectionLightMotionPlan,
     createConnectionLightMotionPlanFromRandomValues,
 } from "@/src/components/canvas/connectionLightMotion";
-import { palette } from "@/src/styles";
 
 // Matches the alpha falloff the Skia light's radial gradient encoded:
 // solid core, then exp(-k/2) steps across two blur sigmas, then transparent.
@@ -172,6 +172,7 @@ export function NativeConnectionLight({
         sharedMotionIndex != null &&
         sharedMotionIndex >= 0;
 
+    const { skin } = useAppAppearance();
     function resolveMotionPlan() {
         if (seed != null) {
             return createConnectionLightMotionPlan(
@@ -340,7 +341,7 @@ export function NativeConnectionLight({
             ]}
         >
             <LightSprite
-                color={palette.peach}
+                color={skin.orb.light}
                 orbRadius={orbRadius}
                 whitePulseOpacity={whitePulseOpacity}
             />

@@ -37,6 +37,10 @@ import {
     useWindowDimensions,
 } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { toErrorString } from "@/src/common/errors";
 import { formatExpiresAt } from "@/src/common/formatters";
 import { timedLog } from "@/src/common/utils";
@@ -79,12 +83,14 @@ import {
 } from "@/src/hosted/planUtils";
 import { resolveRevenueCatApiKey } from "@/src/hosted/revenuecatClient";
 import { useRevenueCatContext } from "@/src/hosted/revenuecatContext";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 import { recordVisibleClientError } from "@/src/telemetry/clientEvents";
 
 const NO_NETWORK_ICON = require("@/assets/images/icons/no-network.svg");
 
 export default function HostedSetupScreen() {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t, i18n } = useTranslation();
     const router = useRouter();
     const rootNavigationState = useRootNavigationState();
@@ -532,7 +538,7 @@ export default function HostedSetupScreen() {
                         { padding: 24 },
                     ]}
                 >
-                    <ActivityIndicator size="small" color={palette.purple} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                     <Text style={[ss.bodyFont, ss.blackText]}>
                         {loadingMessage}
                     </Text>
@@ -707,10 +713,7 @@ export default function HostedSetupScreen() {
                             gap: 10,
                         }}
                     >
-                        <ActivityIndicator
-                            size="small"
-                            color={palette.purple}
-                        />
+                        <ActivityIndicator size="small" color={skin.accent} />
                         <Text
                             style={[
                                 ss.largeFont,
@@ -737,7 +740,7 @@ export default function HostedSetupScreen() {
                         onPress={() => router.replace("/(app)")}
                         style={{
                             borderWidth: 1,
-                            borderColor: palette.purple,
+                            borderColor: skin.accent,
                             borderRadius: 12,
                             paddingHorizontal: 32,
                             paddingVertical: 10,
@@ -764,10 +767,10 @@ export default function HostedSetupScreen() {
                         ss.alignCenter,
                         ss.justifyCenter,
                         centeredContentStyle,
-                        { backgroundColor: palette.white, padding: 24 },
+                        { backgroundColor: skin.background, padding: 24 },
                     ]}
                 >
-                    <ActivityIndicator size="small" color={palette.purple} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                     <Text style={[ss.bodyFont, ss.blackText]}>
                         {loadingMessage}
                     </Text>
@@ -790,7 +793,7 @@ export default function HostedSetupScreen() {
                         { padding: 24 },
                     ]}
                 >
-                    <ActivityIndicator size="small" color={palette.purple} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                     <Text style={[ss.bodyFont, ss.blackText]}>
                         {t("OPENING_YOUR_DASHBOARD_I18N.string")}
                     </Text>

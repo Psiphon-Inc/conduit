@@ -28,9 +28,12 @@ import {
 } from "react-native";
 import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { Icon } from "@/src/components/Icon";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ActionsArea({
     width,
@@ -64,6 +67,8 @@ export function ActionsArea({
     bottomOffset?: number;
     compact?: boolean;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { data: inproxyStatus } = useInproxyStatus();
 
@@ -138,8 +143,11 @@ export function ActionsArea({
                         style={{
                             borderRadius: 30,
                             borderWidth: 2,
-                            borderColor: palette.purple,
-                            backgroundColor: "rgba(255, 255, 255, 0.35)",
+                            borderColor: skin.accent,
+                            backgroundColor:
+                                skin.id === "current"
+                                    ? "rgba(255, 255, 255, 0.35)"
+                                    : skin.surface,
                             paddingHorizontal: compact ? 16 : 20,
                             paddingTop: compact ? 12 : 14,
                             paddingBottom: compact ? 13 : 16,
@@ -177,7 +185,7 @@ export function ActionsArea({
                                 >
                                     <Icon
                                         name="right-arrow"
-                                        color={palette.purple}
+                                        color={skin.accent}
                                         size={compact ? 18 : 20}
                                     />
                                 </View>
@@ -208,6 +216,8 @@ export function ActionsArea({
 }
 
 function ProvisioningStatusLine() {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
 
     return (
@@ -219,15 +229,18 @@ function ProvisioningStatusLine() {
                 justifyContent: "center",
                 borderRadius: 20,
                 borderWidth: 2,
-                borderColor: palette.purple,
-                backgroundColor: "rgba(255, 255, 255, 0.35)",
+                borderColor: skin.accent,
+                backgroundColor:
+                    skin.id === "current"
+                        ? "rgba(255, 255, 255, 0.35)"
+                        : skin.surface,
                 paddingVertical: 10,
                 paddingHorizontal: 20,
                 gap: 10,
                 opacity: 0.75,
             }}
         >
-            <ActivityIndicator size="small" color={palette.purple} />
+            <ActivityIndicator size="small" color={skin.accent} />
             <Text style={[ss.purpleText, ss.bodyFont, { fontSize: 17 }]}>
                 {t("SETTING_UP_INFRASTRUCTURE_I18N.string")}
             </Text>
@@ -246,6 +259,8 @@ function HostedCallToAction({
     hasRecentHostedSignIn?: boolean;
     compact: boolean;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const isDisabled = mode === "loading" || mode === "preparing";
     const useCompactButton =
@@ -263,8 +278,11 @@ function HostedCallToAction({
                     justifyContent: "center",
                     borderRadius: compact ? 18 : 20,
                     borderWidth: 2,
-                    borderColor: palette.purple,
-                    backgroundColor: "rgba(255, 255, 255, 0.35)",
+                    borderColor: skin.accent,
+                    backgroundColor:
+                        skin.id === "current"
+                            ? "rgba(255, 255, 255, 0.35)"
+                            : skin.surface,
                     paddingHorizontal: compact
                         ? 14
                         : mode === "share"
@@ -278,7 +296,7 @@ function HostedCallToAction({
                 {mode === "share" ? (
                     <ExpoImage
                         source={require("@/assets/images/icons/p2p_24px.svg")}
-                        tintColor={palette.purple}
+                        tintColor={skin.accent}
                         style={{
                             width: compact ? 18 : 20,
                             height: compact ? 18 : 20,
@@ -286,7 +304,7 @@ function HostedCallToAction({
                         contentFit="contain"
                     />
                 ) : mode === "loading" || mode === "preparing" ? (
-                    <ActivityIndicator size="small" color={palette.purple} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                 ) : null}
                 <Text
                     style={[
@@ -332,8 +350,11 @@ function HostedCallToAction({
             style={{
                 borderRadius: compact ? 24 : 30,
                 borderWidth: 2,
-                borderColor: palette.purple,
-                backgroundColor: "rgba(255, 255, 255, 0.35)",
+                borderColor: skin.accent,
+                backgroundColor:
+                    skin.id === "current"
+                        ? "rgba(255, 255, 255, 0.35)"
+                        : skin.surface,
                 paddingHorizontal: compact ? 16 : 20,
                 paddingTop: compact ? 12 : 14,
                 paddingBottom: compact ? 13 : 16,
@@ -373,7 +394,7 @@ function HostedCallToAction({
                         >
                             <Icon
                                 name="right-arrow"
-                                color={palette.purple}
+                                color={skin.accent}
                                 size={compact ? 18 : 20}
                             />
                         </View>

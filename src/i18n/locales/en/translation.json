@@ -1,4 +1,24 @@
 {
+    "SETTINGS_APPEARANCE_I18N": {
+        "string": "Appearance",
+        "developer_comment": "Settings heading for visual customization."
+    },
+    "SETTINGS_SKIN_I18N": {
+        "string": "Skin",
+        "developer_comment": "Accessible label for the group of app color skin choices."
+    },
+    "SKIN_CURRENT_I18N": {
+        "string": "Current (default)",
+        "developer_comment": "Name of the original light peach and mauve skin."
+    },
+    "SKIN_CLASSIC_DARK_I18N": {
+        "string": "Classic Dark",
+        "developer_comment": "Name of the black, blue and purple skin inspired by original Conduit."
+    },
+    "SKIN_SAVE_ERROR_I18N": {
+        "string": "Skin applied, but could not be saved. Select it again to retry.",
+        "developer_comment": "Preference storage failure; the selected skin remains active for this session."
+    },
     "TAP_TO_TURN_ON_I18N": {
         "string": "Tap to Turn On",
         "developer_comment": "Text displayed on a button to turn on a feature."

@@ -23,7 +23,7 @@ import Animated, {
     useAnimatedStyle,
 } from "react-native-reanimated";
 
-import { sharedStyles as ss } from "@/src/styles";
+import { useAppearanceStyles } from "@/src/appearance/AppAppearance";
 
 const ICONS: Record<IconName, ImageSource> = {
     check: require("@/assets/images/icons/check.svg"),
@@ -103,6 +103,7 @@ export function Icon({
     opacity?: SharedValue<number> | undefined;
     label?: string | undefined;
 }) {
+    const ss = useAppearanceStyles();
     const source = ICONS[name];
     const content =
         opacity === undefined ? (
