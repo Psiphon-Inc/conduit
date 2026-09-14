@@ -19,6 +19,10 @@
         "string": "Classic Dark",
         "developer_comment": "Name of the black, blue and purple skin inspired by original Conduit."
     },
+    "SKIN_SELECTED_LABEL_I18N": {
+        "string": "{{skin}} (Current)",
+        "developer_comment": "Dropdown label for whichever skin is selected. The skin variable is the localized skin name; Current means actively selected, not the storage ID."
+    },
     "SKIN_SAVE_ERROR_I18N": {
         "string": "Skin applied, but could not be saved. Select it again to retry.",
         "developer_comment": "Preference storage failure; the selected skin remains active for this session."

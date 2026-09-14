@@ -80,6 +80,10 @@ changes to tunnel behavior, hosted state, geometry, gestures, or animation timin
   right, with evenly distributed stops to show the full palette in a compact
   row. Text, radio and selected outline use that option's skin tokens, regardless
   of the active skin. The closed row still follows the active skin.
+  The shared picker derives visible/accessibility option labels with the localized
+  `SKIN_SELECTED_LABEL_I18N` interpolation (`{{skin}} (Current)`) only for the
+  selected option. This follows selection, not the `current` storage ID; the
+  closed row and registry names never include the suffix.
 - `/orb-lab?skin=classic-dark` previews
   deterministic renderer paint without changing the stored preference; omitted or
   invalid lab skin selects `current`.

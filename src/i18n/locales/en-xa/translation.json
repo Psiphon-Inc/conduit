@@ -6,6 +6,7 @@
     "SETTINGS_SKIN_I18N": { "string": "Şķīīƞ" },
     "SKIN_CURRENT_I18N": { "string": "Ƈŀȧȧşşīīƈ Ŀīīɠħŧ" },
     "SKIN_CLASSIC_DARK_I18N": { "string": "Ƈŀȧȧşşīīƈ Ḓȧȧřķ" },
+    "SKIN_SELECTED_LABEL_I18N": { "string": "{{skin}} (Ƈŭŭřřḗḗƞŧ)" },
     "SKIN_SAVE_ERROR_I18N": {
         "string": "Şķīīƞ ȧȧƥƥŀīīḗḗḓ, ƀŭŭŧ ƈǿǿŭŭŀḓ ƞǿǿŧ ƀḗḗ şȧȧṽḗḗḓ. Şḗḗŀḗḗƈŧ īīŧ ȧȧɠȧȧīīƞ ŧǿǿ řḗḗŧřẏ."
     },

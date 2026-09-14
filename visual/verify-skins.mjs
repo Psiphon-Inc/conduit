@@ -24,12 +24,10 @@ try {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.goto(new URL("/settings", BASE_URL).toString());
     const current = page.getByRole("radio", {
-        name: "Classic Light",
-        exact: true,
+        name: /^Classic Light(?: \(Current\))?$/,
     });
     const classic = page.getByRole("radio", {
-        name: "Classic Dark",
-        exact: true,
+        name: /^Classic Dark(?: \(Current\))?$/,
     });
     const trigger = page.getByTestId("skin-picker");
     const dropdown = page.getByTestId("skin-picker-dropdown");
@@ -50,10 +48,36 @@ try {
     async function openPicker() {
         await trigger.click();
         await dropdown.waitFor();
+        for (const [radio, name] of [
+            [current, "Classic Light"],
+            [classic, "Classic Dark"],
+        ]) {
+            const expectedLabel = (await radio.isChecked())
+                ? `${name} (Current)`
+                : name;
+            assert.equal(
+                await page
+                    .getByRole("radio", { name: expectedLabel, exact: true })
+                    .count(),
+                1,
+                "Only the selected option must carry the accessible Current suffix",
+            );
+            assert.equal(
+                await radio.evaluate((input) =>
+                    input.closest("label").textContent.trim(),
+                ),
+                expectedLabel,
+                "Visible and accessible option labels must match",
+            );
+        }
     }
     async function expectClosed(label) {
         await dropdown.waitFor({ state: "detached" });
         assert((await trigger.getAttribute("aria-label")).includes(label));
+        assert(
+            !(await trigger.getAttribute("aria-label")).includes("(Current)"),
+            "Closed row must show only the skin name",
+        );
         assert.equal(await trigger.getAttribute("aria-expanded"), "false");
     }
     await trigger.waitFor();

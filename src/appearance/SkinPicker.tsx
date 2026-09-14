@@ -186,7 +186,18 @@ export function SkinPicker() {
                                         <SkinRadioOption
                                             key={option.id}
                                             id={option.id}
-                                            label={t(option.labelKey)}
+                                            label={
+                                                option.id === skin.id
+                                                    ? t(
+                                                          "SKIN_SELECTED_LABEL_I18N.string",
+                                                          {
+                                                              skin: t(
+                                                                  option.labelKey,
+                                                              ),
+                                                          },
+                                                      )
+                                                    : t(option.labelKey)
+                                            }
                                             onSelect={chooseSkin}
                                             focusOnMount
                                         />
