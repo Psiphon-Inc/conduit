@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { base64urlnopad } from "@scure/base";
+import { base64nopad, base64urlnopad } from "@scure/base";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as SecureStore from "expo-secure-store";
 import { createInstance } from "i18next";
@@ -26,6 +26,7 @@ import { Platform, Share } from "react-native";
 import type { CustomerInfo } from "react-native-purchases";
 import { ReactTestRenderer, act, create } from "react-test-renderer";
 
+import { createOrLoadAccount } from "@/src/auth/account";
 import {
     ConduitActionsProvider,
     useConduitActions,
@@ -36,7 +37,9 @@ import {
     QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
     SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
     SECURESTORE_CONDUIT_NAME_KEY,
+    SECURESTORE_DEVICE_NONCE_KEY,
     SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
+    SECURESTORE_MNEMONIC_KEY,
 } from "@/src/constants";
 import {
     HostedAccountProfileConflictError,
@@ -147,6 +150,8 @@ describe("hosted experience context", () => {
             }
             let desiredParams: InproxyParameters | undefined;
             let failDispatch = false;
+            let syncAttempts = 0;
+            let syncAvailable = false;
             const nativeModule: ConduitModuleAPI = {
                 addInproxyEventListener: (listener) => {
                     listeners.add(listener);
@@ -195,6 +200,11 @@ describe("hosted experience context", () => {
                         }),
                         sessionClient: makeSessionClient({
                             login: async () => session,
+                            refresh: async () => ({
+                                ...session,
+                                accessToken: "access.refreshed",
+                                accessTokenExpiresAtMs: 180_000,
+                            }),
                             loadHostedSession: async () =>
                                 sessionMode === "restored session"
                                     ? session
@@ -202,6 +212,8 @@ describe("hosted experience context", () => {
                         }),
                         apiClient: makeHostedClient({
                             setPersonalCompartmentId: async () => {
+                                syncAttempts++;
+                                if (syncAvailable) return hostedId;
                                 throw new Error(
                                     "Pairing test sync unavailable",
                                 );
@@ -247,6 +259,29 @@ describe("hosted experience context", () => {
                         ?.personal_compartment_id,
                 ).toBe(hostedId),
             );
+            await waitFor(() =>
+                expect(desiredParams?.personalCompartmentId).toBe(localId),
+            );
+            // Characterize the unresolved coordination bug, not just share selection:
+            // recovering the API, refreshing the token, and polling do not retry sync.
+            syncAvailable = true;
+            await act(async () => {
+                await hosted?.refreshSession();
+                await hosted?.pollConduitsOnce();
+            });
+            expect(syncAttempts).toBe(
+                sessionMode === "failed login sync" ? 1 : 0,
+            );
+            expect(
+                hosted?.state.conduitsSnapshot?.conduits[0]
+                    ?.personal_compartment_id,
+            ).toBe(hostedId);
+            expect(desiredParams?.personalCompartmentId).toBe(localId);
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(localId);
             expect(actions?.personalCompartmentId).toBeNull();
             await act(async () => {
                 emitNativeState(nativeEvent);
@@ -514,6 +549,135 @@ describe("hosted experience context", () => {
             renderer!.unmount();
         });
     });
+
+    it.each(["first hosted account", "second device conflict"])(
+        "converges local native parameters after a delayed sync for %s",
+        async (accountMode) => {
+            // App startup initializes account keys before mounting InproxyProvider.
+            // Leave the compartment ID absent so the real local hook derives it.
+            await SecureStore.setItemAsync(
+                SECURESTORE_MNEMONIC_KEY,
+                "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            );
+            await SecureStore.setItemAsync(SECURESTORE_DEVICE_NONCE_KEY, "1");
+            const account = await createOrLoadAccount();
+            if (account instanceof Error) throw account;
+            const localId = base64nopad.encode(account.inproxyKey.publicKey);
+            const hostedId =
+                accountMode === "first hosted account"
+                    ? localId
+                    : "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
+            let registeredId =
+                accountMode === "first hosted account" ? null : hostedId;
+            const syncResponse = createDeferred<string>();
+            const session = makeSession({
+                accessToken: "access.login",
+                accessTokenExpiresAtMs: 90_000,
+                refreshTokenExpiresAtMs: 1_000_000,
+            });
+            const submittedIds: string[] = [];
+            const dispatched: InproxyParameters[] = [];
+            const nativeModule: ConduitModuleAPI = {
+                addInproxyEventListener: () => ({ remove: () => {} }),
+                addIpcEventListener: () => ({ remove: () => {} }),
+                emitCurrentInproxyState: () => {},
+                paramsChanged: async (params) => {
+                    dispatched.push(params);
+                },
+                toggleInProxy: async () => {},
+                sendFeedback: async () => null,
+                logInfo: () => {},
+                logWarn: () => {},
+                logError: () => {},
+            };
+            let hosted: HostedExperienceContextValue | undefined;
+            function Consumer() {
+                hosted = useHostedExperienceContext();
+                return null;
+            }
+            await act(async () => {
+                renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 10_000,
+                        authService: makeAuthService({
+                            signIn: async () => ({
+                                provider: "google",
+                                tokenType: "clerk_broker_jwt",
+                                brokerToken: "test",
+                                platform: "android",
+                                clientVersion: "test",
+                            }),
+                        }),
+                        sessionClient: makeSessionClient({
+                            login: async () => session,
+                        }),
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async (_, id) => {
+                                submittedIds.push(id);
+                                registeredId ??= id;
+                                return syncResponse.promise;
+                            },
+                            getConduitsSnapshot: async () => ({
+                                entitlement: { status: "active" },
+                                conduits: registeredId
+                                    ? [
+                                          {
+                                              conduit_id: "cond_1",
+                                              proxy_id: "st_1",
+                                              status: "active",
+                                              traffic_scope: "personal",
+                                              personal_compartment_id:
+                                                  registeredId,
+                                          },
+                                      ]
+                                    : [],
+                            }),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <InproxyProvider module={nativeModule}>
+                        <Consumer />
+                    </InproxyProvider>,
+                );
+            });
+            await waitFor(() => {
+                expect(hosted?.initialSessionResolved).toBe(true);
+                expect(dispatched.at(-1)?.personalCompartmentId).toBe(localId);
+            });
+            let signIn: Promise<void> | undefined;
+            await act(async () => {
+                signIn = hosted?.signIn("google");
+            });
+            await waitFor(() => {
+                expect(submittedIds).toEqual([localId]);
+                // Session publication enables snapshot loading before sync finishes.
+                expect(
+                    hosted?.state.conduitsSnapshot?.conduits[0]
+                        ?.personal_compartment_id,
+                ).toBe(hostedId);
+            });
+            expect(dispatched.at(-1)?.personalCompartmentId).toBe(localId);
+            await act(async () => {
+                if (accountMode === "second device conflict") {
+                    syncResponse.reject(
+                        new HostedPersonalCompartmentIdConflictError(hostedId),
+                    );
+                } else {
+                    syncResponse.resolve(localId);
+                }
+                await signIn;
+            });
+            await waitFor(() =>
+                expect(dispatched.at(-1)?.personalCompartmentId).toBe(hostedId),
+            );
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(hostedId);
+        },
+    );
 
     it("reconciles personal compartment id conflicts during Android login", async () => {
         await SecureStore.setItemAsync(
