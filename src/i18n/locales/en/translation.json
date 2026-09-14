@@ -1,4 +1,8 @@
 {
+    "DISMISS_HOSTED_PROMOTION_I18N": {
+        "string": "Dismiss hosting promotion for 60 days",
+        "developer_comment": "Accessible close button for optional hosted promotions, shared across app placements."
+    },
     "SETTINGS_APPEARANCE_I18N": {
         "string": "Appearance",
         "developer_comment": "Settings heading for visual customization."

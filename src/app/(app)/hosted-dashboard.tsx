@@ -984,6 +984,9 @@ function DashboardStationSelector({
             </Pressable>
             {!hostedEnabled ? (
                 <Pressable
+                    testID="dashboard-hosted-setup"
+                    accessibilityRole="button"
+                    accessibilityLabel={t("HOST_A_STATION_I18N.string")}
                     onPress={onHostedCta}
                     style={{
                         width: 30,

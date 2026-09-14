@@ -66,6 +66,9 @@ export const ASYNCSTORAGE_INPROXY_REDUCED_LIMIT_BYTES_PER_SECOND_KEY =
 export const ASYNCSTORAGE_SOUND_ENABLED_KEY = "SoundEffectsEnabled";
 /** Non-secret skin preference, shared by native AsyncStorage and web localStorage. */
 export const ASYNCSTORAGE_APP_SKIN_KEY = "appSkin";
+/** Device-wide cooldown shared by optional hosted promotions. */
+export const ASYNCSTORAGE_HOSTED_PROMOTION_DISMISSED_AT_KEY =
+    "hostedPromotionDismissedAt";
 
 // SecureStore keys, centralized to prevent accidental collision
 export const SECURESTORE_MNEMONIC_KEY = "mnemonic";
@@ -84,6 +87,8 @@ export const SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY =
 // useQuery query keys, centralized to prevent accidental collision
 /** Cache for the decoded app skin preference. */
 export const QUERYKEY_APP_SKIN = "appSkin";
+/** Decoded optional hosted-promotion dismissal preference. */
+export const QUERYKEY_HOSTED_PROMOTION = "hostedPromotion";
 // auth
 export const QUERYKEY_ACCOUNT_KEYPAIR = "accountKeyPair";
 export const QUERYKEY_INPROXY_KEYPAIR = "conduitKeyPair";

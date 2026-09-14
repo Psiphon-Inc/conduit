@@ -25,6 +25,7 @@ import { isE2E, isPerf } from "@/src/common/e2e";
 import { AppBottomNav } from "@/src/components/AppBottomNav";
 import { ConduitActionsProvider } from "@/src/components/ConduitActionsContext";
 import { ModalHost, ModalProvider } from "@/src/components/ModalStore";
+import { HostedPromotionProvider } from "@/src/hosted-promotion/HostedPromotion";
 import { readHostedRuntimeConfig } from "@/src/hosted/config";
 import { HostedExperienceProvider } from "@/src/hosted/experience/context";
 import { useHostedExperienceIsOffline } from "@/src/hosted/experience/hooks";
@@ -43,22 +44,26 @@ export default function AppLayout() {
         pathname !== "/(app)/sso-callback";
 
     return (
-        <ModalProvider>
-            <InproxyProvider>
-                <RevenueCatProvider>
-                    <HostedExperienceProvider
-                        baseUrl={hostedConfig.baseUrl}
-                        revenueCatPublicKeys={hostedConfig.revenueCatPublicKeys}
-                    >
-                        <ConduitActionsProvider>
-                            <SoundTriggers />
-                            <ModalHost />
-                            <AppShell showBottomNav={showBottomNav} />
-                        </ConduitActionsProvider>
-                    </HostedExperienceProvider>
-                </RevenueCatProvider>
-            </InproxyProvider>
-        </ModalProvider>
+        <HostedPromotionProvider>
+            <ModalProvider>
+                <InproxyProvider>
+                    <RevenueCatProvider>
+                        <HostedExperienceProvider
+                            baseUrl={hostedConfig.baseUrl}
+                            revenueCatPublicKeys={
+                                hostedConfig.revenueCatPublicKeys
+                            }
+                        >
+                            <ConduitActionsProvider>
+                                <SoundTriggers />
+                                <ModalHost />
+                                <AppShell showBottomNav={showBottomNav} />
+                            </ConduitActionsProvider>
+                        </HostedExperienceProvider>
+                    </RevenueCatProvider>
+                </InproxyProvider>
+            </ModalProvider>
+        </HostedPromotionProvider>
     );
 }
 

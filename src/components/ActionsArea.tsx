@@ -33,6 +33,8 @@ import {
     useAppearanceStyles,
 } from "@/src/appearance/AppAppearance";
 import { Icon } from "@/src/components/Icon";
+import { useHostedPromotion } from "@/src/hosted-promotion/HostedPromotion";
+import { HostedPromotionCloseButton } from "@/src/hosted-promotion/HostedPromotionCloseButton";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 
 export function ActionsArea({
@@ -257,6 +259,9 @@ function HostedCallToAction({
     const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const isDisabled = mode === "loading" || mode === "preparing";
+    const promotion = useHostedPromotion();
+    const isPromotion = mode === "setup" && !hasRecentHostedSignIn;
+    if (isPromotion && !promotion.visible) return null;
     const useCompactButton =
         mode === "loading" || mode === "preparing" || mode === "share";
 
@@ -334,74 +339,78 @@ function HostedCallToAction({
                 : t("CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N.string");
 
     return (
-        <Pressable
-            testID="hosted-cta"
-            onPress={onPress}
-            disabled={isDisabled}
-            style={{
-                borderRadius: compact ? 24 : 30,
-                borderWidth: 2,
-                borderColor: skin.accent,
-                backgroundColor: skin.controlSurface,
-                paddingHorizontal: compact ? 16 : 20,
-                paddingTop: compact ? 12 : 14,
-                paddingBottom: compact ? 13 : 16,
-                opacity: isDisabled ? 0.65 : 1,
-            }}
-        >
-            <View style={{ gap: compact ? 8 : 10 }}>
-                <View
-                    style={{
-                        position: "relative",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        minHeight: compact ? 30 : 36,
-                        paddingHorizontal: compact ? 24 : 28,
-                    }}
-                >
+        <View testID={isPromotion ? "home-hosted-promotion" : undefined}>
+            <Pressable
+                testID="hosted-cta"
+                accessibilityRole="button"
+                onPress={onPress}
+                disabled={isDisabled}
+                style={{
+                    borderRadius: compact ? 24 : 30,
+                    borderWidth: 2,
+                    borderColor: skin.accent,
+                    backgroundColor: skin.controlSurface,
+                    paddingHorizontal: compact ? 16 : 20,
+                    paddingTop: compact ? 12 : 14,
+                    paddingBottom: compact ? 13 : 16,
+                    opacity: isDisabled ? 0.65 : 1,
+                }}
+            >
+                <View style={{ gap: compact ? 8 : 10 }}>
+                    <View
+                        style={{
+                            position: "relative",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            minHeight: compact ? 30 : 36,
+                            paddingHorizontal: compact ? 24 : 28,
+                        }}
+                    >
+                        <Text
+                            style={[
+                                ss.purpleText,
+                                ss.bodyFont,
+                                ss.centeredText,
+                                {
+                                    fontSize: compact ? 20 : 22,
+                                    lineHeight: compact ? 25 : 28,
+                                },
+                            ]}
+                        >
+                            {cardTitle}
+                        </Text>
+                        {!isDisabled && !isPromotion ? (
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    right: 0,
+                                    top: 1,
+                                }}
+                            >
+                                <Icon
+                                    name="right-arrow"
+                                    color={skin.accent}
+                                    size={compact ? 18 : 20}
+                                />
+                            </View>
+                        ) : null}
+                    </View>
+
                     <Text
                         style={[
                             ss.purpleText,
-                            ss.bodyFont,
-                            ss.centeredText,
                             {
-                                fontSize: compact ? 20 : 22,
-                                lineHeight: compact ? 25 : 28,
+                                fontSize: compact ? 15 : 17,
+                                lineHeight: compact ? 19 : 21,
+                                fontFamily: "JuraRegular",
                             },
                         ]}
                     >
-                        {cardTitle}
+                        {cardDescription}
                     </Text>
-                    {!isDisabled ? (
-                        <View
-                            style={{
-                                position: "absolute",
-                                right: 0,
-                                top: 1,
-                            }}
-                        >
-                            <Icon
-                                name="right-arrow"
-                                color={skin.accent}
-                                size={compact ? 18 : 20}
-                            />
-                        </View>
-                    ) : null}
                 </View>
-
-                <Text
-                    style={[
-                        ss.purpleText,
-                        {
-                            fontSize: compact ? 15 : 17,
-                            lineHeight: compact ? 19 : 21,
-                            fontFamily: "JuraRegular",
-                        },
-                    ]}
-                >
-                    {cardDescription}
-                </Text>
-            </View>
-        </Pressable>
+            </Pressable>
+            {isPromotion ? <HostedPromotionCloseButton /> : null}
+        </View>
     );
 }

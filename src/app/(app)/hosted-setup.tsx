@@ -55,6 +55,8 @@ import { HostedSetupSignInHero } from "@/src/components/HostedSetupSignInHero";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
+import { useHostedPromotion } from "@/src/hosted-promotion/HostedPromotion";
+import { HostedPromotionCloseButton } from "@/src/hosted-promotion/HostedPromotionCloseButton";
 import { createHostedApiClient } from "@/src/hosted/apiClient";
 import { readHostedClerkPublishableKey } from "@/src/hosted/auth/clerk";
 import {
@@ -477,6 +479,7 @@ export default function HostedSetupScreen() {
             : onboarding.primaryAction;
     const showHostedSignInHero =
         !showPlanSelectionScreen && onboarding.primaryAction === "sign_in";
+    const promotion = useHostedPromotion();
     const bootstrapRefreshError = bootstrapConduitsQuery.error
         ? `Failed to refresh hosted setup status: ${toErrorString(bootstrapConduitsQuery.error)}`
         : null;
@@ -835,13 +838,31 @@ export default function HostedSetupScreen() {
                     ) : (
                         <>
                             {showHostedSignInHero ? (
-                                <View style={{ marginHorizontal: -16 }}>
-                                    <HostedSetupSignInHero
-                                        headline={onboarding.headline}
-                                        body={storyParagraph}
-                                        width={window.width}
-                                    />
-                                </View>
+                                promotion.visible ? (
+                                    <View
+                                        testID="hosted-setup-promotion"
+                                        style={{
+                                            marginHorizontal: -16,
+                                            paddingTop: 44,
+                                        }}
+                                    >
+                                        <HostedSetupSignInHero
+                                            headline={onboarding.headline}
+                                            body={storyParagraph}
+                                            width={window.width}
+                                        />
+                                        <HostedPromotionCloseButton />
+                                    </View>
+                                ) : (
+                                    <Text
+                                        style={[
+                                            ss.extraLargeFont,
+                                            ss.blackText,
+                                        ]}
+                                    >
+                                        {onboarding.headline}
+                                    </Text>
+                                )
                             ) : null}
                             {onboarding.primaryAction !== "sign_in" ? (
                                 <View style={[ss.column]}>
