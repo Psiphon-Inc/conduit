@@ -37,9 +37,7 @@ import {
     ASYNCSTORAGE_INPROXY_REDUCED_START_TIME_KEY,
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
-    DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS,
     INPROXY_MAX_CLIENTS_MAX,
-    INPROXY_MAX_CLIENTS_TOTAL_MAX,
     QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
     QUERYKEY_INPROXY_ACTIVITY_SEGMENTS,
     QUERYKEY_INPROXY_ACTIVITY_STATS_READY,
@@ -76,6 +74,7 @@ import {
     getDefaultInproxyParameters,
     getProxyId,
     getZeroedInproxyActivityStats,
+    resolveMaxPersonalClients,
 } from "@/src/inproxy/utils";
 import {
     parsePersonalCompartmentId,
@@ -411,12 +410,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                     ? undefined
                     : androidPersonalCompartmentId;
             const maxPersonalClients = personalCompartmentId
-                ? Math.min(
-                      storedInproxyMaxPersonalClients
-                          ? parseInt(storedInproxyMaxPersonalClients)
-                          : DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS,
-                      INPROXY_MAX_CLIENTS_MAX,
-                      Math.max(0, INPROXY_MAX_CLIENTS_TOTAL_MAX - maxClients),
+                ? resolveMaxPersonalClients(
+                      storedInproxyMaxPersonalClients,
+                      maxClients,
                   )
                 : 0;
 

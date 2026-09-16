@@ -21,6 +21,8 @@ export const DEFAULT_INPROXY_MAX_CLIENTS = 2;
 export const DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS = 5;
 export const DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND = 2 * 1000 * 1000; // 2 MB
 
+// tunnel-core rejects zero personal peers when a personal pairing ID is set
+export const INPROXY_MIN_PERSONAL_CLIENTS = 1;
 // if these are maxed out, it means a potential of 8Gbps at full capacity
 export const INPROXY_MAX_CLIENTS_MAX = 25;
 export const INPROXY_MAX_CLIENTS_TOTAL_MAX = 30;
