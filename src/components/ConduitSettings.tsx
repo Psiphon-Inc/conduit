@@ -54,6 +54,7 @@ import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_CLIENTS_TOTAL_MAX,
     INPROXY_MAX_MBPS_PER_PEER_MAX,
+    INPROXY_MIN_PERSONAL_CLIENTS,
     PRIVACY_POLICY_URL,
     TERMS_OF_USE_URL,
 } from "@/src/constants";
@@ -218,7 +219,7 @@ function LocalConduitSettingsCard({
                         <EditableNumberSlider
                             label={t("MAX_PERSONAL_PEERS_I18N.string")}
                             originalValue={inproxyParameters.maxPersonalClients}
-                            min={1}
+                            min={INPROXY_MIN_PERSONAL_CLIENTS}
                             max={INPROXY_MAX_CLIENTS_MAX}
                             style={[...expandedLineItemStyle, ss.alignCenter]}
                             onChange={updateMaxPersonalClients}

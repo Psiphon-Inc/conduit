@@ -27,6 +27,10 @@ import {
 import {
     DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     DEFAULT_INPROXY_MAX_CLIENTS,
+    DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS,
+    INPROXY_MAX_CLIENTS_MAX,
+    INPROXY_MAX_CLIENTS_TOTAL_MAX,
+    INPROXY_MIN_PERSONAL_CLIENTS,
 } from "@/src/constants";
 import {
     InproxyActivityStats,
@@ -48,6 +52,33 @@ export function getDefaultInproxyParameters(): InproxyParameters {
         limitUpstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
         limitDownstreamBytesPerSecond: DEFAULT_INPROXY_LIMIT_BYTES_PER_SECOND,
     });
+}
+
+/**
+ * Resolves the personal peers limit to apply when a personal pairing ID is
+ * configured. Values persisted by earlier versions may be 0, which tunnel-core
+ * rejects, so the stored value is raised to the minimum and capped by the
+ * per-type maximum and the remaining share of the combined total.
+ */
+export function resolveMaxPersonalClients(
+    storedMaxPersonalClients: string | null,
+    maxClients: number,
+): number {
+    const stored = storedMaxPersonalClients
+        ? parseInt(storedMaxPersonalClients)
+        : DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS;
+    const requested = Number.isNaN(stored)
+        ? DEFAULT_INPROXY_MAX_PERSONAL_CLIENTS
+        : stored;
+
+    return Math.min(
+        Math.max(INPROXY_MIN_PERSONAL_CLIENTS, requested),
+        INPROXY_MAX_CLIENTS_MAX,
+        Math.max(
+            INPROXY_MIN_PERSONAL_CLIENTS,
+            INPROXY_MAX_CLIENTS_TOTAL_MAX - maxClients,
+        ),
+    );
 }
 
 export function getZeroedInproxyActivityStats(): InproxyActivityStats {
