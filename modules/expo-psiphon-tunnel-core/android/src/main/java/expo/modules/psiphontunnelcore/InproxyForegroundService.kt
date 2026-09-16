@@ -317,11 +317,23 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             }
         }
 
-        private fun proxyStateBundle(state: ProxyState): android.os.Bundle {
-            return android.os.Bundle().apply {
-                putString("status", state.status.name)
-                putString("networkState", state.networkState?.name)
-            }
+        private var pairingRevision = 0L
+
+        @Synchronized
+        private fun nextPairingRevision(): Long {
+            // Boot-relative microseconds survive service/process recreation and fit JS integers.
+            pairingRevision = maxOf(pairingRevision + 1, android.os.SystemClock.elapsedRealtimeNanos() / 1000)
+            return pairingRevision
+        }
+
+        fun unavailableProxyStateBundle(revision: Long): android.os.Bundle = android.os.Bundle().apply {
+            putString("status", "UNKNOWN")
+            putString("networkState", null)
+            putBundle("pairingConfiguration", android.os.Bundle().apply {
+                putLong("revision", revision)
+                putString("status", "applying")
+                putString("personalCompartmentId", null)
+            })
         }
 
         private fun activityStatsBundle(stats: ActivityStats): android.os.Bundle {
@@ -456,6 +468,30 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     }
 
     private val tag = "InproxyForegroundService"
+    private val pairingConfiguration = PairingConfiguration(::nextPairingRevision) {
+        publishProxyState(state)
+    }
+    private var tunnelStoppedLatch = CountDownLatch(0)
+    private var serviceDestroyed = false
+
+    private fun proxyStateBundle(state: ProxyState): android.os.Bundle = android.os.Bundle().apply {
+        putString("status", state.status.name)
+        putString("networkState", state.networkState?.name)
+        putBundle("pairingConfiguration", android.os.Bundle().apply {
+            pairingConfiguration.snapshot.forEach { (key, value) ->
+                when (value) {
+                    is Long -> putLong(key, value)
+                    is String -> putString(key, value)
+                    null -> putString(key, null)
+                }
+            }
+        })
+    }
+
+    private fun restorePersistedPairing() {
+        pairingConfiguration.restorePersisted(InproxyParameters.load(applicationContext)?.personalCompartmentId)
+    }
+
     private val psiphonTunnel: PsiphonTunnel = PsiphonTunnel.newPsiphonTunnel(this)
     private val executor: ExecutorService = Executors.newSingleThreadExecutor()
     private val tunnelStopExecutor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -470,6 +506,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
     private var personalProxyActivityStats = ProxyActivityStats()
     private var commonProxyActivityStats = ProxyActivityStats()
     private var stats = latestStats
+    @Volatile
     private var state = latestProxyState
     private var activityEmitter: ScheduledExecutorService? = null
     private var activityCallbackCount = 0L
@@ -563,6 +600,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
     override fun onCreate() {
         super.onCreate()
+        state = ProxyState(Status.STOPPED, null)
+        latestProxyState = state
+        restorePersistedPairing()
         logInfo("Inproxy foreground service created")
         regionalAccumulatorLoadFuture = executor.submit {
             loadRegionalAccumulatorsFromDisk()
@@ -599,7 +639,10 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
     override fun onDestroy() {
         super.onDestroy()
+        serviceDestroyed = true
         logInfo("Inproxy foreground service destroyed")
+        stopTunnelOnce("service destroyed")
+        awaitTunnelStopped()
         waitForRegionalAccumulatorLoad()
         maybePersistRegionalAccumulators(force = true)
         stopActivityEmitter()
@@ -628,7 +671,12 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             )
             return false
         }
-        params.store(applicationContext)
+        try {
+            synchronized(psiphonTunnel) { params.store(applicationContext) }
+        } catch (_: Exception) {
+            reportProxyError("inProxyStartFailed", "Failed to persist inproxy parameters", R.string.notification_conduit_failed_to_start_text)
+            return false
+        }
         return startInproxy(params)
     }
 
@@ -643,28 +691,28 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             )
             return
         }
-        val changed = params.store(applicationContext)
-        if (!changed) {
-            logInfo("Parameters update called, but no changes detected")
-            return
-        }
-        logInfo("Parameters updated; changes persisted")
-        if (isRunning.get()) {
-            logInfo("Service is running; restarting inproxy tunnel due to parameter changes")
-            try {
+        try {
+            synchronized(psiphonTunnel) {
+                val changed = params.store(applicationContext)
+                if (!isRunning.get()) {
+                    restorePersistedPairing()
+                    return
+                }
+                if (!changed || tunnelStopRequested.get()) {
+                    publishProxyState(state)
+                    return
+                }
                 resetStats()
-                psiphonTunnel.restartPsiphon()
-            } catch (e: Exception) {
-                logError("Failed to restart in-proxy tunnel", e)
-                reportProxyError(
-                    action = "inProxyRestartFailed",
-                    message = e.message,
-                    notificationTextResId = R.string.notification_conduit_failed_to_restart_text,
-                )
-                stopInproxy("restart failed")
+                pairingConfiguration.applyToCore {
+                    psiphonTunnel.restartPsiphon()
+                    if (tunnelStopRequested.get()) pairingConfiguration.applying()
+                }
             }
-        } else {
-            logInfo("Service is stopped; updated parameters will apply on next start")
+        } catch (_: Exception) {
+            // Do not include core/config exception contents: they may contain private IDs.
+            logError("Failed to apply in-proxy parameters")
+            reportProxyError("inProxyRestartFailed", "Failed to apply inproxy parameters", R.string.notification_conduit_failed_to_restart_text)
+            stopInproxy("restart failed")
         }
     }
 
@@ -693,6 +741,8 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             SERVICE_STARTING_BROADCAST_PERMISSION,
         )
         tunnelStopRequested.set(false)
+        tunnelStoppedLatch = CountDownLatch(1)
+        pairingConfiguration.applying()
 
         Utils.setServiceRunningFlag(applicationContext, true)
         state = ProxyState(Status.RUNNING, NetworkState.HAS_INTERNET)
@@ -705,6 +755,8 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
             Utils.setServiceRunningFlag(applicationContext, false)
             state = ProxyState(Status.STOPPED, null)
             latestProxyState = state
+            tunnelStoppedLatch.countDown()
+            restorePersistedPairing()
             publishProxyState(state)
             stopSelf()
             return false
@@ -721,14 +773,21 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         executor.submit {
             try {
                 logInfo("Inproxy task started")
-                psiphonTunnel.startTunneling(Utils.getEmbeddedServers(this))
+                synchronized(psiphonTunnel) {
+                    if (!tunnelStopRequested.get()) {
+                        pairingConfiguration.applyToCore {
+                            psiphonTunnel.startTunneling(Utils.getEmbeddedServers(this))
+                            if (tunnelStopRequested.get()) pairingConfiguration.applying()
+                        }
+                    }
+                }
                 latch.await()
                 logInfo("Inproxy task stopping")
             } catch (e: PsiphonTunnel.Exception) {
-                logError("Failed to start inproxy", e)
+                logError("Failed to start inproxy")
                 reportProxyError(
                     action = "inProxyStartFailed",
-                    message = e.message,
+                    message = "Failed to start inproxy",
                     notificationTextResId = R.string.notification_conduit_failed_to_start_text,
                 )
             } catch (e: InterruptedException) {
@@ -736,20 +795,28 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 Thread.currentThread().interrupt()
             } finally {
                 stopTunnelOnce("worker cleanup")
-                isRunning.set(false)
-                stopActivityEmitter()
-                Utils.setServiceRunningFlag(applicationContext, false)
-                state = ProxyState(Status.STOPPED, null)
-                latestProxyState = state
-                publishProxyState(state)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                } else {
-                    @Suppress("DEPRECATION")
-                    stopForeground(true)
+                // A separately scheduled stop may own the call. Do not publish persisted
+                // identity until that call has actually stopped the old core.
+                awaitTunnelStopped()
+                // Finalize on the service thread so a new start cannot interleave
+                // with the previous worker publishing STOPPED and stopping the service.
+                android.os.Handler(mainLooper).post {
+                    if (serviceDestroyed) return@post
+                    isRunning.set(false)
+                    stopActivityEmitter()
+                    Utils.setServiceRunningFlag(applicationContext, false)
+                    state = ProxyState(Status.STOPPED, null)
+                    latestProxyState = state
+                    restorePersistedPairing()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        stopForeground(true)
+                    }
+                    logInfo("Inproxy task stopped")
+                    stopSelf()
                 }
-                logInfo("Inproxy task stopped")
-                stopSelf()
             }
         }
         return true
@@ -764,6 +831,7 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         if (!claimTunnelStop("stop requested: $reason")) {
             return
         }
+        pairingConfiguration.applying()
         synchronized(statsLock) {
             latestAnnouncingWorkers = 0
             latestConnectingClients = 0
@@ -817,6 +885,20 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
     private fun stopTunnel() {
         psiphonTunnel.stop()
+        tunnelStoppedLatch.countDown()
+    }
+
+    private fun awaitTunnelStopped() {
+        var interrupted = false
+        while (true) {
+            try {
+                tunnelStoppedLatch.await()
+                break
+            } catch (_: InterruptedException) {
+                interrupted = true
+            }
+        }
+        if (interrupted) Thread.currentThread().interrupt()
     }
 
     private fun resetStats() {
@@ -1879,18 +1961,12 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
 
             psiphonConfig.put("InproxyProxySessionPrivateKey", params.privateKey)
             psiphonConfig.put("InproxyMaxCommonClients", params.maxClients)
-            psiphonConfig.put("InproxyMaxPersonalClients", params.maxPersonalClients)
-            if (!params.personalCompartmentId.isNullOrBlank()) {
-                psiphonConfig.put(
-                    "InproxyProxyPersonalCompartmentID",
-                    params.personalCompartmentId,
-                )
-            }
+            val personalCompartmentId = params.applyPersonalPairingConfig(psiphonConfig)
             psiphonConfig.put("InproxyLimitUpstreamBytesPerSecond", params.limitUpstreamBytesPerSecond)
             psiphonConfig.put("InproxyLimitDownstreamBytesPerSecond", params.limitDownstreamBytesPerSecond)
 
             logInfo(
-                "Inproxy config EmitInproxyProxyActivity=true maxCommonClients=${params.maxClients} maxPersonalClients=${params.maxPersonalClients} personalCompartmentPreview=${previewCompartmentId(params.personalCompartmentId)} upLimit=${params.limitUpstreamBytesPerSecond} downLimit=${params.limitDownstreamBytesPerSecond}",
+                "Inproxy config EmitInproxyProxyActivity=true maxCommonClients=${params.maxClients} maxPersonalClients=${params.maxPersonalClients} upLimit=${params.limitUpstreamBytesPerSecond} downLimit=${params.limitDownstreamBytesPerSecond}",
             )
 
             if (
@@ -1907,7 +1983,9 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
                 psiphonConfig.put("InproxyReducedLimitDownstreamBytesPerSecond", params.reducedLimitDownstreamBytesPerSecond)
             }
 
-            return psiphonConfig.toString()
+            val config = psiphonConfig.toString()
+            pairingConfiguration.recordCoreReadback(personalCompartmentId)
+            return config
         } catch (e: PackageManager.NameNotFoundException) {
             throw IllegalStateException("Failed to get package info", e)
         } catch (e: Exception) {
@@ -2225,17 +2303,6 @@ class InproxyForegroundService : Service(), PsiphonTunnel.HostService {
         cachedAppName?.let { return it }
         return applicationInfo.loadLabel(packageManager).toString().also {
             cachedAppName = it
-        }
-    }
-
-    private fun previewCompartmentId(value: String?): String {
-        if (value.isNullOrBlank()) {
-            return "<none>"
-        }
-        return if (value.length <= 16) {
-            value
-        } else {
-            "${value.take(8)}...${value.takeLast(8)}"
         }
     }
 

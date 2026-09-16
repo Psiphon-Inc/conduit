@@ -23,6 +23,8 @@ import ExpoPsiphonTunnelCoreModule from "./src/ExpoPsiphonTunnelCoreModule";
 export type InproxyParameters = {
     privateKey: string;
     maxClients: number;
+    maxPersonalClients?: number;
+    personalCompartmentId?: string;
     limitUpstreamBytesPerSecond: number;
     limitDownstreamBytesPerSecond: number;
     reducedStartTime?: string;
@@ -35,6 +37,12 @@ export type InproxyParameters = {
 export type InproxyProxyState = {
     status: "RUNNING" | "STOPPED" | "UNKNOWN";
     networkState: "HAS_INTERNET" | "NO_INTERNET" | null;
+    /** Android native readback, not broker health; ignore older revisions. */
+    pairingConfiguration?: {
+        revision: number;
+        status: "persisted" | "applying" | "applied";
+        personalCompartmentId: string | null;
+    };
 };
 
 export type InproxyActivityStats = {
@@ -136,6 +144,7 @@ export async function toggleInProxy(params: InproxyParameters): Promise<void> {
     }
 }
 
+/** Dispatch only; Android acknowledges application through proxyState.pairingConfiguration. */
 export async function paramsChanged(params: InproxyParameters): Promise<void> {
     try {
         await ExpoPsiphonTunnelCoreModule.paramsChanged(params);

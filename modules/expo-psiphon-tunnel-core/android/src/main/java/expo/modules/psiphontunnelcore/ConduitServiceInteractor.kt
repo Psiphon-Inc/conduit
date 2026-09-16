@@ -40,6 +40,7 @@ class ConduitServiceInteractor(private val context: Context) {
     private var isReceiverRegistered = false
     private var conduitService: IConduitService? = null
     private var callback: ((String, Bundle) -> Unit)? = null
+    private var latestPairingRevision = 0L
 
     private val serviceStartingReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -69,6 +70,10 @@ class ConduitServiceInteractor(private val context: Context) {
 
     private val clientCallback = object : IConduitClientCallback.Stub() {
         override fun onProxyStateUpdated(proxyStateBundle: Bundle) {
+            synchronized(this@ConduitServiceInteractor) {
+                latestPairingRevision = maxOf(latestPairingRevision,
+                    proxyStateBundle.getBundle("pairingConfiguration")?.getLong("revision") ?: 0L)
+            }
             logInfo("Received proxy state callback: ${proxyStateBundle.getString("status")}")
             callback?.invoke("proxyState", proxyStateBundle)
         }
@@ -91,6 +96,10 @@ class ConduitServiceInteractor(private val context: Context) {
 
         override fun onServiceDisconnected(name: ComponentName?) {
             logInfo("Disconnected from InproxyForegroundService")
+            // Do not use the UI's current clock: a replacement service may already
+            // have created its readback by the time this death notification arrives.
+            val revision = synchronized(this@ConduitServiceInteractor) { latestPairingRevision + 1 }
+            callback?.invoke("proxyState", InproxyForegroundService.unavailableProxyStateBundle(revision))
             conduitService = null
             isServiceBound = false
 

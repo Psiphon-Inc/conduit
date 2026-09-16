@@ -30,3 +30,9 @@ export const PersonalCompartmentIdSchema = z
         }
     });
 export type PersonalCompartmentId = z.infer<typeof PersonalCompartmentIdSchema>;
+
+/** Reconciliation either commits, loses its scope, or cannot access supported storage. */
+export type PersonalCompartmentReconciliationResult =
+    | "committed"
+    | "stale"
+    | "unavailable";

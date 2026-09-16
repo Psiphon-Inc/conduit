@@ -16,19 +16,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+import { base64nopad, base64urlnopad } from "@scure/base";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as Network from "expo-network";
 import * as SecureStore from "expo-secure-store";
+import { createInstance } from "i18next";
 import React from "react";
-import { Platform } from "react-native";
+import { I18nextProvider } from "react-i18next";
+import { AppState, AppStateStatus, Platform, Share } from "react-native";
 import type { CustomerInfo } from "react-native-purchases";
 import { ReactTestRenderer, act, create } from "react-test-renderer";
 
+import { createOrLoadAccount } from "@/src/auth/account";
+import {
+    ConduitActionsProvider,
+    useConduitActions,
+} from "@/src/components/ConduitActionsContext";
+import { ModalHost, ModalProvider } from "@/src/components/ModalStore";
+import { PersonalPairingShareModal } from "@/src/components/PersonalPairingShareModal";
 import {
     QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
     SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
     SECURESTORE_CONDUIT_NAME_KEY,
+    SECURESTORE_DEVICE_NONCE_KEY,
     SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
+    SECURESTORE_MNEMONIC_KEY,
 } from "@/src/constants";
+import { useAndroidPersonalCompartmentId } from "@/src/hooks";
 import {
     HostedAccountProfileConflictError,
     HostedApiClientRequestError,
@@ -36,22 +50,41 @@ import {
     createHostedApiClient,
 } from "@/src/hosted/apiClient";
 import { HostedAuthService } from "@/src/hosted/auth/types";
+import { ConduitsSnapshot } from "@/src/hosted/contracts";
 import {
     HostedExperienceContextValue,
     HostedExperienceProvider,
     useHostedExperienceContext,
 } from "@/src/hosted/experience/context";
+import { hostedQueryKeys } from "@/src/hosted/queryKeys";
 import { RevenueCatContextValue } from "@/src/hosted/revenuecatContext";
 import {
     HostedSession,
     createHostedSessionClient,
 } from "@/src/hosted/sessionClient";
+import { InproxyProvider, useInproxyContext } from "@/src/inproxy/context";
+import type { ConduitModuleAPI } from "@/src/inproxy/module";
+import type { PairingConfiguration } from "@/src/inproxy/pairingConfiguration";
+import type { InproxyEvent, InproxyParameters } from "@/src/inproxy/types";
+import { PairingTokenPayloadV1Schema } from "@/src/pairing/token";
 
 describe("hosted experience context", () => {
     const originalPlatformOs = Platform.OS;
+    const appStateListeners = new Set<(state: AppStateStatus) => void>();
 
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.mocked(Network.useNetworkState).mockReturnValue({
+            isConnected: true,
+            isInternetReachable: true,
+        });
+        appStateListeners.clear();
+        jest.spyOn(AppState, "addEventListener").mockImplementation(
+            (_, listener) => {
+                appStateListeners.add(listener);
+                return { remove: () => appStateListeners.delete(listener) };
+            },
+        );
         // @ts-expect-error test-only mock helper
         SecureStore.__resetStore();
         Object.defineProperty(Platform, "OS", {
@@ -69,6 +102,7 @@ describe("hosted experience context", () => {
         mountedQueryClients.splice(0).forEach((queryClient) => {
             queryClient.clear();
         });
+        jest.restoreAllMocks();
     });
 
     afterAll(() => {
@@ -77,6 +111,308 @@ describe("hosted experience context", () => {
             value: originalPlatformOs,
         });
     });
+
+    it.each(["failed login sync", "restored session"])(
+        "recovers compartment sync after %s while sharing only native readback",
+        async (sessionMode) => {
+            const i18n = createInstance();
+            await i18n.init({ lng: "en", resources: {} });
+            const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+            const hostedId = "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
+            await SecureStore.setItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                localId,
+            );
+            await SecureStore.setItemAsync(
+                SECURESTORE_CONDUIT_NAME_KEY,
+                "Pairing Station",
+            );
+            const session = makeSession({
+                accessToken: "access.pairing",
+                accessTokenExpiresAtMs: 90_000,
+                refreshTokenExpiresAtMs: 1_000_000,
+            });
+            const listeners = new Set<(event: InproxyEvent) => void>();
+            let nativeEvent: InproxyEvent = {
+                type: "proxyState",
+                data: {
+                    status: "RUNNING",
+                    networkState: "NO_INTERNET",
+                    pairingConfiguration: {
+                        revision: 10,
+                        status: "applied",
+                        personalCompartmentId: localId,
+                    },
+                },
+            };
+            const emitNativeState = (event: InproxyEvent) => {
+                nativeEvent = event;
+                listeners.forEach((listener) => listener(event));
+            };
+            async function receiveNativePairing(
+                pairingConfiguration: PairingConfiguration,
+                status: "RUNNING" | "STOPPED" = "RUNNING",
+            ) {
+                await act(async () => {
+                    emitNativeState({
+                        type: "proxyState",
+                        data: {
+                            status,
+                            networkState: "NO_INTERNET",
+                            pairingConfiguration,
+                        },
+                    });
+                });
+                await flushPromises();
+            }
+            let desiredParams: InproxyParameters | undefined;
+            let failDispatch = false;
+            let syncAttempts = 0;
+            let syncAvailable = false;
+            const nativeModule: ConduitModuleAPI = {
+                addInproxyEventListener: (listener) => {
+                    listeners.add(listener);
+                    return {
+                        remove: () => {
+                            listeners.delete(listener);
+                        },
+                    };
+                },
+                addIpcEventListener: () => ({ remove: () => {} }),
+                emitCurrentInproxyState: () => emitNativeState(nativeEvent),
+                paramsChanged: async (params) => {
+                    if (failDispatch)
+                        throw new Error("Pairing test dispatch failed");
+                    desiredParams = params;
+                },
+                toggleInProxy: async () => {},
+                sendFeedback: async () => null,
+                logInfo: () => {},
+                logWarn: () => {},
+                logError: () => {},
+            };
+            let actions: ReturnType<typeof useConduitActions> | undefined;
+            let inproxy: ReturnType<typeof useInproxyContext> | undefined;
+            let hosted: HostedExperienceContextValue | undefined;
+            function Consumer() {
+                actions = useConduitActions();
+                inproxy = useInproxyContext();
+                hosted = useHostedExperienceContext();
+                return null;
+            }
+            let renderer: ReactTestRenderer;
+            await act(async () => {
+                renderer = renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 20_000,
+                        authService: makeAuthService({
+                            signIn: async () => ({
+                                provider: "google",
+                                tokenType: "clerk_broker_jwt",
+                                brokerToken: "test",
+                                platform: "android",
+                                clientVersion: "test",
+                            }),
+                        }),
+                        sessionClient: makeSessionClient({
+                            login: async () => session,
+                            refresh: async () => ({
+                                ...session,
+                                accessToken: "access.refreshed",
+                                accessTokenExpiresAtMs: 180_000,
+                            }),
+                            loadHostedSession: async () =>
+                                sessionMode === "restored session"
+                                    ? session
+                                    : null,
+                        }),
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async () => {
+                                syncAttempts++;
+                                if (syncAvailable) return hostedId;
+                                throw new Error(
+                                    "Pairing test sync unavailable",
+                                );
+                            },
+                            getConduitsSnapshot: async () => ({
+                                entitlement: { status: "active" },
+                                conduits: [
+                                    {
+                                        conduit_id: "cond_1",
+                                        proxy_id: "st_1",
+                                        status: "active",
+                                        traffic_scope: "personal",
+                                        personal_compartment_id: hostedId,
+                                    },
+                                ],
+                            }),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <I18nextProvider i18n={i18n}>
+                        <ModalProvider>
+                            <InproxyProvider module={nativeModule}>
+                                <ConduitActionsProvider>
+                                    <Consumer />
+                                    <ModalHost />
+                                </ConduitActionsProvider>
+                            </InproxyProvider>
+                        </ModalProvider>
+                    </I18nextProvider>,
+                );
+            });
+            await waitFor(() =>
+                expect(hosted?.initialSessionResolved).toBe(true),
+            );
+            if (sessionMode === "failed login sync") {
+                await act(async () => {
+                    await hosted?.signIn("google");
+                });
+            }
+            await waitFor(() =>
+                expect(
+                    hosted?.state.conduitsSnapshot?.conduits[0]
+                        ?.personal_compartment_id,
+                ).toBe(hostedId),
+            );
+            await waitFor(() =>
+                expect(desiredParams?.personalCompartmentId).toBe(localId),
+            );
+            await waitFor(() => expect(syncAttempts).toBe(3));
+            // Same-account token refresh/polling must not reset the retry budget.
+            await act(async () => {
+                await hosted?.refreshSession();
+                await hosted?.pollConduitsOnce();
+            });
+            expect(syncAttempts).toBe(3);
+            expect(
+                hosted?.state.conduitsSnapshot?.conduits[0]
+                    ?.personal_compartment_id,
+            ).toBe(hostedId);
+            expect(desiredParams?.personalCompartmentId).toBe(localId);
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(localId);
+            expect(actions?.personalCompartmentId).toBeNull();
+            await act(async () => {
+                emitNativeState(nativeEvent);
+            });
+            await flushPromises();
+            expect(actions?.personalCompartmentId).toBe(localId);
+            await act(async () => {
+                actions?.openPersonalPairingModal();
+            });
+            const modal = () =>
+                renderer.root.findByType(PersonalPairingShareModal);
+            expect(modal().props.personalCompartmentId).toBe(localId);
+            await waitFor(() =>
+                expect(desiredParams?.personalCompartmentId).toBe(localId),
+            );
+            if (!desiredParams)
+                throw new Error("Pairing test parameters unavailable");
+            async function expectSharedIdentity(expectedId: string) {
+                const share = jest
+                    .spyOn(Share, "share")
+                    .mockResolvedValue({ action: Share.sharedAction });
+                try {
+                    await act(async () => {
+                        modal()
+                            .findByProps({ disabled: false })
+                            .props.onPress();
+                    });
+                    const token = (
+                        share.mock.calls[0]?.[0].message ?? ""
+                    ).split("/pair/")[1];
+                    expect(
+                        PairingTokenPayloadV1Schema.parse(
+                            JSON.parse(
+                                new TextDecoder().decode(
+                                    base64urlnopad.decode(token),
+                                ),
+                            ),
+                        ).data.id,
+                    ).toBe(expectedId);
+                } finally {
+                    share.mockRestore();
+                }
+            }
+            await expectSharedIdentity(localId);
+            syncAvailable = true;
+            await act(async () => {
+                appStateListeners.forEach((listener) => listener("background"));
+                appStateListeners.forEach((listener) => listener("active"));
+            });
+            await waitFor(() =>
+                expect(desiredParams?.personalCompartmentId).toBe(hostedId),
+            );
+            expect(syncAttempts).toBe(4);
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(hostedId);
+            const nextParams = {
+                ...desiredParams,
+                personalCompartmentId: hostedId,
+            };
+            // Dispatch returning is not acknowledgement; an open modal still shares A.
+            expect(modal().props.personalCompartmentId).toBe(localId);
+            await receiveNativePairing({
+                revision: 11,
+                status: "applying",
+                personalCompartmentId: null,
+            });
+            expect(modal().props.personalCompartmentId).toBeNull();
+            expect(modal().findByProps({ disabled: true })).toBeDefined();
+            await receiveNativePairing({
+                revision: 12,
+                status: "applied",
+                personalCompartmentId: hostedId,
+            });
+            expect(modal().props.personalCompartmentId).toBe(hostedId);
+            await expectSharedIdentity(hostedId);
+            await receiveNativePairing({
+                revision: 10,
+                status: "applied",
+                personalCompartmentId: localId,
+            });
+            expect(modal().props.personalCompartmentId).toBe(hostedId);
+            failDispatch = true;
+            const errorLog = jest
+                .spyOn(console, "error")
+                .mockImplementation(() => {});
+            try {
+                await act(async () => {
+                    await inproxy?.selectInproxyParameters({
+                        ...nextParams,
+                        personalCompartmentId: localId,
+                    });
+                });
+                expect(modal().props.personalCompartmentId).toBe(hostedId);
+            } finally {
+                errorLog.mockRestore();
+            }
+            // Restart failure may persist a new ID, but only actual STOPPED readback enables it.
+            await receiveNativePairing({
+                revision: 13,
+                status: "applying",
+                personalCompartmentId: null,
+            });
+            expect(modal().props.personalCompartmentId).toBeNull();
+            await receiveNativePairing(
+                {
+                    revision: 14,
+                    status: "persisted",
+                    personalCompartmentId: localId,
+                },
+                "STOPPED",
+            );
+            expect(modal().props.personalCompartmentId).toBe(localId);
+        },
+    );
 
     it("fails clearly without an injected or context auth service", () => {
         const queryClient = new QueryClient({
@@ -227,7 +563,9 @@ describe("hosted experience context", () => {
             hostedClient.getConduitsSnapshot as jest.Mock
         ).mock.invocationCallOrder[0];
         expect(setIdCallOrder).toBeLessThan(getConduitsCallOrder);
-        expect(getContextValue().state.authPhase).toBe("authenticated");
+        await waitFor(() =>
+            expect(getContextValue().state.authPhase).toBe("authenticated"),
+        );
         expect(getContextValue().state.revenuecatPhase).toBe("ready");
         expect(getContextValue().state.stationPhase).toBe("active");
         expect(getContextValue().state.entitlementSnapshot).toBe("active");
@@ -235,6 +573,485 @@ describe("hosted experience context", () => {
         act(() => {
             renderer!.unmount();
         });
+    });
+
+    it.each(["first hosted account", "second device conflict"])(
+        "converges local native parameters after a delayed sync for %s",
+        async (accountMode) => {
+            // App startup initializes account keys before mounting InproxyProvider.
+            // Leave the compartment ID absent so the real local hook derives it.
+            await SecureStore.setItemAsync(
+                SECURESTORE_MNEMONIC_KEY,
+                "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            );
+            await SecureStore.setItemAsync(SECURESTORE_DEVICE_NONCE_KEY, "1");
+            const account = await createOrLoadAccount();
+            if (account instanceof Error) throw account;
+            const localId = base64nopad.encode(account.inproxyKey.publicKey);
+            const hostedId =
+                accountMode === "first hosted account"
+                    ? localId
+                    : "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
+            let registeredId =
+                accountMode === "first hosted account" ? null : hostedId;
+            const syncResponse = createDeferred<string>();
+            const session = makeSession({
+                accessToken: "access.login",
+                accessTokenExpiresAtMs: 90_000,
+                refreshTokenExpiresAtMs: 1_000_000,
+            });
+            const submittedIds: string[] = [];
+            const dispatched: InproxyParameters[] = [];
+            const nativeModule: ConduitModuleAPI = {
+                addInproxyEventListener: () => ({ remove: () => {} }),
+                addIpcEventListener: () => ({ remove: () => {} }),
+                emitCurrentInproxyState: () => {},
+                paramsChanged: async (params) => {
+                    dispatched.push(params);
+                },
+                toggleInProxy: async () => {},
+                sendFeedback: async () => null,
+                logInfo: () => {},
+                logWarn: () => {},
+                logError: () => {},
+            };
+            let hosted: HostedExperienceContextValue | undefined;
+            function Consumer() {
+                hosted = useHostedExperienceContext();
+                return null;
+            }
+            await act(async () => {
+                renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 10_000,
+                        authService: makeAuthService({
+                            signIn: async () => ({
+                                provider: "google",
+                                tokenType: "clerk_broker_jwt",
+                                brokerToken: "test",
+                                platform: "android",
+                                clientVersion: "test",
+                            }),
+                        }),
+                        sessionClient: makeSessionClient({
+                            login: async () => session,
+                        }),
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async (_, id) => {
+                                submittedIds.push(id);
+                                registeredId ??= id;
+                                return syncResponse.promise;
+                            },
+                            getConduitsSnapshot: async () => ({
+                                entitlement: { status: "active" },
+                                conduits: registeredId
+                                    ? [
+                                          {
+                                              conduit_id: "cond_1",
+                                              proxy_id: "st_1",
+                                              status: "active",
+                                              traffic_scope: "personal",
+                                              personal_compartment_id:
+                                                  registeredId,
+                                          },
+                                      ]
+                                    : [],
+                            }),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <InproxyProvider module={nativeModule}>
+                        <Consumer />
+                    </InproxyProvider>,
+                );
+            });
+            await waitFor(() => {
+                expect(hosted?.initialSessionResolved).toBe(true);
+                expect(dispatched.at(-1)?.personalCompartmentId).toBe(localId);
+            });
+            let signIn: Promise<void> | undefined;
+            await act(async () => {
+                signIn = hosted?.signIn("google");
+            });
+            await waitFor(() => {
+                expect(submittedIds).toEqual([localId]);
+                // Session publication enables snapshot loading before sync finishes.
+                expect(
+                    hosted?.state.conduitsSnapshot?.conduits[0]
+                        ?.personal_compartment_id,
+                ).toBe(hostedId);
+            });
+            expect(dispatched.at(-1)?.personalCompartmentId).toBe(localId);
+            await act(async () => {
+                appStateListeners.forEach((listener) => listener("background"));
+                appStateListeners.forEach((listener) => listener("active"));
+            });
+            expect(submittedIds).toEqual([localId]);
+            await act(async () => {
+                if (accountMode === "second device conflict") {
+                    syncResponse.reject(
+                        new HostedPersonalCompartmentIdConflictError(hostedId),
+                    );
+                } else {
+                    syncResponse.resolve(localId);
+                }
+                await signIn;
+            });
+            await waitFor(() =>
+                expect(dispatched.at(-1)?.personalCompartmentId).toBe(hostedId),
+            );
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(hostedId);
+        },
+    );
+
+    it.each([
+        "sign out",
+        "sign out with stale 401",
+        "sign out during storage write",
+        "switch account",
+        "switch during storage write",
+    ])(
+        "discards obsolete compartment reconciliation after %s",
+        async (transition) => {
+            const signingOut = transition.startsWith("sign out");
+            const writing = transition.endsWith("storage write");
+            const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+            const obsoleteId = "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
+            const canonicalId = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+            await SecureStore.setItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                localId,
+            );
+            const session = makeSession({
+                accessToken: "access.old",
+                accessTokenExpiresAtMs: 90_000,
+                refreshTokenExpiresAtMs: 1_000_000,
+            });
+            const nextSession = {
+                ...session,
+                accountId: "acc_next",
+                accessToken: "access.next",
+            };
+            const oldResponse = createDeferred<string>();
+            const storageWrite = createDeferred<void>();
+            const storageStarted = createDeferred<void>();
+            const upstreamSignOut = createDeferred<void>();
+            const write = jest
+                .mocked(SecureStore.setItemAsync)
+                .getMockImplementation();
+            if (!write) throw new Error("Pairing test storage unavailable");
+            if (writing) {
+                jest.spyOn(SecureStore, "setItemAsync").mockImplementation(
+                    async (key, value, options) => {
+                        if (
+                            key ===
+                                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY &&
+                            value === obsoleteId
+                        ) {
+                            storageStarted.resolve();
+                            await storageWrite.promise;
+                        }
+                        return write(key, value, options);
+                    },
+                );
+            }
+            const requests: string[] = [];
+            let hosted: HostedExperienceContextValue | undefined;
+            let desiredId: string | null | undefined;
+            function Consumer() {
+                hosted = useHostedExperienceContext();
+                desiredId = useAndroidPersonalCompartmentId().data;
+                return null;
+            }
+            await act(async () => {
+                renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 10_000,
+                        authService: makeAuthService({
+                            signOut: async () => upstreamSignOut.promise,
+                            signIn: async () => ({
+                                provider: "google",
+                                tokenType: "clerk_broker_jwt",
+                                brokerToken: "test",
+                                platform: "android",
+                                clientVersion: "test",
+                            }),
+                        }),
+                        sessionClient: makeSessionClient({
+                            loadHostedSession: async () => session,
+                            login: async () => nextSession,
+                        }),
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async (token) => {
+                                requests.push(token);
+                                if (token === "access.old")
+                                    return oldResponse.promise;
+                                throw new HostedPersonalCompartmentIdConflictError(
+                                    canonicalId,
+                                );
+                            },
+                            getConduitsSnapshot: async () =>
+                                makeConduitsSnapshot("active"),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <Consumer />,
+                );
+            });
+            await waitFor(() => {
+                expect(requests).toEqual(["access.old"]);
+                expect(desiredId).toBe(localId);
+            });
+            if (writing) {
+                await act(async () => {
+                    oldResponse.resolve(obsoleteId);
+                    await storageStarted.promise;
+                });
+            }
+            let signOut: Promise<void> | undefined;
+            await act(async () => {
+                if (signingOut) signOut = hosted?.signOut();
+                else await hosted?.signIn("google");
+            });
+            await act(async () => {
+                if (transition === "sign out with stale 401") {
+                    oldResponse.reject(
+                        new HostedApiClientRequestError(
+                            "Pairing test stale token",
+                            401,
+                            "unauthorized",
+                        ),
+                    );
+                } else {
+                    oldResponse.resolve(obsoleteId);
+                }
+                storageWrite.resolve();
+            });
+            if (signingOut) {
+                // Invalidated at sign-out invocation, before upstream auth completes.
+                expect(desiredId).toBe(localId);
+                await expect(
+                    SecureStore.getItemAsync(
+                        SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                    ),
+                ).resolves.toBe(localId);
+                await act(async () => {
+                    upstreamSignOut.resolve();
+                    await signOut;
+                });
+            }
+            const expectedId = signingOut ? localId : canonicalId;
+            await waitFor(() => {
+                expect(desiredId).toBe(expectedId);
+                expect(hosted?.state.session?.accountId ?? null).toBe(
+                    signingOut ? null : "acc_next",
+                );
+            });
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(expectedId);
+            expect(requests).toEqual(
+                signingOut ? ["access.old"] : ["access.old", "access.next"],
+            );
+        },
+    );
+
+    it("bounds failed sync bursts and recovers on reconnect without blocking offline auth or local identity", async () => {
+        const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+        await SecureStore.setItemAsync(
+            SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+            localId,
+        );
+        const session = makeSession({
+            accessToken: "access.offline",
+            accessTokenExpiresAtMs: 90_000,
+            refreshTokenExpiresAtMs: 1_000_000,
+        });
+        let attempts = 0;
+        let available = false;
+        const retryDelays: number[] = [];
+        let hosted: HostedExperienceContextValue | undefined;
+        let desiredId: string | null | undefined;
+        function Consumer() {
+            hosted = useHostedExperienceContext();
+            desiredId = useAndroidPersonalCompartmentId().data;
+            return null;
+        }
+        jest.mocked(Network.useNetworkState).mockReturnValue({
+            isConnected: false,
+            isInternetReachable: false,
+        });
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 10_000,
+                    delay: async (ms) => {
+                        retryDelays.push(ms);
+                    },
+                    authService: makeAuthService(),
+                    sessionClient: makeSessionClient({
+                        loadHostedSession: async () => session,
+                        refresh: async () => ({
+                            ...session,
+                            accessToken: "access.refreshed",
+                            accessTokenExpiresAtMs: 180_000,
+                        }),
+                    }),
+                    apiClient: makeHostedClient({
+                        setPersonalCompartmentId: async () => {
+                            attempts++;
+                            if (available) return localId;
+                            throw new Error("Pairing test unavailable");
+                        },
+                        getConduitsSnapshot: async () =>
+                            makeConduitsSnapshot("active"),
+                    }),
+                    revenueCat: makeRevenueCatContext(),
+                },
+                <Consumer />,
+            );
+        });
+        await waitFor(() => expect(desiredId).toBe(localId));
+        expect(hosted?.state.authPhase).toBe("authenticated");
+        expect(attempts).toBe(0);
+        const queryClient = mountedQueryClients[mountedQueryClients.length - 1];
+        async function setOnline(online: boolean) {
+            jest.mocked(Network.useNetworkState).mockReturnValue({
+                isConnected: online,
+                isInternetReachable: online,
+            });
+            await act(async () => {
+                // Token changes force the provider to observe the external network state.
+                queryClient.setQueryData(
+                    hostedQueryKeys.session("https://hcb.example.test"),
+                    {
+                        ...session,
+                        accessToken: online
+                            ? "access.online"
+                            : "access.offline",
+                    },
+                );
+            });
+            await waitFor(() => expect(hosted?.isOffline).toBe(!online));
+        }
+        await setOnline(true);
+        await waitFor(() => expect(attempts).toBe(3));
+        expect(retryDelays).toEqual([1000, 4000]);
+        await act(async () => {
+            await hosted?.refreshSession();
+            await hosted?.pollConduitsOnce();
+        });
+        expect(attempts).toBe(3);
+        await setOnline(false);
+        await act(async () => {
+            appStateListeners.forEach((listener) => listener("background"));
+            appStateListeners.forEach((listener) => listener("active"));
+        });
+        expect(attempts).toBe(3);
+        await setOnline(true);
+        await waitFor(() => expect(attempts).toBe(6));
+        expect(retryDelays).toEqual([1000, 4000, 1000, 4000]);
+        await setOnline(false);
+        available = true;
+        await setOnline(true);
+        await waitFor(() => expect(attempts).toBe(7));
+        await flushPromises();
+        await setOnline(false);
+        await setOnline(true);
+        expect(attempts).toBe(7);
+        expect(desiredId).toBe(localId);
+        expect(hosted?.state.authPhase).toBe("authenticated");
+    });
+
+    it("waits for a late local identity without spending sync attempts", async () => {
+        const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+        const session = makeSession({
+            accessToken: "access.late",
+            accessTokenExpiresAtMs: 90_000,
+            refreshTokenExpiresAtMs: 1_000_000,
+        });
+        // No stored ID and no account keys: local identity cannot be derived yet.
+        const write = jest
+            .mocked(SecureStore.setItemAsync)
+            .getMockImplementation();
+        if (!write) throw new Error("Pairing test storage unavailable");
+        const store = jest
+            .spyOn(SecureStore, "setItemAsync")
+            .mockImplementation(async (key, value, options) => {
+                if (key === SECURESTORE_MNEMONIC_KEY)
+                    throw new Error("Pairing test keys unavailable");
+                return write(key, value, options);
+            });
+        const submittedIds: string[] = [];
+        const retryDelays: number[] = [];
+        let desiredId: string | null | undefined;
+        let loaded = false;
+        function Consumer() {
+            const query = useAndroidPersonalCompartmentId();
+            desiredId = query.data;
+            loaded = query.isFetched;
+            return null;
+        }
+        try {
+            await act(async () => {
+                renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 10_000,
+                        delay: async (ms) => {
+                            retryDelays.push(ms);
+                        },
+                        authService: makeAuthService(),
+                        sessionClient: makeSessionClient({
+                            loadHostedSession: async () => session,
+                        }),
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async (_token, id) => {
+                                submittedIds.push(id);
+                                return id;
+                            },
+                            getConduitsSnapshot: async () =>
+                                makeConduitsSnapshot("active"),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <Consumer />,
+                );
+            });
+            await waitFor(() => expect(loaded).toBe(true));
+            expect(desiredId).toBeNull();
+            await flushPromises();
+            expect(submittedIds).toEqual([]);
+            expect(retryDelays).toEqual([]);
+            // InproxyProvider's fallback publishes the derived ID once keys exist.
+            const queryClient =
+                mountedQueryClients[mountedQueryClients.length - 1];
+            await act(async () => {
+                queryClient.setQueryData(
+                    [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+                    localId,
+                );
+            });
+            await waitFor(() => expect(submittedIds).toEqual([localId]));
+            expect(retryDelays).toEqual([]);
+            await expect(
+                SecureStore.getItemAsync(
+                    SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                ),
+            ).resolves.toBe(localId);
+        } finally {
+            // setItemAsync is the shared jestSetup mock; mockRestore would erase it.
+            store.mockImplementation(write);
+        }
     });
 
     it("reconciles personal compartment id conflicts during Android login", async () => {
@@ -304,8 +1121,20 @@ describe("hosted experience context", () => {
             );
         });
 
+        const queryClient = mountedQueryClients[mountedQueryClients.length - 1];
+        const staleIdentityRead = createDeferred<string>();
+        const pendingRead = queryClient
+            .fetchQuery({
+                queryKey: [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
+                queryFn: () => staleIdentityRead.promise,
+            })
+            .catch(() => undefined); // Cancellation is expected after reconciliation.
         await act(async () => {
             await contextValue!.signIn("google");
+            staleIdentityRead.resolve(
+                "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g",
+            );
+            await pendingRead;
         });
         await waitFor(() => {
             expect(contextValue!.state.authPhase).toBe("authenticated");
@@ -539,6 +1368,85 @@ describe("hosted experience context", () => {
         expect(sessionClient.refresh).toHaveBeenCalledTimes(1);
         expect(contextValue!.state.session?.accessToken).toBe("access.new");
         expect(contextValue!.state.accountProfile?.alias).toBe("New Alias");
+    });
+
+    it("retries a live compartment 401 with the refreshed token and commits the endpoint identity", async () => {
+        const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+        const canonicalId = "N8nN1DTLcuNj3DG39uUyIqBP+xKujq6IAklKO1f1Ftk";
+        await SecureStore.setItemAsync(
+            SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+            localId,
+        );
+        const session = makeSession({
+            accessToken: "access.old",
+            accessTokenExpiresAtMs: 200_000,
+            refreshTokenExpiresAtMs: 400_000,
+        });
+        const sessionClient = makeSessionClient({
+            loadHostedSession: async () => session,
+            refresh: jest.fn().mockResolvedValue({
+                ...session,
+                accessToken: "access.new",
+                accessTokenExpiresAtMs: 400_000,
+            }),
+        });
+        const requests: { token: string; id: string }[] = [];
+        const delays: number[] = [];
+        let hosted: HostedExperienceContextValue | undefined;
+        let desiredId: string | null | undefined;
+        function Consumer() {
+            hosted = useHostedExperienceContext();
+            desiredId = useAndroidPersonalCompartmentId().data;
+            return null;
+        }
+        await act(async () => {
+            renderHostedExperience(
+                {
+                    baseUrl: "https://hcb.example.test",
+                    now: () => 20_000,
+                    delay: async (ms) => {
+                        delays.push(ms);
+                    },
+                    authService: makeAuthService(),
+                    sessionClient,
+                    apiClient: makeHostedClient({
+                        setPersonalCompartmentId: async (token, id) => {
+                            requests.push({ token, id });
+                            if (token === "access.old")
+                                throw new HostedApiClientRequestError(
+                                    "Pairing test rejected token",
+                                    401,
+                                );
+                            return canonicalId;
+                        },
+                        getConduitsSnapshot: async () =>
+                            makeConduitsSnapshot("active"),
+                    }),
+                    revenueCat: makeRevenueCatContext(),
+                },
+                <Consumer />,
+            );
+        });
+        await waitFor(() => {
+            expect(desiredId).toBe(canonicalId);
+            expect(hosted?.state.session?.accessToken).toBe("access.new");
+        });
+        expect(requests).toEqual([
+            { token: "access.old", id: localId },
+            { token: "access.new", id: localId },
+        ]);
+        expect(sessionClient.refresh).toHaveBeenCalledTimes(1);
+        expect(delays).toEqual([]);
+        await expect(
+            SecureStore.getItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+            ),
+        ).resolves.toBe(canonicalId);
+        await act(async () => {
+            appStateListeners.forEach((listener) => listener("background"));
+            appStateListeners.forEach((listener) => listener("active"));
+        });
+        expect(requests).toHaveLength(2);
     });
 
     it("refreshes and retries hosted API calls after a still-current token 401", async () => {
@@ -844,6 +1752,103 @@ describe("hosted experience context", () => {
             SecureStore.getItemAsync(SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY),
         ).resolves.toBeNull();
     });
+
+    it.each(["successful hint cleanup", "failed hint cleanup"])(
+        "clears the session after %s and gives same-account sign-in a fresh sync budget",
+        async (cleanup) => {
+            const localId = "jgr+fj3yz6Wpn/vV7qlP4Sh+hBkThZCDEe6+OVJEm2g";
+            await SecureStore.setItemAsync(
+                SECURESTORE_ANDROID_PERSONAL_COMPARTMENT_ID_KEY,
+                localId,
+            );
+            const session = makeSession({
+                accessToken: "access.login",
+                accessTokenExpiresAtMs: 90_000,
+                refreshTokenExpiresAtMs: 1_000_000,
+            });
+            const sessionClient = makeSessionClient({
+                login: async () => session,
+            });
+            const authService = makeAuthService({
+                signIn: async () => ({
+                    provider: "google",
+                    tokenType: "clerk_broker_jwt",
+                    brokerToken: "test",
+                    platform: "android",
+                    clientVersion: "test",
+                }),
+            });
+            let attempts = 0;
+            let available = false;
+            let hosted: HostedExperienceContextValue | undefined;
+            let desiredId: string | null | undefined;
+            function Consumer() {
+                hosted = useHostedExperienceContext();
+                desiredId = useAndroidPersonalCompartmentId().data;
+                return null;
+            }
+            await act(async () => {
+                renderHostedExperience(
+                    {
+                        baseUrl: "https://hcb.example.test",
+                        now: () => 10_000,
+                        authService,
+                        sessionClient,
+                        apiClient: makeHostedClient({
+                            setPersonalCompartmentId: async () => {
+                                attempts++;
+                                if (available) return localId;
+                                throw new Error("Pairing test unavailable");
+                            },
+                            getConduitsSnapshot: async () =>
+                                makeConduitsSnapshot("active"),
+                        }),
+                        revenueCat: makeRevenueCatContext(),
+                    },
+                    <Consumer />,
+                );
+            });
+            await waitFor(() =>
+                expect(hosted?.initialSessionResolved).toBe(true),
+            );
+            await act(async () => {
+                await hosted?.signIn("google");
+            });
+            await waitFor(() => expect(attempts).toBe(3));
+            if (cleanup === "failed hint cleanup") {
+                jest.mocked(SecureStore.deleteItemAsync).mockRejectedValueOnce(
+                    new Error("Pairing test hint cleanup unavailable"),
+                );
+            }
+            await act(async () => {
+                await hosted?.signOut();
+            });
+            await waitFor(() => {
+                expect(hosted?.state.session).toBeNull();
+                expect(hosted?.state.conduitsSnapshot).toBeNull();
+                expect(hosted?.lastAuthProvider).toBeNull();
+            });
+            expect(sessionClient.clearHostedSession).toHaveBeenCalledTimes(1);
+            expect(SecureStore.deleteItemAsync).toHaveBeenCalledWith(
+                SECURESTORE_HOSTED_LAST_AUTH_PROVIDER_KEY,
+            );
+            expect(authService.restoreSignIn).not.toHaveBeenCalled();
+            expect(desiredId).toBe(localId);
+            // Deliberately reuse both account ID and token: only the session boundary resets retries.
+            await act(async () => {
+                await hosted?.signIn("google");
+            });
+            await waitFor(() => expect(attempts).toBe(6));
+            expect(hosted?.state.session?.accountId).toBe(session.accountId);
+            available = true;
+            await act(async () => {
+                appStateListeners.forEach((listener) => listener("background"));
+                appStateListeners.forEach((listener) => listener("active"));
+            });
+            await waitFor(() => expect(attempts).toBe(7));
+            expect(desiredId).toBe(localId);
+        },
+    );
 
     it("clears the auth hint and upstream auth session on explicit sign out", async () => {
         const session = makeSession({
@@ -1829,7 +2834,7 @@ function makeHostedClient(overrides?: Partial<HostedClient>): HostedClient {
     };
 }
 
-function makeConduitsSnapshot(entitlementStatus: string) {
+function makeConduitsSnapshot(entitlementStatus: string): ConduitsSnapshot {
     return {
         entitlement: {
             status: entitlementStatus,

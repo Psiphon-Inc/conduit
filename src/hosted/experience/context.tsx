@@ -28,7 +28,6 @@ import React from "react";
 import { loadCachedAlias } from "@/src/common/conduitAlias";
 import { timedLog } from "@/src/common/utils";
 import {
-    QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
     QUERYKEY_HOSTED_STATS_LIVE,
     QUERYKEY_HOSTED_STATS_RECENT,
     QUERYKEY_HOSTED_STATS_SUMMARY,
@@ -38,10 +37,7 @@ import {
     useHostedAccountProfileQuery,
     useHostedUpdateAccountAliasMutation,
 } from "@/src/hosted/accountQueries";
-import {
-    HostedPersonalCompartmentIdConflictError,
-    createHostedApiClient,
-} from "@/src/hosted/apiClient";
+import { createHostedApiClient } from "@/src/hosted/apiClient";
 import { HOSTED_SIGN_IN_METHOD_UNAVAILABLE_MESSAGE } from "@/src/hosted/auth/messages";
 import {
     clearHostedLastAuthProvider,
@@ -72,6 +68,7 @@ import {
     HostedExperienceState,
     HostedRevenueCatPhase,
 } from "@/src/hosted/experience/types";
+import { useHostedPersonalCompartmentSync } from "@/src/hosted/personalCompartmentSync";
 import { hostedQueryKeys } from "@/src/hosted/queryKeys";
 import { RevenueCatPublicKeys } from "@/src/hosted/revenuecatClient";
 import {
@@ -94,13 +91,7 @@ import {
     refreshHostedSession,
     setHostedSessionState,
     useHostedSessionQuery,
-    withHostedSessionRecovery,
 } from "@/src/hosted/sessionQueries";
-import { PersonalCompartmentId } from "@/src/pairing/compartmentId";
-import {
-    loadAndroidPersonalCompartmentId,
-    persistAndroidPersonalCompartmentId,
-} from "@/src/personalCompartmentId";
 
 type HostedSessionClient = ReturnType<typeof createHostedSessionClient>;
 type HostedApiClient = ReturnType<typeof createHostedApiClient>;
@@ -238,6 +229,13 @@ function HostedExperienceProviderInner(
     const isOffline =
         networkState.isConnected === false ||
         networkState.isInternetReachable === false;
+    const stopPersonalCompartmentSync = useHostedPersonalCompartmentSync({
+        queryClient,
+        sessionDeps,
+        apiClient,
+        isOffline,
+        delay,
+    });
     const authProviderHintQuery = useQuery({
         queryKey: hostedQueryKeys.authProviderHint(baseUrl),
         enabled: Boolean(baseUrl),
@@ -339,19 +337,6 @@ function HostedExperienceProviderInner(
                         `Hosted alias seed deferred: ${toErrorMessage(error)}`,
                     );
                 }
-            }
-
-            if (authResult.platform === "android") {
-                const personalCompartmentId =
-                    await syncAndroidPersonalCompartmentId({
-                        apiClient,
-                        queryClient,
-                        sessionDeps,
-                    });
-                queryClient.setQueryData(
-                    [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
-                    personalCompartmentId,
-                );
             }
 
             if (options.persistAuthProviderHint) {
@@ -790,6 +775,7 @@ function HostedExperienceProviderInner(
     );
 
     const signOut = React.useCallback(async () => {
+        stopPersonalCompartmentSync();
         signInMutation.reset();
         startEmailCodeSignInMutation.reset();
         completeEmailCodeSignInMutation.reset();
@@ -807,12 +793,21 @@ function HostedExperienceProviderInner(
             await authService.signOut();
         } catch {}
 
-        await clearHostedLastAuthProvider();
-        setCachedAuthProviderHint(queryClient, baseUrl, null);
-        await clearHostedSessionState(queryClient, sessionDeps);
-        clearHostedExperienceQueryCache(queryClient, baseUrl);
+        try {
+            await clearHostedLastAuthProvider();
+        } catch {
+            timedLog("Hosted auth provider hint cleanup deferred");
+        } finally {
+            setCachedAuthProviderHint(queryClient, baseUrl, null);
+            try {
+                await clearHostedSessionState(queryClient, sessionDeps);
+            } finally {
+                clearHostedExperienceQueryCache(queryClient, baseUrl);
+            }
+        }
     }, [
         baseUrl,
+        stopPersonalCompartmentSync,
         purchaseMutation,
         queryClient,
         restoreMutation,
@@ -987,6 +982,8 @@ function clearHostedExperienceQueryCache(
     queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_RECENT] });
     queryClient.removeQueries({ queryKey: [QUERYKEY_HOSTED_STATS_LIVE] });
     queryClient.setQueryData(hostedQueryKeys.session(baseUrl), null);
+    // Keep a failed hint deletion from immediately triggering auth restoration.
+    setCachedAuthProviderHint(queryClient, baseUrl, null);
 }
 
 async function configureRevenueCatForSession(input: {
@@ -1004,45 +1001,6 @@ async function configureRevenueCatForSession(input: {
     });
 
     return true;
-}
-
-async function syncAndroidPersonalCompartmentId(input: {
-    apiClient: HostedApiClient;
-    queryClient: QueryClient;
-    sessionDeps: HostedSessionDependencies;
-}): Promise<PersonalCompartmentId | null> {
-    const localPersonalCompartmentId = await loadAndroidPersonalCompartmentId();
-    if (!localPersonalCompartmentId) {
-        return null;
-    }
-
-    try {
-        const normalizedPersonalCompartmentId = await withHostedSessionRecovery(
-            input.queryClient,
-            input.sessionDeps,
-            (session) =>
-                input.apiClient.setPersonalCompartmentId(
-                    session.accessToken,
-                    localPersonalCompartmentId,
-                ),
-        );
-        await persistAndroidPersonalCompartmentId(
-            normalizedPersonalCompartmentId,
-        );
-        return normalizedPersonalCompartmentId;
-    } catch (error) {
-        if (error instanceof HostedPersonalCompartmentIdConflictError) {
-            await persistAndroidPersonalCompartmentId(
-                error.currentPersonalCompartmentId,
-            );
-            return error.currentPersonalCompartmentId;
-        }
-
-        timedLog(
-            `Hosted personal compartment sync deferred: ${toErrorMessage(error)}`,
-        );
-        return localPersonalCompartmentId;
-    }
 }
 
 function normalizeBaseUrl(baseUrl: string): string {

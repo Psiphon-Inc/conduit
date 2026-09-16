@@ -23,6 +23,7 @@ import {
     INPROXY_MAX_CLIENTS_MAX,
     INPROXY_MAX_CLIENTS_TOTAL_MAX,
 } from "@/src/constants";
+import { PairingConfigurationSchema } from "@/src/inproxy/pairingConfiguration";
 import { PersonalCompartmentIdSchema } from "@/src/pairing/compartmentId";
 
 export const InproxyStatusEnumSchema = z.enum([
@@ -34,6 +35,7 @@ export const InproxyStatusEnumSchema = z.enum([
 export const ProxyStateSchema = z.object({
     status: InproxyStatusEnumSchema,
     networkState: z.enum(["HAS_INTERNET", "NO_INTERNET"]).nullable().optional(),
+    pairingConfiguration: PairingConfigurationSchema.optional(),
 });
 
 export const ProxyErrorSchema = z.object({

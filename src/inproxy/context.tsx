@@ -53,7 +53,11 @@ import {
     QUERYKEY_INPROXY_TOTAL_BYTES_TRANSFERRED,
 } from "@/src/constants";
 import { useAndroidPersonalCompartmentId } from "@/src/hooks";
-import { ConduitModule } from "@/src/inproxy/module";
+import { type ConduitModuleAPI, getConduitModule } from "@/src/inproxy/module";
+import {
+    NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+    type PairingConfiguration,
+} from "@/src/inproxy/pairingConfiguration";
 import {
     InproxyActivityStats,
     InproxyActivityStatsSchema,
@@ -78,7 +82,7 @@ import {
 } from "@/src/inproxy/utils";
 import {
     parsePersonalCompartmentId,
-    persistAndroidPersonalCompartmentId,
+    reconcileAndroidPersonalCompartmentId,
 } from "@/src/personalCompartmentId";
 import { playSound } from "@/src/sound";
 
@@ -100,7 +104,14 @@ export function useInproxyContext(): InproxyContextValue {
 /**
  * The InproxyProvider exposes the ConduitModule API.
  */
-export function InproxyProvider({ children }: { children: React.ReactNode }) {
+export function InproxyProvider({
+    children,
+    module: providedModule,
+}: {
+    children: React.ReactNode;
+    module?: ConduitModuleAPI;
+}) {
+    const ConduitModule = providedModule ?? getConduitModule();
     const conduitKeyPair = useConduitKeyPair();
     const androidPersonalCompartmentIdQuery = useAndroidPersonalCompartmentId();
     const androidPersonalCompartmentId = androidPersonalCompartmentIdQuery.data;
@@ -124,18 +135,29 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // Set on user-initiated starts so background auto-reconnects do not
     // replay the activation sound.
     const armedForActivationSoundRef = useRef(false);
+    const parameterSelectionRevisionRef = useRef(0);
+    const parameterWritesRef = useRef(Promise.resolve());
+    const latestPairingRevisionRef = useRef(-1);
 
     useEffect(() => {
         // this manages InproxyEvent subscription and connects it to the handler
-        const subscription =
-            ConduitModule.addInproxyEventListener(handleInproxyEvent);
+        let active = true;
+        queryClient.setQueryData(NATIVE_PAIRING_CONFIGURATION_QUERY_KEY, null);
+        const subscription = ConduitModule.addInproxyEventListener((event) => {
+            if (active) handleInproxyEvent(event);
+        });
         timedLog("InproxyEvent subscription added");
 
         return () => {
+            active = false;
             subscription.remove();
+            queryClient.setQueryData(
+                NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+                null,
+            );
             timedLog("InproxyEvent subscription removed");
         };
-    }, []);
+    }, [ConduitModule, queryClient]);
 
     useEffect(() => {
         const subscription = ConduitModule.addIpcEventListener(handleIpcEvent);
@@ -152,6 +174,10 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             "change",
             (nextState) => {
                 if (nextState === "active") {
+                    queryClient.setQueryData(
+                        NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+                        null,
+                    );
                     ConduitModule.emitCurrentInproxyState();
                 }
             },
@@ -173,18 +199,28 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                         break;
                     }
 
-                    const fallbackStatus = InproxyStatusEnumSchema.safeParse(
-                        (inproxyEvent.data as { status?: unknown })?.status,
+                    queryClient.setQueryData(
+                        NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+                        null,
                     );
+                    // Zod errors can contain payload values, including private identity.
+                    logErrorToDiagnostic(
+                        new Error(
+                            "Invalid native proxy state; pairing unavailable",
+                        ),
+                    );
+                    const fallbackStatus = ProxyStateSchema.pick({
+                        status: true,
+                    }).safeParse(inproxyEvent.data);
                     if (fallbackStatus.success) {
                         handleProxyState({
-                            status: fallbackStatus.data,
+                            status: fallbackStatus.data.status,
                             networkState: null,
                         });
                         break;
                     }
 
-                    throw parsedProxyState.error;
+                    break;
                 } catch (error) {
                     logErrorToDiagnostic(
                         wrapError(error, "Failed to handle proxyState"),
@@ -222,6 +258,20 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     function handleProxyState(proxyState: ProxyState): void {
+        const pairingConfiguration = proxyState.pairingConfiguration;
+        if (
+            pairingConfiguration &&
+            pairingConfiguration.revision >= latestPairingRevisionRef.current
+        ) {
+            latestPairingRevisionRef.current = pairingConfiguration.revision;
+            queryClient.setQueryData<PairingConfiguration | null>(
+                NATIVE_PAIRING_CONFIGURATION_QUERY_KEY,
+                (current) =>
+                    !current || pairingConfiguration.revision > current.revision
+                        ? pairingConfiguration
+                        : current,
+            );
+        }
         const inproxyStatus = InproxyStatusEnumSchema.parse(proxyState.status);
         const previousStatus = lastInproxyStatusRef.current;
         lastInproxyStatusRef.current = inproxyStatus;
@@ -358,7 +408,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     // layer. This also allows us to have defaults that are different than what
     // the module/tunnel-core uses. The values stored in AsyncStorage will be
     // taken as the source of truth.
-    async function loadInproxyParameters() {
+    async function loadInproxyParameters(revision: number) {
         if (
             !conduitKeyPair.data ||
             (Platform.OS === "android" &&
@@ -406,9 +456,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
                 INPROXY_MAX_CLIENTS_MAX,
             );
             const personalCompartmentId =
-                androidPersonalCompartmentId === undefined
-                    ? undefined
-                    : androidPersonalCompartmentId;
+                androidPersonalCompartmentId ?? undefined;
             const maxPersonalClients = personalCompartmentId
                 ? resolveMaxPersonalClients(
                       storedInproxyMaxPersonalClients,
@@ -449,7 +497,9 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             });
 
             // This call updates the context's state value for the parameters.
-            await selectInproxyParameters(storedInproxyParameters);
+            if (revision === parameterSelectionRevisionRef.current) {
+                await selectInproxyParameters(storedInproxyParameters);
+            }
         } catch (error) {
             logErrorToDiagnostic(
                 wrapError(error, "Failed to load inproxy parameters"),
@@ -459,6 +509,20 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
 
     async function selectInproxyParameters(
         params: InproxyParameters,
+    ): Promise<void> {
+        const revision = ++parameterSelectionRevisionRef.current;
+        // Serialize storage writes, and discard selections superseded while awaiting I/O.
+        const write = parameterWritesRef.current.then(async () => {
+            if (revision !== parameterSelectionRevisionRef.current) return;
+            await persistAndDispatchParameters(params, revision);
+        });
+        parameterWritesRef.current = write.catch(() => {});
+        return write;
+    }
+
+    async function persistAndDispatchParameters(
+        params: InproxyParameters,
+        revision: number,
     ): Promise<void> {
         await AsyncStorage.setItem(
             ASYNCSTORAGE_INPROXY_MAX_CLIENTS_KEY,
@@ -488,6 +552,7 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             ASYNCSTORAGE_INPROXY_REDUCED_LIMIT_BYTES_PER_SECOND_KEY,
             params.reducedLimitUpstreamBytesPerSecond?.toString(),
         );
+        if (revision !== parameterSelectionRevisionRef.current) return;
         setInproxyParameters(params);
         try {
             await ConduitModule.paramsChanged(params);
@@ -602,13 +667,18 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
     }
 
     useEffect(() => {
-        loadInproxyParameters();
+        const revision = ++parameterSelectionRevisionRef.current;
+        void loadInproxyParameters(revision);
+        return () => {
+            ++parameterSelectionRevisionRef.current;
+        };
     }, [androidPersonalCompartmentId, conduitKeyPair.data]);
 
     useEffect(() => {
         if (
             Platform.OS !== "android" ||
-            androidPersonalCompartmentId != null ||
+            // Undefined means SecureStore is still loading, not that an ID is absent.
+            androidPersonalCompartmentId !== null ||
             !(conduitKeyPair.data?.publicKey instanceof Uint8Array)
         ) {
             return;
@@ -625,7 +695,13 @@ export function InproxyProvider({ children }: { children: React.ReactNode }) {
             [QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID],
             personalCompartmentId,
         );
-        void persistAndroidPersonalCompartmentId(personalCompartmentId);
+        void reconcileAndroidPersonalCompartmentId(
+            personalCompartmentId,
+            () =>
+                queryClient.getQueryData([
+                    QUERYKEY_ANDROID_PERSONAL_COMPARTMENT_ID,
+                ]) === personalCompartmentId,
+        );
     }, [androidPersonalCompartmentId, conduitKeyPair.data, queryClient]);
 
     const value = {

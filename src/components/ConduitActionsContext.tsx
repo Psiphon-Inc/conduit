@@ -27,10 +27,11 @@ import {
     RyveClaimMaterial,
     resolvePreferredRyveName,
 } from "@/src/components/ryveClaim";
-import { useAndroidPersonalCompartmentId, useConduitName } from "@/src/hooks";
+import { useConduitName } from "@/src/hooks";
 import { useHostedExperienceState } from "@/src/hosted/experience/hooks";
 import { isEntitlementAllowed } from "@/src/hosted/experience/stateMachine";
 import { resolveHostedPersonalPairingState } from "@/src/hosted/personalPairing";
+import { useNativePairingConfiguration } from "@/src/inproxy/pairingConfiguration";
 
 export interface ConduitActionsContextValue {
     /** Open the Ryve claim modal for a given claim material */
@@ -65,8 +66,7 @@ export function useConduitActions(): ConduitActionsContextValue {
 
 export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
     const { openModal } = useModal();
-    const { data: androidPersonalCompartmentId } =
-        useAndroidPersonalCompartmentId();
+    const nativePairingConfiguration = useNativePairingConfiguration();
     const { data: conduitName } = useConduitName();
     const state = useHostedExperienceState();
     const conduits = state.conduitsSnapshot?.conduits ?? [];
@@ -94,9 +94,7 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
         Platform.OS === "ios" || Platform.OS === "web";
     const personalCompartmentId = usesHostedPersonalPairing
         ? hostedPersonalPairing.hostedPersonalCompartmentId
-        : (hostedPersonalPairing.hostedPersonalCompartmentId ??
-          androidPersonalCompartmentId ??
-          null);
+        : (nativePairingConfiguration?.personalCompartmentId ?? null);
     const isPersonalPairingShareReady = usesHostedPersonalPairing
         ? hostedPersonalPairing.ready
         : personalCompartmentId != null;
@@ -104,8 +102,6 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
         usesHostedPersonalPairing &&
         hostedPersonalPairing.preparing &&
         !isPersonalPairingShareReady;
-    const personalPairingWrapperBaseUrl =
-        state.session?.personalPairingWrapperBaseUrl ?? null;
 
     const hostedRyveClaim = React.useMemo(
         () => conduits.find((c) => c.ryve_claim)?.ryve_claim,
@@ -131,13 +127,8 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
 
     const openPersonalPairingModal = React.useCallback(() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        openModal(
-            <PersonalPairingShareModal
-                personalCompartmentId={personalCompartmentId}
-                wrapperBaseUrl={personalPairingWrapperBaseUrl}
-            />,
-        );
-    }, [openModal, personalCompartmentId, personalPairingWrapperBaseUrl]);
+        openModal(<LivePersonalPairingShareModal />);
+    }, [openModal]);
 
     const value = React.useMemo<ConduitActionsContextValue>(
         () => ({
@@ -162,5 +153,19 @@ export function ConduitActionsProvider({ children }: React.PropsWithChildren) {
         <ConduitActionsContext.Provider value={value}>
             {children}
         </ConduitActionsContext.Provider>
+    );
+}
+
+// ModalStore retains this element; subscribing here keeps its contents current.
+function LivePersonalPairingShareModal() {
+    const { personalCompartmentId } = useConduitActions();
+    const state = useHostedExperienceState();
+    return (
+        <PersonalPairingShareModal
+            personalCompartmentId={personalCompartmentId}
+            wrapperBaseUrl={
+                state.session?.personalPairingWrapperBaseUrl ?? null
+            }
+        />
     );
 }
