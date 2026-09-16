@@ -18,8 +18,11 @@
  */
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
+import { AppSkinPreview } from "@/src/appearance/AppAppearance";
+import { APP_SKINS, parseAppSkinPreference } from "@/src/appearance/appSkins";
 import { InproxyStatusColorCanvas } from "@/src/components/SkyBox";
 import {
     OrbEvolutionLevel,
@@ -34,6 +37,7 @@ import {
     findVisualScenario,
 } from "@/src/components/orb-scene/visualScenarios";
 import { clampVisualProgress } from "@/src/components/orb-scene/visualTestControl";
+import { AppearanceControlsPreview } from "@/src/components/visual-lab/AppearanceControlsPreview";
 import { palette } from "@/src/styles";
 
 /**
@@ -52,6 +56,7 @@ import { palette } from "@/src/styles";
  *   viewport  mobile | desktop | fit (default: mobile)
  *   bg        black | white | mauve (default: black)
  *   theme     0..3 theme level override for orb scenes
+ *   skin      current | classic-dark (does not change saved preference)
  *   chrome    0 hides controls for screenshot capture (default: 1)
  *
  * Screenshot automation waits for `[data-visualready="true"]`, which is set
@@ -104,6 +109,13 @@ function ScenarioMount({
         progress,
         reducedMotion: false,
     };
+    if (scenario.kind === "appearance-controls") {
+        return (
+            <View style={{ width, height }}>
+                <AppearanceControlsPreview />
+            </View>
+        );
+    }
     if (scenario.kind === "skybox") {
         return (
             <View style={{ width, height }}>
@@ -257,6 +269,7 @@ const CONTROL_STYLE: React.CSSProperties = {
 };
 
 export function VisualLabScreen() {
+    const { t } = useTranslation();
     const router = useRouter();
     const params = useLocalSearchParams<{
         scenario?: string;
@@ -266,8 +279,10 @@ export function VisualLabScreen() {
         bg?: string;
         theme?: string;
         chrome?: string;
+        skin?: string;
     }>();
     const windowSize = useWindowSize();
+    const skinId = parseAppSkinPreference(firstString(params.skin));
 
     const scenarioId =
         firstString(params.scenario) ?? ORB_VISUAL_SCENARIOS[0].id;
@@ -275,7 +290,9 @@ export function VisualLabScreen() {
     const playing = firstString(params.play) === "1";
     const chromeVisible = firstString(params.chrome) !== "0";
     const backgroundId = firstString(params.bg) ?? "black";
-    const background = BACKGROUNDS[backgroundId] ?? BACKGROUNDS.black;
+    const background = firstString(params.bg)
+        ? (BACKGROUNDS[backgroundId] ?? BACKGROUNDS.black)
+        : APP_SKINS[skinId].labBackground;
     const viewportParam = firstString(params.viewport) ?? "mobile";
     const themeParam = firstString(params.theme);
     const themeOverride =
@@ -300,6 +317,7 @@ export function VisualLabScreen() {
               ];
 
     const settleKey = JSON.stringify([
+        skinId,
         scenarioId,
         progress,
         viewportParam,
@@ -338,7 +356,11 @@ export function VisualLabScreen() {
         themeOverride,
     };
 
-    const stage = <RendererStage rendererId="native" {...stageProps} />;
+    const stage = (
+        <AppSkinPreview skinId={skinId}>
+            <RendererStage rendererId="native" {...stageProps} />
+        </AppSkinPreview>
+    );
 
     return (
         <div
@@ -376,6 +398,21 @@ export function VisualLabScreen() {
                             {ORB_VISUAL_SCENARIOS.map((entry) => (
                                 <option key={entry.id} value={entry.id}>
                                     {entry.id}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <label>
+                        Skin{" "}
+                        <select
+                            value={skinId}
+                            onChange={(event) =>
+                                setParam("skin", event.target.value)
+                            }
+                        >
+                            {Object.values(APP_SKINS).map((skin) => (
+                                <option key={skin.id} value={skin.id}>
+                                    {t(skin.labelKey)}
                                 </option>
                             ))}
                         </select>

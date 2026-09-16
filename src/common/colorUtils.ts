@@ -35,6 +35,22 @@ export function rgbaFromRgb(rgb: string, alpha: number): string {
     return `rgba(${trimmed},${clampedAlpha})`;
 }
 
+/** Converts owned six-digit hex palette colors (with optional #) to RGB channels. */
+export function hexToRgbChannels(hex: string): {
+    r: number;
+    g: number;
+    b: number;
+} {
+    const value = Number.parseInt(hex.replace(/^#/, ""), 16);
+    return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+}
+
+/** Formats owned hex palette paint for the renderer's rgb() channel inputs. */
+export function rgbFromHexColor(hex: string): string {
+    const { r, g, b } = hexToRgbChannels(hex);
+    return `rgb(${r},${g},${b})`;
+}
+
 /**
  * Multiplies the alpha channel of an `rgba(...)` or `rgb(...)` color string
  * by a given multiplier.

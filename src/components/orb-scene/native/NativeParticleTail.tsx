@@ -23,6 +23,7 @@ import Animated, {
     useAnimatedStyle,
 } from "react-native-reanimated";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import {
     connectionLightMotionBufferOffset,
     connectionLightProxyEnvelope,
@@ -82,7 +83,7 @@ export function NativeParticleTail({
     orbRadius,
     sharedMotionBuffer,
     sharedMotionIndex,
-    tint = "rgba(255,222,205,0.2)",
+    tint,
     masterOpacity,
 }: {
     orbRadius: number;
@@ -91,6 +92,7 @@ export function NativeParticleTail({
     tint?: string;
     masterOpacity?: SharedValue<number>;
 }) {
+    const { skin } = useAppAppearance();
     // The sheet is sized from the orb so it never resizes at runtime; only
     // its rotation and opacity animate. Its outward half must be long enough
     // to reach the light across the whole contact band the envelope allows.
@@ -158,7 +160,7 @@ export function NativeParticleTail({
         >
             <ExpoImage
                 source={TAIL_MASK}
-                tintColor={tint}
+                tintColor={tint ?? skin.orb.particle}
                 style={StyleSheet.absoluteFill}
                 contentFit="fill"
             />

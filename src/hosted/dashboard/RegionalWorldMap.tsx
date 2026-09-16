@@ -20,6 +20,7 @@ import React from "react";
 import { View } from "react-native";
 import Svg, { Circle, G, Path } from "react-native-svg";
 
+import { hexToRgbChannels } from "@/src/common/colorUtils";
 import {
     RegionalImpactRow,
     normalizeRegionalMapKey,
@@ -61,8 +62,8 @@ const worldMapBounds = require("@/assets/worldmapBounds.json") as Record<
 const countryCodesToNames =
     require("@/assets/countryCodesToNames.json") as Record<string, string>;
 const worldMapLookup = buildWorldMapLookup();
-const IDLE_REGION_RGB = hexToRgb(palette.deepMauve);
-const ACTIVE_REGION_RGB = hexToRgb(palette.peach);
+const IDLE_REGION_RGB = hexToRgbChannels(palette.deepMauve);
+const ACTIVE_REGION_RGB = hexToRgbChannels(palette.peach);
 
 interface RegionalMapMarker {
     radius: number;
@@ -79,17 +80,6 @@ const MANUAL_REGIONAL_MARKERS: Record<string, RegionalMapMarker> = {
 
 function clamp01(value: number): number {
     return Math.max(0, Math.min(1, value));
-}
-
-function hexToRgb(hex: string) {
-    const normalized = hex.replace(/^#/, "");
-    const value = Number.parseInt(normalized, 16);
-
-    return {
-        r: (value >> 16) & 255,
-        g: (value >> 8) & 255,
-        b: value & 255,
-    };
 }
 
 function interpolateChannel(start: number, end: number, amount: number) {

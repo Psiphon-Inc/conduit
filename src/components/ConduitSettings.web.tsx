@@ -5,6 +5,11 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
+import { SkinPicker } from "@/src/appearance/SkinPicker";
 import { useConduitActions } from "@/src/components/ConduitActionsContext";
 import { EditableConduitAlias } from "@/src/components/EditableConduitAlias";
 import { GitHash } from "@/src/components/GitHash";
@@ -25,9 +30,10 @@ import { useConduitName } from "@/src/hooks";
 import { useHostedExperienceState } from "@/src/hosted/experience/hooks";
 import { isEntitlementAllowed } from "@/src/hosted/experience/stateMachine";
 import { playSound, setSoundEnabled, useSoundEnabled } from "@/src/sound";
-import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ConduitSettings({ inline = false }: { inline?: boolean }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const router = useRouter();
     const { t } = useTranslation();
     const { openModal } = useModal();
@@ -76,7 +82,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                     justifyContent: "space-between",
                     gap: 16,
                     borderBottomWidth: 1,
-                    borderBottomColor: "rgba(0, 0, 0, 0.12)",
+                    borderBottomColor: skin.border,
                     paddingVertical: 8,
                 }}
             >
@@ -104,7 +110,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         ) : null}
                     </View>
                 </View>
-                <Icon name="chevron-right" color={palette.purple} size={16} />
+                <Icon name="chevron-right" color={skin.accent} size={16} />
             </Pressable>
         );
     }
@@ -141,7 +147,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                           icon: (
                               <ExpoImage
                                   source={require("@/assets/images/icons/p2p_24px.svg")}
-                                  tintColor={palette.black}
+                                  tintColor={skin.text}
                                   style={{ width: 20, height: 20 }}
                                   contentFit="contain"
                               />
@@ -161,7 +167,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                           icon: (
                               <ExpoImage
                                   source={require("@/assets/images/icons/ryve.svg")}
-                                  tintColor={palette.black}
+                                  tintColor={skin.text}
                                   style={{ width: 20, height: 20 }}
                                   contentFit="contain"
                               />
@@ -177,7 +183,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                     icon: (
                         <ExpoImage
                             source={require("@/assets/images/icons/account.svg")}
-                            tintColor={palette.black}
+                            tintColor={skin.text}
                             style={{ width: 20, height: 20 }}
                             contentFit="contain"
                         />
@@ -188,6 +194,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                 })}
 
                 {/* Sound effects toggle */}
+                <SkinPicker />
                 <View
                     style={{
                         minHeight: 60,
@@ -196,7 +203,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                         justifyContent: "space-between",
                         gap: 16,
                         borderBottomWidth: 1,
-                        borderBottomColor: "rgba(0, 0, 0, 0.12)",
+                        borderBottomColor: skin.border,
                         paddingVertical: 8,
                     }}
                 >
@@ -208,7 +215,7 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                             flex: 1,
                         }}
                     >
-                        <Icon name="speaker" color={palette.black} size={20} />
+                        <Icon name="speaker" color={skin.text} size={20} />
                         <Text style={[ss.bodyFont, ss.blackText]}>
                             {t("SETTINGS_SOUND_EFFECTS_I18N.string")}
                         </Text>
@@ -220,25 +227,19 @@ export function ConduitSettings({ inline = false }: { inline?: boolean }) {
                 </View>
 
                 {renderSettingsAction({
-                    icon: (
-                        <Icon name="question" color={palette.black} size={20} />
-                    ),
+                    icon: <Icon name="question" color={skin.text} size={20} />,
                     label: t("MORE_INFO_I18N.string"),
                     onPress: () => void Linking.openURL(LEARN_MORE_URL),
                 })}
 
                 {renderSettingsAction({
-                    icon: (
-                        <Icon name="shield" color={palette.black} size={20} />
-                    ),
+                    icon: <Icon name="shield" color={skin.text} size={20} />,
                     label: t("PRIVACY_POLICY_I18N.string"),
                     onPress: () => void Linking.openURL(PRIVACY_POLICY_URL),
                 })}
 
                 {renderSettingsAction({
-                    icon: (
-                        <Icon name="notepad" color={palette.black} size={20} />
-                    ),
+                    icon: <Icon name="notepad" color={skin.text} size={20} />,
                     label: t("TERMS_OF_USE_I18N.string"),
                     onPress: () => void Linking.openURL(TERMS_OF_USE_URL),
                 })}

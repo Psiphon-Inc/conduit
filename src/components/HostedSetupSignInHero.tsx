@@ -28,42 +28,18 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
-import { palette, sharedStyles as ss } from "@/src/styles";
-
-const BAND_COLORS = [
-    "rgba(219,211,236,0)",
-    "rgba(187,174,227,0.18)",
-    "rgba(161,143,212,0.42)",
-    "rgba(136, 99, 189, 1)",
-    "rgba(136, 99, 189, 1)",
-    "rgba(161,143,212,0.42)",
-    "rgba(187,174,227,0.18)",
-    "rgba(219,211,236,0)",
-] as const;
-const BAND_POSITIONS = [0, 0.16, 0.25, 0.4, 0.6, 0.75, 0.84, 1] as const;
-
-// The Skia hero pulsed its colors with interpolateColors over a 7s sine;
-// the native version renders both pulse endpoints as static layers and
-// crossfades the top one.
-const PULSE_VARIANTS = [
-    {
-        gradient: ["#8E77C3", "#EFA48D"],
-        glowAlpha: 0.5,
-        innerShadow: "rgba(246,198,185,0.72)",
-    },
-    {
-        gradient: ["#9C85CD", "#F2B09A"],
-        glowAlpha: 0.68,
-        innerShadow: "rgba(234,182,168,0.88)",
-    },
-];
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
+import type { SkinHeroPulsePaint } from "@/src/appearance/appSkins";
 
 function HeroOrbLayer({
     variant,
     idSuffix,
     orbRadius,
 }: {
-    variant: (typeof PULSE_VARIANTS)[number];
+    variant: SkinHeroPulsePaint;
     idSuffix: string;
     orbRadius: number;
 }) {
@@ -82,10 +58,14 @@ function HeroOrbLayer({
                 >
                     <Stop
                         offset={orbRadius / (box / 2) - 0.05}
-                        stopColor="#FFFFFF"
+                        stopColor={variant.glowColor}
                         stopOpacity={variant.glowAlpha}
                     />
-                    <Stop offset={1} stopColor="#FFFFFF" stopOpacity={0} />
+                    <Stop
+                        offset={1}
+                        stopColor={variant.glowColor}
+                        stopOpacity={0}
+                    />
                 </RadialGradient>
                 <RadialGradient
                     id={`hero-body-${idSuffix}`}
@@ -141,6 +121,8 @@ export function HostedSetupSignInHero({
     body: string;
     width: number;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const pulse = useSharedValue(0);
 
     React.useEffect(() => {
@@ -175,7 +157,7 @@ export function HostedSetupSignInHero({
                 width: "100%",
                 minHeight: cardHeight,
                 borderRadius: 28,
-                backgroundColor: palette.white,
+                backgroundColor: skin.background,
                 overflow: "hidden",
             }}
         >
@@ -213,8 +195,8 @@ export function HostedSetupSignInHero({
                     style={StyleSheet.absoluteFill}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 1 }}
-                    colors={BAND_COLORS}
-                    locations={BAND_POSITIONS}
+                    colors={skin.hero.bandColors}
+                    locations={skin.hero.bandPositions}
                 />
                 <Svg
                     width={haloRadius * 2}
@@ -266,7 +248,7 @@ export function HostedSetupSignInHero({
                     }}
                 >
                     <HeroOrbLayer
-                        variant={PULSE_VARIANTS[0]}
+                        variant={skin.hero.pulseVariants[0]}
                         idSuffix="rest"
                         orbRadius={orbRadius}
                     />
@@ -274,7 +256,7 @@ export function HostedSetupSignInHero({
                         style={[StyleSheet.absoluteFill, pulseStyle]}
                     >
                         <HeroOrbLayer
-                            variant={PULSE_VARIANTS[1]}
+                            variant={skin.hero.pulseVariants[1]}
                             idSuffix="peak"
                             orbRadius={orbRadius}
                         />

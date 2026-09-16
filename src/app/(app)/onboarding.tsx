@@ -42,6 +42,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { drawBigFont } from "@/src/common/utils";
 import { ExternalTextLink } from "@/src/components/ExternalTextLink";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
@@ -54,9 +58,11 @@ import {
     PRIVACY_POLICY_URL,
 } from "@/src/constants";
 import { useNotificationsPermissions } from "@/src/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 export default function OnboardingScreen() {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const win = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const { t, i18n } = useTranslation();
@@ -322,7 +328,7 @@ export default function OnboardingScreen() {
                                     fontFamily: "JuraRegular",
                                     fontSize: bigFontSize,
                                     letterSpacing: 0.5,
-                                    color: palette.black,
+                                    color: skin.text,
                                     textAlign: "center",
                                     fontWeight: "500",
                                 }}
@@ -355,7 +361,7 @@ export default function OnboardingScreen() {
                                     fontFamily: "Rajdhani",
                                     fontSize: fontSize,
                                     letterSpacing: fontSize * 0.05,
-                                    color: palette.black,
+                                    color: skin.text,
                                     textAlign: isRTL ? "right" : "left",
                                     writingDirection: isRTL ? "rtl" : "ltr",
                                 }}
@@ -379,10 +385,10 @@ export default function OnboardingScreen() {
                                         marginRight: dotWidth / 2,
                                         borderRadius: dotWidth / 4,
                                         borderWidth: 1,
-                                        borderColor: palette.purple,
+                                        borderColor: skin.accent,
                                         backgroundColor:
                                             viewIndex >= index
-                                                ? palette.purple
+                                                ? skin.accent
                                                 : palette.transparent,
                                     }}
                                 />
@@ -396,8 +402,8 @@ export default function OnboardingScreen() {
                                 height: buttonSize.height,
                                 borderRadius: buttonBorderRadius,
                                 borderWidth: 3,
-                                borderColor: palette.purple,
-                                backgroundColor: palette.white,
+                                borderColor: skin.accent,
+                                backgroundColor: skin.background,
                                 alignItems: "center",
                                 justifyContent: "center",
                             }}
@@ -407,7 +413,7 @@ export default function OnboardingScreen() {
                                     fontFamily: "JuraRegular",
                                     fontSize: bigFontSize * 0.8,
                                     letterSpacing: bigFontSize * 0.05,
-                                    color: palette.purple,
+                                    color: skin.accent,
                                     textAlign: "center",
                                 }}
                             >

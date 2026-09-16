@@ -19,7 +19,10 @@
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Text, View } from "react-native";
 
-import { palette, sharedStyles as ss } from "@/src/styles";
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 
 export interface ConduitStatusProps {
     /** Conduit alias / station name */
@@ -45,6 +48,8 @@ export interface ConduitStatusProps {
 }
 
 export function ConduitStatus(props: ConduitStatusProps) {
+    const { skin } = useAppAppearance();
+    const ss = useAppearanceStyles();
     const { t } = useTranslation();
 
     const {
@@ -66,7 +71,7 @@ export function ConduitStatus(props: ConduitStatusProps) {
     }
 
     const metricFontSize = 17;
-    const metricColor = "rgba(35, 30, 40, 0.78)";
+    const metricColor = skin.metricsText;
     const showPersonalPairing = localIsOnline || showHosted;
     const summaryRows = [
         showLocal
@@ -118,7 +123,7 @@ export function ConduitStatus(props: ConduitStatusProps) {
                     style={[
                         ss.bodyFont,
                         {
-                            color: palette.black,
+                            color: skin.text,
                             fontSize: 26,
                             letterSpacing: 1,
                             textAlign: "center",

@@ -48,6 +48,10 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { isE2E } from "@/src/common/e2e";
 import { toErrorString } from "@/src/common/errors";
 import { formatBytes } from "@/src/common/formatters";
@@ -124,12 +128,14 @@ import {
     useInproxyRegionalBreakdownByWindow,
     useInproxyStatus,
 } from "@/src/inproxy/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 type DashboardStationMode = "hosted" | "local";
 const SUMMARY_ANIMATION_STEPS = 12;
 
 export default function HostedDashboardScreen() {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const router = useRouter();
     const rootNavigationState = useRootNavigationState();
     const win = useWindowDimensions();
@@ -672,7 +678,7 @@ export default function HostedDashboardScreen() {
                                     style={[
                                         ss.tinyFont,
                                         {
-                                            color: palette.midGrey,
+                                            color: skin.mutedText,
                                         },
                                     ]}
                                 >
@@ -816,7 +822,7 @@ export default function HostedDashboardScreen() {
                                     <Icon
                                         name="chevron-down"
                                         size={16}
-                                        color={palette.black}
+                                        color={skin.text}
                                     />
                                 </Animated.View>
                             </Pressable>
@@ -846,6 +852,7 @@ function DashboardLoadingScreen({
     width: number;
     height: number;
 }) {
+    const { skin } = useAppAppearance();
     return (
         <View style={{ flex: 1 }}>
             <DashboardBackground width={width} height={height} />
@@ -857,7 +864,7 @@ function DashboardLoadingScreen({
                         justifyContent: "center",
                     }}
                 >
-                    <ActivityIndicator size="small" color={palette.black} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                 </View>
             </SafeAreaView>
         </View>
@@ -871,6 +878,7 @@ function DashboardBackground({
     width: number;
     height: number;
 }) {
+    const { skin } = useAppAppearance();
     return (
         <LinearGradient
             style={{
@@ -880,7 +888,7 @@ function DashboardBackground({
             }}
             start={{ x: 0, y: 1 }}
             end={{ x: 0, y: 0 }}
-            colors={["#FCDFD7", "#F0E0EB", "#E8DFF2", "#FFFFFF"]}
+            colors={skin.screenGradient}
             locations={[0.08, 0.19, 0.33, 0.78]}
         />
     );
@@ -889,7 +897,10 @@ function DashboardBackground({
 /**
  * Generates a style object for a selectable window button based on selected state.
  */
-function buttonStyle(selected?: boolean) {
+function buttonStyle(
+    paint: { selectedSurface: string; idleSurface: string },
+    selected?: boolean,
+) {
     return {
         borderRadius: 8,
         paddingVertical: 8,
@@ -897,9 +908,7 @@ function buttonStyle(selected?: boolean) {
         minWidth: 68,
         alignItems: "center" as const,
         justifyContent: "center" as const,
-        backgroundColor: selected
-            ? palette.selectedPurple
-            : "rgba(25, 18, 36, 0.08)",
+        backgroundColor: selected ? paint.selectedSurface : paint.idleSurface,
     };
 }
 
@@ -914,6 +923,8 @@ function DashboardStationSelector({
     onSelect: (mode: DashboardStationMode) => void;
     onHostedCta: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
 
     return (
@@ -926,7 +937,7 @@ function DashboardStationSelector({
                     }
                     onSelect("local");
                 }}
-                style={buttonStyle(mode === "local")}
+                style={buttonStyle(skin.segmentedControl, mode === "local")}
             >
                 <Text
                     style={[
@@ -935,7 +946,7 @@ function DashboardStationSelector({
                             color:
                                 mode === "local"
                                     ? palette.white
-                                    : palette.midGrey,
+                                    : skin.mutedText,
                             fontSize: 13,
                         },
                     ]}
@@ -953,7 +964,7 @@ function DashboardStationSelector({
                     onSelect("hosted");
                 }}
                 style={[
-                    buttonStyle(mode === "hosted"),
+                    buttonStyle(skin.segmentedControl, mode === "hosted"),
                     !hostedEnabled ? { opacity: 0.45 } : null,
                 ]}
             >
@@ -964,7 +975,7 @@ function DashboardStationSelector({
                             color:
                                 mode === "hosted"
                                     ? palette.white
-                                    : palette.midGrey,
+                                    : skin.mutedText,
                             fontSize: 13,
                         },
                     ]}
@@ -974,6 +985,9 @@ function DashboardStationSelector({
             </Pressable>
             {!hostedEnabled ? (
                 <Pressable
+                    testID="dashboard-hosted-setup"
+                    accessibilityRole="button"
+                    accessibilityLabel={t("HOST_A_STATION_I18N.string")}
                     onPress={onHostedCta}
                     style={{
                         width: 30,
@@ -981,7 +995,7 @@ function DashboardStationSelector({
                         borderRadius: 999,
                         alignItems: "center",
                         justifyContent: "center",
-                        backgroundColor: palette.black,
+                        backgroundColor: skin.strongSurface,
                     }}
                 >
                     <Text
@@ -1004,11 +1018,12 @@ function DashboardStationSelector({
 }
 
 function DashboardSectionDivider() {
+    const { skin } = useAppAppearance();
     return (
         <View
             style={{
                 borderTopWidth: 1,
-                borderTopColor: palette.thinPurple,
+                borderTopColor: skin.subtleBorder,
                 width: "100%",
             }}
         />
@@ -1026,10 +1041,12 @@ function RecentWindowButton({
     onPress: () => void;
     testID?: string;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     return (
         <Pressable
             testID={testID}
-            style={buttonStyle(selected)}
+            style={buttonStyle(skin.segmentedControl, selected)}
             onPress={() => {
                 if (!isE2E()) {
                     Haptics.selectionAsync();
@@ -1041,7 +1058,7 @@ function RecentWindowButton({
                 style={[
                     ss.bodyFont,
                     {
-                        color: selected ? palette.white : palette.midGrey,
+                        color: selected ? palette.white : skin.mutedText,
                         fontSize: 15,
                     },
                 ]}
@@ -1122,6 +1139,8 @@ function RegionalBreakdownPanel({
     rows: RegionalImpactRow[];
     window: RecentWindow;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const [detailsVisible, setDetailsVisible] = React.useState(false);
     const [detailsContentReady, setDetailsContentReady] = React.useState(false);
@@ -1196,7 +1215,7 @@ function RegionalBreakdownPanel({
                             ss.tinyFont,
                             ss.centeredText,
                             {
-                                color: palette.midGrey,
+                                color: skin.mutedText,
                             },
                         ]}
                     >
@@ -1235,6 +1254,8 @@ function RegionalBreakdownModal({
     rows: RegionalImpactRow[];
     window: RecentWindow;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { i18n, t } = useTranslation();
     const visibleRows = React.useMemo(
         () =>
@@ -1282,7 +1303,7 @@ function RegionalBreakdownModal({
                     width: "100%",
                     maxWidth: 560,
                     maxHeight: "80%",
-                    backgroundColor: palette.white,
+                    backgroundColor: skin.background,
                     borderRadius: 18,
                     overflow: "hidden",
                 }}
@@ -1339,7 +1360,7 @@ function RegionalBreakdownModal({
                         >
                             <ActivityIndicator
                                 size="small"
-                                color={palette.midGrey}
+                                color={skin.mutedText}
                             />
                         </View>
                     ) : (

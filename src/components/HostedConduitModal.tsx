@@ -19,6 +19,10 @@
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, Text, View } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { formatBytes } from "@/src/common/formatters";
 import { useConduitActions } from "@/src/components/ConduitActionsContext";
 import { Icon } from "@/src/components/Icon";
@@ -27,7 +31,7 @@ import { resolvePreferredRyveName } from "@/src/components/ryveClaim";
 import { useConduitName } from "@/src/hooks";
 import { getScopeLabel } from "@/src/hosted/conduitDisplay";
 import { ConduitView } from "@/src/hosted/contracts";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 export function HostedConduitModal({
     conduit,
@@ -44,6 +48,8 @@ export function HostedConduitModal({
      *  conduit to the big center orb slot. */
     onSetAsMain?: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { data: conduitName } = useConduitName();
     const { openPersonalPairingModal, openRyveClaimModal } =
@@ -76,7 +82,7 @@ export function HostedConduitModal({
                 }}
                 style={{
                     width: "80%",
-                    backgroundColor: palette.white,
+                    backgroundColor: skin.background,
                     borderRadius: 18,
                     overflow: "hidden",
                 }}
@@ -110,7 +116,7 @@ export function HostedConduitModal({
                                         ss.bodyFont,
                                         {
                                             fontSize: 17,
-                                            color: palette.midGrey,
+                                            color: skin.mutedText,
                                             textTransform: "uppercase",
                                             letterSpacing: 0.8,
                                         },
@@ -202,7 +208,7 @@ export function HostedConduitModal({
                                         ss.tinyFont,
                                         {
                                             fontSize: 11,
-                                            color: palette.midGrey,
+                                            color: skin.mutedText,
                                             opacity: 0.72,
                                             letterSpacing: 0.3,
                                         },
@@ -230,7 +236,7 @@ export function HostedConduitModal({
                                 paddingVertical: 10,
                                 paddingHorizontal: 20,
                                 borderWidth: 1.5,
-                                borderColor: palette.purple,
+                                borderColor: skin.accent,
                                 borderRadius: 15,
                                 alignSelf: "stretch",
                             }}
@@ -240,7 +246,7 @@ export function HostedConduitModal({
                                     ss.bodyFont,
                                     {
                                         fontSize: 16,
-                                        color: palette.purple,
+                                        color: skin.accent,
                                         letterSpacing: 0.3,
                                     },
                                 ]}
@@ -249,7 +255,7 @@ export function HostedConduitModal({
                             </Text>
                             <Icon
                                 name="right-arrow"
-                                color={palette.purple}
+                                color={skin.accent}
                                 size={12}
                             />
                         </Pressable>
@@ -277,7 +283,7 @@ export function HostedConduitModal({
                                 paddingVertical: 10,
                                 paddingHorizontal: 20,
                                 borderWidth: 1.5,
-                                borderColor: palette.purple,
+                                borderColor: skin.accent,
                                 borderRadius: 15,
                                 alignSelf: "stretch",
                             }}
@@ -287,7 +293,7 @@ export function HostedConduitModal({
                                     ss.bodyFont,
                                     {
                                         fontSize: 16,
-                                        color: palette.purple,
+                                        color: skin.accent,
                                         letterSpacing: 0.3,
                                     },
                                 ]}
@@ -296,7 +302,7 @@ export function HostedConduitModal({
                             </Text>
                             <Icon
                                 name="right-arrow"
-                                color={palette.purple}
+                                color={skin.accent}
                                 size={12}
                             />
                         </Pressable>
@@ -318,7 +324,7 @@ export function HostedConduitModal({
                                     ss.bodyFont,
                                     {
                                         fontSize: 15,
-                                        color: palette.midGrey,
+                                        color: skin.mutedText,
                                         letterSpacing: 0.3,
                                     },
                                 ]}

@@ -20,10 +20,12 @@ import { Stack, usePathname } from "expo-router";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import { isE2E, isPerf } from "@/src/common/e2e";
 import { AppBottomNav } from "@/src/components/AppBottomNav";
 import { ConduitActionsProvider } from "@/src/components/ConduitActionsContext";
 import { ModalHost, ModalProvider } from "@/src/components/ModalStore";
+import { HostedPromotionProvider } from "@/src/hosted-promotion/HostedPromotion";
 import { readHostedRuntimeConfig } from "@/src/hosted/config";
 import { HostedExperienceProvider } from "@/src/hosted/experience/context";
 import { useHostedExperienceIsOffline } from "@/src/hosted/experience/hooks";
@@ -31,7 +33,6 @@ import { RevenueCatProvider } from "@/src/hosted/revenuecatContext";
 import { InproxyProvider, useInproxyContext } from "@/src/inproxy/context";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
 import { SoundTriggers } from "@/src/sound/SoundTriggers";
-import { palette } from "@/src/styles";
 
 export default function AppLayout() {
     const hostedConfig = React.useMemo(readHostedRuntimeConfig, []);
@@ -43,26 +44,31 @@ export default function AppLayout() {
         pathname !== "/(app)/sso-callback";
 
     return (
-        <ModalProvider>
-            <InproxyProvider>
-                <RevenueCatProvider>
-                    <HostedExperienceProvider
-                        baseUrl={hostedConfig.baseUrl}
-                        revenueCatPublicKeys={hostedConfig.revenueCatPublicKeys}
-                    >
-                        <ConduitActionsProvider>
-                            <SoundTriggers />
-                            <ModalHost />
-                            <AppShell showBottomNav={showBottomNav} />
-                        </ConduitActionsProvider>
-                    </HostedExperienceProvider>
-                </RevenueCatProvider>
-            </InproxyProvider>
-        </ModalProvider>
+        <HostedPromotionProvider>
+            <ModalProvider>
+                <InproxyProvider>
+                    <RevenueCatProvider>
+                        <HostedExperienceProvider
+                            baseUrl={hostedConfig.baseUrl}
+                            revenueCatPublicKeys={
+                                hostedConfig.revenueCatPublicKeys
+                            }
+                        >
+                            <ConduitActionsProvider>
+                                <SoundTriggers />
+                                <ModalHost />
+                                <AppShell showBottomNav={showBottomNav} />
+                            </ConduitActionsProvider>
+                        </HostedExperienceProvider>
+                    </RevenueCatProvider>
+                </InproxyProvider>
+            </ModalProvider>
+        </HostedPromotionProvider>
     );
 }
 
 function AppShell({ showBottomNav }: { showBottomNav: boolean }) {
+    const { skin } = useAppAppearance();
     return (
         <View
             testID="app-ready"
@@ -75,7 +81,7 @@ function AppShell({ showBottomNav }: { showBottomNav: boolean }) {
                         headerShown: false,
                         animation: "fade",
                         contentStyle: {
-                            backgroundColor: palette.white,
+                            backgroundColor: skin.background,
                         },
                     }}
                 >

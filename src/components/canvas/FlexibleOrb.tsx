@@ -30,11 +30,11 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 import {
     InnerShadowLayer,
     OrbBodyGradient,
 } from "@/src/components/orb-scene/native/orbLayers";
-import { palette } from "@/src/styles";
 
 interface FlexibleOrbProps {
     currentView: SharedValue<number>;
@@ -53,6 +53,7 @@ export function FlexibleOrb({
     sceneHeight,
     sceneWidth,
 }: FlexibleOrbProps) {
+    const { skin } = useAppAppearance();
     const initialRadius = sceneHeight / 4;
     // Largest spring target across views, with bounce overshoot headroom;
     // the wrapper renders at this size and scales down.
@@ -209,20 +210,20 @@ export function FlexibleOrb({
                 <OrbBodyGradient
                     id="onboarding-orb-body"
                     radius={baseRadius}
-                    innerColor={palette.fadedMauve}
-                    outerColor={palette.purple}
+                    innerColor={skin.onboardingOrb.center}
+                    outerColor={skin.onboardingOrb.outer}
                 />
                 <InnerShadowLayer
                     id="onboarding-orb-shadow-mauve"
                     radius={baseRadius}
-                    color={palette.mauve}
+                    color={skin.onboardingOrb.topLeftShadow}
                     dx={10}
                     dy={10}
                 />
                 <InnerShadowLayer
                     id="onboarding-orb-shadow-peach"
                     radius={baseRadius}
-                    color={palette.peach}
+                    color={skin.onboardingOrb.bottomRightShadow}
                     dx={-10}
                     dy={-10}
                 />

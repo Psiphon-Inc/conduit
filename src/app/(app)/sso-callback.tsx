@@ -22,10 +22,11 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
+import { useAppearanceStyles } from "@/src/appearance/AppAppearance";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
-import { sharedStyles as ss } from "@/src/styles";
 
 export default function SSOCallbackScreen() {
+    const ss = useAppearanceStyles();
     const { t } = useTranslation();
     const router = useRouter();
     const rootNavigationState = useRootNavigationState();

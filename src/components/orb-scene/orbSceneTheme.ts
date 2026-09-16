@@ -16,7 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-import { rgbaFromRgb } from "@/src/common/colorUtils";
+import {
+    APP_SKINS,
+    type AppSkinId,
+    type AppSkinTokens,
+} from "@/src/appearance/appSkins";
+import { rgbFromHexColor, rgbaFromRgb } from "@/src/common/colorUtils";
 import { palette } from "@/src/styles";
 
 // Shared visual contract for the orb scene: theme tables, slot layouts, and
@@ -41,6 +46,9 @@ export interface OrbTheme {
     radialOuter: OrbTone;
     innerShadowBR: OrbTone;
     outerGlow: OrbTone;
+    /** Optional cold top-left inner shadow and rim, used by Classic Dark. */
+    innerShadowTL?: OrbTone;
+    rimColor?: string;
 }
 
 export interface OrbSceneTheme {
@@ -185,3 +193,77 @@ export const PROVISIONING_MARKER_GLOW_COLORS = [
     rgbaFromRgb(SCENE_THEMES[HOSTED_ORB_THEME_LEVEL].orb.radialOuter.rgb, 0),
 ];
 export const PROVISIONING_MARKER_GLOW_POSITIONS = [0, 0.34, 1];
+
+function makeColdSceneTheme(
+    skin: AppSkinTokens,
+    level: OrbEvolutionLevel,
+): OrbSceneTheme {
+    const orb = skin.orb;
+    return {
+        orb: {
+            radialInner: { rgb: rgbFromHexColor(orb.center), alpha: 1 },
+            radialOuter: {
+                rgb: rgbFromHexColor(
+                    level === 0 || level === 2 ? orb.deepBlue : orb.deepPurple,
+                ),
+                alpha: 1,
+            },
+            innerShadowBR: { rgb: rgbFromHexColor(orb.purple), alpha: 1 },
+            innerShadowTL: { rgb: rgbFromHexColor(orb.blue), alpha: 1 },
+            outerGlow: {
+                rgb: rgbFromHexColor(
+                    level === 0 || level === 2 ? orb.blue : orb.purple,
+                ),
+                alpha: 0.54,
+            },
+            rimColor: orb.rim,
+        },
+        titleColor: skin.text,
+        statusLeadColor: skin.text,
+        metricColor: skin.mutedText,
+        hintColor: skin.text,
+    };
+}
+
+// Paint is computed once, not in the animation/render loop. The pastel profile
+// preserves the original translucent evolution tables; cold-rim adds opaque
+// centers, the second inner shadow and the rim. This is a renderer distinction,
+// not a skin-ID switch: another cold-rim skin only needs token definitions.
+const sceneThemesBySkin: ReadonlyMap<
+    AppSkinId,
+    Record<OrbEvolutionLevel, OrbSceneTheme>
+> = new Map(
+    Object.values(APP_SKINS).map((skin) => [
+        skin.id,
+        skin.orb.sceneProfile === "pastel"
+            ? SCENE_THEMES
+            : {
+                  0: makeColdSceneTheme(skin, 0),
+                  1: makeColdSceneTheme(skin, 1),
+                  2: makeColdSceneTheme(skin, 2),
+                  3: makeColdSceneTheme(skin, 3),
+              },
+    ]),
+);
+
+/** Select renderer paint without changing evolution state, geometry or animations. */
+export function getOrbSceneTheme(
+    skinId: AppSkinId,
+    level: OrbEvolutionLevel,
+): OrbSceneTheme {
+    const themes = sceneThemesBySkin.get(skinId);
+    if (!themes)
+        throw new Error("Orb scene skin profile missing from skin registry");
+    return themes[level];
+}
+
+/** Provisioning markers use the same skin as hosted orbs, including during swaps. */
+export function getProvisioningGlowColors(skinId: AppSkinId): string[] {
+    const orb = APP_SKINS[skinId].orb;
+    if (orb.sceneProfile === "pastel") return PROVISIONING_MARKER_GLOW_COLORS;
+    return [
+        rgbaFromRgb(rgbFromHexColor(orb.rim), 0.72),
+        rgbaFromRgb(rgbFromHexColor(orb.blue), 0.42),
+        rgbaFromRgb(rgbFromHexColor(orb.purple), 0),
+    ];
+}

@@ -22,11 +22,15 @@ import { StyleProp, Text, View, ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 import type { AnimatedStyle } from "react-native-reanimated";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { Identicon } from "@/src/components/Identicon";
 import { HostedMiniOrbNative as HostedMiniOrb } from "@/src/components/orb-scene/native/HostedMiniOrbNative";
 import { getScopeIcon, getScopeLabel } from "@/src/hosted/conduitDisplay";
 import { ConduitView } from "@/src/hosted/contracts";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 export function HostedConduitCard({
     conduit,
@@ -41,6 +45,8 @@ export function HostedConduitCard({
     style?: StyleProp<ViewStyle>;
     orbStyle?: AnimatedStyle<ViewStyle>;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const scopeIcon = getScopeIcon(conduit.traffic_scope);
     const scopeLabel = getScopeLabel(conduit.traffic_scope, t);
@@ -59,7 +65,7 @@ export function HostedConduitCard({
                         {scopeIcon ? (
                             <Image
                                 source={scopeIcon}
-                                tintColor={palette.midGrey}
+                                tintColor={skin.mutedText}
                                 style={{
                                     width: 16,
                                     height: 16,
@@ -75,7 +81,7 @@ export function HostedConduitCard({
                                     ss.tinyFont,
                                     {
                                         fontSize: 13,
-                                        color: palette.midGrey,
+                                        color: skin.mutedText,
                                         opacity: 0.72,
                                         textTransform: "uppercase",
                                         letterSpacing: 0.5,
@@ -113,7 +119,7 @@ export function HostedConduitCard({
                                         ss.tinyFont,
                                         {
                                             fontSize: 13,
-                                            color: palette.midGrey,
+                                            color: skin.mutedText,
                                             opacity: 0.72,
                                             letterSpacing: 0.3,
                                         },
@@ -170,7 +176,7 @@ export function HostedConduitCard({
                         {scopeIcon ? (
                             <Image
                                 source={scopeIcon}
-                                tintColor={palette.midGrey}
+                                tintColor={skin.mutedText}
                                 style={{
                                     width: 14,
                                     height: 14,
@@ -186,7 +192,7 @@ export function HostedConduitCard({
                                     ss.tinyFont,
                                     {
                                         fontSize: 12,
-                                        color: palette.midGrey,
+                                        color: skin.mutedText,
                                         opacity: 0.72,
                                         textTransform: "uppercase",
                                         letterSpacing: 0.5,
@@ -224,7 +230,7 @@ export function HostedConduitCard({
                                         ss.tinyFont,
                                         {
                                             fontSize: 12,
-                                            color: palette.midGrey,
+                                            color: skin.mutedText,
                                             opacity: 0.72,
                                             letterSpacing: 0.3,
                                         },

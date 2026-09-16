@@ -30,6 +30,10 @@ import {
     View,
 } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { toErrorString } from "@/src/common/errors";
 import { readOptionalStringField } from "@/src/common/recordUtils";
 import { Icon } from "@/src/components/Icon";
@@ -45,7 +49,7 @@ import {
 } from "@/src/hosted/experience/hooks";
 import { useRevenueCatContext } from "@/src/hosted/revenuecatContext";
 import { HostedCustomerInfo } from "@/src/hosted/revenuecatTypes";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 const ACCOUNT_HORIZONTAL_PADDING = 32;
 const ACCOUNT_ACTIVE_GREEN = "#16954E";
@@ -67,6 +71,8 @@ const WEB_SUBSCRIPTION_DELETE_CLEANUP_MESSAGE =
     "Cancel your web subscription before deleting your account. After cancellation is reflected here, retry delete account.";
 
 export function HostedConduitAccountPage() {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const router = useRouter();
     const state = useHostedExperienceState();
@@ -333,7 +339,7 @@ export function HostedConduitAccountPage() {
                         height: 14,
                         borderLeftWidth: 2,
                         borderBottomWidth: 2,
-                        borderColor: palette.purple,
+                        borderColor: skin.accent,
                         transform: [{ rotate: "45deg" }],
                     }}
                 />
@@ -370,10 +376,9 @@ export function HostedConduitAccountPage() {
                             <View
                                 style={{
                                     borderWidth: 1,
-                                    borderColor: palette.thinPurple,
+                                    borderColor: skin.subtleBorder,
                                     borderRadius: 16,
-                                    backgroundColor:
-                                        "rgba(255, 255, 255, 0.42)",
+                                    backgroundColor: skin.panelSurface,
                                     padding: 12,
                                     marginBottom: 18,
                                     gap: 10,
@@ -503,7 +508,9 @@ export function HostedConduitAccountPage() {
                                     borderRadius: 12,
                                     padding: 12,
                                     gap: 10,
-                                    backgroundColor: palette.redTint5,
+                                    backgroundColor:
+                                        skin.accountButtons
+                                            .dangerConfirmationSurface,
                                     marginTop: 4,
                                 }}
                             >
@@ -600,6 +607,8 @@ function SubscriptionRow({
     expanded: boolean;
     onPress: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
 
     return (
@@ -616,7 +625,7 @@ function SubscriptionRow({
         >
             <ExpoImage
                 source={SUBSCRIPTION_ICON}
-                tintColor={palette.black}
+                tintColor={skin.text}
                 style={{ width: 34, height: 34 }}
                 contentFit="contain"
             />
@@ -662,7 +671,7 @@ function SubscriptionRow({
                     transform: [{ rotate: expanded ? "90deg" : "0deg" }],
                 }}
             >
-                <Icon name="chevron-right" color={palette.black} size={18} />
+                <Icon name="chevron-right" color={skin.text} size={18} />
             </View>
         </Pressable>
     );
@@ -687,7 +696,9 @@ function AccountActionRow({
     showChevron?: boolean;
     testID?: string;
 }) {
-    const color = danger ? ACCOUNT_DANGER_RED : palette.black;
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
+    const color = danger ? ACCOUNT_DANGER_RED : skin.text;
 
     return (
         <Pressable
@@ -726,6 +737,7 @@ function SubscriptionChip({
 }: {
     presentation: SubscriptionPresentation;
 }) {
+    const ss = useAppearanceStyles();
     const colors = resolveChipColors(presentation.kind);
 
     return (
@@ -759,6 +771,7 @@ function SubscriptionChip({
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
+    const ss = useAppearanceStyles();
     return (
         <View
             style={{
@@ -800,21 +813,26 @@ function AccountPanelButton({
     variant?: AccountActionVariant;
     testID?: string;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const isDanger = variant === "danger";
     const isPrimary = variant === "primary";
-    const borderColor = isDanger ? ACCOUNT_DANGER_RED : palette.purple;
+    const borderColor = isDanger ? ACCOUNT_DANGER_RED : skin.accent;
+    const buttonPaint = skin.accountButtons;
     const backgroundColor = disabled
         ? isDanger
-            ? palette.redTint5
-            : palette.fadedMauve
+            ? buttonPaint.disabledDanger
+            : isPrimary
+              ? buttonPaint.disabledPrimary
+              : buttonPaint.disabledSecondary
         : isPrimary
-          ? palette.purple
-          : palette.white;
+          ? buttonPaint.primary
+          : buttonPaint.secondary;
     const textColor = isDanger
         ? ACCOUNT_DANGER_RED
         : isPrimary
           ? palette.white
-          : palette.black;
+          : skin.text;
 
     return (
         <Pressable

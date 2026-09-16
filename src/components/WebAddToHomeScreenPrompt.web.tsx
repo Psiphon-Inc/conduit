@@ -5,13 +5,17 @@ import { useTranslation } from "react-i18next";
 import { Pressable, Text, View, useWindowDimensions } from "react-native";
 
 import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
+import {
     isIOSWebDevice,
     isWebAppStandalone,
 } from "@/src/common/webInstallPrompt";
 import { Icon } from "@/src/components/Icon";
 import { useModal } from "@/src/components/ModalStore";
 import { ASYNCSTORAGE_WEB_ADD_TO_HOME_SCREEN_PROMPT_SEEN_KEY } from "@/src/constants";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 export function WebAddToHomeScreenPromptController({
     disabled = false,
@@ -53,6 +57,8 @@ export function WebAddToHomeScreenPromptController({
 }
 
 export function WebAddToHomeScreenModal() {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { closeModal } = useModal();
     const win = useWindowDimensions();
@@ -86,7 +92,7 @@ export function WebAddToHomeScreenModal() {
                 style={{
                     width: modalWidth,
                     borderRadius: 24,
-                    backgroundColor: palette.white,
+                    backgroundColor: skin.background,
                     padding: 24,
                     gap: 18,
                     alignItems: "center",
@@ -142,7 +148,7 @@ export function WebAddToHomeScreenModal() {
                             borderRadius: 25,
                             alignItems: "center",
                             justifyContent: "center",
-                            backgroundColor: palette.purple,
+                            backgroundColor: skin.action,
                             paddingHorizontal: 18,
                         }}
                     >
@@ -177,5 +183,6 @@ export function useIsIOSWebDevice(): boolean {
 }
 
 export function AddToHomeScreenSettingsIcon() {
-    return <Icon name="home" color={palette.black} size={20} />;
+    const { skin } = useAppAppearance();
+    return <Icon name="home" color={skin.text} size={20} />;
 }

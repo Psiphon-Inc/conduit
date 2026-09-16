@@ -21,13 +21,17 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { formatBytes } from "@/src/common/formatters";
 import { TimeseriesDataPoint } from "@/src/common/timeseries";
 import {
     TimeseriesPlot,
     TimeseriesSeries,
 } from "@/src/components/TimeseriesPlot";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 export type HostedStatusMode = "bytes" | "connected";
 
@@ -63,6 +67,8 @@ export function HostedStatusPanel({
      *  (e.g. while fetching data for a newly-selected time window). */
     isLoading?: boolean;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const [plotWidth, setPlotWidth] = React.useState(0);
 
@@ -104,7 +110,7 @@ export function HostedStatusPanel({
             style={{
                 position: "relative",
                 borderRadius: 12,
-                backgroundColor: "rgba(25, 18, 36, 0.06)",
+                backgroundColor: skin.segmentedControl.groupSurface,
                 padding: 10,
                 gap: 8,
             }}
@@ -166,7 +172,7 @@ export function HostedStatusPanel({
                         {isLoading ? (
                             <ActivityIndicator
                                 size="small"
-                                color={palette.midGrey}
+                                color={skin.mutedText}
                             />
                         ) : null}
                     </View>
@@ -201,6 +207,8 @@ function HostedStatusModeButton({
     selected: boolean;
     onPress: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     return (
         <Pressable
             onPress={() => {
@@ -210,8 +218,8 @@ function HostedStatusModeButton({
             style={{
                 borderRadius: 8,
                 backgroundColor: selected
-                    ? palette.selectedPurple
-                    : "rgba(25, 18, 36, 0.08)",
+                    ? skin.segmentedControl.selectedSurface
+                    : skin.segmentedControl.idleSurface,
                 paddingHorizontal: 10,
                 paddingVertical: 6,
             }}
@@ -220,7 +228,7 @@ function HostedStatusModeButton({
                 style={[
                     ss.tinyFont,
                     {
-                        color: selected ? palette.white : palette.midGrey,
+                        color: selected ? palette.white : skin.mutedText,
                     },
                 ]}
             >

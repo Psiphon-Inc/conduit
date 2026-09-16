@@ -23,6 +23,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, Text, TextInput, View } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { isE2E } from "@/src/common/e2e";
 import {
     APPLE_STANDARD_EULA_URL,
@@ -34,14 +38,12 @@ import {
     HostedPlanOption,
     formatHostedPlanPrice,
 } from "@/src/hosted/planUtils";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 type ActionButtonVariant = "primary" | "secondary";
 
 const GOOGLE_SIGN_IN_ICON = require("@/assets/images/google.png");
 const APPLE_SIGN_IN_ICON = require("@/assets/images/apple.png");
-const HOSTED_PRIMARY_GRADIENT_START = "#7E5CB8";
-const HOSTED_PRIMARY_GRADIENT_END = "rgba(156, 129, 201, 0.69)";
 
 export function HostedPlanSelection({
     offeringsLoading,
@@ -59,6 +61,8 @@ export function HostedPlanSelection({
     onSelectPlan: (option: HostedPlanOption) => void;
     onRetry: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     return (
         <View style={[ss.column]}>
@@ -71,12 +75,8 @@ export function HostedPlanSelection({
             {options.length > 0
                 ? options.map((option) => {
                       const selected = selectedPlanKey === option.key;
-                      const textColor = selected
-                          ? palette.white
-                          : palette.black;
-                      const badgeColor = selected
-                          ? palette.white
-                          : palette.purple;
+                      const textColor = selected ? palette.white : skin.text;
+                      const badgeColor = selected ? palette.white : skin.accent;
                       return (
                           <Pressable
                               key={option.key}
@@ -87,16 +87,16 @@ export function HostedPlanSelection({
                               style={{
                                   borderWidth: 2,
                                   borderColor: selected
-                                      ? palette.purple
-                                      : palette.thinPurple,
+                                      ? skin.accent
+                                      : skin.subtleBorder,
                                   borderRadius: 14,
                                   paddingHorizontal: 14,
                                   paddingVertical: 12,
                                   backgroundColor: selected
-                                      ? HOSTED_PRIMARY_GRADIENT_START
-                                      : palette.white,
+                                      ? skin.setupButtons.selectedPlanSurface
+                                      : skin.background,
                                   shadowColor: selected
-                                      ? HOSTED_PRIMARY_GRADIENT_START
+                                      ? skin.setupButtons.selectedPlanShadow
                                       : palette.transparent,
                                   shadowOpacity: selected ? 0.34 : 0,
                                   shadowRadius: selected ? 12 : 0,
@@ -182,6 +182,8 @@ export function HostedPlanSelection({
 }
 
 export function HostedSetupBackButton({ onPress }: { onPress: () => void }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     return (
         <Pressable
             accessibilityRole="button"
@@ -203,7 +205,7 @@ export function HostedSetupBackButton({ onPress }: { onPress: () => void }) {
                     height: 12,
                     borderLeftWidth: 2,
                     borderBottomWidth: 2,
-                    borderColor: palette.purple,
+                    borderColor: skin.accent,
                     transform: [{ rotate: "45deg" }],
                 }}
             />
@@ -245,6 +247,8 @@ export function PrimaryActionBlock({
     recoverActionPending: boolean;
     onOpenManage: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const [e2eEmail, setE2eEmail] = React.useState("");
     const [e2eCode, setE2eCode] = React.useState("");
@@ -283,17 +287,17 @@ export function PrimaryActionBlock({
                             autoCorrect={false}
                             keyboardType="email-address"
                             placeholder="qa+clerk_test@example.com"
-                            placeholderTextColor={palette.midGrey}
+                            placeholderTextColor={skin.mutedText}
                             style={[
                                 ss.bodyFont,
                                 ss.blackText,
                                 {
                                     borderWidth: 1,
-                                    borderColor: palette.thinPurple,
+                                    borderColor: skin.subtleBorder,
                                     borderRadius: 12,
                                     minHeight: 48,
                                     paddingHorizontal: 12,
-                                    backgroundColor: palette.white,
+                                    backgroundColor: skin.background,
                                 },
                             ]}
                         />
@@ -304,17 +308,17 @@ export function PrimaryActionBlock({
                             onChangeText={setE2eCode}
                             keyboardType="number-pad"
                             placeholder="424242"
-                            placeholderTextColor={palette.midGrey}
+                            placeholderTextColor={skin.mutedText}
                             style={[
                                 ss.bodyFont,
                                 ss.blackText,
                                 {
                                     borderWidth: 1,
-                                    borderColor: palette.thinPurple,
+                                    borderColor: skin.subtleBorder,
                                     borderRadius: 12,
                                     minHeight: 48,
                                     paddingHorizontal: 12,
-                                    backgroundColor: palette.white,
+                                    backgroundColor: skin.background,
                                 },
                             ]}
                         />
@@ -429,6 +433,7 @@ export function PrimaryActionBlock({
 }
 
 function HostedPaywallLegalLinks() {
+    const ss = useAppearanceStyles();
     const { t } = useTranslation();
     const termsOfUseUrl =
         Platform.OS === "ios" ? APPLE_STANDARD_EULA_URL : TERMS_OF_USE_URL;
@@ -481,6 +486,8 @@ function HostedPaywallLegalLinks() {
 }
 
 export function StatusText(props: React.PropsWithChildren) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     return (
         <Text
             style={[
@@ -488,10 +495,10 @@ export function StatusText(props: React.PropsWithChildren) {
                 ss.blackText,
                 {
                     borderWidth: 1,
-                    borderColor: palette.thinPurple,
+                    borderColor: skin.subtleBorder,
                     borderRadius: 10,
                     padding: 10,
-                    backgroundColor: palette.whiteHighlight,
+                    backgroundColor: skin.statusSurface,
                 },
             ]}
         >
@@ -521,14 +528,16 @@ export function ActionButton({
 }) {
     const isPrimary = variant === "primary";
     const showGradient = Boolean(gradientBackground) && !disabled;
-    const textColor = showGradient ? palette.white : palette.black;
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
+    const textColor = showGradient ? palette.white : skin.text;
 
     return (
         <Pressable
             testID={testID}
             style={{
                 borderWidth: 1,
-                borderColor: palette.purple,
+                borderColor: skin.accent,
                 borderRadius: 12,
                 height: 48,
                 paddingHorizontal: showGradient ? 0 : 14,
@@ -536,12 +545,12 @@ export function ActionButton({
                 alignItems: "center",
                 overflow: "hidden",
                 backgroundColor: disabled
-                    ? palette.fadedMauve
+                    ? skin.setupButtons.disabledSurface
                     : showGradient
-                      ? palette.transparent
+                      ? skin.setupButtons.gradientSurface
                       : isPrimary
-                        ? palette.purpleTint3
-                        : palette.white,
+                        ? skin.setupButtons.primarySurface
+                        : skin.setupButtons.secondarySurface,
             }}
             onPress={onPress}
             disabled={disabled}
@@ -552,10 +561,7 @@ export function ActionButton({
                     pointerEvents="none"
                     start={{ x: 0, y: 0.5 }}
                     end={{ x: 1, y: 0.5 }}
-                    colors={[
-                        HOSTED_PRIMARY_GRADIENT_START,
-                        HOSTED_PRIMARY_GRADIENT_END,
-                    ]}
+                    colors={skin.setupButtons.gradient}
                 />
             ) : null}
             <View style={[ss.row, ss.alignCenter, ss.justifyCenter]}>
@@ -566,7 +572,7 @@ export function ActionButton({
                             padding: 5,
                             borderRadius: 20,
                             borderWidth: 1,
-                            borderColor: palette.purple,
+                            borderColor: skin.accent,
                         }}
                     >
                         <ExpoImage

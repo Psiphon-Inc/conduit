@@ -28,9 +28,14 @@ import {
 } from "react-native";
 import { useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { Icon } from "@/src/components/Icon";
+import { useHostedPromotion } from "@/src/hosted-promotion/HostedPromotion";
+import { HostedPromotionCloseButton } from "@/src/hosted-promotion/HostedPromotionCloseButton";
 import { useInproxyStatus } from "@/src/inproxy/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
 
 export function ActionsArea({
     width,
@@ -64,6 +69,8 @@ export function ActionsArea({
     bottomOffset?: number;
     compact?: boolean;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { data: inproxyStatus } = useInproxyStatus();
 
@@ -138,8 +145,8 @@ export function ActionsArea({
                         style={{
                             borderRadius: 30,
                             borderWidth: 2,
-                            borderColor: palette.purple,
-                            backgroundColor: "rgba(255, 255, 255, 0.35)",
+                            borderColor: skin.accent,
+                            backgroundColor: skin.controlSurface,
                             paddingHorizontal: compact ? 16 : 20,
                             paddingTop: compact ? 12 : 14,
                             paddingBottom: compact ? 13 : 16,
@@ -177,7 +184,7 @@ export function ActionsArea({
                                 >
                                     <Icon
                                         name="right-arrow"
-                                        color={palette.purple}
+                                        color={skin.accent}
                                         size={compact ? 18 : 20}
                                     />
                                 </View>
@@ -208,6 +215,8 @@ export function ActionsArea({
 }
 
 function ProvisioningStatusLine() {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
 
     return (
@@ -219,15 +228,15 @@ function ProvisioningStatusLine() {
                 justifyContent: "center",
                 borderRadius: 20,
                 borderWidth: 2,
-                borderColor: palette.purple,
-                backgroundColor: "rgba(255, 255, 255, 0.35)",
+                borderColor: skin.accent,
+                backgroundColor: skin.controlSurface,
                 paddingVertical: 10,
                 paddingHorizontal: 20,
                 gap: 10,
                 opacity: 0.75,
             }}
         >
-            <ActivityIndicator size="small" color={palette.purple} />
+            <ActivityIndicator size="small" color={skin.accent} />
             <Text style={[ss.purpleText, ss.bodyFont, { fontSize: 17 }]}>
                 {t("SETTING_UP_INFRASTRUCTURE_I18N.string")}
             </Text>
@@ -246,8 +255,13 @@ function HostedCallToAction({
     hasRecentHostedSignIn?: boolean;
     compact: boolean;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const isDisabled = mode === "loading" || mode === "preparing";
+    const promotion = useHostedPromotion();
+    const isPromotion = mode === "setup" && !hasRecentHostedSignIn;
+    if (isPromotion && !promotion.visible) return null;
     const useCompactButton =
         mode === "loading" || mode === "preparing" || mode === "share";
 
@@ -263,8 +277,8 @@ function HostedCallToAction({
                     justifyContent: "center",
                     borderRadius: compact ? 18 : 20,
                     borderWidth: 2,
-                    borderColor: palette.purple,
-                    backgroundColor: "rgba(255, 255, 255, 0.35)",
+                    borderColor: skin.accent,
+                    backgroundColor: skin.controlSurface,
                     paddingHorizontal: compact
                         ? 14
                         : mode === "share"
@@ -278,7 +292,7 @@ function HostedCallToAction({
                 {mode === "share" ? (
                     <ExpoImage
                         source={require("@/assets/images/icons/p2p_24px.svg")}
-                        tintColor={palette.purple}
+                        tintColor={skin.accent}
                         style={{
                             width: compact ? 18 : 20,
                             height: compact ? 18 : 20,
@@ -286,7 +300,7 @@ function HostedCallToAction({
                         contentFit="contain"
                     />
                 ) : mode === "loading" || mode === "preparing" ? (
-                    <ActivityIndicator size="small" color={palette.purple} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                 ) : null}
                 <Text
                     style={[
@@ -325,74 +339,78 @@ function HostedCallToAction({
                 : t("CREATE_A_PSIPHON_HOSTED_STATION_DESCRIPTION_I18N.string");
 
     return (
-        <Pressable
-            testID="hosted-cta"
-            onPress={onPress}
-            disabled={isDisabled}
-            style={{
-                borderRadius: compact ? 24 : 30,
-                borderWidth: 2,
-                borderColor: palette.purple,
-                backgroundColor: "rgba(255, 255, 255, 0.35)",
-                paddingHorizontal: compact ? 16 : 20,
-                paddingTop: compact ? 12 : 14,
-                paddingBottom: compact ? 13 : 16,
-                opacity: isDisabled ? 0.65 : 1,
-            }}
-        >
-            <View style={{ gap: compact ? 8 : 10 }}>
-                <View
-                    style={{
-                        position: "relative",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        minHeight: compact ? 30 : 36,
-                        paddingHorizontal: compact ? 24 : 28,
-                    }}
-                >
+        <View testID={isPromotion ? "home-hosted-promotion" : undefined}>
+            <Pressable
+                testID="hosted-cta"
+                accessibilityRole="button"
+                onPress={onPress}
+                disabled={isDisabled}
+                style={{
+                    borderRadius: compact ? 24 : 30,
+                    borderWidth: 2,
+                    borderColor: skin.accent,
+                    backgroundColor: skin.controlSurface,
+                    paddingHorizontal: compact ? 16 : 20,
+                    paddingTop: compact ? 12 : 14,
+                    paddingBottom: compact ? 13 : 16,
+                    opacity: isDisabled ? 0.65 : 1,
+                }}
+            >
+                <View style={{ gap: compact ? 8 : 10 }}>
+                    <View
+                        style={{
+                            position: "relative",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            minHeight: compact ? 30 : 36,
+                            paddingHorizontal: compact ? 24 : 28,
+                        }}
+                    >
+                        <Text
+                            style={[
+                                ss.purpleText,
+                                ss.bodyFont,
+                                ss.centeredText,
+                                {
+                                    fontSize: compact ? 20 : 22,
+                                    lineHeight: compact ? 25 : 28,
+                                },
+                            ]}
+                        >
+                            {cardTitle}
+                        </Text>
+                        {!isDisabled && !isPromotion ? (
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    right: 0,
+                                    top: 1,
+                                }}
+                            >
+                                <Icon
+                                    name="right-arrow"
+                                    color={skin.accent}
+                                    size={compact ? 18 : 20}
+                                />
+                            </View>
+                        ) : null}
+                    </View>
+
                     <Text
                         style={[
                             ss.purpleText,
-                            ss.bodyFont,
-                            ss.centeredText,
                             {
-                                fontSize: compact ? 20 : 22,
-                                lineHeight: compact ? 25 : 28,
+                                fontSize: compact ? 15 : 17,
+                                lineHeight: compact ? 19 : 21,
+                                fontFamily: "JuraRegular",
                             },
                         ]}
                     >
-                        {cardTitle}
+                        {cardDescription}
                     </Text>
-                    {!isDisabled ? (
-                        <View
-                            style={{
-                                position: "absolute",
-                                right: 0,
-                                top: 1,
-                            }}
-                        >
-                            <Icon
-                                name="right-arrow"
-                                color={palette.purple}
-                                size={compact ? 18 : 20}
-                            />
-                        </View>
-                    ) : null}
                 </View>
-
-                <Text
-                    style={[
-                        ss.purpleText,
-                        {
-                            fontSize: compact ? 15 : 17,
-                            lineHeight: compact ? 19 : 21,
-                            fontFamily: "JuraRegular",
-                        },
-                    ]}
-                >
-                    {cardDescription}
-                </Text>
-            </View>
-        </Pressable>
+            </Pressable>
+            {isPromotion ? <HostedPromotionCloseButton /> : null}
+        </View>
     );
 }

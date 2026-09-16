@@ -37,6 +37,10 @@ import {
     useWindowDimensions,
 } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { toErrorString } from "@/src/common/errors";
 import { formatExpiresAt } from "@/src/common/formatters";
 import { timedLog } from "@/src/common/utils";
@@ -51,6 +55,8 @@ import { HostedSetupSignInHero } from "@/src/components/HostedSetupSignInHero";
 import { ProxyID } from "@/src/components/ProxyID";
 import { SafeAreaView } from "@/src/components/SafeAreaView";
 import { APP_MAX_CONTENT_WIDTH } from "@/src/constants";
+import { useHostedPromotion } from "@/src/hosted-promotion/HostedPromotion";
+import { HostedPromotionCloseButton } from "@/src/hosted-promotion/HostedPromotionCloseButton";
 import { createHostedApiClient } from "@/src/hosted/apiClient";
 import { readHostedClerkPublishableKey } from "@/src/hosted/auth/clerk";
 import {
@@ -79,12 +85,14 @@ import {
 } from "@/src/hosted/planUtils";
 import { resolveRevenueCatApiKey } from "@/src/hosted/revenuecatClient";
 import { useRevenueCatContext } from "@/src/hosted/revenuecatContext";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 import { recordVisibleClientError } from "@/src/telemetry/clientEvents";
 
 const NO_NETWORK_ICON = require("@/assets/images/icons/no-network.svg");
 
 export default function HostedSetupScreen() {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t, i18n } = useTranslation();
     const router = useRouter();
     const rootNavigationState = useRootNavigationState();
@@ -471,6 +479,7 @@ export default function HostedSetupScreen() {
             : onboarding.primaryAction;
     const showHostedSignInHero =
         !showPlanSelectionScreen && onboarding.primaryAction === "sign_in";
+    const promotion = useHostedPromotion();
     const bootstrapRefreshError = bootstrapConduitsQuery.error
         ? `Failed to refresh hosted setup status: ${toErrorString(bootstrapConduitsQuery.error)}`
         : null;
@@ -532,7 +541,7 @@ export default function HostedSetupScreen() {
                         { padding: 24 },
                     ]}
                 >
-                    <ActivityIndicator size="small" color={palette.purple} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                     <Text style={[ss.bodyFont, ss.blackText]}>
                         {loadingMessage}
                     </Text>
@@ -707,10 +716,7 @@ export default function HostedSetupScreen() {
                             gap: 10,
                         }}
                     >
-                        <ActivityIndicator
-                            size="small"
-                            color={palette.purple}
-                        />
+                        <ActivityIndicator size="small" color={skin.accent} />
                         <Text
                             style={[
                                 ss.largeFont,
@@ -737,7 +743,7 @@ export default function HostedSetupScreen() {
                         onPress={() => router.replace("/(app)")}
                         style={{
                             borderWidth: 1,
-                            borderColor: palette.purple,
+                            borderColor: skin.accent,
                             borderRadius: 12,
                             paddingHorizontal: 32,
                             paddingVertical: 10,
@@ -764,10 +770,10 @@ export default function HostedSetupScreen() {
                         ss.alignCenter,
                         ss.justifyCenter,
                         centeredContentStyle,
-                        { backgroundColor: palette.white, padding: 24 },
+                        { backgroundColor: skin.background, padding: 24 },
                     ]}
                 >
-                    <ActivityIndicator size="small" color={palette.purple} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                     <Text style={[ss.bodyFont, ss.blackText]}>
                         {loadingMessage}
                     </Text>
@@ -790,7 +796,7 @@ export default function HostedSetupScreen() {
                         { padding: 24 },
                     ]}
                 >
-                    <ActivityIndicator size="small" color={palette.purple} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                     <Text style={[ss.bodyFont, ss.blackText]}>
                         {t("OPENING_YOUR_DASHBOARD_I18N.string")}
                     </Text>
@@ -832,13 +838,39 @@ export default function HostedSetupScreen() {
                     ) : (
                         <>
                             {showHostedSignInHero ? (
-                                <View style={{ marginHorizontal: -16 }}>
-                                    <HostedSetupSignInHero
-                                        headline={onboarding.headline}
-                                        body={storyParagraph}
-                                        width={window.width}
-                                    />
-                                </View>
+                                promotion.visible ? (
+                                    <View
+                                        testID="hosted-setup-promotion"
+                                        style={{
+                                            marginHorizontal: -16,
+                                            paddingTop: 44,
+                                        }}
+                                    >
+                                        <HostedSetupSignInHero
+                                            headline={onboarding.headline}
+                                            body={storyParagraph}
+                                            width={window.width}
+                                        />
+                                        <HostedPromotionCloseButton />
+                                    </View>
+                                ) : (
+                                    <View style={[ss.column]}>
+                                        <Text
+                                            style={[
+                                                ss.extraLargeFont,
+                                                ss.blackText,
+                                            ]}
+                                        >
+                                            {onboarding.headline}
+                                        </Text>
+                                        <Text
+                                            testID="hosted-setup-explanation"
+                                            style={[ss.bodyFont, ss.blackText]}
+                                        >
+                                            {storyParagraph}
+                                        </Text>
+                                    </View>
+                                )
                             ) : null}
                             {onboarding.primaryAction !== "sign_in" ? (
                                 <View style={[ss.column]}>
@@ -877,7 +909,7 @@ export default function HostedSetupScreen() {
                                                     ss.padded,
                                                     {
                                                         backgroundColor:
-                                                            palette.white,
+                                                            skin.sharedSurface,
                                                         minWidth: 140,
                                                         gap: 5,
                                                         flex: 1,

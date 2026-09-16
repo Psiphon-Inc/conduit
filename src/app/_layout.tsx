@@ -18,23 +18,27 @@
  */
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
-import { DefaultTheme, ThemeProvider } from "expo-router";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
-import * as SystemUI from "expo-system-ui";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { LogBox } from "react-native";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { ReduceMotion, ReducedMotionConfig } from "react-native-reanimated";
 
+import {
+    AppAppearanceProvider,
+    useAppAppearance,
+} from "@/src/appearance/AppAppearance";
+import { AppStartupGate } from "@/src/appearance/AppStartupGate";
+import { AppearanceChrome } from "@/src/appearance/AppearanceChrome";
+import { reportAppearanceFailure } from "@/src/appearance/appearanceErrors";
 import { AuthProvider } from "@/src/auth/context";
 import { isE2E } from "@/src/common/e2e";
 import { PERF_ENABLED, PerfRecorderHost } from "@/src/common/perfProbe";
 import { HostedAuthProvider } from "@/src/hosted/auth/provider";
 import i18nService from "@/src/i18n/i18n";
 import { hydrateSoundPreference } from "@/src/sound";
-import { fonts, palette } from "@/src/styles";
+import { fonts } from "@/src/styles";
 import { createAppQueryClient } from "@/src/telemetry/queryClient";
 
 i18nService.initI18n();
@@ -49,59 +53,56 @@ if (isE2E()) {
 }
 
 export default function RootLayout() {
-    const [forceRootReady, setForceRootReady] = useState(false);
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AppAppearanceProvider>
+                <NativeRootContent />
+            </AppAppearanceProvider>
+        </QueryClientProvider>
+    );
+}
+
+function hideNativeSplash(): void {
+    void SplashScreen.hideAsync().catch((cause: unknown) => {
+        reportAppearanceFailure("system-chrome", cause);
+    });
+}
+
+function NativeRootContent() {
+    const { skin } = useAppAppearance();
     const [loaded, fontError] = useFonts({
         JuraRegular: fonts.JuraRegular,
         JuraBold: fonts.JuraBold,
         Rajdhani: fonts.Rajdhani,
     });
-    const rootReady = loaded || Boolean(fontError) || forceRootReady;
 
     useEffect(() => {
-        if (rootReady) {
-            void SplashScreen.hideAsync();
-            return;
-        }
-
-        const fallbackTimer = setTimeout(() => {
-            setForceRootReady(true);
-        }, 2000);
-
-        return () => {
-            clearTimeout(fallbackTimer);
-        };
-    }, [rootReady]);
-
-    useEffect(() => {
-        SystemUI.setBackgroundColorAsync(palette.black).then(() => {});
         void hydrateSoundPreference();
     }, []);
 
-    if (!rootReady) {
-        return null;
-    }
-
     return (
-        <KeyboardProvider>
-            {/* E2E builds disable Reanimated-driven animations. The idle
+        <AppStartupGate
+            assetsReady={loaded || Boolean(fontError)}
+            onReady={hideNativeSplash}
+        >
+            <KeyboardProvider>
+                {/* E2E builds disable Reanimated-driven animations. The idle
                 withRepeat loops behind the Skia scenes otherwise repaint
                 continuously, saturating the UI thread on emulators/test
                 devices and starving Maestro's input driver. */}
-            {isE2E() ? (
-                <ReducedMotionConfig mode={ReduceMotion.Always} />
-            ) : null}
-            {PERF_ENABLED ? <PerfRecorderHost /> : null}
-            <ThemeProvider value={DefaultTheme}>
-                <QueryClientProvider client={queryClient}>
+                {isE2E() ? (
+                    <ReducedMotionConfig mode={ReduceMotion.Always} />
+                ) : null}
+                {PERF_ENABLED ? <PerfRecorderHost /> : null}
+                <AppearanceChrome>
                     <HostedAuthProvider>
                         <AuthProvider>
-                            <StatusBar style="dark" />
                             <Stack
                                 screenOptions={{
                                     headerShown: false,
                                     animation: "none",
                                     contentStyle: {
-                                        backgroundColor: palette.white,
+                                        backgroundColor: skin.background,
                                     },
                                 }}
                             >
@@ -109,8 +110,8 @@ export default function RootLayout() {
                             </Stack>
                         </AuthProvider>
                     </HostedAuthProvider>
-                </QueryClientProvider>
-            </ThemeProvider>
-        </KeyboardProvider>
+                </AppearanceChrome>
+            </KeyboardProvider>
+        </AppStartupGate>
     );
 }

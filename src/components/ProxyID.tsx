@@ -19,8 +19,8 @@
 import * as Clipboard from "expo-clipboard";
 import { Pressable, Text, View } from "react-native";
 
+import { useAppearanceStyles } from "@/src/appearance/AppAppearance";
 import { Identicon } from "@/src/components/Identicon";
-import { sharedStyles as ss } from "@/src/styles";
 
 export function ProxyID({
     proxyId,
@@ -29,6 +29,7 @@ export function ProxyID({
     proxyId: string;
     copyable?: boolean;
 }) {
+    const ss = useAppearanceStyles();
     // proxyId is a base64nopad encoded X25519 public key
     async function copyProxyIdToClipboard() {
         await Clipboard.setStringAsync(proxyId);

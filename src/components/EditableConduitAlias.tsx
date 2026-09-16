@@ -30,6 +30,10 @@ import {
 } from "react-native";
 
 import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
+import {
     MAX_NICKNAME_LENGTH,
     countRunes,
     isValidNickname,
@@ -48,7 +52,7 @@ import {
     useHostedExperienceState,
 } from "@/src/hosted/experience/hooks";
 import { playSound } from "@/src/sound";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 /**
  * A shared editable conduit alias field backed by SecureStore.
@@ -70,6 +74,7 @@ export function EditableConduitAlias({
     labelBackground?: string;
     testID?: string;
 }) {
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { data: storedName } = useConduitName();
     const { pushModal, openModal, isOpen } = useModal();
@@ -101,9 +106,7 @@ export function EditableConduitAlias({
             style={{
                 position: "relative",
                 borderWidth: 1,
-                borderColor: hasStoredName
-                    ? palette.purple
-                    : palette.thinPurple,
+                borderColor: hasStoredName ? skin.accent : palette.thinPurple,
                 borderRadius: 8,
                 paddingHorizontal: 16,
                 paddingVertical: 14,
@@ -115,11 +118,11 @@ export function EditableConduitAlias({
                     position: "absolute",
                     top: -9,
                     left: 12,
-                    backgroundColor: labelBackground ?? palette.white,
+                    backgroundColor: labelBackground ?? skin.background,
                     paddingHorizontal: 4,
                     fontSize: 12,
                     fontFamily: "JuraRegular",
-                    color: hasStoredName ? palette.purple : palette.midGrey,
+                    color: hasStoredName ? skin.accent : skin.mutedText,
                 }}
             >
                 {t("ALIAS_I18N.string")}
@@ -131,7 +134,7 @@ export function EditableConduitAlias({
                 style={{
                     fontSize,
                     fontFamily: "JuraRegular",
-                    color: hasStoredName ? palette.black : palette.peachyMauve,
+                    color: hasStoredName ? skin.text : skin.aliasPlaceholder,
                 }}
             >
                 {displayName}
@@ -151,6 +154,8 @@ function ConduitNameEditorModal({
     initialName: string;
     fallbackName?: string;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const queryClient = useQueryClient();
     const { popModal } = useModal();
@@ -260,7 +265,7 @@ function ConduitNameEditorModal({
                 <Pressable
                     onPress={(e) => e.stopPropagation()}
                     style={{
-                        backgroundColor: palette.white,
+                        backgroundColor: skin.background,
                         borderTopLeftRadius: 20,
                         borderTopRightRadius: 20,
                         paddingTop: 12,
@@ -282,11 +287,7 @@ function ConduitNameEditorModal({
                             onPress={dismiss}
                             hitSlop={12}
                         >
-                            <Icon
-                                name="close"
-                                color={palette.black}
-                                size={20}
-                            />
+                            <Icon name="close" color={skin.text} size={20} />
                         </Pressable>
                         <Text
                             style={[
@@ -307,7 +308,7 @@ function ConduitNameEditorModal({
                         >
                             <Icon
                                 name="right-arrow"
-                                color={palette.black}
+                                color={skin.text}
                                 size={20}
                             />
                         </Pressable>
@@ -319,7 +320,7 @@ function ConduitNameEditorModal({
                             ss.bodyFont,
                             {
                                 fontSize: 14,
-                                color: palette.midGrey,
+                                color: skin.mutedText,
                                 opacity: 0.72,
                                 marginBottom: 12,
                             },
@@ -351,10 +352,10 @@ function ConduitNameEditorModal({
                                 borderRadius: 10,
                                 paddingHorizontal: 16,
                                 paddingVertical: 14,
-                                backgroundColor: "#FFFFFF",
+                                backgroundColor: skin.surface,
                             },
                         ]}
-                        selectionColor={palette.purple}
+                        selectionColor={skin.accent}
                         maxLength={MAX_NICKNAME_LENGTH + 4}
                         autoCorrect={false}
                         autoCapitalize="words"
@@ -391,7 +392,7 @@ function ConduitNameEditorModal({
                                     color:
                                         runeCount > MAX_NICKNAME_LENGTH
                                             ? palette.red
-                                            : palette.midGrey,
+                                            : skin.mutedText,
                                 },
                             ]}
                         >

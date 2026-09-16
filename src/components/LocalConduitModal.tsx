@@ -19,12 +19,16 @@
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { formatBytes } from "@/src/common/formatters";
 import { useConduitActions } from "@/src/components/ConduitActionsContext";
 import { Icon } from "@/src/components/Icon";
 import { Identicon } from "@/src/components/Identicon";
 import { RyveCallToAction } from "@/src/components/RyveCallToAction";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 export function LocalConduitModal({
     connectedCount,
@@ -39,6 +43,8 @@ export function LocalConduitModal({
     onClose: () => void;
     onTurnOff: () => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { openPersonalPairingModal } = useConduitActions();
 
@@ -58,7 +64,7 @@ export function LocalConduitModal({
                 }}
                 style={{
                     width: "80%",
-                    backgroundColor: palette.white,
+                    backgroundColor: skin.background,
                     borderRadius: 18,
                     overflow: "hidden",
                 }}
@@ -83,7 +89,7 @@ export function LocalConduitModal({
                                 ss.bodyFont,
                                 {
                                     fontSize: 17,
-                                    color: palette.midGrey,
+                                    color: skin.mutedText,
                                     textTransform: "uppercase",
                                     letterSpacing: 0.8,
                                 },
@@ -170,7 +176,7 @@ export function LocalConduitModal({
                                         ss.tinyFont,
                                         {
                                             fontSize: 11,
-                                            color: palette.midGrey,
+                                            color: skin.mutedText,
                                             opacity: 0.72,
                                             letterSpacing: 0.3,
                                         },
@@ -197,7 +203,7 @@ export function LocalConduitModal({
                             paddingVertical: 10,
                             paddingHorizontal: 20,
                             borderWidth: 1.5,
-                            borderColor: palette.purple,
+                            borderColor: skin.accent,
                             borderRadius: 15,
                             alignSelf: "stretch",
                         }}
@@ -207,7 +213,7 @@ export function LocalConduitModal({
                                 ss.bodyFont,
                                 {
                                     fontSize: 16,
-                                    color: palette.purple,
+                                    color: skin.accent,
                                     letterSpacing: 0.3,
                                 },
                             ]}
@@ -216,7 +222,7 @@ export function LocalConduitModal({
                         </Text>
                         <Icon
                             name="right-arrow"
-                            color={palette.purple}
+                            color={skin.accent}
                             size={12}
                         />
                     </Pressable>
@@ -238,7 +244,7 @@ export function LocalConduitModal({
                                     paddingVertical: 10,
                                     paddingHorizontal: 20,
                                     borderWidth: 1.5,
-                                    borderColor: palette.purple,
+                                    borderColor: skin.accent,
                                     borderRadius: 15,
                                     alignSelf: "stretch",
                                 }}
@@ -248,7 +254,7 @@ export function LocalConduitModal({
                                         ss.bodyFont,
                                         {
                                             fontSize: 16,
-                                            color: palette.purple,
+                                            color: skin.accent,
                                             letterSpacing: 0.3,
                                         },
                                     ]}
@@ -257,7 +263,7 @@ export function LocalConduitModal({
                                 </Text>
                                 <Icon
                                     name="right-arrow"
-                                    color={palette.purple}
+                                    color={skin.accent}
                                     size={12}
                                 />
                             </Pressable>

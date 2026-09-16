@@ -30,6 +30,10 @@ import Animated, {
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { bytesToMB } from "@/src/common/utils";
 import { AnimatedText } from "@/src/components/AnimatedText";
 import { EditableNumberSlider } from "@/src/components/EditableNumberSlider";
@@ -39,7 +43,7 @@ import {
 } from "@/src/constants";
 import { TIME_STEPS, formatTimeIndex } from "@/src/inproxy/reducedUsageTime";
 import type { InproxyParameters } from "@/src/inproxy/types";
-import { lineItemStyle, palette, sharedStyles as ss } from "@/src/styles";
+import { lineItemStyle, palette } from "@/src/styles";
 
 interface ReducedUsageWindowProps {
     reducedExpanded: boolean;
@@ -74,6 +78,8 @@ function ReducedUsageWindowSelector({
     endTime: SharedValue<string>;
     scrollRef: React.RefObject<any>;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const segmentWidth = useSharedValue(0);
     const prevStartIndex = useSharedValue(0);
@@ -199,7 +205,7 @@ function ReducedUsageWindowSelector({
                     </Text>
                     <AnimatedText
                         text={startDisplayText}
-                        color={palette.black}
+                        color={skin.text}
                         fontFamily={ss.boldFont.fontFamily}
                         fontSize={ss.bodyFont.fontSize}
                     />
@@ -210,7 +216,7 @@ function ReducedUsageWindowSelector({
                     </Text>
                     <AnimatedText
                         text={endDisplayText}
-                        color={palette.black}
+                        color={skin.text}
                         fontFamily={ss.boldFont.fontFamily}
                         fontSize={ss.bodyFont.fontSize}
                     />
@@ -234,8 +240,8 @@ function ReducedUsageWindowSelector({
                         borderRadius: 8,
                         overflow: "hidden",
                         borderWidth: 1,
-                        borderColor: palette.midGrey,
-                        backgroundColor: palette.black,
+                        borderColor: skin.mutedText,
+                        backgroundColor: skin.strongSurface,
                         position: "absolute",
                         top: handleOffset,
                     }}
@@ -275,8 +281,8 @@ function ReducedUsageWindowSelector({
                                 height: handleSize,
                                 borderRadius: handleSize / 2,
                                 borderWidth: 2,
-                                borderColor: palette.purple,
-                                backgroundColor: palette.white,
+                                borderColor: skin.accent,
+                                backgroundColor: skin.background,
                             },
                             startHandleStyle,
                         ]}
@@ -293,7 +299,7 @@ function ReducedUsageWindowSelector({
                                 borderRadius: handleSize / 2,
                                 borderWidth: 2,
                                 borderColor: palette.peachyMauve,
-                                backgroundColor: palette.white,
+                                backgroundColor: skin.background,
                             },
                             endHandleStyle,
                         ]}
@@ -331,6 +337,8 @@ export function ReducedUsageWindow({
     disableReducedWindow,
     showSelector,
 }: ReducedUsageWindowProps) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const notConfiguredLabel = t("REDUCED_WINDOW_NOT_CONFIGURED_I18N.string");
     const summaryPrefix = t("REDUCED_WINDOW_SUMMARY_PREFIX_I18N.string");
@@ -377,9 +385,9 @@ export function ReducedUsageWindow({
                                 ss.rounded5,
                                 ss.halfPadded,
                                 {
-                                    backgroundColor: palette.white,
+                                    backgroundColor: skin.background,
                                     borderWidth: 1,
-                                    borderColor: palette.purple,
+                                    borderColor: skin.accent,
                                 },
                             ]}
                         >
@@ -391,7 +399,7 @@ export function ReducedUsageWindow({
                 </View>
                 <AnimatedText
                     text={summaryText}
-                    color={palette.midGrey}
+                    color={skin.mutedText}
                     fontFamily={ss.tinyFont.fontFamily}
                     fontSize={14}
                 />
@@ -424,9 +432,9 @@ export function ReducedUsageWindow({
                                 ss.rounded5,
                                 ss.halfPadded,
                                 {
-                                    backgroundColor: palette.white,
+                                    backgroundColor: skin.background,
                                     borderWidth: 1,
-                                    borderColor: palette.purple,
+                                    borderColor: skin.accent,
                                 },
                             ]}
                         >
@@ -504,7 +512,7 @@ export function ReducedUsageWindow({
                 <View style={[ss.row, ss.fullWidth, ss.alignCenter]}>
                     <AnimatedText
                         text={summaryText}
-                        color={palette.black}
+                        color={skin.text}
                         fontFamily={ss.bodyFont.fontFamily}
                         fontSize={14}
                     />
@@ -517,7 +525,7 @@ export function ReducedUsageWindow({
                             {
                                 borderRadius: 5,
                                 borderWidth: 1,
-                                borderColor: palette.purple,
+                                borderColor: skin.accent,
                                 paddingVertical: 6,
                             },
                         ]}

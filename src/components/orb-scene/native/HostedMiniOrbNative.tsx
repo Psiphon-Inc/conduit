@@ -35,6 +35,10 @@ import Animated, {
 import Svg, { Circle } from "react-native-svg";
 
 import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
+import {
     ConnectionLightMotionSpec,
     connectionLightSeed,
     createConnectionLightMotionPlan,
@@ -52,20 +56,8 @@ import {
     visualTestLightElapsedMs,
 } from "@/src/components/orb-scene/visualTestControl";
 import { useAppIsActive } from "@/src/hooks";
-import { palette, sharedStyles as ss } from "@/src/styles";
 
 const MAX_HOSTED_LIGHTS = 8;
-
-// The Skia version cycled the body gradient's outer color through this
-// palette with interpolateColors; the native version renders one static
-// gradient layer per stop and crossfades wrapper opacity.
-const ORB_CYCLE_COLORS = [
-    palette.deepMauve,
-    palette.peach,
-    palette.fadedMauve,
-    palette.mauve,
-    palette.fadedMauve,
-];
 
 // Shared static SVG layers live in orbLayers.tsx.
 
@@ -97,6 +89,8 @@ export function HostedMiniOrbNative({
     lightSeedKey?: string;
 }) {
     const { t } = useTranslation();
+    const { skin } = useAppAppearance();
+    const ss = useAppearanceStyles();
     const appIsActive = useAppIsActive();
     const finalOrbRadius = width / 4;
     const orbCenterY = height / 2;
@@ -284,7 +278,7 @@ export function HostedMiniOrbNative({
                         orbWrapperStyle,
                     ]}
                 >
-                    {ORB_CYCLE_COLORS.map((color, index) => (
+                    {skin.miniOrb.cycleColors.map((color, index) => (
                         <OrbCycleLayer
                             key={`cycle-${index}`}
                             index={index}
@@ -296,7 +290,7 @@ export function HostedMiniOrbNative({
                     <InnerShadowLayer
                         id="mini-shadow-mauve"
                         radius={finalOrbRadius}
-                        color={palette.mauve}
+                        color={skin.miniOrb.topLeftShadow}
                         dx={10}
                         dy={10}
                     />
@@ -313,7 +307,7 @@ export function HostedMiniOrbNative({
                             cx={finalOrbRadius}
                             cy={finalOrbRadius}
                             r={finalOrbRadius - 1}
-                            stroke={palette.deepMauve}
+                            stroke={skin.miniOrb.rim}
                             strokeWidth={1.5}
                             strokeOpacity={0.3}
                             fill="none"
@@ -380,6 +374,7 @@ function OrbCycleLayer({
     color: string;
     colorIndex: SharedValue<number>;
 }) {
+    const { skin } = useAppAppearance();
     const layerStyle = useAnimatedStyle(() => {
         // Stacked crossfade: the base layer stays opaque, each higher layer
         // fades in over the one below as the cycle position passes it.
@@ -395,7 +390,7 @@ function OrbCycleLayer({
             <OrbBodyGradient
                 id={`mini-cycle-${index}`}
                 radius={radius}
-                innerColor={palette.white}
+                innerColor={skin.orb.center}
                 outerColor={color}
             />
         </Animated.View>
@@ -409,6 +404,7 @@ function IdleActiveShadow({
     radius: number;
     activityWeight: SharedValue<number>;
 }) {
+    const { skin } = useAppAppearance();
     const idleStyle = useAnimatedStyle(
         () => ({ opacity: 1 - activityWeight.value }),
         [activityWeight],
@@ -423,7 +419,7 @@ function IdleActiveShadow({
                 <InnerShadowLayer
                     id="mini-shadow-idle"
                     radius={radius}
-                    color={palette.peachyMauve}
+                    color={skin.miniOrb.idleBottomRightShadow}
                     dx={-10}
                     dy={-10}
                 />
@@ -432,7 +428,7 @@ function IdleActiveShadow({
                 <InnerShadowLayer
                     id="mini-shadow-active"
                     radius={radius}
-                    color={palette.peach}
+                    color={skin.miniOrb.activeBottomRightShadow}
                     dx={-10}
                     dy={-10}
                 />

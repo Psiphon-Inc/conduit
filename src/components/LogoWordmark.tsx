@@ -19,7 +19,7 @@
 import { Image } from "expo-image";
 import { View } from "react-native";
 
-import { palette } from "@/src/styles";
+import { useAppAppearance } from "@/src/appearance/AppAppearance";
 
 export function LogoWordmark({
     width,
@@ -28,6 +28,7 @@ export function LogoWordmark({
     width: number;
     height: number;
 }) {
+    const { skin } = useAppAppearance();
     return (
         <View
             style={[
@@ -40,7 +41,7 @@ export function LogoWordmark({
         >
             <Image
                 source={require("@/assets/images/psiphon-conduit-wordmark.svg")}
-                tintColor={palette.black}
+                tintColor={skin.text}
                 style={{
                     width: "100%",
                     height: "100%",

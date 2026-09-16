@@ -31,6 +31,10 @@ import {
     View,
 } from "react-native";
 
+import {
+    useAppAppearance,
+    useAppearanceStyles,
+} from "@/src/appearance/AppAppearance";
 import { normalizeLanguageCode } from "@/src/common/localeUtils";
 import { isValidNickname, normalizeNickname } from "@/src/common/precis";
 import { EditableConduitAlias } from "@/src/components/EditableConduitAlias";
@@ -40,7 +44,7 @@ import { ASYNCSTORAGE_PAIRING_LANGUAGE_KEY } from "@/src/constants";
 import { useConduitName } from "@/src/hooks";
 import { buildPairingShareOutput } from "@/src/pairing/token";
 import { playSound } from "@/src/sound";
-import { palette, sharedStyles as ss } from "@/src/styles";
+import { palette } from "@/src/styles";
 
 interface LanguageOption {
     code: string;
@@ -73,6 +77,8 @@ export function PersonalPairingShareModal({
     personalCompartmentId: string | null;
     wrapperBaseUrl?: string | null;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t, i18n } = useTranslation();
     const { data: storedConduitName } = useConduitName();
     const { closeModal, pushModal } = useModal();
@@ -183,7 +189,7 @@ export function PersonalPairingShareModal({
                         {
                             overflow: "hidden",
                             maxHeight: "64%",
-                            backgroundColor: palette.white,
+                            backgroundColor: skin.background,
                         },
                     ]}
                 >
@@ -315,9 +321,9 @@ export function PersonalPairingShareModal({
                                             alignItems: "center",
                                             justifyContent: "space-between",
                                             borderWidth: 1,
-                                            borderColor: palette.purple,
+                                            borderColor: skin.accent,
                                             borderRadius: 8,
-                                            backgroundColor: palette.white,
+                                            backgroundColor: skin.background,
                                             paddingHorizontal: 14,
                                             height: 48,
                                         }}
@@ -413,6 +419,8 @@ function LanguagePickerModal({
     selected: string;
     onSelect: (language: string) => void;
 }) {
+    const ss = useAppearanceStyles();
+    const { skin } = useAppAppearance();
     const { t } = useTranslation();
     const { popModal } = useModal();
 
@@ -428,7 +436,7 @@ function LanguagePickerModal({
             <Pressable
                 onPress={(e) => e.stopPropagation()}
                 style={{
-                    backgroundColor: palette.white,
+                    backgroundColor: skin.background,
                     borderTopLeftRadius: 20,
                     borderTopRightRadius: 20,
                     paddingTop: 12,
@@ -481,8 +489,8 @@ function LanguagePickerModal({
                                         {
                                             fontSize: 20,
                                             color: isSelected
-                                                ? palette.purple
-                                                : palette.black,
+                                                ? skin.accent
+                                                : skin.text,
                                         },
                                     ]}
                                 >

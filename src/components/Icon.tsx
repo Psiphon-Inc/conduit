@@ -23,7 +23,7 @@ import Animated, {
     useAnimatedStyle,
 } from "react-native-reanimated";
 
-import { sharedStyles as ss } from "@/src/styles";
+import { useAppearanceStyles } from "@/src/appearance/AppAppearance";
 
 const ICONS: Record<IconName, ImageSource> = {
     check: require("@/assets/images/icons/check.svg"),
@@ -35,6 +35,7 @@ const ICONS: Record<IconName, ImageSource> = {
     send: require("@/assets/images/icons/send.svg"),
     home: require("@/assets/images/icons/home.svg"),
     settings: require("@/assets/images/icons/settings.svg"),
+    "paint-palette": require("@/assets/images/icons/paint-palette.svg"),
     question: require("@/assets/images/icons/question.svg"),
     "external-link": require("@/assets/images/icons/external-link.svg"),
     analytics: require("@/assets/images/icons/analytics.svg"),
@@ -54,6 +55,7 @@ type IconName =
     | "send"
     | "home"
     | "settings"
+    | "paint-palette"
     | "question"
     | "external-link"
     | "analytics"
@@ -103,6 +105,7 @@ export function Icon({
     opacity?: SharedValue<number> | undefined;
     label?: string | undefined;
 }) {
+    const ss = useAppearanceStyles();
     const source = ICONS[name];
     const content =
         opacity === undefined ? (
