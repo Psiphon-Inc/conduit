@@ -852,6 +852,7 @@ function DashboardLoadingScreen({
     width: number;
     height: number;
 }) {
+    const { skin } = useAppAppearance();
     return (
         <View style={{ flex: 1 }}>
             <DashboardBackground width={width} height={height} />
@@ -863,7 +864,7 @@ function DashboardLoadingScreen({
                         justifyContent: "center",
                     }}
                 >
-                    <ActivityIndicator size="small" color={palette.black} />
+                    <ActivityIndicator size="small" color={skin.accent} />
                 </View>
             </SafeAreaView>
         </View>
